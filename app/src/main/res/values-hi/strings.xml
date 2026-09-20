@@ -1155,4 +1155,15 @@
     <string name="firebase_sync_security_note">गोपनीयता गारंटी: पासवर्ड और पिन हैश कभी भी क्लाउड पर सिंक नहीं किए जाते हैं</string>
     <string name="firebase_sync_project_id">फ़ायरबेस प्रोजेक्ट: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">दस्तावेज़ स्कैनर</string>
+    <string name="doc_scanner_title">दस्तावेज़ स्कैनर</string>
+    <string name="doc_scanner_desc">ML Kit के साथ चालान और रसीदें स्कैन करें</string>
+    <string name="scan_now">दस्तावेज़ स्कैन करें</string>
+    <string name="scanned_docs_list">स्कैन किए गए दस्तावेज़ (%1$d)</string>
+    <string name="no_scanned_docs">कोई स्कैन किया गया दस्तावेज़ नहीं</string>
+    <string name="no_scanned_docs_sub">रसीदें स्कैन करने के लिए \"दस्तावेज़ स्कैन करें\" पर टैप करें।</string>
+    <string name="delete_doc_title">स्कैन किया गया दस्तावेज़ हटाएं</string>
+    <string name="delete_doc_confirm">क्या आप निश्चित रूप से \"%1$s\" को हटाना चाहते हैं?</string>
+    <string name="doc_deleted">दस्तावेज़ हटा दिया गया</string>
+    <string name="doc_scanned_success">दस्तावेज़ सफलतापूर्वक स्कैन किया गया</string>
 </resources>

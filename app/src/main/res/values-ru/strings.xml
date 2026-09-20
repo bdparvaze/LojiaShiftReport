@@ -1158,4 +1158,15 @@
     <string name="firebase_sync_security_note">Гарантия конфиденциальности: пароли и хеши PIN-кодов никогда не синхронизируются с облаком</string>
     <string name="firebase_sync_project_id">Проект Firebase: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">Сканер документов</string>
+    <string name="doc_scanner_title">Сканер документов</string>
+    <string name="doc_scanner_desc">Сканирование счетов и чеков с помощью ML Kit</string>
+    <string name="scan_now">Сканировать документ</string>
+    <string name="scanned_docs_list">Отсканированные документы (%1$d)</string>
+    <string name="no_scanned_docs">Нет отсканированных документов</string>
+    <string name="no_scanned_docs_sub">Нажмите \"Сканировать документ\" для сканирования.</string>
+    <string name="delete_doc_title">Удалить документ</string>
+    <string name="delete_doc_confirm">Вы уверены, что хотите удалить \"%1$s\"?</string>
+    <string name="doc_deleted">Документ удален</string>
+    <string name="doc_scanned_success">Документ успешно отсканирован</string>
 </resources>

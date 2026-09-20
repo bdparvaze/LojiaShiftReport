@@ -1156,4 +1156,16 @@
     <string name="firebase_sync_security_note">Privacy Guarantee: Passwords and PIN hashes are never synced to the cloud</string>
     <string name="firebase_sync_project_id">Firebase Project: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+
+    <string name="document_scanner">Document Scanner</string>
+    <string name="doc_scanner_title">Document Scanner</string>
+    <string name="doc_scanner_desc">Scan invoices, receipts, and contracts with ML Kit</string>
+    <string name="scan_now">Scan Document</string>
+    <string name="scanned_docs_list">Scanned Documents (%1$d)</string>
+    <string name="no_scanned_docs">No Scanned Documents</string>
+    <string name="no_scanned_docs_sub">Tap \"Scan Document\" to scan invoices and receipts.</string>
+    <string name="delete_doc_title">Delete Scanned Document</string>
+    <string name="delete_doc_confirm">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="doc_deleted">Document deleted</string>
+    <string name="doc_scanned_success">Document scanned successfully</string>
 </resources>

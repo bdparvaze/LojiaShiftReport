@@ -1158,4 +1158,15 @@
     <string name="firebase_sync_security_note">隐私保障：密码与PIN码哈希绝不同步至云端</string>
     <string name="firebase_sync_project_id">Firebase项目：%s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">文档扫描仪</string>
+    <string name="doc_scanner_title">文档扫描仪</string>
+    <string name="doc_scanner_desc">使用 ML Kit 扫描发票和收据</string>
+    <string name="scan_now">扫描文档</string>
+    <string name="scanned_docs_list">已扫描文档 (%1$d)</string>
+    <string name="no_scanned_docs">暂无已扫描文档</string>
+    <string name="no_scanned_docs_sub">点击“扫描文档”开始扫描发票与收据。</string>
+    <string name="delete_doc_title">删除扫描文档</string>
+    <string name="delete_doc_confirm">确定要删除“%1$s”吗？</string>
+    <string name="doc_deleted">文档已删除</string>
+    <string name="doc_scanned_success">文档扫描成功</string>
 </resources>

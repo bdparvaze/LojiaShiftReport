@@ -1158,4 +1158,15 @@
     <string name="firebase_sync_security_note">Gizlilik Garantisi: Şifreler ve PIN özetleri asla buluta senkronize edilmez</string>
     <string name="firebase_sync_project_id">Firebase Projesi: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">Belge Tarayıcı</string>
+    <string name="doc_scanner_title">Belge Tarayıcı</string>
+    <string name="doc_scanner_desc">ML Kit ile faturaları ve fişleri tarayın</string>
+    <string name="scan_now">Belge Taramasını Başlat</string>
+    <string name="scanned_docs_list">Taranan Belgeler (%1$d)</string>
+    <string name="no_scanned_docs">Taranmış Belge Yok</string>
+    <string name="no_scanned_docs_sub">Taramak için \"Belge Taramasını Başlat\" butonuna dokunun.</string>
+    <string name="delete_doc_title">Taranan Belgeyi Sil</string>
+    <string name="delete_doc_confirm">\"%1$s\" belgesini silmek istediğinizden emin misiniz?</string>
+    <string name="doc_deleted">Belge silindi</string>
+    <string name="doc_scanned_success">Belge başarıyla tarandı</string>
 </resources>

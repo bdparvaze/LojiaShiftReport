@@ -1158,4 +1158,15 @@
     <string name="firebase_sync_security_note">Jaminan Privasi: Kata sandi dan hash PIN tidak pernah disinkronkan ke cloud</string>
     <string name="firebase_sync_project_id">Proyek Firebase: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">Pemindai Dokumen</string>
+    <string name="doc_scanner_title">Pemindai Dokumen</string>
+    <string name="doc_scanner_desc">Pindai faktur dan resi dengan ML Kit</string>
+    <string name="scan_now">Pindai Dokumen</string>
+    <string name="scanned_docs_list">Dokumen Terdokumentasi (%1$d)</string>
+    <string name="no_scanned_docs">Tidak Ada Dokumen</string>
+    <string name="no_scanned_docs_sub">Ketuk \"Pindai Dokumen\" untuk memindai faktur.</string>
+    <string name="delete_doc_title">Hapus Dokumen</string>
+    <string name="delete_doc_confirm">Apakah Anda yakin ingin menghapus \"%1$s\"?</string>
+    <string name="doc_deleted">Dokumen dihapus</string>
+    <string name="doc_scanned_success">Dokumen berhasil dipindai</string>
 </resources>

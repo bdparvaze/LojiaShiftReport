@@ -1156,4 +1156,15 @@
     <string name="firebase_sync_security_note">ضمان الخصوصية: لا تتم مزامنة كلمات المرور أو أرقام PIN مع السحابة نهائياً</string>
     <string name="firebase_sync_project_id">مشروع فايربيز: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">ماسح المستندات الضوئي</string>
+    <string name="doc_scanner_title">ماسح المستندات الضوئي</string>
+    <string name="doc_scanner_desc">مسح الفواتير والإيصالات والعقود ضوئياً باستخدام ML Kit</string>
+    <string name="scan_now">مسح مستند ضوئياً</string>
+    <string name="scanned_docs_list">المستندات الممسوحة ضوئياً (%1$d)</string>
+    <string name="no_scanned_docs">لا توجد مستندات ممسوحة ضوئياً</string>
+    <string name="no_scanned_docs_sub">انقر على \"مسح مستند ضوئياً\" لمسح الفواتير والإيصالات.</string>
+    <string name="delete_doc_title">حذف المستند الممسوح ضوئياً</string>
+    <string name="delete_doc_confirm">هل أنت تأكد من أنك تريد حذف \"%1$s\"؟</string>
+    <string name="doc_deleted">تم حذف المستند</string>
+    <string name="doc_scanned_success">تم مسح المستند بنجاح</string>
 </resources>

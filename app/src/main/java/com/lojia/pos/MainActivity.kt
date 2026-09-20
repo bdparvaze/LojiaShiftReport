@@ -23,6 +23,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,6 +54,7 @@ sealed interface AppNavState {
     sealed class ShiftReportState(override val titleKey: String, override val icon: ImageVector) : AppNavState {
         data object Reports : ShiftReportState("nav_reports", Icons.Default.Assessment)
         data object Analytics : ShiftReportState("nav_analytics", Icons.Default.BarChart)
+        data object DocumentScanner : ShiftReportState("nav_document_scanner", Icons.Outlined.DocumentScanner)
         data class SettingsDetail(val section: String = "profile") : ShiftReportState("nav_settings", Icons.Default.Settings)
 
         companion object {
@@ -195,6 +197,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                         val screenTitle = when (val state = navState) {
                                             is AppNavState.ShiftReportState.Reports -> "Shift Report"
                                             is AppNavState.ShiftReportState.Analytics -> "Analytics"
+                                            is AppNavState.ShiftReportState.DocumentScanner -> stringResource(R.string.document_scanner)
                                             is AppNavState.ShiftReportState.SettingsDetail -> {
                                                 when (state.section) {
                                                     "root", "all", "overview" -> "Settings"
@@ -360,6 +363,9 @@ private fun ShiftReportModuleNavHost(
                 reportViewModel = reportViewModel,
                 language = language
             )
+        }
+        is AppNavState.ShiftReportState.DocumentScanner -> {
+            com.lojia.pos.scanner.DocumentScannerScreen()
         }
         is AppNavState.ShiftReportState.SettingsDetail -> {
             LaunchedEffect(destination.section) {

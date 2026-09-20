@@ -1156,4 +1156,15 @@
     <string name="firebase_sync_security_note">Datenschutzgarantie: Passwörter und PIN-Hashes werden niemals mit der Cloud synchronisiert</string>
     <string name="firebase_sync_project_id">Firebase-Projekt: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">Dokumentenscanner</string>
+    <string name="doc_scanner_title">Dokumentenscanner</string>
+    <string name="doc_scanner_desc">Rechnungen und Belege mit ML Kit scannen</string>
+    <string name="scan_now">Dokument scannen</string>
+    <string name="scanned_docs_list">Gescannte Dokumente (%1$d)</string>
+    <string name="no_scanned_docs">Keine gescannten Dokumente</string>
+    <string name="no_scanned_docs_sub">Tippen Sie auf \"Dokument scannen\", um Belege zu scannen.</string>
+    <string name="delete_doc_title">Gescanntes Dokument löschen</string>
+    <string name="delete_doc_confirm">Möchten Sie \"%1$s\" wirklich löschen?</string>
+    <string name="doc_deleted">Dokument gelöscht</string>
+    <string name="doc_scanned_success">Dokument erfolgreich gescannt</string>
 </resources>

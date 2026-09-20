@@ -1156,4 +1156,15 @@
     <string name="firebase_sync_security_note">গোপনীয়তা গ্যারান্টি: পাসওয়ার্ড এবং পিন হ্যাশগুলি কখনও ক্লাউডে সিঙ্ক করা হয় না</string>
     <string name="firebase_sync_project_id">ফায়ারবেস প্রকল্প: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">ডকুমেন্ট স্ক্যানার</string>
+    <string name="doc_scanner_title">ডকুমেন্ট স্ক্যানার</string>
+    <string name="doc_scanner_desc">ML Kit দিয়ে ইনভয়েস, রসিদ এবং চুক্তি স্ক্যান করুন</string>
+    <string name="scan_now">ডকুমেন্ট স্ক্যান করুন</string>
+    <string name="scanned_docs_list">স্ক্যান করা ডকুমেন্ট (%1$d)</string>
+    <string name="no_scanned_docs">কোনো স্ক্যান করা ডকুমেন্ট নেই</string>
+    <string name="no_scanned_docs_sub">ইনভয়েস এবং রসিদ স্ক্যান করতে \"ডকুমেন্ট স্ক্যান করুন\" এ ট্যাপ করুন।</string>
+    <string name="delete_doc_title">স্ক্যান করা ডকুমেন্ট মুছুন</string>
+    <string name="delete_doc_confirm">আপনি কি নিশ্চিত যে আপনি \"%1$s\" মুছতে চান?</string>
+    <string name="doc_deleted">ডকুমেন্ট মোছা হয়েছে</string>
+    <string name="doc_scanned_success">ডকুমেন্ট সফলভাবে স্ক্যান করা হয়েছে</string>
 </resources>

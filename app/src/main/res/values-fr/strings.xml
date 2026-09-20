@@ -1156,4 +1156,15 @@
     <string name="firebase_sync_security_note">Garantie de confidentialité: les mots de passe et les hachages de code PIN ne sont jamais synchronisés avec le cloud</string>
     <string name="firebase_sync_project_id">Projet Firebase: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">Scanner de Documents</string>
+    <string name="doc_scanner_title">Scanner de Documents</string>
+    <string name="doc_scanner_desc">Numérisez factures et reçus avec ML Kit</string>
+    <string name="scan_now">Numériser Document</string>
+    <string name="scanned_docs_list">Documents Numérisés (%1$d)</string>
+    <string name="no_scanned_docs">Aucun Document Numérisé</string>
+    <string name="no_scanned_docs_sub">Appuyez sur \"Numériser Document\" pour numériser des factures.</string>
+    <string name="delete_doc_title">Supprimer le Document</string>
+    <string name="delete_doc_confirm">Voulez-vous vraiment supprimer \"%1$s\" ?</string>
+    <string name="doc_deleted">Document supprimé</string>
+    <string name="doc_scanned_success">Document numérisé avec succès</string>
 </resources>

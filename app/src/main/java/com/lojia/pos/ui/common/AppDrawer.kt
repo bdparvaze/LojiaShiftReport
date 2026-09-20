@@ -179,6 +179,18 @@ fun MainAppDrawer(
                 }
             )
 
+            // 2.5 Document Scanner
+            DrawerMenuItem(
+                title = stringResource(R.string.document_scanner),
+                icon = Icons.Outlined.DocumentScanner,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.DocumentScanner,
+                onClick = {
+                    onNavigate(AppNavState.ShiftReportState.DocumentScanner)
+                    onCloseDrawer()
+                }
+            )
+
             // 3. Cashier
             DrawerMenuItem(
                 title = "Cashier",

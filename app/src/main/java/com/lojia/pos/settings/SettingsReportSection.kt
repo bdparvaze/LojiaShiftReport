@@ -10,7 +10,6 @@ import com.lojia.pos.util.*
 import com.lojia.pos.ui.common.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.auth.*
-import com.lojia.pos.pos.*
 import com.lojia.pos.report.*
 import com.lojia.pos.settings.*
 import com.lojia.pos.sync.*

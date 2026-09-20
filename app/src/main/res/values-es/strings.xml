@@ -1156,4 +1156,15 @@
     <string name="firebase_sync_security_note">Garantía de privacidad: las contraseñas y los PIN nunca se sincronizan con la nube</string>
     <string name="firebase_sync_project_id">Proyecto Firebase: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
+    <string name="document_scanner">Escáner de Documentos</string>
+    <string name="doc_scanner_title">Escáner de Documentos</string>
+    <string name="doc_scanner_desc">Escanee facturas y recibos con ML Kit</string>
+    <string name="scan_now">Escanear Documento</string>
+    <string name="scanned_docs_list">Documentos Escaneados (%1$d)</string>
+    <string name="no_scanned_docs">Sin Documentos Escaneados</string>
+    <string name="no_scanned_docs_sub">Toque \"Escanear Documento\" para escanear facturas.</string>
+    <string name="delete_doc_title">Eliminar Documento Escaneado</string>
+    <string name="delete_doc_confirm">¿Está seguro de que desea eliminar \"%1$s\"?</string>
+    <string name="doc_deleted">Documento eliminado</string>
+    <string name="doc_scanned_success">Documento escaneado con éxito</string>
 </resources>
