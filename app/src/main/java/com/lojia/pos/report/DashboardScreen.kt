@@ -6,7 +6,6 @@ import com.lojia.pos.util.*
 import com.lojia.pos.ui.common.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.auth.*
-import com.lojia.pos.pos.*
 import com.lojia.pos.report.*
 import com.lojia.pos.settings.*
 
@@ -82,25 +81,22 @@ import androidx.compose.ui.res.stringResource
 @Composable
 fun DashboardScreen(
     reportViewModel: ReportViewModel,
-    posViewModel: PosViewModel,
     language: AppLanguage
 ) {
     val shiftReports by reportViewModel.shiftReports.collectAsState()
-    val salesHistory by posViewModel.salesHistory.collectAsState()
     val businessProfile by reportViewModel.businessProfile.collectAsState()
 
     var dashboardViewMode by remember { mutableIntStateOf(0) } // 0: Monthly Trends (Recharts), 1: Shift & Payment Breakdown
 
-        val rawCurrency = businessProfile?.currency ?: "SAR"
+    val rawCurrency = businessProfile?.currency ?: "SAR"
     val currency = if (rawCurrency == "SAR") stringResource(R.string.currency_unit) else rawCurrency
 
     val totalShiftSales = shiftReports.sumOf { it.totalSales }
-    val totalPosSales = salesHistory.sumOf { it.totalAmount }
-    val combinedGrossSales = totalShiftSales + totalPosSales
+    val combinedGrossSales = totalShiftSales
 
-    val totalCash = shiftReports.sumOf { it.grossCash } + salesHistory.filter { it.paymentMethod == "Cash" }.sumOf { it.totalAmount }
-    val totalMada = shiftReports.sumOf { it.madaPayments } + salesHistory.filter { it.paymentMethod == "Mada" }.sumOf { it.totalAmount }
-    val totalWallet = shiftReports.sumOf { it.digitalWallet } + salesHistory.filter { it.paymentMethod == "Digital Wallet" }.sumOf { it.totalAmount }
+    val totalCash = shiftReports.sumOf { it.grossCash }
+    val totalMada = shiftReports.sumOf { it.madaPayments }
+    val totalWallet = shiftReports.sumOf { it.digitalWallet }
 
     val totalExpenses = shiftReports.sumOf { it.totalExpenses }
     val avgSalesPerShift = if (shiftReports.isNotEmpty()) totalShiftSales / shiftReports.size else 0.0
@@ -248,7 +244,6 @@ fun DashboardScreen(
             item {
                 MonthlySalesSummaryView(
                     shiftReports = shiftReports,
-                    salesHistory = salesHistory,
                     currency = currency,
                     language = language
                 )

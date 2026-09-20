@@ -36,10 +36,7 @@ class FirebaseCloudSyncWorker(
                 workDataOf(
                     "status" to if (syncResult.success) "SUCCESS" else "CLOUD_DOWN",
                     "message" to syncResult.message,
-                    "products" to syncResult.productsSynced,
-                    "categories" to syncResult.categoriesSynced,
                     "reports" to syncResult.reportsSynced,
-                    "sales" to syncResult.salesSynced,
                     "timestamp" to System.currentTimeMillis()
                 )
             )

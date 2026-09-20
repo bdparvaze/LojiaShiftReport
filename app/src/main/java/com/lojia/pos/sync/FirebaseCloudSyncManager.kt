@@ -37,14 +37,8 @@ data class FirebaseSyncStatusState(
     val lastSyncSummary: String = "",
     val isCloudReachable: Boolean = true,
     val isOnline: Boolean = true,
-    val uploadedProducts: Int = 0,
-    val downloadedProducts: Int = 0,
-    val uploadedCategories: Int = 0,
-    val downloadedCategories: Int = 0,
     val uploadedReports: Int = 0,
     val downloadedReports: Int = 0,
-    val uploadedSales: Int = 0,
-    val downloadedSales: Int = 0,
     val lastErrorMessage: String? = null
 )
 
@@ -54,25 +48,13 @@ data class FirebaseSyncStatusState(
 data class FirebaseSyncResult(
     val success: Boolean,
     val message: String,
-    val productsSynced: Int = 0,
-    val categoriesSynced: Int = 0,
     val reportsSynced: Int = 0,
-    val salesSynced: Int = 0,
     val isCloudReachable: Boolean = true,
     val isOfflineMode: Boolean = false
 )
 
 /**
- * Centralized Firebase Cloud Sync Manager.
- *
- * Architecture Principles:
- * 1. Offline-first: Room database is the authoritative primary source of truth on-device.
- * 2. Non-blocking: All POS checkout, inventory, and shift actions operate solely through Room.
- * 3. Bidirectional Sync: Uploads and downloads Products, Categories, Shift Reports, Sales, Business Profile.
- * 4. Conflict Handling: Last-updated timestamp comparison (Last-Write-Wins with Room precedence on tie).
- * 5. Privacy: Strictly filters out all authentication secrets, user passwords, and cashier PINs.
- * 6. Cloud Resilience: If Firebase is disabled, down, or returning 403/404, gracefully switches to local
- *    buffered sync without ever blocking the UI or throwing unhandled errors.
+ * Centralized Firebase Cloud Sync Manager for Shift Reports.
  */
 object FirebaseCloudSyncManager {
     private const val TAG = "FirebaseCloudSync"
@@ -83,7 +65,6 @@ object FirebaseCloudSyncManager {
     private const val KEY_CUSTOM_FIREBASE_URL = "firebase_custom_url"
     private const val KEY_PROJECT_ID = "firebase_project_id"
 
-    // Default configuration from firebase-applet-config.json
     const val DEFAULT_PROJECT_ID = "gen-lang-client-0290392339"
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -99,311 +80,120 @@ object FirebaseCloudSyncManager {
 
         _syncState.value = FirebaseSyncStatusState(
             isEnabled = enabled,
-            isSyncing = false,
             lastSyncTimestamp = lastTime,
+            lastSyncSummary = summary,
             statusMessage = if (enabled) {
-                if (lastTime > 0) "Synchronized • Room primary" else "Sync enabled • Waiting for sync"
+                if (lastTime > 0) "Synchronized • Last synced ${formatTimestamp(lastTime)}"
+                else "Sync is active • Waiting for initial sync"
             } else {
                 "Sync is turned off (Offline-only mode)"
-            },
-            lastSyncSummary = summary,
-            isOnline = isNetworkAvailable(context)
+            }
         )
     }
 
     fun isSyncEnabled(context: Context): Boolean {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_SYNC_ENABLED, false)
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_SYNC_ENABLED, false)
     }
 
     fun setSyncEnabled(context: Context, enabled: Boolean) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putBoolean(KEY_SYNC_ENABLED, enabled).apply()
 
-        val lastTime = prefs.getLong(KEY_LAST_SYNC_TIME, 0L)
-        val summary = prefs.getString(KEY_LAST_SYNC_SUMMARY, "") ?: ""
-
         _syncState.value = _syncState.value.copy(
             isEnabled = enabled,
-            statusMessage = if (enabled) {
-                if (lastTime > 0) "Synchronized • Room primary" else "Sync enabled • Ready to sync"
-            } else {
-                "Sync is turned off (Offline-only mode)"
-            },
-            lastSyncSummary = summary
+            statusMessage = if (enabled) "Cloud sync activated" else "Sync is turned off (Offline-only mode)"
         )
 
         if (enabled) {
-            FirebaseCloudSyncScheduler.schedulePeriodicSync(context)
-            // Trigger an initial sync pass
-            scope.launch {
-                performSync(context, isManual = true)
-            }
-        } else {
-            FirebaseCloudSyncScheduler.cancelPeriodicSync(context)
+            triggerSyncNow(context)
         }
-    }
-
-    fun getLastSyncTimestamp(context: Context): Long {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getLong(KEY_LAST_SYNC_TIME, 0L)
     }
 
     fun getFirebaseProjectId(context: Context): String {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_PROJECT_ID, DEFAULT_PROJECT_ID) ?: DEFAULT_PROJECT_ID
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_PROJECT_ID, DEFAULT_PROJECT_ID) ?: DEFAULT_PROJECT_ID
+    }
+
+    fun setFirebaseProjectId(context: Context, projectId: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_PROJECT_ID, projectId.trim()).apply()
     }
 
     fun getCustomFirebaseUrl(context: Context): String {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_CUSTOM_FIREBASE_URL, "") ?: ""
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_CUSTOM_FIREBASE_URL, "") ?: ""
     }
 
     fun setCustomFirebaseUrl(context: Context, url: String) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_CUSTOM_FIREBASE_URL, url.trim())
-            .apply()
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_CUSTOM_FIREBASE_URL, url.trim()).apply()
     }
 
-    fun formatSyncTime(timestamp: Long): String {
-        if (timestamp <= 0L) return "Never synced"
-        val sdf = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
-        return sdf.format(Date(timestamp))
+    private fun isNetworkAvailable(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return false
+        val activeNet = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(activeNet) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    fun isNetworkAvailable(context: Context): Boolean {
-        return try {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-                ?: return false
-            val network = cm.activeNetwork ?: return false
-            val capabilities = cm.getNetworkCapabilities(network) ?: return false
-            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-        } catch (e: Exception) {
-            false
+    fun triggerSyncNow(context: Context, onResult: ((FirebaseSyncResult) -> Unit)? = null) {
+        scope.launch {
+            val res = performBidirectionalSync(context)
+            withContext(Dispatchers.Main) {
+                onResult?.invoke(res)
+            }
         }
     }
 
-    /**
-     * Records an entity timestamp update locally.
-     * Keeps track of when each product, category, or business profile was modified.
-     */
-    fun recordEntityUpdated(context: Context, entityType: String, id: Int, timestamp: Long = System.currentTimeMillis()) {
-        val prefs = context.getSharedPreferences("lojia_entity_timestamps", Context.MODE_PRIVATE)
-        prefs.edit().putLong("${entityType}_${id}", timestamp).apply()
+    suspend fun performSync(context: Context, isManual: Boolean = false): FirebaseSyncResult {
+        return performBidirectionalSync(context)
     }
 
-    fun getEntityTimestamp(context: Context, entityType: String, id: Int, defaultTime: Long = 0L): Long {
-        val prefs = context.getSharedPreferences("lojia_entity_timestamps", Context.MODE_PRIVATE)
-        return prefs.getLong("${entityType}_${id}", defaultTime)
-    }
+    suspend fun performBidirectionalSync(context: Context): FirebaseSyncResult = withContext(Dispatchers.IO) {
+        val isEnabled = isSyncEnabled(context)
+        val isOnline = isNetworkAvailable(context)
 
-    /**
-     * Primary Synchronization Method.
-     * Never blocks callers or POS transactions. Executes fully on Dispatchers.IO.
-     */
-    suspend fun performSync(context: Context, isManual: Boolean = false): FirebaseSyncResult = withContext(Dispatchers.IO) {
-        if (!isSyncEnabled(context)) {
-            return@withContext FirebaseSyncResult(
-                success = false,
-                message = "Cloud sync is currently disabled in Settings",
-                isOfflineMode = true
-            )
-        }
-
-        if (_syncState.value.isSyncing) {
-            Log.d(TAG, "Sync already in progress, skipping concurrent run.")
-            return@withContext FirebaseSyncResult(
-                success = true,
-                message = "Sync already in progress"
-            )
-        }
-
-        val online = isNetworkAvailable(context)
-        if (!online) {
+        if (!isEnabled) {
             _syncState.value = _syncState.value.copy(
                 isSyncing = false,
-                isOnline = false,
-                statusMessage = "Offline — Local Room database is primary and up to date"
+                isEnabled = false,
+                isOnline = isOnline,
+                statusMessage = "Offline Mode: Sync disabled"
             )
             return@withContext FirebaseSyncResult(
                 success = true,
-                message = "Offline: Changes queued in local Room database",
+                message = "Offline Mode: Cloud sync is disabled.",
                 isOfflineMode = true
             )
         }
 
         _syncState.value = _syncState.value.copy(
             isSyncing = true,
-            isOnline = true,
-            statusMessage = "Synchronizing with Firebase cloud..."
+            statusMessage = "Synchronizing with Cloud..."
         )
 
         val db = AppDatabase.getInstance(context)
-        val posDao = db.posDao()
         val reportDao = db.reportDao()
 
-        var uploadedProducts = 0
-        var downloadedProducts = 0
-        var uploadedCategories = 0
-        var downloadedCategories = 0
         var uploadedReports = 0
         var downloadedReports = 0
-        var uploadedSales = 0
-        var downloadedSales = 0
         var cloudReachable = true
         var failureReason: String? = null
 
         try {
-            // =================================================================
-            // 1. GATHER LOCAL ROOM DATA (PRIMARY SOURCE OF TRUTH)
-            // =================================================================
-            val localProducts = posDao.getAllProductsList()
-            val localCategories = posDao.getAllCategoriesList()
             val localReports = reportDao.getAllShiftReportsList()
-            val localSales = posDao.getAllSalesList()
             val localBusinessProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
 
-            // Build Local Snapshot Map for conflict resolution
-            val localProductMap = localProducts.associateBy { it.id }.toMutableMap()
-            val localCategoryMap = localCategories.associateBy { it.id }.toMutableMap()
             val localReportMap = localReports.associateBy { it.id }.toMutableMap()
-            val localSalesMap = localSales.associateBy { it.id }.toMutableMap()
 
-            // =================================================================
-            // 2. FETCH REMOTE FIREBASE CLOUD DATA
-            // =================================================================
             val remoteDataResult = fetchRemoteData(context)
             val remoteJson = remoteDataResult.first
             cloudReachable = remoteDataResult.second
 
-            val remoteProducts = remoteJson?.optJSONArray("products") ?: JSONArray()
-            val remoteCategories = remoteJson?.optJSONArray("categories") ?: JSONArray()
             val remoteReports = remoteJson?.optJSONArray("shiftReports") ?: JSONArray()
-            val remoteSales = remoteJson?.optJSONArray("sales") ?: JSONArray()
             val remoteProfileObj = remoteJson?.optJSONObject("businessProfile")
 
-            // =================================================================
-            // 3. CONFLICT HANDLING VIA LAST-UPDATED TIMESTAMP: PRODUCTS
-            // =================================================================
-            val productsToUpdateInRoom = mutableListOf<POSProduct>()
-            val remoteProductIdsSeen = mutableSetOf<Int>()
-
-            for (i in 0 until remoteProducts.length()) {
-                val pObj = remoteProducts.getJSONObject(i)
-                val rId = pObj.getInt("id")
-                val rUpdated = pObj.optLong("updatedAt", 0L)
-                remoteProductIdsSeen.add(rId)
-
-                val local = localProductMap[rId]
-                val localTs = getEntityTimestamp(context, "product", rId, 0L)
-
-                if (local == null) {
-                    // New product from cloud -> Download to Room
-                    val newProduct = POSProduct(
-                        id = rId,
-                        name = pObj.getString("name"),
-                        categoryId = pObj.optInt("categoryId", 1),
-                        price = pObj.optDouble("price", 0.0),
-                        costPrice = pObj.optDouble("costPrice", 0.0),
-                        stockQuantity = pObj.optDouble("stockQuantity", 100.0),
-                        minStockAlert = pObj.optDouble("minStockAlert", 10.0),
-                        barcode = pObj.optString("barcode", ""),
-                        sku = pObj.optString("sku", ""),
-                        unit = pObj.optString("unit", "pcs"),
-                        colorHex = pObj.optString("colorHex", "#10B981"),
-                        active = pObj.optBoolean("active", true)
-                    )
-                    productsToUpdateInRoom.add(newProduct)
-                    recordEntityUpdated(context, "product", rId, rUpdated)
-                    downloadedProducts++
-                } else if (rUpdated > localTs) {
-                    // Remote is newer -> Update Room
-                    val updatedProduct = local.copy(
-                        name = pObj.optString("name", local.name),
-                        categoryId = pObj.optInt("categoryId", local.categoryId),
-                        price = pObj.optDouble("price", local.price),
-                        costPrice = pObj.optDouble("costPrice", local.costPrice),
-                        stockQuantity = pObj.optDouble("stockQuantity", local.stockQuantity),
-                        minStockAlert = pObj.optDouble("minStockAlert", local.minStockAlert),
-                        barcode = pObj.optString("barcode", local.barcode),
-                        sku = pObj.optString("sku", local.sku),
-                        unit = pObj.optString("unit", local.unit),
-                        colorHex = pObj.optString("colorHex", local.colorHex),
-                        active = pObj.optBoolean("active", local.active)
-                    )
-                    productsToUpdateInRoom.add(updatedProduct)
-                    recordEntityUpdated(context, "product", rId, rUpdated)
-                    downloadedProducts++
-                } else {
-                    // Local is newer or equal -> Will upload to remote
-                    uploadedProducts++
-                }
-            }
-
-            // Products that exist locally but not remotely -> upload
-            for (localP in localProducts) {
-                if (!remoteProductIdsSeen.contains(localP.id)) {
-                    uploadedProducts++
-                }
-            }
-
-            if (productsToUpdateInRoom.isNotEmpty()) {
-                posDao.insertProducts(productsToUpdateInRoom)
-            }
-
-            // =================================================================
-            // 4. CONFLICT HANDLING VIA LAST-UPDATED TIMESTAMP: CATEGORIES
-            // =================================================================
-            val categoriesToUpdateInRoom = mutableListOf<POSCategory>()
-            val remoteCategoryIdsSeen = mutableSetOf<Int>()
-
-            for (i in 0 until remoteCategories.length()) {
-                val cObj = remoteCategories.getJSONObject(i)
-                val cId = cObj.getInt("id")
-                val rUpdated = cObj.optLong("updatedAt", 0L)
-                remoteCategoryIdsSeen.add(cId)
-
-                val local = localCategoryMap[cId]
-                val localTs = getEntityTimestamp(context, "category", cId, 0L)
-
-                if (local == null) {
-                    val newCat = POSCategory(
-                        id = cId,
-                        name = cObj.getString("name"),
-                        iconName = cObj.optString("iconName", "Category"),
-                        colorHex = cObj.optString("colorHex", "#6366F1")
-                    )
-                    categoriesToUpdateInRoom.add(newCat)
-                    recordEntityUpdated(context, "category", cId, rUpdated)
-                    downloadedCategories++
-                } else if (rUpdated > localTs) {
-                    val updatedCat = local.copy(
-                        name = cObj.optString("name", local.name),
-                        iconName = cObj.optString("iconName", local.iconName),
-                        colorHex = cObj.optString("colorHex", local.colorHex)
-                    )
-                    categoriesToUpdateInRoom.add(updatedCat)
-                    recordEntityUpdated(context, "category", cId, rUpdated)
-                    downloadedCategories++
-                } else {
-                    uploadedCategories++
-                }
-            }
-
-            for (localCat in localCategories) {
-                if (!remoteCategoryIdsSeen.contains(localCat.id)) {
-                    uploadedCategories++
-                }
-            }
-
-            if (categoriesToUpdateInRoom.isNotEmpty()) {
-                posDao.insertCategories(categoriesToUpdateInRoom)
-            }
-
-            // =================================================================
-            // 5. CONFLICT HANDLING: SHIFT REPORTS (dateInMillis / timestamp)
-            // =================================================================
             val reportsToUpdateInRoom = mutableListOf<ShiftReport>()
             val remoteReportIdsSeen = mutableSetOf<Int>()
 
@@ -462,52 +252,7 @@ object FirebaseCloudSyncManager {
                 reportDao.insertShiftReports(reportsToUpdateInRoom)
             }
 
-            // =================================================================
-            // 6. CONFLICT HANDLING: SALES SUMMARIES (timestamp)
-            // =================================================================
-            val salesToUpdateInRoom = mutableListOf<POSSale>()
-            val remoteSaleIdsSeen = mutableSetOf<Int>()
-
-            for (i in 0 until remoteSales.length()) {
-                val sObj = remoteSales.getJSONObject(i)
-                val sId = sObj.getInt("id")
-                remoteSaleIdsSeen.add(sId)
-
-                val local = localSalesMap[sId]
-                if (local == null) {
-                    val newSale = POSSale(
-                        id = sId,
-                        invoiceNumber = sObj.optString("invoiceNumber", "INV-$sId"),
-                        cashierName = sObj.optString("cashierName", "Staff"),
-                        customerName = sObj.optString("customerName", "Customer"),
-                        subtotal = sObj.optDouble("subtotal", 0.0),
-                        vatAmount = sObj.optDouble("vatAmount", 0.0),
-                        totalAmount = sObj.optDouble("totalAmount", 0.0),
-                        paymentMethod = sObj.optString("paymentMethod", "CASH"),
-                        timestamp = sObj.optLong("timestamp", System.currentTimeMillis()),
-                        isVoided = sObj.optBoolean("isVoided", false),
-                        voidReason = sObj.optString("voidReason", "")
-                    )
-                    salesToUpdateInRoom.add(newSale)
-                    downloadedSales++
-                } else {
-                    uploadedSales++
-                }
-            }
-
-            for (ls in localSales) {
-                if (!remoteSaleIdsSeen.contains(ls.id)) {
-                    uploadedSales++
-                }
-            }
-
-            if (salesToUpdateInRoom.isNotEmpty()) {
-                posDao.insertSales(salesToUpdateInRoom)
-            }
-
-            // =================================================================
-            // 7. CONFLICT HANDLING: BUSINESS PROFILE
-            // =================================================================
+            // Conflict Handling: Business Profile
             if (remoteProfileObj != null) {
                 val rProfileTs = remoteProfileObj.optLong("updatedAt", 0L)
                 val lProfileTs = getEntityTimestamp(context, "business_profile", 1, 0L)
@@ -531,14 +276,8 @@ object FirebaseCloudSyncManager {
                 }
             }
 
-            // =================================================================
-            // 8. COMPOSE UPLOAD PAYLOAD & DISPATCH TO FIREBASE
-            // (Strictly excludes passwords and PINs)
-            // =================================================================
-            val freshProducts = posDao.getAllProductsList()
-            val freshCategories = posDao.getAllCategoriesList()
+            // Compose Upload Payload
             val freshReports = reportDao.getAllShiftReportsList()
-            val freshSales = posDao.getAllSalesList()
             val freshProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
 
             val uploadPayload = JSONObject()
@@ -546,43 +285,6 @@ object FirebaseCloudSyncManager {
             uploadPayload.put("lastSyncTimestamp", System.currentTimeMillis())
             uploadPayload.put("projectId", getFirebaseProjectId(context))
 
-            // Products Array (with timestamps)
-            val pArr = JSONArray()
-            for (p in freshProducts) {
-                val pTs = getEntityTimestamp(context, "product", p.id, System.currentTimeMillis())
-                pArr.put(JSONObject().apply {
-                    put("id", p.id)
-                    put("name", p.name)
-                    put("categoryId", p.categoryId)
-                    put("price", p.price)
-                    put("costPrice", p.costPrice)
-                    put("stockQuantity", p.stockQuantity)
-                    put("minStockAlert", p.minStockAlert)
-                    put("barcode", p.barcode)
-                    put("sku", p.sku)
-                    put("unit", p.unit)
-                    put("colorHex", p.colorHex)
-                    put("active", p.active)
-                    put("updatedAt", pTs)
-                })
-            }
-            uploadPayload.put("products", pArr)
-
-            // Categories Array (with timestamps)
-            val cArr = JSONArray()
-            for (c in freshCategories) {
-                val cTs = getEntityTimestamp(context, "category", c.id, System.currentTimeMillis())
-                cArr.put(JSONObject().apply {
-                    put("id", c.id)
-                    put("name", c.name)
-                    put("iconName", c.iconName)
-                    put("colorHex", c.colorHex)
-                    put("updatedAt", cTs)
-                })
-            }
-            uploadPayload.put("categories", cArr)
-
-            // Shift Reports Array
             val repArr = JSONArray()
             for (r in freshReports) {
                 repArr.put(JSONObject().apply {
@@ -604,26 +306,6 @@ object FirebaseCloudSyncManager {
             }
             uploadPayload.put("shiftReports", repArr)
 
-            // Sales Summaries Array
-            val salesArr = JSONArray()
-            for (s in freshSales) {
-                salesArr.put(JSONObject().apply {
-                    put("id", s.id)
-                    put("invoiceNumber", s.invoiceNumber)
-                    put("cashierName", s.cashierName)
-                    put("customerName", s.customerName)
-                    put("subtotal", s.subtotal)
-                    put("vatAmount", s.vatAmount)
-                    put("totalAmount", s.totalAmount)
-                    put("paymentMethod", s.paymentMethod)
-                    put("timestamp", s.timestamp)
-                    put("isVoided", s.isVoided)
-                    put("voidReason", s.voidReason)
-                })
-            }
-            uploadPayload.put("sales", salesArr)
-
-            // Business Profile Object (Zero passwords/PINs)
             val bpTs = getEntityTimestamp(context, "business_profile", 1, System.currentTimeMillis())
             val bpObj = JSONObject().apply {
                 put("businessName", freshProfile.businessName)
@@ -641,22 +323,14 @@ object FirebaseCloudSyncManager {
             }
             uploadPayload.put("businessProfile", bpObj)
 
-            // Dispatch to cloud (or local cloud buffer fallback)
             val uploadSuccess = dispatchUploadToFirebase(context, uploadPayload)
             if (!uploadSuccess) {
                 cloudReachable = false
             }
 
-            // =================================================================
-            // 9. PERSIST SYNC METADATA
-            // =================================================================
             val now = System.currentTimeMillis()
-            val totalProducts = freshProducts.size
-            val totalCategories = freshCategories.size
             val totalReports = freshReports.size
-            val totalSales = freshSales.size
-
-            val summaryStr = "Synced: $totalProducts products, $totalCategories categories, $totalReports reports, $totalSales sales"
+            val summaryStr = "Synced: $totalReports shift reports"
 
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit()
@@ -664,12 +338,11 @@ object FirebaseCloudSyncManager {
                 .putString(KEY_LAST_SYNC_SUMMARY, summaryStr)
                 .apply()
 
-            // Update app_settings in Room
             reportDao.setSetting(AppSetting(KEY_LAST_SYNC_TIME, now.toString()))
             reportDao.setSetting(AppSetting(KEY_LAST_SYNC_SUMMARY, summaryStr))
 
             val statusMsg = if (cloudReachable) {
-                "Synchronized • All business records up to date"
+                "Synchronized • Shift reports up to date"
             } else {
                 "Cloud server unreachable — Local Room data safe and unaffected"
             }
@@ -681,33 +354,23 @@ object FirebaseCloudSyncManager {
                 lastSyncSummary = summaryStr,
                 isCloudReachable = cloudReachable,
                 isOnline = true,
-                uploadedProducts = uploadedProducts,
-                downloadedProducts = downloadedProducts,
-                uploadedCategories = uploadedCategories,
-                downloadedCategories = downloadedCategories,
                 uploadedReports = uploadedReports,
                 downloadedReports = downloadedReports,
-                uploadedSales = uploadedSales,
-                downloadedSales = downloadedSales,
                 lastErrorMessage = null
             )
 
-            Log.i(TAG, "Firebase Cloud Sync completed successfully: $summaryStr (cloudReachable=$cloudReachable)")
+            Log.i(TAG, "Firebase Cloud Sync completed: $summaryStr (cloudReachable=$cloudReachable)")
 
             return@withContext FirebaseSyncResult(
                 success = true,
                 message = summaryStr,
-                productsSynced = totalProducts,
-                categoriesSynced = totalCategories,
                 reportsSynced = totalReports,
-                salesSynced = totalSales,
                 isCloudReachable = cloudReachable
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error during Firebase Cloud Sync: ${e.message}", e)
             failureReason = e.localizedMessage ?: "Unknown sync error"
 
-            val currentTimestamp = _syncState.value.lastSyncTimestamp
             _syncState.value = _syncState.value.copy(
                 isSyncing = false,
                 statusMessage = "Cloud server unreachable — Local Room data safe and unaffected",
@@ -717,24 +380,20 @@ object FirebaseCloudSyncManager {
 
             return@withContext FirebaseSyncResult(
                 success = false,
-                message = "Cloud currently unreachable: $failureReason. Local Room data is completely unaffected.",
+                message = "Cloud currently unreachable: $failureReason. Local Room data is unaffected.",
                 isCloudReachable = false
             )
         }
     }
 
-    /**
-     * Downloads remote data from Firebase Realtime Database or Firestore REST,
-     * or loads from persistent local cloud buffer if remote is offline/disabled.
-     */
     private fun fetchRemoteData(context: Context): Pair<JSONObject?, Boolean> {
         val customUrl = getCustomFirebaseUrl(context)
         val projectId = getFirebaseProjectId(context)
 
         val targetUrl = if (customUrl.isNotEmpty()) {
-            if (!customUrl.endsWith(".json")) "$customUrl/pos_cloud_data.json" else customUrl
+            if (!customUrl.endsWith(".json")) "$customUrl/shift_report_cloud_data.json" else customUrl
         } else {
-            "https://$projectId-default-rtdb.firebaseio.com/pos_cloud_data.json"
+            "https://$projectId-default-rtdb.firebaseio.com/shift_report_cloud_data.json"
         }
 
         try {
@@ -758,35 +417,28 @@ object FirebaseCloudSyncManager {
                 val responseStr = sb.toString().trim()
                 if (responseStr.isNotEmpty() && responseStr != "null") {
                     val jsonObj = JSONObject(responseStr)
-                    // Update local buffer file
                     saveLocalCloudBuffer(context, jsonObj)
                     return Pair(jsonObj, true)
                 }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Network attempt to Firebase at $targetUrl failed or service unavailable (${e.message}). Reading from local buffer.")
+            Log.w(TAG, "Network attempt to Firebase failed (${e.message}). Reading from local buffer.")
         }
 
-        // Fallback to local persistent cloud buffer so sync never fails or crashes
         val bufferObj = loadLocalCloudBuffer(context)
         return Pair(bufferObj, false)
     }
 
-    /**
-     * Dispatches the synchronized payload to Firebase cloud REST endpoint.
-     * Also updates the local persistent cloud buffer.
-     */
     private fun dispatchUploadToFirebase(context: Context, payload: JSONObject): Boolean {
-        // 1. Always save to local cloud mirror buffer first (guarantee zero data loss)
         saveLocalCloudBuffer(context, payload)
 
         val customUrl = getCustomFirebaseUrl(context)
         val projectId = getFirebaseProjectId(context)
 
         val targetUrl = if (customUrl.isNotEmpty()) {
-            if (!customUrl.endsWith(".json")) "$customUrl/pos_cloud_data.json" else customUrl
+            if (!customUrl.endsWith(".json")) "$customUrl/shift_report_cloud_data.json" else customUrl
         } else {
-            "https://$projectId-default-rtdb.firebaseio.com/pos_cloud_data.json"
+            "https://$projectId-default-rtdb.firebaseio.com/shift_report_cloud_data.json"
         }
 
         return try {
@@ -808,7 +460,7 @@ object FirebaseCloudSyncManager {
             val responseCode = conn.responseCode
             responseCode in 200..299
         } catch (e: Exception) {
-            Log.w(TAG, "Upload to Firebase failed (${e.message}). Local buffer updated successfully. Room remains primary truth.")
+            Log.w(TAG, "Upload to Firebase failed (${e.message}). Local buffer updated successfully.")
             false
         }
     }
@@ -839,6 +491,29 @@ object FirebaseCloudSyncManager {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read local cloud buffer: ${e.message}")
             null
+        }
+    }
+
+    private fun getEntityTimestamp(context: Context, entityType: String, id: Int, defaultTs: Long): Long {
+        val prefs = context.getSharedPreferences("entity_timestamps", Context.MODE_PRIVATE)
+        return prefs.getLong("${entityType}_$id", defaultTs)
+    }
+
+    private fun recordEntityUpdated(context: Context, entityType: String, id: Int, timestamp: Long) {
+        val prefs = context.getSharedPreferences("entity_timestamps", Context.MODE_PRIVATE)
+        prefs.edit().putLong("${entityType}_$id", timestamp).apply()
+    }
+
+    fun formatSyncTime(timestamp: Long): String {
+        return formatTimestamp(timestamp)
+    }
+
+    private fun formatTimestamp(timestamp: Long): String {
+        return try {
+            val sdf = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+            sdf.format(Date(timestamp))
+        } catch (e: Exception) {
+            "Recently"
         }
     }
 }

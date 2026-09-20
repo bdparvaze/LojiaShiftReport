@@ -25,26 +25,15 @@ import kotlinx.coroutines.launch
         AppSetting::class,
         ShiftSession::class,
         CashMovement::class,
-        POSCategory::class,
-        POSProduct::class,
-        POSModifier::class,
-        POSDiscount::class,
-        POSSale::class,
-        POSSaleItem::class,
-        POSCustomer::class,
-        POSEmployee::class,
-        POSSupplier::class,
-        POSStockAdjustment::class,
         TranslationCacheEntity::class,
         ShopReceiptConfig::class
     ],
-    version = 6,
-    exportSchema = true
+    version = 7,
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun reportDao(): ReportDao
-    abstract fun posDao(): POSDao
     abstract fun translationDao(): TranslationDao
 
     companion object {
@@ -64,10 +53,10 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {}
         }
         val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE pos_sales ADD COLUMN isVoided INTEGER NOT NULL DEFAULT 0")
-                db.execSQL("ALTER TABLE pos_sales ADD COLUMN voidReason TEXT NOT NULL DEFAULT ''")
-            }
+            override fun migrate(db: SupportSQLiteDatabase) {}
+        }
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {}
         }
 
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
@@ -77,11 +66,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "lojia_system_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
-
-                if (BuildConfig.DEBUG) {
-                    builder.fallbackToDestructiveMigration()
-                }
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .fallbackToDestructiveMigration()
 
                 builder.addCallback(DatabaseCallback(scope))
                 val instance = builder.build()
@@ -102,12 +88,12 @@ abstract class AppDatabase : RoomDatabase() {
             super.onCreate(db)
             INSTANCE?.let { database ->
                 scope.launch(Dispatchers.IO) {
-                    populateInitialData(database.reportDao(), database.posDao())
+                    populateInitialData(database.reportDao())
                 }
             }
         }
 
-        suspend fun populateInitialData(reportDao: ReportDao, posDao: POSDao) {
+        suspend fun populateInitialData(reportDao: ReportDao) {
             if (BuildConfig.DEBUG) {
                 reportDao.saveUserProfile(
                     UserProfile(
@@ -178,36 +164,6 @@ abstract class AppDatabase : RoomDatabase() {
                 reportDao.insertCashier(Cashier(name = "Manager (Demo)", pin = SecurityUtils.hashSecret("123456"), role = "ADMIN"))
                 reportDao.insertCashier(Cashier(name = "Cashier 1 (Demo)", pin = SecurityUtils.hashSecret("1111"), role = "CASHIER"))
                 reportDao.insertCashier(Cashier(name = "Cashier 2 (Demo)", pin = SecurityUtils.hashSecret("2222"), role = "CASHIER"))
-
-                val catDrinks = posDao.insertCategory(POSCategory(name = "Beverages / المشروبات", iconName = "Coffee", colorHex = "#3B82F6"))
-                val catFood = posDao.insertCategory(POSCategory(name = "Food & Bakery / المأكولات", iconName = "Restaurant", colorHex = "#F59E0B"))
-                val catRetail = posDao.insertCategory(POSCategory(name = "Specialty & Retail / منتجات عامة", iconName = "Category", colorHex = "#10B981"))
-
-                // Beverages
-                posDao.insertProduct(POSProduct(name = "Espresso / اسبريسو", categoryId = catDrinks.toInt(), price = 3.50, costPrice = 0.80, stockQuantity = 300.0, minStockAlert = 20.0, barcode = "101", unit = "cup"))
-                posDao.insertProduct(POSProduct(name = "Cappuccino / كابتشينو", categoryId = catDrinks.toInt(), price = 4.50, costPrice = 1.20, stockQuantity = 250.0, minStockAlert = 20.0, barcode = "102", unit = "cup"))
-                posDao.insertProduct(POSProduct(name = "Iced Latte / لاتيه مثلج", categoryId = catDrinks.toInt(), price = 5.00, costPrice = 1.40, stockQuantity = 200.0, minStockAlert = 15.0, barcode = "103", unit = "cup"))
-                posDao.insertProduct(POSProduct(name = "Turkish Tea / شاي تركي", categoryId = catDrinks.toInt(), price = 2.50, costPrice = 0.50, stockQuantity = 400.0, minStockAlert = 25.0, barcode = "104", unit = "cup"))
-                posDao.insertProduct(POSProduct(name = "Mineral Water / مياه معدنية", categoryId = catDrinks.toInt(), price = 1.50, costPrice = 0.40, stockQuantity = 500.0, minStockAlert = 30.0, barcode = "105", unit = "bottle"))
-
-                // Food
-                posDao.insertProduct(POSProduct(name = "Club Sandwich / كلوب ساندويتش", categoryId = catFood.toInt(), price = 6.50, costPrice = 2.20, stockQuantity = 80.0, minStockAlert = 10.0, barcode = "201", unit = "pcs"))
-                posDao.insertProduct(POSProduct(name = "Butter Croissant / كرواسون", categoryId = catFood.toInt(), price = 3.00, costPrice = 0.90, stockQuantity = 100.0, minStockAlert = 15.0, barcode = "202", unit = "pcs"))
-                posDao.insertProduct(POSProduct(name = "Cheese Muffin / مافن جبن", categoryId = catFood.toInt(), price = 3.50, costPrice = 1.00, stockQuantity = 90.0, minStockAlert = 10.0, barcode = "203", unit = "pcs"))
-                posDao.insertProduct(POSProduct(name = "Caesar Salad / سلطة سيزر", categoryId = catFood.toInt(), price = 7.00, costPrice = 2.50, stockQuantity = 60.0, minStockAlert = 10.0, barcode = "204", unit = "bowl"))
-
-                // Retail
-                posDao.insertProduct(POSProduct(name = "Coffee Beans 250g / بن قهوة مختصة", categoryId = catRetail.toInt(), price = 14.00, costPrice = 6.50, stockQuantity = 50.0, minStockAlert = 8.0, barcode = "301", unit = "pack"))
-                posDao.insertProduct(POSProduct(name = "Premium Tea Tin 100g / علبة شاي فاخر", categoryId = catRetail.toInt(), price = 12.00, costPrice = 5.00, stockQuantity = 45.0, minStockAlert = 8.0, barcode = "302", unit = "can"))
-                posDao.insertProduct(POSProduct(name = "Reusable Travel Mug / كوب حراري", categoryId = catRetail.toInt(), price = 15.00, costPrice = 6.00, stockQuantity = 35.0, minStockAlert = 5.0, barcode = "303", unit = "pcs"))
-
-                posDao.insertModifier(POSModifier(name = "Extra Shot / جرعة إضافية", optionGroup = "Coffee Options", extraPrice = 1.0))
-                posDao.insertModifier(POSModifier(name = "Oat Milk / حليب شوفان", optionGroup = "Milk Options", extraPrice = 0.75))
-                posDao.insertModifier(POSModifier(name = "Vanilla Syrup / سيروب فانيلا", optionGroup = "Syrup", extraPrice = 0.50))
-
-                posDao.insertDiscount(POSDiscount(name = "Staff 20% / خصم موظفين", percentage = 20.0, isPercentage = true, code = "STAFF20"))
-                posDao.insertDiscount(POSDiscount(name = "Promo 10% / عرض ترويجي", percentage = 10.0, isPercentage = true, code = "PROMO10"))
-                posDao.insertDiscount(POSDiscount(name = "Flat $5 / خصم مباشر", fixedAmount = 5.0, isPercentage = false, code = "FLAT5"))
 
                 val activeSessionId = reportDao.insertShiftSession(
                     ShiftSession(

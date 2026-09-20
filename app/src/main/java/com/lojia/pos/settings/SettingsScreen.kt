@@ -7,7 +7,6 @@ import com.lojia.pos.util.*
 import com.lojia.pos.ui.common.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.auth.*
-import com.lojia.pos.pos.*
 import com.lojia.pos.report.*
 import com.lojia.pos.settings.*
 
@@ -93,9 +92,8 @@ import androidx.compose.ui.res.stringResource
 @Composable
 fun SettingsScreen(
     reportViewModel: ReportViewModel,
-    posViewModel: PosViewModel,
-    activeModule: AppModule,
-    onSwitchModule: (AppModule) -> Unit,
+    activeModule: AppModule = AppModule.SHIFT_REPORT,
+    onSwitchModule: (AppModule) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -113,7 +111,6 @@ fun SettingsScreen(
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showSupportTicketDialog by remember { mutableStateOf(false) }
     var showTestPrintDialog by remember { mutableStateOf(false) }
-    var showBarcodeScannerDialog by remember { mutableStateOf(false) }
 
     val handleRestrictedClick: (action: () -> Unit) -> Unit = { action ->
         if (isAdmin) {
@@ -135,28 +132,14 @@ fun SettingsScreen(
                 .testTag("settings_scrollable_list"),
             verticalArrangement = Arrangement.Top
         ) {
-            // =================================================================
-            // MAIN SETTINGS CONTENT (SHOP MODULE VS SHIFT REPORT MODULE)
-            // =================================================================
             item {
-                if (activeModule == AppModule.SHOPPING) {
-                    SettingsShopSection(
-                        reportViewModel = reportViewModel,
-                        posViewModel = posViewModel,
-                        language = currentLanguage,
-                        isAdmin = isAdmin,
-                        onRestrictedClick = handleRestrictedClick,
-                        onSwitchModule = onSwitchModule
-                    )
-                } else {
-                    SettingsReportSection(
-                        reportViewModel = reportViewModel,
-                        language = currentLanguage,
-                        isAdmin = isAdmin,
-                        onRestrictedClick = handleRestrictedClick,
-                        onSwitchModule = onSwitchModule
-                    )
-                }
+                SettingsReportSection(
+                    reportViewModel = reportViewModel,
+                    language = currentLanguage,
+                    isAdmin = isAdmin,
+                    onRestrictedClick = handleRestrictedClick,
+                    onSwitchModule = onSwitchModule
+                )
             }
 
             // Bottom Spacing
@@ -233,7 +216,7 @@ fun SettingsScreen(
         )
     }
 
-    // Common Dialogs (Admin PIN, Terms, Privacy, Support Ticket, Test Print, Barcode Scanner)
+    // Common Dialogs (Admin PIN, Terms, Privacy, Support Ticket, Test Print)
     SettingsCommonDialogs(
         showAdminPinDialog = showAdminPinDialog,
         onDismissAdminPin = {
@@ -253,11 +236,6 @@ fun SettingsScreen(
         onDismissSupportTicket = { showSupportTicketDialog = false },
         showTestPrintDialog = showTestPrintDialog,
         onDismissTestPrint = { showTestPrintDialog = false },
-        showBarcodeScannerDialog = showBarcodeScannerDialog,
-        onDismissBarcodeScanner = { showBarcodeScannerDialog = false },
-        onBarcodeScanned = { barcode ->
-            posViewModel.scanBarcode(barcode)
-        },
         userProfile = userProfile
     )
 }

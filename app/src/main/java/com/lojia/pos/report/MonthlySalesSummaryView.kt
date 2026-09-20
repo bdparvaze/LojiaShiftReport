@@ -6,7 +6,6 @@ import com.lojia.pos.util.*
 import com.lojia.pos.ui.common.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.auth.*
-import com.lojia.pos.pos.*
 import com.lojia.pos.report.*
 import com.lojia.pos.settings.*
 
@@ -115,9 +114,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 import com.lojia.pos.data.AppLanguage
-
-import com.lojia.pos.data.POSSale
-
 import com.lojia.pos.data.ShiftReport
 
 
@@ -148,7 +144,6 @@ enum class ChartType {
 @Composable
 fun MonthlySalesSummaryView(
     shiftReports: List<ShiftReport>,
-    salesHistory: List<POSSale>,
     currency: String,
     language: AppLanguage,
     modifier: Modifier = Modifier
@@ -158,7 +153,6 @@ fun MonthlySalesSummaryView(
     var selectedChartType by remember { mutableStateOf(ChartType.AREA_TREND) }
     var hoveredDayIndex by remember { mutableStateOf<Int?>(null) }
     var showShiftBreakdown by remember { mutableStateOf(true) }
-    var showPosBreakdown by remember { mutableStateOf(true) }
 
     // Target Calendar based on offset
     val targetCalendar = remember(calendarMonthOffset) {
@@ -182,7 +176,7 @@ fun MonthlySalesSummaryView(
     val isCurrentCalendarMonth = remember(calendarMonthOffset) { calendarMonthOffset == 0 }
 
     // Calculate aggregated daily data for the selected month
-    val dailyDataList = remember(shiftReports, salesHistory, currentYear, currentMonth, daysInMonth, activeLocale) {
+    val dailyDataList = remember(shiftReports, currentYear, currentMonth, daysInMonth, activeLocale) {
         val list = mutableListOf<DaySalesData>()
         val cal = Calendar.getInstance()
         val dayNameFmt = SimpleDateFormat("EEE", activeLocale)
@@ -191,10 +185,6 @@ fun MonthlySalesSummaryView(
         for (day in 1..daysInMonth) {
             cal.set(currentYear, currentMonth, day, 0, 0, 0)
             cal.set(Calendar.MILLISECOND, 0)
-            val startOfDay = cal.timeInMillis
-            cal.set(currentYear, currentMonth, day, 23, 59, 59)
-            cal.set(Calendar.MILLISECOND, 999)
-            val endOfDay = cal.timeInMillis
 
             // Filter shifts falling in this day
             val shiftsOnDay = shiftReports.filter { report ->
@@ -204,21 +194,12 @@ fun MonthlySalesSummaryView(
                         rCal.get(Calendar.DAY_OF_MONTH) == day
             }
 
-            // Filter POS sales on this day
-            val salesOnDay = salesHistory.filter { sale ->
-                val sCal = Calendar.getInstance().apply { timeInMillis = sale.timestamp }
-                sCal.get(Calendar.YEAR) == currentYear &&
-                        sCal.get(Calendar.MONTH) == currentMonth &&
-                        sCal.get(Calendar.DAY_OF_MONTH) == day
-            }
-
             val shiftTotal = shiftsOnDay.sumOf { it.totalSales }
-            val posTotal = salesOnDay.sumOf { it.totalAmount }
-            val combined = shiftTotal + posTotal
+            val combined = shiftTotal
 
-            val cash = shiftsOnDay.sumOf { it.grossCash } + salesOnDay.filter { it.paymentMethod == "Cash" }.sumOf { it.totalAmount }
-            val mada = shiftsOnDay.sumOf { it.madaPayments } + salesOnDay.filter { it.paymentMethod == "Mada" }.sumOf { it.totalAmount }
-            val wallet = shiftsOnDay.sumOf { it.digitalWallet } + salesOnDay.filter { it.paymentMethod == "Digital Wallet" }.sumOf { it.totalAmount }
+            val cash = shiftsOnDay.sumOf { it.grossCash }
+            val mada = shiftsOnDay.sumOf { it.madaPayments }
+            val wallet = shiftsOnDay.sumOf { it.digitalWallet }
 
             cal.set(currentYear, currentMonth, day)
             list.add(
@@ -227,9 +208,9 @@ fun MonthlySalesSummaryView(
                     dateString = dateFmt.format(cal.time),
                     dayName = dayNameFmt.format(cal.time),
                     shiftSales = shiftTotal,
-                    posSales = posTotal,
+                    posSales = 0.0,
                     totalRevenue = combined,
-                    transactionsCount = shiftsOnDay.size + salesOnDay.size,
+                    transactionsCount = shiftsOnDay.size,
                     cashAmount = cash,
                     madaAmount = mada,
                     walletAmount = wallet
@@ -748,12 +729,6 @@ fun MonthlySalesSummaryView(
                         onClick = {}
                     )
                     LegendItem(
-                        label = stringResource(R.string.pos_direct_sales),
-                        color = AccentEmerald,
-                        isActive = showPosBreakdown,
-                        onClick = { showPosBreakdown = !showPosBreakdown }
-                    )
-                    LegendItem(
                         label = stringResource(R.string.shift_cashier_sales),
                         color = AccentGold,
                         isActive = showShiftBreakdown,
@@ -775,7 +750,6 @@ fun MonthlySalesSummaryView(
                             data = dailyDataList,
                             currency = currency,
                             hoveredIndex = hoveredDayIndex,
-                            showPosBreakdown = showPosBreakdown,
                             showShiftBreakdown = showShiftBreakdown,
                             onHoverIndexChange = { hoveredDayIndex = it }
                         )
@@ -827,12 +801,6 @@ fun MonthlySalesSummaryView(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = stringResource(R.string.pos_2f).format(d.posSales),
-                                            color = AccentEmerald,
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
                                         Text(
                                             text = stringResource(R.string.shift_2f).format(d.shiftSales),
                                             color = AccentGold,

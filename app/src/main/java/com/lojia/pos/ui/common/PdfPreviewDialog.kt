@@ -1,72 +1,33 @@
 package com.lojia.pos.ui.common
 
-
 import android.content.Context
-
 import android.content.Intent
-
 import android.net.Uri
-
 import android.widget.Toast
 
-
 import androidx.compose.foundation.background
-
-
 import androidx.compose.foundation.border
-
-
 import androidx.compose.foundation.layout.*
-
-
 import androidx.compose.foundation.rememberScrollState
-
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-
 import androidx.compose.foundation.verticalScroll
-
-
 import androidx.compose.material.icons.Icons
-
-
 import androidx.compose.material.icons.filled.*
-
-
 import androidx.compose.material3.*
-
-
 import androidx.compose.runtime.*
-
-
 import androidx.compose.ui.Alignment
-
-
 import androidx.compose.ui.Modifier
-
-
 import androidx.compose.ui.graphics.Color
-
-
 import androidx.compose.ui.platform.LocalContext
-
-
 import androidx.compose.ui.platform.testTag
-
-
 import androidx.compose.ui.text.font.FontFamily
-
-
 import androidx.compose.ui.text.font.FontWeight
-
 import androidx.compose.ui.text.style.TextOverflow
-
 import androidx.compose.ui.unit.dp
-
-
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 
+import com.lojia.pos.R
 import com.lojia.pos.data.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.util.MoneyFormat
@@ -77,13 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 import java.text.SimpleDateFormat
-
 import java.util.*
-
-
-import androidx.compose.ui.res.stringResource
-
-import com.lojia.pos.R
 
 @Composable
 fun ShiftReportPreviewDialog(
@@ -471,383 +426,6 @@ fun ShiftReportPreviewDialog(
                         ) {
                             Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.share),
-                                maxLines = 1,
-                                softWrap = false,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        dismissButton = null
-    )
-}
-
-@Composable
-fun SaleReceiptPreviewDialog(
-    sale: POSSale,
-    businessProfile: BusinessProfile?,
-    language: AppLanguage,
-    onDismiss: () -> Unit,
-    onOpenPrinterSettings: (() -> Unit)? = null
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val db = remember(context) { AppDatabase.getInstance(context) }
-    val printerManager = remember(context) { com.lojia.pos.printer.BluetoothPrinterManager(context) }
-    val receiptConfigState by db.reportDao().getReceiptConfig().collectAsState(initial = null)
-
-    val currencyCode = businessProfile?.currency
-    val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-
-    var exportedUri by remember { mutableStateOf<Uri?>(null) }
-    var exportSuccessMessage by remember { mutableStateOf<String?>(null) }
-    var printerErrorMessage by remember { mutableStateOf<String?>(null) }
-    var isPrinting by remember { mutableStateOf(false) }
-
-    val isVoided = sale.isVoided
-    val taxInvoiceTitle = if (isVoided) "VOIDED / REFUNDED INVOICE" else stringResource(R.string.simplified_tax_invoice)
-    val subtotalLabel = stringResource(R.string.subtotal_exclusive_vat)
-    val taxRateStr = if (businessProfile?.vatRate != null && businessProfile.vatRate > 0.0) "${businessProfile.vatRate}%" else ""
-    val vatLabel = if (taxRateStr.isNotEmpty()) "Tax/VAT ($taxRateStr)" else stringResource(R.string.vat_amount_15)
-    val totalLabel = stringResource(R.string.total_amount_due_inc_vat)
-    val defaultBiz = stringResource(R.string.default_business_name)
-    val thankYouMsg = stringResource(R.string.pdf_thank_you_visit, businessProfile?.businessName ?: defaultBiz)
-
-    val receiptText = buildString {
-        appendLine("========================================")
-        appendLine("        ${businessProfile?.businessName ?: defaultBiz}")
-        if (!businessProfile?.address.isNullOrBlank()) {
-            appendLine("        ${businessProfile?.address}")
-        }
-        if (!businessProfile?.phone.isNullOrBlank()) {
-            appendLine("        Tel: ${businessProfile?.phone}")
-        }
-        appendLine("        $taxInvoiceTitle")
-        appendLine("========================================")
-        if (isVoided) {
-            appendLine("*** THIS SALE HAS BEEN VOIDED / REFUNDED ***")
-            if (sale.voidReason.isNotBlank()) {
-                appendLine("Reason: ${sale.voidReason}")
-            }
-            appendLine("----------------------------------------")
-        }
-        appendLine("${stringResource(R.string.invoice_number)}: ${sale.invoiceNumber}")
-        appendLine("${stringResource(R.string.date_2)}: ${dateFormatter.format(Date(sale.timestamp))}")
-        appendLine("${stringResource(R.string.cashier_6)}: ${sale.cashierName}")
-        if (sale.customerName.isNotBlank() && sale.customerName != "Walk-in Customer") {
-            appendLine("Customer: ${sale.customerName}")
-        }
-        if (!businessProfile?.vatNumber.isNullOrBlank()) {
-            appendLine("Tax ID / VAT: ${businessProfile?.vatNumber}")
-        }
-        appendLine("${stringResource(R.string.payment_method)}: ${sale.paymentMethod}")
-        appendLine("----------------------------------------")
-        appendLine("$subtotalLabel:   ${MoneyFormat.format(sale.subtotal, currencyCode)}")
-        if (businessProfile?.isTaxEnabled != false || sale.vatAmount > 0.0) {
-            appendLine("$vatLabel:              ${MoneyFormat.format(sale.vatAmount, currencyCode)}")
-        }
-        appendLine("$totalLabel:              ${MoneyFormat.format(sale.totalAmount, currencyCode)}")
-        appendLine("========================================")
-        appendLine("        $thankYouMsg")
-        appendLine("========================================")
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.ReceiptLong,
-                        contentDescription = null,
-                        tint = PrimaryIndigo,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.invoice),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
-                }
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (printerErrorMessage != null) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.PrintDisabled,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Printer Warning",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = printerErrorMessage ?: "",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            if (onOpenPrinterSettings != null) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                OutlinedButton(
-                                    onClick = {
-                                        onDismiss()
-                                        onOpenPrinterSettings()
-                                    },
-                                    modifier = Modifier.align(Alignment.End)
-                                ) {
-                                    Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Open Printer Settings", fontSize = 12.sp)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (exportSuccessMessage != null) {
-                    Surface(
-                        color = AccentEmerald.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, AccentEmerald.copy(alpha = 0.5f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AccentEmerald, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = stringResource(R.string.pdf_exported_success),
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = AccentEmerald
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = exportSuccessMessage ?: "",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                Surface(
-                    color = PureWhite,
-                    shape = RoundedCornerShape(12.dp),
-                    border = CardDefaults.outlinedCardBorder(),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = receiptText,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.5.sp,
-                        lineHeight = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Main Action: Print Receipt
-                Button(
-                    onClick = {
-                        printerErrorMessage = null
-                        if (!printerManager.isPrinterConfigured()) {
-                            printerErrorMessage = "No Bluetooth thermal printer selected or connected. Please configure a printer in Settings."
-                        } else {
-                            isPrinting = true
-                            scope.launch {
-                                try {
-                                    val saleItems = withContext(Dispatchers.IO) {
-                                        db.posDao().getSaleItems(sale.id)
-                                    }
-
-                                    val formattedItems: List<Pair<String, Pair<Double, Double>>> = saleItems.map { item ->
-                                        Pair(item.productName, Pair(item.quantity, item.totalPrice))
-                                    }
-
-                                    val formattedText = printerManager.buildReceiptText(
-                                        businessName = businessProfile?.businessName?.ifBlank { "Lojia Store" } ?: "Lojia Store",
-                                        businessAddress = businessProfile?.address ?: "",
-                                        businessPhone = businessProfile?.phone ?: "",
-                                        vatNumber = businessProfile?.vatNumber ?: "",
-                                        customHeader = receiptConfigState?.customHeader ?: "",
-                                        customFooterText = receiptConfigState?.customFooterText ?: "",
-                                        showTaxNumber = receiptConfigState?.showTaxNumber ?: true,
-                                        showCashierName = receiptConfigState?.showCashierName ?: true,
-                                        receiptId = sale.invoiceNumber,
-                                        dateTimeStr = dateFormatter.format(Date(sale.timestamp)),
-                                        cashierName = sale.cashierName,
-                                        customerName = sale.customerName,
-                                        items = formattedItems,
-                                        subtotal = sale.subtotal,
-                                        discount = 0.0,
-                                        tax = sale.vatAmount,
-                                        grandTotal = sale.totalAmount,
-                                        paymentMethod = sale.paymentMethod,
-                                        currencySymbol = currencyCode ?: "$"
-                                    )
-
-                                    val printResult = printerManager.printFormattedText(formattedText)
-                                    isPrinting = false
-                                    printResult.fold(
-                                        onSuccess = {
-                                            Toast.makeText(context, "Receipt sent to printer!", Toast.LENGTH_SHORT).show()
-                                        },
-                                        onFailure = { err ->
-                                            printerErrorMessage = "Printer error: ${err.message ?: "Failed to send to printer."}"
-                                        }
-                                    )
-                                } catch (e: Exception) {
-                                    isPrinting = false
-                                    printerErrorMessage = "Print error: ${e.message}"
-                                }
-                            }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentEmerald),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isPrinting,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("print_thermal_receipt_btn")
-                ) {
-                    if (isPrinting) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = PureWhite, strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Printing Receipt...", fontWeight = FontWeight.Bold)
-                    } else {
-                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Print Receipt", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = {
-                            val result = PdfReportGenerator.generateSaleInvoicePdf(
-                                context = context,
-                                sale = sale,
-                                businessProfile = businessProfile
-                            )
-                            if (result.isSuccess) {
-                                exportedUri = result.uri
-                                exportSuccessMessage = "Saved to: ${result.displayPath}"
-                                Toast.makeText(context, context.getString(R.string.invoice_pdf_saved), Toast.LENGTH_SHORT).show()
-                                result.uri?.let { uri ->
-                                    PdfReportGenerator.openPdfFile(context, uri)
-                                }
-                            } else {
-                                Toast.makeText(context, context.getString(R.string.export_failed_msg, result.errorMessage), Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 44.dp)
-                            .testTag("export_invoice_pdf_btn")
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                if (exportedUri != null) Icons.Default.Visibility else Icons.Default.PictureAsPdf,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (exportedUri != null) stringResource(R.string.open_pdf)
-                                else stringResource(R.string.export_pdf),
-                                maxLines = 1,
-                                softWrap = false,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            if (exportedUri != null) {
-                                PdfReportGenerator.sharePdfFile(context, exportedUri!!, context.getString(R.string.tax_invoice_title_fmt, sale.invoiceNumber))
-                            } else {
-                                val result = PdfReportGenerator.generateSaleInvoicePdf(context, sale, businessProfile)
-                                if (result.isSuccess && result.uri != null) {
-                                    exportedUri = result.uri
-                                    PdfReportGenerator.sharePdfFile(context, result.uri, context.getString(R.string.tax_invoice_title_fmt, sale.invoiceNumber))
-                                } else {
-                                    val sendIntent: Intent = Intent().apply {
-                                        action = Intent.ACTION_SEND
-                                        putExtra(Intent.EXTRA_TEXT, receiptText)
-                                        type = "text/plain"
-                                    }
-                                    val shareIntent = Intent.createChooser(sendIntent, "Share Receipt").apply {
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                    context.startActivity(shareIntent)
-                                }
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 44.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = stringResource(R.string.share),
                                 maxLines = 1,

@@ -558,17 +558,8 @@ fun SecurityPinModal(
     val coroutineScope = rememberCoroutineScope()
     val shakeOffset = remember { Animatable(0f) }
 
-    val accentColor = when (targetModule) {
-        AppModule.SHOPPING -> LoyverseGreenDark
-        AppModule.SHIFT_REPORT -> PrimaryIndigo
-        null -> PrimaryIndigo
-    }
-
-    val targetBadgeBg = when (targetModule) {
-        AppModule.SHOPPING -> Color(0xFFECFDF5)
-        AppModule.SHIFT_REPORT -> Color(0xFFEFF6FF)
-        null -> Color(0xFFF1F5F9)
-    }
+    val accentColor = PrimaryIndigo
+    val targetBadgeBg = Color(0xFFEFF6FF)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -676,16 +667,10 @@ fun SecurityPinModal(
 
                     // Target Module Transition Badge
                     if (targetModule != null) {
-                        val (targetNameRes, targetIcon) = when (targetModule) {
-                            AppModule.SHOPPING -> Pair(
-                                R.string.shopping_pos_module,
-                                Icons.Outlined.PointOfSale
-                            )
-                            AppModule.SHIFT_REPORT -> Pair(
-                                R.string.shift_report_module,
-                                Icons.Outlined.Assessment
-                            )
-                        }
+                        val (targetNameRes, targetIcon) = Pair(
+                            R.string.shift_report_module,
+                            Icons.Outlined.Assessment
+                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
@@ -991,6 +976,74 @@ fun SecurityPinModal(
         }
     }
 }
+
+@Composable
+fun LoyverseMenuItemRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    onClick: () -> Unit = {}
+) {
+    Surface(
+        onClick = onClick,
+        color = PureWhite,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFF1F5F9), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color(0xFF475569),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp
+                    ),
+                    color = Color(0xFF0F172A)
+                )
+                if (!subtitle.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp
+                        ),
+                        color = Color(0xFF64748B)
+                    )
+                }
+            }
+            if (trailing != null) {
+                trailing()
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
 
 
 

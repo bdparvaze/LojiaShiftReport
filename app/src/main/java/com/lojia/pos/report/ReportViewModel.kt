@@ -6,7 +6,6 @@ import com.lojia.pos.util.*
 import com.lojia.pos.ui.common.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.auth.*
-import com.lojia.pos.pos.*
 import com.lojia.pos.report.*
 import com.lojia.pos.settings.*
 import com.lojia.pos.sync.*
@@ -796,31 +795,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun removePurchasedItem(id: String) {
         purchasedItems.value = purchasedItems.value.filter { it.id != id }
-    }
-
-    // Auto-fill from active POS Sales
-    fun autoFillFromPosSales(salesList: List<POSSale>) {
-        if (salesList.isEmpty()) {
-            viewModelScope.launch {
-                _uiMessage.emit(UiText.StringResource(R.string.no_pos_sales_available))
-            }
-            return
-        }
-        val cashTotal = salesList.filter { it.paymentMethod == "CASH" }.sumOf { it.totalAmount }
-        val cardTotal = salesList.filter { it.paymentMethod != "CASH" }.sumOf { it.totalAmount }
-
-        grossCashInput.value = "%.2f".format(cashTotal)
-        madaPaymentsInput.value = "%.2f".format(cardTotal)
-        viewModelScope.launch {
-            _uiMessage.emit(
-                UiText.StringResource(
-                    R.string.toast_autofill_pos_sales,
-                    salesList.size,
-                    "%.2f".format(cashTotal),
-                    "%.2f".format(cardTotal)
-                )
-            )
-        }
     }
 
     init {

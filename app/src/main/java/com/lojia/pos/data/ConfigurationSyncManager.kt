@@ -127,8 +127,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     }
 
     private fun loadInitialModule(): AppModule {
-        val moduleName = prefs.getString(KEY_ACTIVE_MODULE, AppModule.SHOPPING.name) ?: AppModule.SHOPPING.name
-        return if (moduleName == AppModule.SHIFT_REPORT.name) AppModule.SHIFT_REPORT else AppModule.SHOPPING
+        return AppModule.SHIFT_REPORT
     }
 
     private suspend fun syncStoredSettingsFromDb() {
@@ -172,7 +171,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             // Restore active module
             val dbModule = reportDao.getSetting(KEY_ACTIVE_MODULE)
             if (!dbModule.isNullOrBlank()) {
-                val mod = if (dbModule == AppModule.SHIFT_REPORT.name) AppModule.SHIFT_REPORT else AppModule.SHOPPING
+                val mod = AppModule.SHIFT_REPORT
                 if (mod != _currentModule.value) {
                     _currentModule.value = mod
                     prefs.edit().putString(KEY_ACTIVE_MODULE, mod.name).apply()
@@ -211,7 +210,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                             }
                         }
                         KEY_ACTIVE_MODULE -> {
-                            val mod = if (setting.value == AppModule.SHIFT_REPORT.name) AppModule.SHIFT_REPORT else AppModule.SHOPPING
+                            val mod = AppModule.SHIFT_REPORT
                             if (mod != _currentModule.value) {
                                 _currentModule.value = mod
                                 prefs.edit().putString(KEY_ACTIVE_MODULE, mod.name).apply()

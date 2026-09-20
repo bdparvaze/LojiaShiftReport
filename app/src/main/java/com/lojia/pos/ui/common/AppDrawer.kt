@@ -36,20 +36,19 @@ import com.lojia.pos.ui.theme.*
 
 @Composable
 fun MainAppDrawer(
-    activeModule: AppModule,
+    activeModule: AppModule = AppModule.SHIFT_REPORT,
     navState: AppNavState,
     currentLanguage: AppLanguage,
     businessProfile: BusinessProfile?,
     userProfile: UserProfile?,
     onNavigate: (AppNavState) -> Unit,
-    onSwitchModule: (AppModule) -> Unit,
-    onOpenShopMenu: (String) -> Unit,
-    onOpenReportMenu: (String) -> Unit,
+    onSwitchModule: (AppModule) -> Unit = {},
+    onOpenShopMenu: (String) -> Unit = {},
+    onOpenReportMenu: (String) -> Unit = {},
     onCloseDrawer: () -> Unit,
     onLockApp: () -> Unit
 ) {
-    val isShopActive = activeModule == AppModule.SHOPPING
-    val headerBgColor = if (isShopActive) LoyverseGreenDark else PrimaryIndigoDark
+    val headerBgColor = PrimaryIndigoDark
 
     ModalDrawerSheet(
         drawerContainerColor = PureWhite,
@@ -78,7 +77,7 @@ fun MainAppDrawer(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isShopActive) Icons.Default.ShoppingCart else Icons.Default.Assessment,
+                        imageVector = Icons.Default.Assessment,
                         contentDescription = null,
                         tint = PureWhite,
                         modifier = Modifier.size(20.dp)
@@ -87,7 +86,7 @@ fun MainAppDrawer(
 
                 Column(modifier = Modifier.weight(1f, fill = false)) {
                     AutoText(
-                        text = if (isShopActive) "🛒 Shop Module" else "📊 Shift Report",
+                        text = "📊 Shift Report",
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
@@ -118,7 +117,7 @@ fun MainAppDrawer(
                     color = PureWhite.copy(alpha = 0.22f)
                 ) {
                     AutoText(
-                        text = if (isShopActive) "Shop & POS" else "Shift Report",
+                        text = "Shift Report",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = PureWhite,
                             fontWeight = FontWeight.SemiBold,
@@ -153,351 +152,141 @@ fun MainAppDrawer(
                 .padding(vertical = 6.dp, horizontal = 8.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            if (isShopActive) {
-                // ==========================================
-                // 🛒 SHOP MODULE - PRIMARY SCREENS (EXACT 14 ITEMS)
-                // ==========================================
-                // 1. Sales
-                DrawerMenuItem(
-                    title = "Sales",
-                    icon = Icons.Outlined.PointOfSale,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.Pos,
-                    onClick = {
-                        onNavigate(AppNavState.Shop.Pos)
-                        onCloseDrawer()
-                    }
-                )
+            // ===============================================
+            // 📊 SHIFT REPORT MODULE - PRIMARY SCREENS
+            // ===============================================
+            // 1. Analytics
+            DrawerMenuItem(
+                title = "Analytics",
+                icon = Icons.Outlined.Insights,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.Analytics,
+                onClick = {
+                    onNavigate(AppNavState.ShiftReportState.Analytics)
+                    onCloseDrawer()
+                }
+            )
 
-                // 2. Receipts
-                DrawerMenuItem(
-                    title = "Receipts",
-                    icon = Icons.AutoMirrored.Outlined.ReceiptLong,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "receipts",
-                    onClick = {
-                        onOpenShopMenu("receipts")
-                        onNavigate(AppNavState.Shop.SettingsDetail("receipts"))
-                        onCloseDrawer()
-                    }
-                )
+            // 2. Shift Report
+            DrawerMenuItem(
+                title = "Shift Report",
+                icon = Icons.Outlined.Assessment,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.Reports,
+                onClick = {
+                    onNavigate(AppNavState.ShiftReportState.Reports)
+                    onCloseDrawer()
+                }
+            )
 
-                // 3. Shift
-                DrawerMenuItem(
-                    title = "Shift",
-                    icon = Icons.Outlined.LockClock,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && (navState.section == "shift" || navState.section == "daily_shift_report"),
-                    onClick = {
-                        onOpenShopMenu("shift")
-                        onNavigate(AppNavState.Shop.SettingsDetail("shift"))
-                        onCloseDrawer()
-                    }
-                )
+            // 3. Cashier
+            DrawerMenuItem(
+                title = "Cashier",
+                icon = Icons.Outlined.Badge,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "cashiers",
+                onClick = {
+                    onOpenReportMenu("cashiers")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("cashiers"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 4. Items
-                DrawerMenuItem(
-                    title = "Items",
-                    icon = Icons.Outlined.FormatListBulleted,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "items",
-                    onClick = {
-                        onOpenShopMenu("items")
-                        onNavigate(AppNavState.Shop.SettingsDetail("items"))
-                        onCloseDrawer()
-                    }
-                )
+            // 4. Profile
+            DrawerMenuItem(
+                title = "Profile",
+                icon = Icons.Outlined.Person,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "profile",
+                onClick = {
+                    onOpenReportMenu("profile")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("profile"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 5. Cashier
-                DrawerMenuItem(
-                    title = "Cashier",
-                    icon = Icons.Outlined.Badge,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && (navState.section == "cashiers" || navState.section == "cashier"),
-                    onClick = {
-                        onOpenShopMenu("cashiers")
-                        onNavigate(AppNavState.Shop.SettingsDetail("cashiers"))
-                        onCloseDrawer()
-                    }
-                )
+            // 5. Security
+            DrawerMenuItem(
+                title = "Security",
+                icon = Icons.Outlined.Shield,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "security",
+                onClick = {
+                    onOpenReportMenu("security")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("security"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 6. Profile
-                DrawerMenuItem(
-                    title = "Profile",
-                    icon = Icons.Outlined.Person,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "profile",
-                    onClick = {
-                        onOpenShopMenu("profile")
-                        onNavigate(AppNavState.Shop.SettingsDetail("profile"))
-                        onCloseDrawer()
-                    }
-                )
+            // 6. Language
+            DrawerMenuItem(
+                title = "Language",
+                icon = Icons.Outlined.Language,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "language",
+                onClick = {
+                    onOpenReportMenu("language")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("language"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 7. Security
-                DrawerMenuItem(
-                    title = "Security",
-                    icon = Icons.Outlined.Shield,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "security",
-                    onClick = {
-                        onOpenShopMenu("security")
-                        onNavigate(AppNavState.Shop.SettingsDetail("security"))
-                        onCloseDrawer()
-                    }
-                )
+            // 7. Backup
+            DrawerMenuItem(
+                title = "Backup",
+                icon = Icons.Outlined.CloudUpload,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "backup",
+                onClick = {
+                    onOpenReportMenu("backup")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("backup"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 8. Settings
-                DrawerMenuItem(
-                    title = "Settings",
-                    icon = Icons.Outlined.Settings,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && (navState.section == "settings_sub" || navState.section == "settings"),
-                    onClick = {
-                        onOpenShopMenu("settings_sub")
-                        onNavigate(AppNavState.Shop.SettingsDetail("settings_sub"))
-                        onCloseDrawer()
-                    }
-                )
+            // 8. Support
+            DrawerMenuItem(
+                title = "Support",
+                icon = Icons.Outlined.HeadsetMic,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "support",
+                onClick = {
+                    onOpenReportMenu("support")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("support"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 9. Back office
-                DrawerMenuItem(
-                    title = "Back office",
-                    icon = Icons.Outlined.Business,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "back_office",
-                    onClick = {
-                        onOpenShopMenu("back_office")
-                        onNavigate(AppNavState.Shop.SettingsDetail("back_office"))
-                        onCloseDrawer()
-                    }
-                )
+            // 9. About
+            DrawerMenuItem(
+                title = "About",
+                icon = Icons.Outlined.Info,
+                activeColor = PrimaryIndigo,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "about",
+                onClick = {
+                    onOpenReportMenu("about")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("about"))
+                    onCloseDrawer()
+                }
+            )
 
-                // 10. Apps
-                DrawerMenuItem(
-                    title = "Apps",
-                    icon = Icons.Outlined.Apps,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "apps",
-                    onClick = {
-                        onOpenShopMenu("apps")
-                        onNavigate(AppNavState.Shop.SettingsDetail("apps"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 11. Language
-                DrawerMenuItem(
-                    title = "Language",
-                    icon = Icons.Outlined.Language,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "language",
-                    onClick = {
-                        onOpenShopMenu("language")
-                        onNavigate(AppNavState.Shop.SettingsDetail("language"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 12. Support
-                DrawerMenuItem(
-                    title = "Support",
-                    icon = Icons.Outlined.HeadsetMic,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "support",
-                    onClick = {
-                        onOpenShopMenu("support")
-                        onNavigate(AppNavState.Shop.SettingsDetail("support"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 13. About
-                DrawerMenuItem(
-                    title = "About",
-                    icon = Icons.Outlined.Info,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "about",
-                    onClick = {
-                        onOpenShopMenu("about")
-                        onNavigate(AppNavState.Shop.SettingsDetail("about"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 14. Switch Module
-                DrawerMenuItem(
-                    title = "Switch Module",
-                    icon = Icons.Outlined.SwapHoriz,
-                    activeColor = LoyverseGreenPrimary,
-                    isSelected = false,
-                    onClick = {
-                        onSwitchModule(AppModule.SHIFT_REPORT)
-                        onCloseDrawer()
-                    }
-                )
-
-                // 15. Log Out
-                DrawerMenuItem(
-                    title = "Log Out",
-                    icon = Icons.AutoMirrored.Filled.ExitToApp,
-                    activeColor = Color(0xFFDC2626),
-                    isSelected = false,
-                    onClick = {
-                        onCloseDrawer()
-                        onLockApp()
-                    }
-                )
-
-            } else {
-                // ===============================================
-                // 📊 SHIFT REPORT MODULE - PRIMARY SCREENS (EXACT 10 ITEMS)
-                // ===============================================
-                // 1. Analytics
-                DrawerMenuItem(
-                    title = "Analytics",
-                    icon = Icons.Outlined.Insights,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.Analytics,
-                    onClick = {
-                        onNavigate(AppNavState.ShiftReportState.Analytics)
-                        onCloseDrawer()
-                    }
-                )
-
-                // 2. Shift Report
-                DrawerMenuItem(
-                    title = "Shift Report",
-                    icon = Icons.Outlined.Assessment,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.Reports,
-                    onClick = {
-                        onNavigate(AppNavState.ShiftReportState.Reports)
-                        onCloseDrawer()
-                    }
-                )
-
-                // 3. Cashier
-                DrawerMenuItem(
-                    title = "Cashier",
-                    icon = Icons.Outlined.Badge,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "cashiers",
-                    onClick = {
-                        onOpenReportMenu("cashiers")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("cashiers"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 4. Profile
-                DrawerMenuItem(
-                    title = "Profile",
-                    icon = Icons.Outlined.Person,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "profile",
-                    onClick = {
-                        onOpenReportMenu("profile")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("profile"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 5. Security
-                DrawerMenuItem(
-                    title = "Security",
-                    icon = Icons.Outlined.Shield,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "security",
-                    onClick = {
-                        onOpenReportMenu("security")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("security"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 6. Language
-                DrawerMenuItem(
-                    title = "Language",
-                    icon = Icons.Outlined.Language,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "language",
-                    onClick = {
-                        onOpenReportMenu("language")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("language"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 7. Backup
-                DrawerMenuItem(
-                    title = "Backup",
-                    icon = Icons.Outlined.CloudUpload,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "backup",
-                    onClick = {
-                        onOpenReportMenu("backup")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("backup"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 8. Support
-                DrawerMenuItem(
-                    title = "Support",
-                    icon = Icons.Outlined.HeadsetMic,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "support",
-                    onClick = {
-                        onOpenReportMenu("support")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("support"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 9. About
-                DrawerMenuItem(
-                    title = "About",
-                    icon = Icons.Outlined.Info,
-                    activeColor = PrimaryIndigo,
-                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "about",
-                    onClick = {
-                        onOpenReportMenu("about")
-                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("about"))
-                        onCloseDrawer()
-                    }
-                )
-
-                // 10. Switch Module
-                DrawerMenuItem(
-                    title = "Switch Module",
-                    icon = Icons.Outlined.SwapHoriz,
-                    activeColor = PrimaryIndigo,
-                    isSelected = false,
-                    onClick = {
-                        onSwitchModule(AppModule.SHOPPING)
-                        onCloseDrawer()
-                    }
-                )
-
-                // 11. Log Out
-                DrawerMenuItem(
-                    title = "Log Out",
-                    icon = Icons.AutoMirrored.Filled.ExitToApp,
-                    activeColor = Color(0xFFDC2626),
-                    isSelected = false,
-                    onClick = {
-                        onCloseDrawer()
-                        onLockApp()
-                    }
-                )
-            }
+            // 10. Log Out
+            DrawerMenuItem(
+                title = "Log Out",
+                icon = Icons.AutoMirrored.Filled.ExitToApp,
+                activeColor = Color(0xFFDC2626),
+                isSelected = false,
+                onClick = {
+                    onCloseDrawer()
+                    onLockApp()
+                }
+            )
         }
     }
 }
 
 /**
- * Drawer item representing a Loyverse-style menu entry with icon and title.
+ * Drawer item representing a menu entry with icon and title.
  * Automatically translates the title into the active world language using AutoText.
  */
 @Composable

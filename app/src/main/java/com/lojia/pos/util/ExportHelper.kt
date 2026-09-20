@@ -1,40 +1,20 @@
 package com.lojia.pos.util
 
-
 import com.lojia.pos.R
-
-
 import android.content.Context
-
 import android.content.Intent
-
 import android.graphics.Canvas
-
 import android.graphics.Color
-
 import android.graphics.Paint
-
 import android.graphics.pdf.PdfDocument
-
 import android.net.Uri
-
 import android.widget.Toast
-
-
 import androidx.core.content.FileProvider
-
-import com.lojia.pos.data.POSSale
-
 import com.lojia.pos.data.ShiftReport
-
 import java.io.File
-
 import java.io.FileOutputStream
-
 import java.io.FileWriter
-
 import java.text.SimpleDateFormat
-
 import java.util.*
 
 object ExportHelper {
@@ -62,30 +42,7 @@ object ExportHelper {
         return csvFile
     }
 
-    fun exportSalesToCsv(
-        context: Context,
-        sales: List<POSSale>,
-        currency: String = "SAR"
-    ): File {
-        val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val csvFile = File(exportDir, "Sales_Ledger_$timeStamp.csv")
-
-        FileWriter(csvFile).use { writer ->
-            writer.append("Invoice No,Cashier,Customer,Payment Method,Subtotal ($currency),VAT ($currency),Total Amount ($currency),Timestamp\n")
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-
-            for (s in sales) {
-                val dateStr = dateFormat.format(Date(s.timestamp))
-                writer.append("${s.invoiceNumber},\"${s.cashierName}\",\"${s.customerName}\",${s.paymentMethod},${s.subtotal},${s.vatAmount},${s.totalAmount},$dateStr\n")
-            }
-            writer.flush()
-        }
-        return csvFile
-    }
-
     fun exportReportsAsCsv(context: Context, reports: List<ShiftReport>, currency: String = "SAR") {
-        val actualCurrency = if (currency == "SAR") context.getString(R.string.currency_unit) else currency
         try {
             val file = exportShiftReportsToCsv(context, reports, currency)
             shareExportedFile(context, file, "text/csv", "Export Shift Reports CSV")
@@ -95,7 +52,6 @@ object ExportHelper {
     }
 
     fun exportReportsAsPdf(context: Context, reports: List<ShiftReport>, currency: String = "SAR") {
-        val actualCurrency = if (currency == "SAR") context.getString(R.string.currency_unit) else currency
         try {
             val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())

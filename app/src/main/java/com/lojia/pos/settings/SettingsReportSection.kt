@@ -368,13 +368,6 @@ fun SettingsReportSection(
                     subtitle = stringResource(R.string.support_subtitle),
                     onClick = { reportViewModel.selectReportSettingsMenu("support") }
                 )
-
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.SwapHoriz,
-                    title = "Switch Module",
-                    subtitle = stringResource(R.string.switch_module_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("switch_module") }
-                )
             }
 
             // =================================================================
@@ -1450,24 +1443,10 @@ fun SettingsReportSection(
             }
 
             // =================================================================
-            // 7. SWITCH MODULE
+            // 7. SWITCH MODULE (Not needed - Single Module)
             // =================================================================
             "switch_module" -> {
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Assessment,
-                    title = stringResource(R.string.title_shift_report_module),
-                    subtitle = stringResource(R.string.desc_currently_active_shift_report),
-                    trailing = {
-                        Icon(Icons.Outlined.CheckCircle, contentDescription = stringResource(R.string.active), tint = Color(0xFF4F46E5))
-                    },
-                    onClick = { onSwitchModule(AppModule.SHIFT_REPORT) }
-                )
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Storefront,
-                    title = stringResource(R.string.title_shop_module),
-                    subtitle = stringResource(R.string.desc_switch_to_shop),
-                    onClick = { onSwitchModule(AppModule.SHOPPING) }
-                )
+                // Handled / Single module mode
             }
         }
     }
@@ -1727,12 +1706,7 @@ fun SettingsReportSection(
                                     color = Color(0xFF92400E)
                                 )
                                 Text(
-                                    text = "• Products: ${s.productsCount} | Categories: ${s.categoriesCount}",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF92400E)
-                                )
-                                Text(
-                                    text = "• Sales: ${s.salesCount} | Cashiers: ${s.cashiersCount}",
+                                    text = "• Shift Sessions: ${s.shiftSessionsCount} | Cashiers: ${s.cashiersCount}",
                                     fontSize = 12.sp,
                                     color = Color(0xFF92400E)
                                 )
@@ -1983,12 +1957,7 @@ fun SettingsReportSection(
                                     color = Color(0xFF92400E)
                                 )
                                 Text(
-                                    text = "• Products: ${s.productsCount} | Categories: ${s.categoriesCount}",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF92400E)
-                                )
-                                Text(
-                                    text = "• Sales: ${s.salesCount} | Cashiers: ${s.cashiersCount}",
+                                    text = "• Shift Sessions: ${s.shiftSessionsCount} | Cashiers: ${s.cashiersCount}",
                                     fontSize = 12.sp,
                                     color = Color(0xFF92400E)
                                 )

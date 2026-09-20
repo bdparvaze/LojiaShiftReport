@@ -10,7 +10,6 @@ import com.lojia.pos.util.*
 import com.lojia.pos.ui.common.*
 import com.lojia.pos.ui.theme.*
 import com.lojia.pos.auth.*
-import com.lojia.pos.pos.*
 import com.lojia.pos.report.*
 import com.lojia.pos.settings.*
 
@@ -108,9 +107,6 @@ fun SettingsCommonDialogs(
     onDismissSupportTicket: () -> Unit,
     showTestPrintDialog: Boolean,
     onDismissTestPrint: () -> Unit,
-    showBarcodeScannerDialog: Boolean,
-    onDismissBarcodeScanner: () -> Unit,
-    onBarcodeScanned: (String) -> Unit,
     userProfile: UserProfile? = null
 ) {
     val context = LocalContext.current
@@ -324,59 +320,6 @@ fun SettingsCommonDialogs(
             },
             confirmButton = {
                 Button(onClick = onDismissTestPrint) { Text(stringResource(R.string.ok)) }
-            }
-        )
-    }
-
-    // Barcode Scanner Dialog
-    if (showBarcodeScannerDialog) {
-        var manualBarcode by remember { mutableStateOf("") }
-
-        AlertDialog(
-            onDismissRequest = onDismissBarcodeScanner,
-            icon = { Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp)) },
-            title = { Text(stringResource(R.string.barcode_scanner_1), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.align_barcode_with_camera), fontSize = 13.sp, color = TextSecondaryLight)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFF1E293B),
-                        modifier = Modifier.fillMaxWidth().height(120.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(stringResource(R.string.camera_viewfinder_active), color = Color(0xFF94A3B8), fontSize = 12.sp)
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    LojiaTextField(
-                        value = manualBarcode,
-                        onValueChange = { manualBarcode = it },
-                        label = { Text(stringResource(R.string.enter_barcode_eg_1001)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (manualBarcode.isNotBlank()) {
-                            onBarcodeScanned(manualBarcode)
-                            onDismissBarcodeScanner()
-                        }
-                    }
-                ) {
-                    Text(stringResource(R.string.lookup_item))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissBarcodeScanner) { Text(stringResource(R.string.cancel_18)) }
             }
         )
     }

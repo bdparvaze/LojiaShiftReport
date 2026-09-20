@@ -133,7 +133,6 @@ fun RechartsAreaTrendCanvas(
     data: List<DaySalesData>,
     currency: String,
     hoveredIndex: Int?,
-    showPosBreakdown: Boolean,
     showShiftBreakdown: Boolean,
     onHoverIndexChange: (Int?) -> Unit
 ) {
@@ -194,19 +193,6 @@ fun RechartsAreaTrendCanvas(
             val x = index * stepX
             val y = paddingTop + chartHeight - (value / maxRevenue).toFloat() * chartHeight
             return Offset(x, y.coerceIn(paddingTop, paddingTop + chartHeight))
-        }
-
-        if (showPosBreakdown) {
-            val posPath = Path()
-            data.forEachIndexed { idx, d ->
-                val pt = getPoint(idx, d.posSales)
-                if (idx == 0) posPath.moveTo(pt.x, pt.y) else posPath.lineTo(pt.x, pt.y)
-            }
-            drawPath(
-                path = posPath,
-                color = AccentEmerald.copy(alpha = 0.5f),
-                style = Stroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f), 0f))
-            )
         }
 
         if (showShiftBreakdown) {
