@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Lojia" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnPrimary">#ffffffff</item>
+        <item name="colorOnSecondary">#ffffffff</item>
+        <item name="colorOnError">#ffffffff</item>
+        <item name="materialButtonStyle">@style/PrimaryButton</item>
+        <item name="textAppearanceHeadline1">@style/TextH1</item>
+    </style>
+
+    <style name="AppTheme" parent="Theme.Lojia" />
+
+    <style name="PrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:textColor">#ffffffff</item>
+        <item name="backgroundTint">@color/primary</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <style name="TextH1" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+</resources>

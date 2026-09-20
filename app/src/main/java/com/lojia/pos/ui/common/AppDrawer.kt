@@ -1,0 +1,542 @@
+package com.lojia.pos.ui.common
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.lojia.pos.R
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.lojia.pos.AppNavState
+import com.lojia.pos.data.AppLanguage
+import com.lojia.pos.data.AppModule
+import com.lojia.pos.data.BusinessProfile
+import com.lojia.pos.data.UserProfile
+import com.lojia.pos.ui.theme.*
+
+@Composable
+fun MainAppDrawer(
+    activeModule: AppModule,
+    navState: AppNavState,
+    currentLanguage: AppLanguage,
+    businessProfile: BusinessProfile?,
+    userProfile: UserProfile?,
+    onNavigate: (AppNavState) -> Unit,
+    onSwitchModule: (AppModule) -> Unit,
+    onOpenShopMenu: (String) -> Unit,
+    onOpenReportMenu: (String) -> Unit,
+    onCloseDrawer: () -> Unit,
+    onLockApp: () -> Unit
+) {
+    val isShopActive = activeModule == AppModule.SHOPPING
+    val headerBgColor = if (isShopActive) LoyverseGreenDark else PrimaryIndigoDark
+
+    ModalDrawerSheet(
+        drawerContainerColor = PureWhite,
+        modifier = Modifier
+            .widthIn(min = 195.dp, max = 225.dp)
+            .fillMaxHeight()
+            .testTag("main_navigation_drawer")
+    ) {
+        // Top Header Banner
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(headerBgColor)
+                .statusBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(PureWhite.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isShopActive) Icons.Default.ShoppingCart else Icons.Default.Assessment,
+                        contentDescription = null,
+                        tint = PureWhite,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f, fill = false)) {
+                    AutoText(
+                        text = if (isShopActive) "🛒 Shop Module" else "📊 Shift Report",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = PureWhite
+                        ),
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = userProfile?.fullName?.ifBlank { "Store Owner" } ?: "Store Owner",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = PureWhite.copy(alpha = 0.85f),
+                            fontSize = 11.sp
+                        ),
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Role and Active Module Badges
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = PureWhite.copy(alpha = 0.22f)
+                ) {
+                    AutoText(
+                        text = if (isShopActive) "Shop & POS" else "Shift Report",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = PureWhite,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp
+                        ),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = PureWhite.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = userProfile?.currentRole ?: "ADMIN",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = PureWhite,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 10.sp
+                        ),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                    )
+                }
+            }
+        }
+
+        // Scrollable Drawer Menu List: Clean Loyverse-style navigation items
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 6.dp, horizontal = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            if (isShopActive) {
+                // ==========================================
+                // 🛒 SHOP MODULE - PRIMARY SCREENS (EXACT 14 ITEMS)
+                // ==========================================
+                // 1. Sales
+                DrawerMenuItem(
+                    title = "Sales",
+                    icon = Icons.Outlined.PointOfSale,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.Pos,
+                    onClick = {
+                        onNavigate(AppNavState.Shop.Pos)
+                        onCloseDrawer()
+                    }
+                )
+
+                // 2. Receipts
+                DrawerMenuItem(
+                    title = "Receipts",
+                    icon = Icons.AutoMirrored.Outlined.ReceiptLong,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "receipts",
+                    onClick = {
+                        onOpenShopMenu("receipts")
+                        onNavigate(AppNavState.Shop.SettingsDetail("receipts"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 3. Shift
+                DrawerMenuItem(
+                    title = "Shift",
+                    icon = Icons.Outlined.LockClock,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && (navState.section == "shift" || navState.section == "daily_shift_report"),
+                    onClick = {
+                        onOpenShopMenu("shift")
+                        onNavigate(AppNavState.Shop.SettingsDetail("shift"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 4. Items
+                DrawerMenuItem(
+                    title = "Items",
+                    icon = Icons.Outlined.FormatListBulleted,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "items",
+                    onClick = {
+                        onOpenShopMenu("items")
+                        onNavigate(AppNavState.Shop.SettingsDetail("items"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 5. Cashier
+                DrawerMenuItem(
+                    title = "Cashier",
+                    icon = Icons.Outlined.Badge,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && (navState.section == "cashiers" || navState.section == "cashier"),
+                    onClick = {
+                        onOpenShopMenu("cashiers")
+                        onNavigate(AppNavState.Shop.SettingsDetail("cashiers"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 6. Profile
+                DrawerMenuItem(
+                    title = "Profile",
+                    icon = Icons.Outlined.Person,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "profile",
+                    onClick = {
+                        onOpenShopMenu("profile")
+                        onNavigate(AppNavState.Shop.SettingsDetail("profile"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 7. Security
+                DrawerMenuItem(
+                    title = "Security",
+                    icon = Icons.Outlined.Shield,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "security",
+                    onClick = {
+                        onOpenShopMenu("security")
+                        onNavigate(AppNavState.Shop.SettingsDetail("security"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 8. Settings
+                DrawerMenuItem(
+                    title = "Settings",
+                    icon = Icons.Outlined.Settings,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && (navState.section == "settings_sub" || navState.section == "settings"),
+                    onClick = {
+                        onOpenShopMenu("settings_sub")
+                        onNavigate(AppNavState.Shop.SettingsDetail("settings_sub"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 9. Back office
+                DrawerMenuItem(
+                    title = "Back office",
+                    icon = Icons.Outlined.Business,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "back_office",
+                    onClick = {
+                        onOpenShopMenu("back_office")
+                        onNavigate(AppNavState.Shop.SettingsDetail("back_office"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 10. Apps
+                DrawerMenuItem(
+                    title = "Apps",
+                    icon = Icons.Outlined.Apps,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "apps",
+                    onClick = {
+                        onOpenShopMenu("apps")
+                        onNavigate(AppNavState.Shop.SettingsDetail("apps"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 11. Language
+                DrawerMenuItem(
+                    title = "Language",
+                    icon = Icons.Outlined.Language,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "language",
+                    onClick = {
+                        onOpenShopMenu("language")
+                        onNavigate(AppNavState.Shop.SettingsDetail("language"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 12. Support
+                DrawerMenuItem(
+                    title = "Support",
+                    icon = Icons.Outlined.HeadsetMic,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "support",
+                    onClick = {
+                        onOpenShopMenu("support")
+                        onNavigate(AppNavState.Shop.SettingsDetail("support"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 13. About
+                DrawerMenuItem(
+                    title = "About",
+                    icon = Icons.Outlined.Info,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = navState is AppNavState.Shop.SettingsDetail && navState.section == "about",
+                    onClick = {
+                        onOpenShopMenu("about")
+                        onNavigate(AppNavState.Shop.SettingsDetail("about"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 14. Switch Module
+                DrawerMenuItem(
+                    title = "Switch Module",
+                    icon = Icons.Outlined.SwapHoriz,
+                    activeColor = LoyverseGreenPrimary,
+                    isSelected = false,
+                    onClick = {
+                        onSwitchModule(AppModule.SHIFT_REPORT)
+                        onCloseDrawer()
+                    }
+                )
+
+                // 15. Log Out
+                DrawerMenuItem(
+                    title = "Log Out",
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
+                    activeColor = Color(0xFFDC2626),
+                    isSelected = false,
+                    onClick = {
+                        onCloseDrawer()
+                        onLockApp()
+                    }
+                )
+
+            } else {
+                // ===============================================
+                // 📊 SHIFT REPORT MODULE - PRIMARY SCREENS (EXACT 10 ITEMS)
+                // ===============================================
+                // 1. Analytics
+                DrawerMenuItem(
+                    title = "Analytics",
+                    icon = Icons.Outlined.Insights,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.Analytics,
+                    onClick = {
+                        onNavigate(AppNavState.ShiftReportState.Analytics)
+                        onCloseDrawer()
+                    }
+                )
+
+                // 2. Shift Report
+                DrawerMenuItem(
+                    title = "Shift Report",
+                    icon = Icons.Outlined.Assessment,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.Reports,
+                    onClick = {
+                        onNavigate(AppNavState.ShiftReportState.Reports)
+                        onCloseDrawer()
+                    }
+                )
+
+                // 3. Cashier
+                DrawerMenuItem(
+                    title = "Cashier",
+                    icon = Icons.Outlined.Badge,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "cashiers",
+                    onClick = {
+                        onOpenReportMenu("cashiers")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("cashiers"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 4. Profile
+                DrawerMenuItem(
+                    title = "Profile",
+                    icon = Icons.Outlined.Person,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "profile",
+                    onClick = {
+                        onOpenReportMenu("profile")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("profile"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 5. Security
+                DrawerMenuItem(
+                    title = "Security",
+                    icon = Icons.Outlined.Shield,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "security",
+                    onClick = {
+                        onOpenReportMenu("security")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("security"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 6. Language
+                DrawerMenuItem(
+                    title = "Language",
+                    icon = Icons.Outlined.Language,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "language",
+                    onClick = {
+                        onOpenReportMenu("language")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("language"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 7. Backup
+                DrawerMenuItem(
+                    title = "Backup",
+                    icon = Icons.Outlined.CloudUpload,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "backup",
+                    onClick = {
+                        onOpenReportMenu("backup")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("backup"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 8. Support
+                DrawerMenuItem(
+                    title = "Support",
+                    icon = Icons.Outlined.HeadsetMic,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "support",
+                    onClick = {
+                        onOpenReportMenu("support")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("support"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 9. About
+                DrawerMenuItem(
+                    title = "About",
+                    icon = Icons.Outlined.Info,
+                    activeColor = PrimaryIndigo,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "about",
+                    onClick = {
+                        onOpenReportMenu("about")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("about"))
+                        onCloseDrawer()
+                    }
+                )
+
+                // 10. Switch Module
+                DrawerMenuItem(
+                    title = "Switch Module",
+                    icon = Icons.Outlined.SwapHoriz,
+                    activeColor = PrimaryIndigo,
+                    isSelected = false,
+                    onClick = {
+                        onSwitchModule(AppModule.SHOPPING)
+                        onCloseDrawer()
+                    }
+                )
+
+                // 11. Log Out
+                DrawerMenuItem(
+                    title = "Log Out",
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
+                    activeColor = Color(0xFFDC2626),
+                    isSelected = false,
+                    onClick = {
+                        onCloseDrawer()
+                        onLockApp()
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Drawer item representing a Loyverse-style menu entry with icon and title.
+ * Automatically translates the title into the active world language using AutoText.
+ */
+@Composable
+private fun DrawerMenuItem(
+    title: String,
+    icon: ImageVector,
+    activeColor: Color,
+    isSelected: Boolean = false,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) activeColor.copy(alpha = 0.12f) else Color.Transparent,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (isSelected) activeColor else Color(0xFF555555),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            AutoText(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 14.sp,
+                    color = if (isSelected) activeColor else Color(0xFF212121)
+                ),
+                maxLines = 1
+            )
+        }
+    }
+}

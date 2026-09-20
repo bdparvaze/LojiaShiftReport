@@ -1,0 +1,6 @@
+{
+  "name": "Lojia system",
+  "description": "Offline-first POS and shift report management app for single-store retail and food service on Android, featuring local-only Room database storage as primary source of truth, optional background Firebase cloud sync, shift reconciliation, receipt generation, and multi-language support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
