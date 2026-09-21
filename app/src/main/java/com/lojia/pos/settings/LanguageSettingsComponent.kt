@@ -80,8 +80,6 @@ fun LanguageSettingsComponent(
         AppLanguage.fromCode(datastoreData.currentCode)
     }
 
-    var searchQuery by remember { mutableStateOf("") }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -89,59 +87,15 @@ fun LanguageSettingsComponent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // =========================================================================
-        // SEARCH SECTION FOR ALL 37+ WORLD LANGUAGES
+        // LANGUAGE CATALOG LIST (English, Bengali, Arabic)
         // =========================================================================
-        LojiaTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = {
-                Text(
-                    text = stringResource(R.string.search_world_languages),
-                    fontSize = 14.sp
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { searchQuery = "" }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Close,
-                            contentDescription = stringResource(R.string.btn_clear),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("language_search_field")
-        )
-
-        // =========================================================================
-        // LANGUAGE CATALOG LIST
-        // =========================================================================
-        val filteredLanguages = remember(searchQuery) {
-            AppLanguage.entries.filter { lang ->
-                searchQuery.isBlank() ||
-                        lang.displayName.contains(searchQuery, ignoreCase = true) ||
-                        lang.nativeName.contains(searchQuery, ignoreCase = true) ||
-                        lang.code.contains(searchQuery, ignoreCase = true)
-            }
-        }
+        val availableLanguages = remember { AppLanguage.entries }
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            filteredLanguages.forEach { lang ->
+            availableLanguages.forEach { lang ->
                 val isSelected = activeAppLanguage == lang
                 LanguageOptionRow(
                     language = lang,

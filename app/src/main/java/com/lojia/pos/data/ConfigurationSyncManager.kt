@@ -114,7 +114,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
 
     private fun loadInitialLanguage(): AppLanguage {
         val code = prefs.getString(KEY_SELECTED_LANGUAGE, AppLanguage.ENGLISH.code) ?: AppLanguage.ENGLISH.code
-        return AppLanguage.values().find { it.code == code } ?: AppLanguage.ENGLISH
+        return AppLanguage.fromCode(code)
     }
 
     private fun loadInitialCountry(): AppCountry {
@@ -135,8 +135,8 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             // Restore language from Room DB if present
             val dbLangCode = reportDao.getSetting(KEY_SELECTED_LANGUAGE)
             if (!dbLangCode.isNullOrBlank()) {
-                val dbLang = AppLanguage.values().find { it.code == dbLangCode }
-                if (dbLang != null && dbLang != _currentLanguage.value) {
+                val dbLang = AppLanguage.fromCode(dbLangCode)
+                if (dbLang != _currentLanguage.value) {
                     _currentLanguage.value = dbLang
                     prefs.edit().putString(KEY_SELECTED_LANGUAGE, dbLang.code).apply()
                 }
@@ -190,8 +190,8 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                 settingsList.forEach { setting ->
                     when (setting.key) {
                         KEY_SELECTED_LANGUAGE -> {
-                            val lang = AppLanguage.values().find { it.code == setting.value }
-                            if (lang != null && lang != _currentLanguage.value) {
+                            val lang = AppLanguage.fromCode(setting.value)
+                            if (lang != _currentLanguage.value) {
                                 _currentLanguage.value = lang
                                 prefs.edit().putString(KEY_SELECTED_LANGUAGE, lang.code).apply()
                             }
@@ -442,7 +442,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             val root = JSONObject(jsonStr)
             if (root.has("language")) {
                 val langCode = root.getString("language")
-                val lang = AppLanguage.values().find { it.code == langCode } ?: AppLanguage.ENGLISH
+                val lang = AppLanguage.fromCode(langCode)
                 setLanguage(lang)
             }
             if (root.has("activeCashier")) {

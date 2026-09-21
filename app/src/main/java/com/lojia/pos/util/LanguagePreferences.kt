@@ -107,15 +107,17 @@ object LanguagePreferences {
 
     /**
      * Synchronous retrieval with DataStore first-check fallback.
+     * Safely sanitizes the language to only supported codes (en, bn, ar), falling back to "en".
      */
     fun getLanguage(context: Context): String {
-        return try {
+        val rawCode = try {
             runBlocking {
                 context.languageDataStore.data.map { prefs -> prefs[LANGUAGE_KEY] }.first()
             } ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
         } catch (e: Exception) {
             getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
         }
+        return AppLanguage.fromCode(rawCode).code
     }
 
     /**
@@ -123,7 +125,8 @@ object LanguagePreferences {
      */
     fun getLanguageFlow(context: Context): Flow<String> {
         return context.languageDataStore.data.map { preferences ->
-            preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
+            val raw = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
+            AppLanguage.fromCode(raw).code
         }
     }
 
@@ -132,12 +135,14 @@ object LanguagePreferences {
      */
     fun getLanguagePreferenceDataFlow(context: Context): Flow<LanguagePreferenceData> {
         return context.languageDataStore.data.map { preferences ->
-            val code = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
-            val secondary = preferences[SECONDARY_LANGUAGE_KEY] ?: "ar"
+            val rawCode = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
+            val rawSecondary = preferences[SECONDARY_LANGUAGE_KEY] ?: "ar"
+            val validCode = AppLanguage.fromCode(rawCode).code
+            val validSecondary = AppLanguage.fromCode(rawSecondary).code
             val updated = preferences[LAST_UPDATED_KEY] ?: System.currentTimeMillis()
             LanguagePreferenceData(
-                currentCode = code,
-                secondaryCode = secondary,
+                currentCode = validCode,
+                secondaryCode = validSecondary,
                 lastUpdatedMillis = updated
             )
         }

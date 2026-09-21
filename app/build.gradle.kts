@@ -84,6 +84,8 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.mlkit.barcode.scanning)
     implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.github.DantSu:ESCPOS-ThermalPrinter-Android:3.3.0")
     ksp(libs.androidx.room.compiler)

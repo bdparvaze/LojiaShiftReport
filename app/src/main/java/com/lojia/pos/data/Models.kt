@@ -448,42 +448,8 @@ enum class AppLanguage(
     val isRtl: Boolean = false
 ) {
     ENGLISH("en", "English", "English", "🇺🇸", isRtl = false),
-    ARABIC("ar", "Arabic", "العربية", "🇸🇦", isRtl = true),
     BENGALI("bn", "Bengali", "বাংলা", "🇧🇩", isRtl = false),
-    SPANISH("es", "Spanish", "Español", "🇪🇸", isRtl = false),
-    FRENCH("fr", "French", "Français", "🇫🇷", isRtl = false),
-    GERMAN("de", "German", "Deutsch", "🇩🇪", isRtl = false),
-    HINDI("hi", "Hindi", "हिन्दी", "🇮🇳", isRtl = false),
-    URDU("ur", "Urdu", "اردو", "🇵🇰", isRtl = true),
-    CHINESE("zh", "Chinese", "简体中文", "🇨🇳", isRtl = false),
-    TURKISH("tr", "Turkish", "Türkçe", "🇹🇷", isRtl = false),
-    JAPANESE("ja", "Japanese", "日本語", "🇯🇵", isRtl = false),
-    PORTUGUESE("pt", "Portuguese", "Português", "🇧🇷", isRtl = false),
-    RUSSIAN("ru", "Russian", "Русский", "🇷🇺", isRtl = false),
-    INDONESIAN("id", "Indonesian", "Bahasa Indonesia", "🇮🇩", isRtl = false),
-    ITALIAN("it", "Italian", "Italiano", "🇮🇹", isRtl = false),
-    KOREAN("ko", "Korean", "한국어", "🇰🇷", isRtl = false),
-    VIETNAMESE("vi", "Vietnamese", "Tiếng Việt", "🇻🇳", isRtl = false),
-    TAGALOG("tl", "Tagalog / Filipino", "Filipino", "🇵🇭", isRtl = false),
-    SWAHILI("sw", "Swahili", "Kiswahili", "🇰🇪", isRtl = false),
-    PERSIAN("fa", "Persian", "فارسی", "🇮🇷", isRtl = true),
-    THAI("th", "Thai", "ไทย", "🇹🇭", isRtl = false),
-    DUTCH("nl", "Dutch", "Nederlands", "🇳🇱", isRtl = false),
-    POLISH("pl", "Polish", "Polski", "🇵🇱", isRtl = false),
-    MALAY("ms", "Malay", "Bahasa Melayu", "🇲🇾", isRtl = false),
-    PUNJABI("pa", "Punjabi", "ਪੰਜਾਬੀ", "🇮🇳", isRtl = false),
-    TAMIL("ta", "Tamil", "தமிழ்", "🇮🇳", isRtl = false),
-    TELUGU("te", "Telugu", "తెలుగు", "🇮🇳", isRtl = false),
-    GREEK("el", "Greek", "Ελληνικά", "🇬🇷", isRtl = false),
-    HEBREW("he", "Hebrew", "עברית", "🇮🇱", isRtl = true),
-    SWEDISH("sv", "Swedish", "Svenska", "🇸🇪", isRtl = false),
-    NORWEGIAN("no", "Norwegian", "Norsk", "🇳🇴", isRtl = false),
-    DANISH("da", "Danish", "Dansk", "🇩🇰", isRtl = false),
-    FINNISH("fi", "Finnish", "Suomi", "🇫🇮", isRtl = false),
-    ROMANIAN("ro", "Romanian", "Română", "🇷🇴", isRtl = false),
-    HUNGARIAN("hu", "Hungarian", "Magyar", "🇭🇺", isRtl = false),
-    CZECH("cs", "Czech", "Čeština", "🇨🇿", isRtl = false),
-    UKRAINIAN("uk", "Ukrainian", "Українська", "🇺🇦", isRtl = false);
+    ARABIC("ar", "Arabic", "العربية", "🇸🇦", isRtl = true);
 
     companion object {
         fun fromCode(code: String?): AppLanguage {

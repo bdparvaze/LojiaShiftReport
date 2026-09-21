@@ -12,7 +12,10 @@ data class ScannedDocument(
     val pageCount: Int,
     val fileSizeBytes: Long,
     val createdAtMillis: Long = System.currentTimeMillis(),
-    val notes: String = ""
+    val notes: String = "",
+    val thumbnailPath: String = "",
+    val ocrText: String = "",
+    val docxUriPath: String = ""
 )
 
 @Dao
@@ -26,9 +29,18 @@ interface DocumentScannerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDocument(document: ScannedDocument): Long
 
+    @Query("UPDATE scanned_documents SET title = :newTitle WHERE id = :id")
+    suspend fun updateDocumentTitle(id: Int, newTitle: String)
+
+    @Query("UPDATE scanned_documents SET ocrText = :ocrText, docxUriPath = :docxUriPath WHERE id = :id")
+    suspend fun updateOcrAndDocx(id: Int, ocrText: String, docxUriPath: String)
+
     @Delete
     suspend fun deleteDocument(document: ScannedDocument)
 
     @Query("DELETE FROM scanned_documents WHERE id = :id")
     suspend fun deleteDocumentById(id: Int)
+
+    @Query("DELETE FROM scanned_documents WHERE id IN (:ids)")
+    suspend fun deleteDocumentsByIds(ids: List<Int>)
 }
