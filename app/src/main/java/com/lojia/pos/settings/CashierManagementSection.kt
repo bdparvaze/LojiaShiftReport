@@ -174,7 +174,7 @@ fun CashierManagementSection(
                         ),
                         shape = RoundedCornerShape(10.dp),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                        modifier = Modifier.height(40.dp)
+                        modifier = Modifier.defaultMinSize(minHeight = 40.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

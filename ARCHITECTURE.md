@@ -1,67 +1,75 @@
-# Lojia System - Architecture Guide 🏗️
+# LojiaShiftReport - Architecture Guide 🏗️
 
-এই গাইডটি Lojia System অ্যান্ড্রয়েড প্রজেক্টের অভ্যন্তরীণ আর্কিটেকচার, ফোল্ডার স্ট্রাকচার এবং কোডবেস কীভাবে সাজানো হয়েছে তা ব্যাখ্যা করে।
+LojiaShiftReport is built with Clean Architecture principles and MVVM (Model-View-ViewModel) using Jetpack Compose, Kotlin Coroutines & Flow, and Room Database.
 
-## ১. প্রজেক্ট স্ট্রাকচার (Folder Hierarchy)
+---
 
-প্রজেক্টটি ক্লিন আর্কিটেকচার (Clean Architecture) এবং ফিচার-ভিত্তিক (Feature-by-Feature) মডুলারিজেশন মেনে সাজানো হয়েছে। এর ফলে কোড সহজে খুঁজে পাওয়া যায় এবং রক্ষণাবেক্ষণ (Maintenance) করা সহজ হয়।
+## 1. Modular Structure
 
-প্রধান ফোল্ডার স্ট্রাকচারটি নিচে দেওয়া হলো (`app/src/main/java/com/lojia/pos/` এর অধীনে):
+The codebase is organized into distinct domain and feature packages under `com.lojia.shiftreport`:
 
 ```text
-com.lojia.pos
+com.lojia.shiftreport
 │
-├── MainActivity.kt                # অ্যাপের মূল এন্ট্রি পয়েন্ট এবং ন্যাভিগেশন হোস্ট
+├── MainActivity.kt                # App Entry Point & Navigation Host (Crossfade Routing)
 │
-├── auth/                          # 🔐 অথেনটিকেশন এবং নিরাপত্তা
-│   ├── AdminAuthDialog.kt         # অ্যাডমিন পিন ভেরিফিকেশন ডায়ালগ
-│   ├── BiometricAuthManager.kt    # ফিঙ্গারপ্রিন্ট/ফেইস আনলক লজিক
-│   ├── BiometricLockScreen.kt     # বায়োমেট্রিক স্ক্রিনের ইউআই
-│   └── MpinScreen.kt              # পিন/পাসওয়ার্ড এন্ট্রি স্ক্রিন
+├── auth/                          # 🔐 Authentication & Security Layer
+│   ├── AdminAuthDialog.kt         # PIN authorization dialog for restricted operations
+│   ├── BiometricAuthManager.kt    # Android BiometricPrompt wrapper
+│   ├── BiometricLockScreen.kt     # App auto-lock and PIN unlock screen
+│   ├── LojiaAuthComponents.kt     # Registration, login fields & country dial picker
+│   └── LojiaAuthModels.kt         # User profile and registration state models
 │
-├── data/                          # 💾 ডেটা লেয়ার (Local DB & Repositories)
-│   ├── AppDatabase.kt             # Room Database এর মূল কনফিগারেশন
-│   ├── Models.kt                  # অ্যাপের ডেটা ক্লাসসমূহ (Entities)
-│   ├── POSDao.kt                  # POS সম্পর্কিত Database Queries
-│   ├── ReportDao.kt               # রিপোর্ট এবং শিফট সম্পর্কিত Queries
-│   └── ShiftReportRepository.kt   # UI এবং Database এর মধ্যে ডেটা আদান-প্রদানকারী লেয়ার
+├── data/                          # 💾 Data & Persistence Layer
+│   ├── AppDatabase.kt             # Room Database with automated migration handlers
+│   ├── Models.kt                  # ShiftReport, ShiftSession, CashMovement, User, Country
+│   ├── ReportDao.kt               # Shift report queries, analytics aggregations & user prefs
+│   ├── PreferencesRepository.kt   # Encrypted SharedPreferences for tokens & quick login
+│   └── ShiftReportRepository.kt   # Central repository orchestrating local Room & cloud sync
 │
-├── pos/                           # 🛒 পয়েন্ট অফ সেল (কোর ফিচার)
-│   ├── PosScreen.kt               # মূল সেলস এবং কার্ট ইউআই (UI)
-│   ├── PosViewModel.kt            # POS এর বিজনেস লজিক এবং স্টেট ম্যানেজমেন্ট (MVVM)
-│   ├── InventoryScreen.kt         # প্রোডাক্ট এবং ইনভেন্টরি ম্যানেজমেন্ট
-│   ├── CashManagementScreen.kt    # ক্যাশ-ইন / ক্যাশ-আউট স্ক্রিন
-│   └── BarcodeScannerDialog.kt    # ক্যামেরা দিয়ে বারকোড স্ক্যানিং লজিক
+├── report/                        # 📊 Shift Reports & Analytics Module
+│   ├── DashboardScreen.kt         # Shift performance metrics & financial analytics
+│   ├── ShiftReportScreen.kt       # Active shift creation, cash counting & history list
+│   ├── ShiftReportLedgerTabs.kt   # Multi-tab shift details & expense breakdown
+│   ├── ShiftReportPreviewDialog.kt# Thermal & PDF preview dialog with QR verification
+│   └── ReportViewModel.kt         # ViewModel managing shift states, metrics & exports
 │
-├── report/                        # 📊 রিপোর্ট এবং অ্যানালিটিক্স
-│   ├── DashboardScreen.kt         # দৈনিক এবং সাপ্তাহিক সেলস ড্যাশবোর্ড
-│   ├── ShiftReportScreen.kt       # শিফট খোলা/বন্ধ করা এবং ক্যাশ মেলানোর ইউআই
-│   ├── ShiftReportLedgerTabs.kt   # শিফটের বিস্তারিত হিসাবের ট্যাব
-│   └── ReportViewModel.kt         # রিপোর্টিং মডিউলের বিজনেস লজিক
+├── scanner/                       # 📄 Document Scanner & OCR Module
+│   ├── DocumentScannerScreen.kt   # Main scanner screen with Activity context bridge
+│   ├── DocumentScannerComponents.kt# Scan header card, document card & empty states
+│   ├── DocumentScannerDialogs.kt  # Save, rename, batch delete, OCR & password dialogs
+│   ├── DocumentScannerViewModel.kt# Document persistence, Word export & PDF encryption
+│   ├── OcrTextExtractor.kt        # Google ML Kit on-device text recognition
+│   ├── DocxExporter.kt            # Microsoft Word (.docx) document generator
+│   ├── PdfSecurityManager.kt      # PDF password protection and encryption
+│   └── ScannedDocument.kt         # Room entity & DAO for scanned documents
 │
-├── settings/                      # ⚙️ অ্যাপ সেটিংস এবং কনফিগারেশন
-│   ├── SettingsShopSection.kt     # স্টোরের সাধারণ তথ্য এবং কারেন্সি সেটিংস
-│   ├── CashierManagementSection.kt# ক্যাশিয়ার এবং অ্যাডমিন রোল ম্যানেজমেন্ট
-│   └── SettingsReportSection.kt   # প্রিন্টার এবং লোকাল/ল্যাঙ্গুয়েজ সেটিংস
+├── settings/                      # ⚙️ Settings & Configuration Module
+│   ├── SettingsReportSection.kt   # Business profile, currency, country, tax & backups
+│   ├── CashierManagementSection.kt# Cashier PIN setup and role assignments
+│   └── LanguageSettingsComponent.kt# Dynamic in-app locale switcher (EN, BN, AR)
 │
-├── ui/                            # 🎨 শেয়ার্ড ইউজার ইন্টারফেস (Shared UI)
+├── ui/                            # 🎨 Shared UI, Theme & Design System
 │   ├── common/
-│   │   ├── LojiaTextField.kt      # গ্লোবাল কাস্টম ইনপুট ফিল্ড (Alignment fix সহ)
-│   │   ├── AppDrawer.kt           # অ্যাপের সাইড ন্যাভিগেশন মেনু
-│   │   └── PdfPreviewDialog.kt    # পিডিএফ রসিদ দেখানোর ডায়ালগ
+│   │   ├── LojiaTextField.kt      # Standardized input fields with validation states
+│   │   ├── AppDrawer.kt           # Side navigation drawer
+│   │   └── Components.kt          # Shared cards, badges, statistics chips & headers
 │   └── theme/
-│       ├── Color.kt, Theme.kt     # গ্লোবাল ম্যাটেরিয়াল কালার এবং থিম কনফিগারেশন
-│       └── Type.kt                # ফন্ট এবং টাইপোগ্রাফি স্টাইল
+│       ├── Color.kt               # Material 3 color system (Primary Indigo, Slate, Emerald)
+│       ├── Theme.kt               # Dynamic color schemes & typography bindings
+│       └── Type.kt                # Poppins & system typography definitions
 │
-└── util/                          # 🛠️ ইউটিলিটি এবং হেল্পার ফাংশন
-    ├── PdfReportGenerator.kt      # ডায়নামিক পিডিএফ ইনভয়েস তৈরি করার কোড
-    ├── LocaleManager.kt           # অ্যাপের ভাষা পরিবর্তনের লজিক
-    ├── ExportHelper.kt            # ডেটা এক্সপোর্ট (CSV/Excel) করার কোড
-    └── PrintHelper.kt             # ব্লুটুথ থার্মাল প্রিন্টারে প্রিন্ট করার কোড
+└── util/                          # 🛠️ Utility Functions & Helpers
+    ├── PdfReportGenerator.kt      # Vector-based PDF receipt & shift summary builder
+    ├── LocaleManager.kt           # Runtime language switching & RTL direction support
+    └── SecurityUtils.kt           # SHA-256 secret hashing & cryptographic helpers
 ```
 
-## আর্কিটেকচারাল প্যাটার্ন (MVVM)
-এই প্রজেক্টটি **MVVM (Model-View-ViewModel)** আর্কিটেকচার মেনে চলে:
-*   **View (Jetpack Compose):** শুধুমাত্র ইউআই (UI) রেন্ডার করে এবং ইউজারের ইভেন্টগুলো (ক্লিক, টাইপিং) ViewModel এ পাঠায়। (`PosScreen`, `ShiftReportScreen`)
-*   **ViewModel:** বিজনেস লজিক প্রসেস করে এবং UI এর জন্য State ধারণ করে (`MutableStateFlow`)। (`PosViewModel`, `ReportViewModel`)
-*   **Model/Repository:** ডেটাবেস (Room) থেকে ডেটা নিয়ে আসে এবং সেভ করে। (`ShiftReportRepository`, `AppDatabase`)
+---
+
+## 2. Key Architecture Principles
+
+1. **Strict Offline-First**: Local Room Database is the single source of truth for all shift records, financial numbers, and scanned documents. No network latency blocks user operations.
+2. **Feature Isolation**: Shift reporting and Document scanning operate with independent DAOs and ViewModels to prevent cross-module coupling.
+3. **Robust Intent & Context Management**: Document scanning and PDF viewing utilize guaranteed Activity context references with proper Intent flags to prevent crashes.
+4. **Multilingual Architecture**: Dynamic runtime language changing between English, Bengali, and Arabic without app restart, preserving full RTL layout hierarchy.

@@ -42,8 +42,6 @@ fun MainAppDrawer(
     businessProfile: BusinessProfile?,
     userProfile: UserProfile?,
     onNavigate: (AppNavState) -> Unit,
-    onSwitchModule: (AppModule) -> Unit = {},
-    onOpenShopMenu: (String) -> Unit = {},
     onOpenReportMenu: (String) -> Unit = {},
     onCloseDrawer: () -> Unit,
     onLockApp: () -> Unit
@@ -53,7 +51,7 @@ fun MainAppDrawer(
     ModalDrawerSheet(
         drawerContainerColor = PureWhite,
         modifier = Modifier
-            .widthIn(min = 195.dp, max = 225.dp)
+            .widthIn(min = 240.dp, max = 300.dp)
             .fillMaxHeight()
             .testTag("main_navigation_drawer")
     ) {
@@ -86,7 +84,7 @@ fun MainAppDrawer(
 
                 Column(modifier = Modifier.weight(1f, fill = false)) {
                     AutoText(
-                        text = "📊 Shift Report",
+                        text = "LojiaShiftReport",
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
@@ -95,7 +93,7 @@ fun MainAppDrawer(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = userProfile?.fullName?.ifBlank { "Store Owner" } ?: "Store Owner",
+                        text = userProfile?.fullName?.ifBlank { "Shift Manager" } ?: "Shift Manager",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = PureWhite.copy(alpha = 0.85f),
                             fontSize = 11.sp
@@ -314,12 +312,13 @@ private fun DrawerMenuItem(
         color = if (isSelected) activeColor.copy(alpha = 0.12f) else Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 44.dp)
             .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 9.dp),
+                .padding(horizontal = 10.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -336,7 +335,9 @@ private fun DrawerMenuItem(
                     fontSize = 14.sp,
                     color = if (isSelected) activeColor else Color(0xFF212121)
                 ),
-                maxLines = 1
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
         }
     }

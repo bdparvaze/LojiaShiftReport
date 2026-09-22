@@ -15,8 +15,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -31,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -68,6 +71,7 @@ fun AdminAuthDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(22.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -220,7 +224,7 @@ fun AdminAuthDialog(
                         containerColor = Color(0xFFF8FAFC),
                         contentColor = Color(0xFF0F172A)
                     ),
-                    modifier = Modifier.fillMaxWidth().height(40.dp)
+                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 40.dp)
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -235,7 +239,9 @@ fun AdminAuthDialog(
                         Text(
                             text = "Authenticate with Biometrics",
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -258,12 +264,14 @@ fun AdminAuthDialog(
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 42.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.cancel_18),
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -286,7 +294,7 @@ fun AdminAuthDialog(
                         ),
                         modifier = Modifier
                             .weight(1.2f)
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 42.dp)
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),

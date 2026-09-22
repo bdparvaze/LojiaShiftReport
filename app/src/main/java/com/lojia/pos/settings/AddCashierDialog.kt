@@ -15,8 +15,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Lock
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -65,6 +68,7 @@ fun AddCashierDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -250,12 +254,14 @@ fun AddCashierDialog(
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 42.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.cancel_18),
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -274,7 +280,7 @@ fun AddCashierDialog(
                         ),
                         modifier = Modifier
                             .weight(1.2f)
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 42.dp)
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),

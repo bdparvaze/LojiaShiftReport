@@ -80,9 +80,8 @@ import androidx.compose.ui.platform.testTag
 
 
 import androidx.compose.ui.text.font.FontWeight
-
-
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 
 
 import androidx.compose.ui.text.style.TextAlign
@@ -313,18 +312,24 @@ fun MetricStatCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = value,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (!subtitle.isNullOrBlank()) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -397,105 +402,6 @@ fun FormInputField(
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(start = 12.dp, top = 4.dp)
             )
-        }
-    }
-}
-
-@Composable
-fun ShopMenuCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    iconTint: Color = PrimaryIndigo,
-    isExpanded: Boolean,
-    isRestricted: Boolean = false,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = PureWhite,
-        shadowElevation = if (isExpanded) 3.dp else 1.dp,
-        border = BorderStroke(1.dp, if (isExpanded) iconTint.copy(alpha = 0.5f) else Color(0xFFE2E8F0)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onClick() }
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = iconTint.copy(alpha = 0.12f),
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = iconTint,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = title,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                                color = TextPrimaryLight
-                            )
-                            if (isRestricted) {
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Color(0xFFFEF3C7)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.pin_1),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFFB45309),
-                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                    )
-                                }
-                            }
-                        }
-                        Text(
-                            text = subtitle,
-                            fontSize = 12.sp,
-                            color = TextSecondaryLight,
-                            maxLines = 1
-                        )
-                    }
-                }
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = TextSecondaryLight
-                )
-            }
-
-            AnimatedVisibility(visible = isExpanded) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 4.dp)
-                ) {
-                    HorizontalDivider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(bottom = 12.dp))
-                    content()
-                }
-            }
         }
     }
 }
@@ -961,7 +867,7 @@ fun SecurityPinModal(
                         onClick = onDismiss,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 42.dp)
                             .testTag("btn_cancel_pin_auth")
                     ) {
                         AutoText(
@@ -988,12 +894,14 @@ fun LoyverseMenuItemRow(
     Surface(
         onClick = onClick,
         color = PureWhite,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 56.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -1017,7 +925,9 @@ fun LoyverseMenuItemRow(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     ),
-                    color = Color(0xFF0F172A)
+                    color = Color(0xFF0F172A),
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 if (!subtitle.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -1026,7 +936,9 @@ fun LoyverseMenuItemRow(
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp
                         ),
-                        color = Color(0xFF64748B)
+                        color = Color(0xFF64748B),
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
             }

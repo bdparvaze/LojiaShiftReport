@@ -586,12 +586,12 @@ private fun ReportEntryTab(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(38.dp)
+                                            .defaultMinSize(minHeight = 40.dp)
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(Color.White)
                                             .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(8.dp))
                                             .clickable { showDatePicker = true }
-                                            .padding(horizontal = 10.dp),
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         Row(
@@ -603,8 +603,12 @@ private fun ReportEntryTab(
                                                 text = dateLabel,
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Medium,
-                                                color = ShiftColors.Charcoal
+                                                color = ShiftColors.Charcoal,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f, fill = false)
                                             )
+                                            Spacer(Modifier.width(4.dp))
                                             Icon(
                                                 imageVector = Icons.Default.DateRange,
                                                 contentDescription = stringResource(R.string.select_date),
@@ -2061,12 +2065,12 @@ private fun SectionHeader(
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, accent),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = accent),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
-                modifier = Modifier.height(26.dp)
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                modifier = Modifier.defaultMinSize(minHeight = 28.dp)
             ) {
                 Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(12.dp))
                 Spacer(Modifier.width(2.dp))
-                Text(stringResource(R.string.add), fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.add), fontSize = 10.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
         }
     }
@@ -2715,7 +2719,7 @@ private fun NumberField(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .defaultMinSize(minHeight = 46.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (enabled) Color.White else Color(0xFFF1F5F9))
                 .border(
@@ -2723,7 +2727,7 @@ private fun NumberField(
                     color = if (enabled) Color(0xFFCBD5E1) else Color(0xFFE2E8F0),
                     shape = RoundedCornerShape(8.dp)
                 )
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             BasicTextField(
@@ -2795,11 +2799,11 @@ private fun LabeledDropdown(
                 modifier = Modifier
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth()
-                    .height(38.dp)
+                    .defaultMinSize(minHeight = 40.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.White)
                     .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp),
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(

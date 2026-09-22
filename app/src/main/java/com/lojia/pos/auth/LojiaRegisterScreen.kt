@@ -351,7 +351,7 @@ fun LojiaRegisterScreen(
                             color = LojiaColors.N50,
                             border = BorderStroke(1.5.dp, LojiaColors.N300),
                             modifier = Modifier
-                                .height(42.dp)
+                                .defaultMinSize(minHeight = 44.dp)
                                 .widthIn(min = 78.dp)
                                 .clickable { showCountryPicker = true }
                                 .testTag("ccBtn")
@@ -499,7 +499,7 @@ fun LojiaRegisterScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 44.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(LojiaColors.N50)
                             .border(
@@ -508,7 +508,7 @@ fun LojiaRegisterScreen(
                                 RoundedCornerShape(10.dp)
                             )
                             .clickable { showQuestionMenu = true }
-                            .padding(horizontal = 12.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Row(

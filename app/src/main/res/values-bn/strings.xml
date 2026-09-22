@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_title">লজিয়া সিস্টেম</string>
+    <string name="app_title">লজিয়া শিফট রিপোর্ট</string>
     <string name="shop_module">দোকান ও পিওএস মডিউল</string>
     <string name="shift_report_module">শিফট রিপোর্ট মডিউল</string>
     <string name="switch_module">মডিউল পরিবর্তন করুন</string>
@@ -454,7 +454,7 @@
     <string name="saved_successfully">সফলভাবে সংরক্ষিত হয়েছে!</string>
     <string name="open">খুলুন</string>
     <string name="launch">চালু করুন</string>
-    <string name="app_name">Lojia system</string>
+    <string name="app_name">লজিয়া শিফট রিপোর্ট</string>
     <string name="average_shift_sales">গড় শিফট বিক্রয়</string>
     <string name="total_reports_count">মোট রিপোর্টের সংখ্যা</string>
     <string name="payment_distribution">পেমেন্ট পদ্ধতি বণ্টন</string>

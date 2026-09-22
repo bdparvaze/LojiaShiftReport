@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_title">نظام لوجيا</string>
+    <string name="app_title">تقارير ورديات لوجيا</string>
     <string name="shop_module">وحدة المتجر ونقاط البيع</string>
     <string name="shift_report_module">وحدة تقارير الورديات</string>
     <string name="switch_module">تبديل وضع النظام</string>
@@ -454,7 +454,7 @@
     <string name="saved_successfully">تم الحفظ بنجاح!</string>
     <string name="open">فتح</string>
     <string name="launch">تشغيل</string>
-    <string name="app_name">Lojia system</string>
+    <string name="app_name">تقارير ورديات لوجيا</string>
     <string name="average_shift_sales">متوسط مبيعات الوردية</string>
     <string name="total_reports_count">إجمالي عدد التقارير</string>
     <string name="payment_distribution">توزيع طرق الدفع</string>

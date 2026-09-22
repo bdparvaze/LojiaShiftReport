@@ -190,7 +190,12 @@ fun SettingsCommonDialogs(
             icon = { Icon(Icons.Default.Gavel, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.terms_conditions_1), fontWeight = FontWeight.Bold) },
             text = {
-                Column(modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Text(
                         text = stringResource(R.string.msg_1_license_usagenlojia_system),
                         fontSize = 13.sp,
@@ -214,7 +219,12 @@ fun SettingsCommonDialogs(
             icon = { Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.privacy_policy_2), fontWeight = FontWeight.Bold) },
             text = {
-                Column(modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 320.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Text(
                         text = stringResource(R.string.msg_1_data_collectionnlojia_system),
                         fontSize = 13.sp,

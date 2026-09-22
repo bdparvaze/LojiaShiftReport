@@ -316,7 +316,7 @@ fun LojiaInputField(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(42.dp)
+                .defaultMinSize(minHeight = 44.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(bgColor)
                 .border(
@@ -324,7 +324,7 @@ fun LojiaInputField(
                     color = borderColor,
                     shape = RoundedCornerShape(10.dp)
                 )
-                .padding(horizontal = 11.dp),
+                .padding(horizontal = 11.dp, vertical = 6.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -430,7 +430,7 @@ fun LojiaGradientButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(46.dp)
+            .defaultMinSize(minHeight = 46.dp)
             .shadow(
                 elevation = if (enabled) 4.dp else 0.dp,
                 shape = RoundedCornerShape(10.dp),
@@ -439,6 +439,7 @@ fun LojiaGradientButton(
             .clip(RoundedCornerShape(10.dp))
             .background(buttonBrush)
             .clickable(enabled = enabled && !isLoading, onClick = onClick)
+            .padding(vertical = 4.dp)
             .testTag(testTag),
         contentAlignment = Alignment.Center
     ) {
@@ -768,8 +769,6 @@ fun LojiaCountryPickerDialog(
                                 .padding(horizontal = 16.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = country.flag, fontFamily = com.lojia.pos.ui.theme.PoppinsFontFamily, fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = country.dial,
                                 fontFamily = com.lojia.pos.ui.theme.PoppinsFontFamily, fontSize = 13.sp,

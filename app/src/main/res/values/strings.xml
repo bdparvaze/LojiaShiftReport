@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_title">Lojia</string>
+    <string name="app_title">Lojia Shift Report</string>
     <string name="shop_module">Shop Module</string>
     <string name="shift_report_module">Shift Report Module</string>
     <string name="switch_module">Switch Module</string>
@@ -454,7 +454,7 @@
     <string name="saved_successfully">Saved successfully!</string>
     <string name="open">Open</string>
     <string name="launch">Launch</string>
-    <string name="app_name">Lojia system</string>
+    <string name="app_name">Lojia Shift Report</string>
     <string name="average_shift_sales">Average Shift Sales</string>
     <string name="total_reports_count">Total Reports Count</string>
     <string name="payment_distribution">Payment Distribution</string>

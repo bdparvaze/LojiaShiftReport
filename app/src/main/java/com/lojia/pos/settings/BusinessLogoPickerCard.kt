@@ -467,6 +467,7 @@ fun ProfileDetailItemRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 56.dp)
             .clickable { onClick() }
     ) {
         Row(
@@ -504,7 +505,9 @@ fun ProfileDetailItemRow(
                             color = Color(0xFF64748B),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
-                        )
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(

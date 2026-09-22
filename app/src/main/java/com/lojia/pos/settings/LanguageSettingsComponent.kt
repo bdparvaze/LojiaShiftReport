@@ -120,7 +120,7 @@ fun LanguageSettingsComponent(
 }
 
 /**
- * Individual Language Item Row with Flag, Native Name, English Name, RTL Badge, and DataStore indicator.
+ * Individual Language Item Row with Native Name, English Name, RTL Badge, and Selection indicator.
  */
 @Composable
 private fun LanguageOptionRow(
@@ -130,41 +130,55 @@ private fun LanguageOptionRow(
     onClick: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) accentColor.copy(alpha = 0.12f) else Color.Transparent,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.35f)) else null,
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) accentColor.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, accentColor) else null,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .defaultMinSize(minHeight = 56.dp)
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .testTag("language_row_${language.code}")
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.weight(1f, fill = false)
             ) {
-                Text(
-                    text = language.flag,
-                    fontSize = 22.sp
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (isSelected) accentColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Language,
+                        contentDescription = null,
+                        tint = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
-                Column {
+                Column(modifier = Modifier.weight(1f, fill = false)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = language.nativeName,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                             fontSize = 15.sp,
-                            color = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurface
+                            color = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         if (language.isRtl) {
                             Surface(
@@ -173,18 +187,20 @@ private fun LanguageOptionRow(
                             ) {
                                 Text(
                                     text = "RTL",
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFFB45309),
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                                 )
                             }
                         }
                     }
                     Text(
-                        text = "${language.displayName} (${language.code})",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "${language.displayName} (${language.code.uppercase()})",
+                        fontSize = 12.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
             }
@@ -194,7 +210,7 @@ private fun LanguageOptionRow(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = stringResource(R.string.cd_active_language_datastore),
                     tint = accentColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }

@@ -16,6 +16,7 @@ import com.lojia.pos.sync.*
 
 import com.lojia.pos.util.AppLanguageManager
 import com.lojia.pos.util.SecurityUtils
+import androidx.compose.ui.text.style.TextOverflow
 
 
 import android.content.Intent
@@ -1262,9 +1263,21 @@ fun SettingsReportSection(
                         selected = langCountryTab == 0,
                         onClick = { langCountryTab = 0 },
                         text = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("🌐 ", fontSize = 14.sp)
-                                Text(stringResource(R.string.language), fontWeight = if (langCountryTab == 0) FontWeight.Bold else FontWeight.Normal)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Language,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.language),
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = if (langCountryTab == 0) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                )
                             }
                         }
                     )
@@ -1272,9 +1285,21 @@ fun SettingsReportSection(
                         selected = langCountryTab == 1,
                         onClick = { langCountryTab = 1 },
                         text = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("🌍 ", fontSize = 14.sp)
-                                Text(stringResource(R.string.country), fontWeight = if (langCountryTab == 1) FontWeight.Bold else FontWeight.Normal)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Public,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.country),
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = if (langCountryTab == 1) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                )
                             }
                         }
                     )
@@ -1324,6 +1349,7 @@ fun SettingsReportSection(
                             color = if (isSelected) Color(0xFFF5F3FF) else Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .defaultMinSize(minHeight = 56.dp)
                                 .clickable {
                                     reportViewModel.setCountry(c)
                                     Toast.makeText(
@@ -1344,19 +1370,21 @@ fun SettingsReportSection(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text(text = c.flag, fontSize = 24.sp)
-                                    Spacer(modifier = Modifier.width(14.dp))
-                                    Column {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = displayName,
                                             fontSize = 14.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color(0xFF4F46E5) else Color(0xFF1E293B)
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                            color = if (isSelected) Color(0xFF4F46E5) else Color(0xFF1E293B),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
                                             text = "${c.currencyCode} (${c.currencySymbol}) • VAT: ${c.defaultVatRate.toInt()}%",
                                             fontSize = 12.sp,
-                                            color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B)
+                                            color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }

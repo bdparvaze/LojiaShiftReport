@@ -134,14 +134,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         return success
     }
 
-    // Active Shop Settings Menu Key (Profile, Security, Sales, Receipts, Shift, Items, Settings, Back Office, Apps, Language, Support)
-    private val _selectedShopSettingsMenu = MutableStateFlow<String?>("profile")
-    val selectedShopSettingsMenu: StateFlow<String?> = _selectedShopSettingsMenu.asStateFlow()
-
-    fun selectShopSettingsMenu(menuKey: String?) {
-        _selectedShopSettingsMenu.value = menuKey
-    }
-
     // Active Shift Report Settings Menu Key (profile, security, backup, language, about, support, switch_module)
     private val _selectedReportSettingsMenu = MutableStateFlow<String?>("profile")
     val selectedReportSettingsMenu: StateFlow<String?> = _selectedReportSettingsMenu.asStateFlow()

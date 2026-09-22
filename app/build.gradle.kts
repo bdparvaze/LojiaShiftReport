@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.lojia.pos"
+    namespace = "com.lojia.shiftreport"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.lojia.pos"
+        applicationId = "com.lojia.shiftreport"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

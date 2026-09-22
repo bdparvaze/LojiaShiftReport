@@ -179,8 +179,6 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                         businessProfile = businessProfile,
                                         userProfile = userProfile,
                                         onNavigate = { newNavState -> navState = newNavState },
-                                        onSwitchModule = { },
-                                        onOpenShopMenu = { },
                                         onOpenReportMenu = { menuKey -> reportViewModel.selectReportSettingsMenu(menuKey) },
                                         onCloseDrawer = { scope.launch { drawerState.close() } },
                                         onLockApp = {
@@ -227,8 +225,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 Row(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .height(56.dp)
-                                                        .padding(horizontal = 8.dp),
+                                                        .defaultMinSize(minHeight = 56.dp)
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp),
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
@@ -253,7 +251,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                             color = PureWhite,
                                                             fontWeight = FontWeight.Bold,
                                                             fontSize = 18.sp,
-                                                            maxLines = 1
+                                                            maxLines = 1,
+                                                            modifier = Modifier.weight(1f, fill = false)
                                                         )
                                                     }
                                                 }

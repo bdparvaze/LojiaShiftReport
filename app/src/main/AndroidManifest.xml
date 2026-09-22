@@ -51,7 +51,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:host="oauth2callback" android:scheme="com.lojia.pos"/>
+                <data android:host="oauth2callback" android:scheme="com.lojia.shiftreport"/>
             </intent-filter>
         </activity>
 
