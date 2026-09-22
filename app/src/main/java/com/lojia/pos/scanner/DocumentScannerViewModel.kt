@@ -307,7 +307,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        context.startActivity(Intent.createChooser(shareIntent, "Share Word (.docx)"))
+        val chooserIntent = Intent.createChooser(shareIntent, "Share Word (.docx)").apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(chooserIntent)
     }
 
     fun renameDocument(document: ScannedDocument, newTitle: String) {
@@ -418,7 +421,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Share Protected PDF"))
+            val chooser = Intent.createChooser(shareIntent, "Share Protected PDF").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error sharing protected PDF", e)
             Toast.makeText(context, "Could not share protected PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
@@ -441,7 +447,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            context.startActivity(Intent.createChooser(viewIntent, "Open Protected PDF"))
+            val chooser = Intent.createChooser(viewIntent, "Open Protected PDF").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
         } catch (e: ActivityNotFoundException) {
             Log.e("DocumentScannerVM", "No PDF viewer app found", e)
             Toast.makeText(context, "No PDF viewer app found on device", Toast.LENGTH_LONG).show()
@@ -471,7 +480,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            context.startActivity(Intent.createChooser(shareIntent, "Share Document"))
+            val chooser = Intent.createChooser(shareIntent, "Share Document").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error sharing document", e)
             Toast.makeText(context, "Could not share document: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
@@ -498,7 +510,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
-            context.startActivity(Intent.createChooser(viewIntent, "Open PDF"))
+            val chooser = Intent.createChooser(viewIntent, "Open PDF").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
         } catch (e: ActivityNotFoundException) {
             Log.e("DocumentScannerVM", "No PDF viewer app installed", e)
             Toast.makeText(context, "No PDF viewer app found on device", Toast.LENGTH_LONG).show()
