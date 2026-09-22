@@ -1160,6 +1160,7 @@
     <string name="doc_scanner_title">Dokumentenscanner</string>
     <string name="doc_scanner_desc">Rechnungen und Belege mit ML Kit scannen</string>
     <string name="scan_now">Dokument scannen</string>
+    <string name="scan_with_camera_fallback">Mit Kamera scannen (Ausweichoption)</string>
     <string name="scanned_docs_list">Gescannte Dokumente (%1$d)</string>
     <string name="no_scanned_docs">Keine gescannten Dokumente</string>
     <string name="no_scanned_docs_sub">Tippen Sie auf \"Dokument scannen\", um Belege zu scannen.</string>

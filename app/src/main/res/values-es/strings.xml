@@ -1160,6 +1160,7 @@
     <string name="doc_scanner_title">Escáner de Documentos</string>
     <string name="doc_scanner_desc">Escanee facturas y recibos con ML Kit</string>
     <string name="scan_now">Escanear Documento</string>
+    <string name="scan_with_camera_fallback">Escanear con cámara (alternativa)</string>
     <string name="scanned_docs_list">Documentos Escaneados (%1$d)</string>
     <string name="no_scanned_docs">Sin Documentos Escaneados</string>
     <string name="no_scanned_docs_sub">Toque \"Escanear Documento\" para escanear facturas.</string>

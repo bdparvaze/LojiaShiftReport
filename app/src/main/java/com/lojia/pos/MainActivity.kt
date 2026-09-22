@@ -272,6 +272,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                             navState = navState,
                                             reportViewModel = reportViewModel,
                                             language = currentLanguage,
+                                            activity = this@MainActivity,
                                             onPreviewPdf = { report -> previewReport = report }
                                         )
 
@@ -318,6 +319,7 @@ fun AppNavigationHost(
     navState: AppNavState,
     reportViewModel: ReportViewModel,
     language: AppLanguage,
+    activity: android.app.Activity,
     onPreviewPdf: (ShiftReport) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -333,6 +335,7 @@ fun AppNavigationHost(
                     destination = destination,
                     reportViewModel = reportViewModel,
                     language = language,
+                    activity = activity,
                     onPreviewPdf = onPreviewPdf
                 )
             }
@@ -348,6 +351,7 @@ private fun ShiftReportModuleNavHost(
     destination: AppNavState.ShiftReportState,
     reportViewModel: ReportViewModel,
     language: AppLanguage,
+    activity: android.app.Activity,
     onPreviewPdf: (ShiftReport) -> Unit
 ) {
     when (destination) {
@@ -365,7 +369,7 @@ private fun ShiftReportModuleNavHost(
             )
         }
         is AppNavState.ShiftReportState.DocumentScanner -> {
-            com.lojia.pos.scanner.DocumentScannerScreen()
+            com.lojia.pos.scanner.DocumentScannerScreen(activity = activity)
         }
         is AppNavState.ShiftReportState.SettingsDetail -> {
             LaunchedEffect(destination.section) {

@@ -1160,6 +1160,7 @@
     <string name="doc_scanner_title">Scanner de Documents</string>
     <string name="doc_scanner_desc">Numérisez factures et reçus avec ML Kit</string>
     <string name="scan_now">Numériser Document</string>
+    <string name="scan_with_camera_fallback">Numériser avec la caméra (secours)</string>
     <string name="scanned_docs_list">Documents Numérisés (%1$d)</string>
     <string name="no_scanned_docs">Aucun Document Numérisé</string>
     <string name="no_scanned_docs_sub">Appuyez sur \"Numériser Document\" pour numériser des factures.</string>

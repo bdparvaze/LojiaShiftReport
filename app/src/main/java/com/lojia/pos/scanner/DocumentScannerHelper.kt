@@ -6,7 +6,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 
 object DocumentScannerHelper {
-    fun createScanner(context: Context, pageLimit: Int = 15): GmsDocumentScanner {
+    fun createScanner(context: Context, pageLimit: Int = 10): GmsDocumentScanner {
         val options = GmsDocumentScannerOptions.Builder()
             .setGalleryImportAllowed(true)
             .setPageLimit(pageLimit)
@@ -14,7 +14,7 @@ object DocumentScannerHelper {
                 GmsDocumentScannerOptions.RESULT_FORMAT_PDF,
                 GmsDocumentScannerOptions.RESULT_FORMAT_JPEG
             )
-            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_BASE)
             .build()
 
         return GmsDocumentScanning.getClient(options)

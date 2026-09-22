@@ -1162,6 +1162,7 @@
     <string name="doc_scanner_title">文档扫描仪</string>
     <string name="doc_scanner_desc">使用 ML Kit 扫描发票和收据</string>
     <string name="scan_now">扫描文档</string>
+    <string name="scan_with_camera_fallback">使用相机扫描（备用）</string>
     <string name="scanned_docs_list">已扫描文档 (%1$d)</string>
     <string name="no_scanned_docs">暂无已扫描文档</string>
     <string name="no_scanned_docs_sub">点击“扫描文档”开始扫描发票与收据。</string>

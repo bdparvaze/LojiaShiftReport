@@ -1162,6 +1162,7 @@
     <string name="doc_scanner_title">Belge Tarayıcı</string>
     <string name="doc_scanner_desc">ML Kit ile faturaları ve fişleri tarayın</string>
     <string name="scan_now">Belge Taramasını Başlat</string>
+    <string name="scan_with_camera_fallback">Kamera ile Tara (Alternatif)</string>
     <string name="scanned_docs_list">Taranan Belgeler (%1$d)</string>
     <string name="no_scanned_docs">Taranmış Belge Yok</string>
     <string name="no_scanned_docs_sub">Taramak için \"Belge Taramasını Başlat\" butonuna dokunun.</string>

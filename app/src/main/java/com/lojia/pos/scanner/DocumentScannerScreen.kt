@@ -1,11 +1,19 @@
 package com.lojia.pos.scanner
 
+import android.Manifest
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -18,7 +26,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
@@ -69,6 +79,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentScannerScreen(
+    activity: Activity,
     modifier: Modifier = Modifier,
     viewModel: DocumentScannerViewModel = viewModel()
 ) {
@@ -77,7 +88,10 @@ fun DocumentScannerScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     var pendingScanResult by remember { mutableStateOf<GmsDocumentScanningResult?>(null) }
+    var pendingPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    var tempCameraImageUri by remember { mutableStateOf<Uri?>(null) }
     var showSaveTitleDialog by remember { mutableStateOf(false) }
+    var showScannerFallbackPrompt by remember { mutableStateOf(false) }
     var customDocumentTitle by remember { mutableStateOf("") }
 
     var documentToDelete by remember { mutableStateOf<ScannedDocument?>(null) }
@@ -120,14 +134,100 @@ fun DocumentScannerScreen(
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
-            if (scanResult != null) {
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                customDocumentTitle = "Scan_$timeStamp"
-                pendingScanResult = scanResult
-                showSaveTitleDialog = true
+        try {
+            if (result.resultCode == Activity.RESULT_OK) {
+                val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+                if (scanResult != null) {
+                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    customDocumentTitle = "Scan_$timeStamp"
+                    pendingScanResult = scanResult
+                    pendingPhotoUri = null
+                    showSaveTitleDialog = true
+                } else {
+                    Log.w("DocScanner", "Scan returned RESULT_OK but scanResult is null")
+                    showScannerFallbackPrompt = true
+                }
+            } else if (result.resultCode == Activity.RESULT_CANCELED) {
+                Log.d("DocScanner", "Scan was cancelled or dismissed by user")
+                showScannerFallbackPrompt = true
+            } else {
+                Log.w("DocScanner", "Scan returned resultCode: ${result.resultCode}")
+                showScannerFallbackPrompt = true
             }
+        } catch (e: Exception) {
+            Log.e("DocScanner", "Error handling scanner result", e)
+            showScannerFallbackPrompt = true
+        }
+    }
+
+    val galleryFallbackLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            customDocumentTitle = "Doc_$timeStamp"
+            pendingScanResult = null
+            pendingPhotoUri = uri
+            showSaveTitleDialog = true
+        }
+    }
+
+    val cameraFallbackLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraImageUri != null) {
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            customDocumentTitle = "Doc_$timeStamp"
+            pendingScanResult = null
+            pendingPhotoUri = tempCameraImageUri
+            showSaveTitleDialog = true
+        }
+    }
+
+    val startCameraCapture: () -> Unit = {
+        try {
+            val tempFile = File.createTempFile("camera_doc_", ".jpg", context.cacheDir).apply {
+                createNewFile()
+                deleteOnExit()
+            }
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                tempFile
+            )
+            tempCameraImageUri = uri
+            cameraFallbackLauncher.launch(uri)
+        } catch (e: Exception) {
+            Log.e("DocScanner", "Camera fallback failed to launch, trying gallery", e)
+            galleryFallbackLauncher.launch("image/*")
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            startCameraCapture()
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.camera_permission_required),
+                Toast.LENGTH_SHORT
+            ).show()
+            galleryFallbackLauncher.launch("image/*")
+        }
+    }
+
+    val launchFallbackCapture = {
+        val hasCameraPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasCameraPermission) {
+            startCameraCapture()
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -193,28 +293,45 @@ fun DocumentScannerScreen(
                     Button(
                         onClick = {
                             try {
+                                val targetActivity = activity ?: context.findActivity()
+                                if (targetActivity == null || targetActivity.isFinishing || targetActivity.isDestroyed) {
+                                    Log.e("DocumentScanner", "Cannot start scan: activity is null or finishing")
+                                    Toast.makeText(context, "Activity is finishing or unavailable", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
+
                                 val options = GmsDocumentScannerOptions.Builder()
                                     .setGalleryImportAllowed(true)
-                                    .setPageLimit(100)
-                                    .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF, GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
-                                    .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+                                    .setPageLimit(10)
+                                    .setResultFormats(
+                                        GmsDocumentScannerOptions.RESULT_FORMAT_PDF,
+                                        GmsDocumentScannerOptions.RESULT_FORMAT_JPEG
+                                    )
+                                    .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_BASE)
                                     .build()
 
-                                val activity = context as? Activity
-                                if (activity != null) {
-                                    GmsDocumentScanning.getClient(options)
-                                        .getStartScanIntent(activity)
-                                        .addOnSuccessListener { intentSender ->
-                                            scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Toast.makeText(context, "Scanner error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                                        }
-                                } else {
-                                    Toast.makeText(context, "Activity context unavailable", Toast.LENGTH_SHORT).show()
-                                }
+                                GmsDocumentScanning.getClient(options)
+                                    .getStartScanIntent(targetActivity)
+                                    .addOnSuccessListener { intentSender ->
+                                        Log.d("DocScanner", "Scan intent sender received successfully")
+                                        scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("DocScanner", "start failed", e)
+                                        val errorClass = e.javaClass.simpleName
+                                        val errorMsg = e.message ?: e.localizedMessage ?: "Unknown error"
+                                        val causeMsg = e.cause?.message?.let { " [Cause: $it]" } ?: ""
+                                        val fullError = "Scanner failure: $errorClass - $errorMsg$causeMsg"
+                                        Toast.makeText(context, fullError, Toast.LENGTH_LONG).show()
+                                        showScannerFallbackPrompt = true
+                                    }
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Could not start scanner: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                                Log.e("DocScanner", "start failed", e)
+                                val errorClass = e.javaClass.simpleName
+                                val errorMsg = e.message ?: e.localizedMessage ?: "Unknown error"
+                                val causeMsg = e.cause?.message?.let { " [Cause: $it]" } ?: ""
+                                Toast.makeText(context, "Could not start scanner: $errorClass - $errorMsg$causeMsg", Toast.LENGTH_LONG).show()
+                                showScannerFallbackPrompt = true
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
@@ -234,6 +351,54 @@ fun DocumentScannerScreen(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                launchFallbackCapture()
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigo),
+                            border = BorderStroke(1.5.dp, PrimaryIndigo),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.scan_with_camera_fallback),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                galleryFallbackLauncher.launch("image/*")
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF475569)),
+                            border = BorderStroke(1.5.dp, Color(0xFFCBD5E1)),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.AddAPhoto,
+                                contentDescription = "Gallery",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -503,12 +668,19 @@ fun DocumentScannerScreen(
     }
 
     // Save Title Dialog after scanning
-    if (showSaveTitleDialog && pendingScanResult != null) {
+    if (showSaveTitleDialog && (pendingScanResult != null || pendingPhotoUri != null)) {
         AlertDialog(
             onDismissRequest = {
-                pendingScanResult?.let { viewModel.saveScannedResult(it) }
+                val scanResult = pendingScanResult
+                val photoUri = pendingPhotoUri
+                if (scanResult != null) {
+                    viewModel.saveScannedResult(scanResult)
+                } else if (photoUri != null) {
+                    viewModel.saveImageAsScannedDocument(photoUri)
+                }
                 showSaveTitleDialog = false
                 pendingScanResult = null
+                pendingPhotoUri = null
             },
             title = { Text(text = "Save Scanned Document", fontWeight = FontWeight.Bold) },
             text = {
@@ -527,13 +699,18 @@ fun DocumentScannerScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val result = pendingScanResult
-                        if (result != null) {
-                            viewModel.saveScannedResult(result, customDocumentTitle)
+                        val scanResult = pendingScanResult
+                        val photoUri = pendingPhotoUri
+                        if (scanResult != null) {
+                            viewModel.saveScannedResult(scanResult, customDocumentTitle)
+                            Toast.makeText(context, context.getString(R.string.doc_scanned_success), Toast.LENGTH_SHORT).show()
+                        } else if (photoUri != null) {
+                            viewModel.saveImageAsScannedDocument(photoUri, customDocumentTitle)
                             Toast.makeText(context, context.getString(R.string.doc_scanned_success), Toast.LENGTH_SHORT).show()
                         }
                         showSaveTitleDialog = false
                         pendingScanResult = null
+                        pendingPhotoUri = null
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
                 ) {
@@ -543,12 +720,69 @@ fun DocumentScannerScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        pendingScanResult?.let { viewModel.saveScannedResult(it) }
+                        val scanResult = pendingScanResult
+                        val photoUri = pendingPhotoUri
+                        if (scanResult != null) {
+                            viewModel.saveScannedResult(scanResult)
+                        } else if (photoUri != null) {
+                            viewModel.saveImageAsScannedDocument(photoUri)
+                        }
                         showSaveTitleDialog = false
                         pendingScanResult = null
+                        pendingPhotoUri = null
                     }
                 ) {
                     Text("Use Default Name")
+                }
+            }
+        )
+    }
+
+    if (showScannerFallbackPrompt) {
+        AlertDialog(
+            onDismissRequest = { showScannerFallbackPrompt = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.CameraAlt,
+                    contentDescription = null,
+                    tint = PrimaryIndigo,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(text = "Document Scan Incomplete", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(text = "The Google ML Kit scanner was closed or cannot run in this environment. You can scan using your camera directly or select an image from the gallery.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showScannerFallbackPrompt = false
+                        launchFallbackCapture()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo)
+                ) {
+                    Text("Use Camera", color = Color.White)
+                }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = {
+                            showScannerFallbackPrompt = false
+                            galleryFallbackLauncher.launch("image/*")
+                        }
+                    ) {
+                        Text("Gallery")
+                    }
+                    TextButton(
+                        onClick = {
+                            showScannerFallbackPrompt = false
+                        }
+                    ) {
+                        Text("Dismiss")
+                    }
                 }
             }
         )
@@ -1399,3 +1633,15 @@ private fun formatFileSize(bytes: Long): String {
     val digitGroups = (Math.log10(bytes.toDouble()) / Math.log10(1024.0)).toInt()
     return DecimalFormat("#,##0.#").format(bytes / Math.pow(1024.0, digitGroups.toDouble())) + " " + units[digitGroups]
 }
+
+/**
+ * Safely resolves the nearest Activity by unwrapping ContextWrapper hierarchies in Compose.
+ */
+private tailrec fun Context.findActivity(): Activity? {
+    return when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+}
+

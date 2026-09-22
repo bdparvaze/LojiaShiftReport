@@ -1160,6 +1160,7 @@
     <string name="doc_scanner_title">ماسح المستندات الضوئي</string>
     <string name="doc_scanner_desc">مسح الفواتير والإيصالات والعقود ضوئياً باستخدام ML Kit</string>
     <string name="scan_now">مسح مستند ضوئياً</string>
+    <string name="scan_with_camera_fallback">المسح بواسطة الكاميرا (بديل)</string>
     <string name="scanned_docs_list">المستندات الممسوحة ضوئياً (%1$d)</string>
     <string name="no_scanned_docs">لا توجد مستندات ممسوحة ضوئياً</string>
     <string name="no_scanned_docs_sub">انقر على \"مسح مستند ضوئياً\" لمسح الفواتير والإيصالات.</string>

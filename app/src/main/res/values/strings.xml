@@ -1161,6 +1161,7 @@
     <string name="doc_scanner_title">Document Scanner</string>
     <string name="doc_scanner_desc">Scan invoices, receipts, and contracts with ML Kit</string>
     <string name="scan_now">Scan Document</string>
+    <string name="scan_with_camera_fallback">Scan with Camera (Fallback)</string>
     <string name="scanned_docs_list">Scanned Documents (%1$d)</string>
     <string name="no_scanned_docs">No Scanned Documents</string>
     <string name="no_scanned_docs_sub">Tap \"Scan Document\" to scan invoices and receipts.</string>

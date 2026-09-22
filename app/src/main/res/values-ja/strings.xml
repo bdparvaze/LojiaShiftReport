@@ -1162,6 +1162,7 @@
     <string name="doc_scanner_title">ドキュメントスキャナー</string>
     <string name="doc_scanner_desc">ML Kitで請求書や領収書をスキャン</string>
     <string name="scan_now">ドキュメントをスキャン</string>
+    <string name="scan_with_camera_fallback">カメラでスキャン（代替）</string>
     <string name="scanned_docs_list">スキャン済みドキュメント (%1$d)</string>
     <string name="no_scanned_docs">スキャンされたドキュメントはありません</string>
     <string name="no_scanned_docs_sub">「ドキュメントをスキャン」をタップしてスキャンします。</string>

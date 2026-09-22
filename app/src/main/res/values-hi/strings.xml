@@ -1159,6 +1159,7 @@
     <string name="doc_scanner_title">दस्तावेज़ स्कैनर</string>
     <string name="doc_scanner_desc">ML Kit के साथ चालान और रसीदें स्कैन करें</string>
     <string name="scan_now">दस्तावेज़ स्कैन करें</string>
+    <string name="scan_with_camera_fallback">कैमरे से स्कैन करें (वैकल्पिक)</string>
     <string name="scanned_docs_list">स्कैन किए गए दस्तावेज़ (%1$d)</string>
     <string name="no_scanned_docs">कोई स्कैन किया गया दस्तावेज़ नहीं</string>
     <string name="no_scanned_docs_sub">रसीदें स्कैन करने के लिए \"दस्तावेज़ स्कैन करें\" पर टैप करें।</string>

@@ -1162,6 +1162,7 @@
     <string name="doc_scanner_title">Сканер документов</string>
     <string name="doc_scanner_desc">Сканирование счетов и чеков с помощью ML Kit</string>
     <string name="scan_now">Сканировать документ</string>
+    <string name="scan_with_camera_fallback">Сканировать камерой (резервный вариант)</string>
     <string name="scanned_docs_list">Отсканированные документы (%1$d)</string>
     <string name="no_scanned_docs">Нет отсканированных документов</string>
     <string name="no_scanned_docs_sub">Нажмите \"Сканировать документ\" для сканирования.</string>

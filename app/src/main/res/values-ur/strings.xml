@@ -1162,6 +1162,7 @@
     <string name="doc_scanner_title">ڈاکیومنٹ اسکینر</string>
     <string name="doc_scanner_desc">ML Kit کے ساتھ رسیدیں اور دستاویزات اسکین کریں</string>
     <string name="scan_now">ڈاکیومنٹ اسکین کریں</string>
+    <string name="scan_with_camera_fallback">کیمرہ سے اسکین کریں (متبادل)</string>
     <string name="scanned_docs_list">اسکین شدہ دستاویزات (%1$d)</string>
     <string name="no_scanned_docs">کوئی اسکین شدہ دستاویز نہیں ہے</string>
     <string name="no_scanned_docs_sub">اسکین کرنے کے لیے \"ڈاکیومنٹ اسکین کریں\" پر ٹیپ کریں۔</string>
