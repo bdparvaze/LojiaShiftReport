@@ -1,6 +1,7 @@
 package com.lojia.shiftreport.auth
 
 import com.lojia.shiftreport.R
+import androidx.compose.ui.res.stringResource
 import com.lojia.shiftreport.data.*
 import com.lojia.shiftreport.util.*
 import com.lojia.shiftreport.ui.common.*
@@ -64,13 +65,17 @@ fun LojiaHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.height(260.dp))
-            .background(PrimaryBlue)
+            .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.height(180.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(PrimaryBlue, Color(0xFF2563EB))
+                )
+            )
             .testTag("lojiaHeader"),
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -84,10 +89,10 @@ fun LojiaHeader(
                 ) {
                     Canvas(
                         modifier = Modifier
-                            .height(64.dp)
-                            .width(92.dp)
+                            .height(46.dp)
+                            .width(68.dp)
                     ) {
-                        val strokeW = 12.dp.toPx()
+                        val strokeW = 9.dp.toPx()
                         // Vertical bar of L
                         drawRect(
                             color = Color.White,
@@ -104,32 +109,35 @@ fun LojiaHeader(
 
                     Text(
                         text = "ojia",
-                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 40.sp,
+                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
+                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 Text(
                     text = "system",
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 40.sp,
+                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFFACC15),
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "SECURE BUSINESS LEDGER",
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White.copy(alpha = 0.95f),
-                letterSpacing = 2.sp
+                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White.copy(alpha = 0.90f),
+                letterSpacing = 2.5.sp
             )
         }
     }
@@ -192,17 +200,21 @@ fun LojiaSectionHeader(
                 )
             }
             Spacer(modifier = Modifier.width(9.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = LojiaColors.N900
+                    color = LojiaColors.N900,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = subtitle,
                     fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 10.8.sp,
                     color = LojiaColors.N500,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 1.dp)
                 )
             }
@@ -510,10 +522,10 @@ fun LojiaPasswordStrengthMeter(
     score = score.coerceIn(1, 4)
 
     val (badgeText, badgeColor, badgeBg) = when (score) {
-        1 -> Triple(LojiaStrings.get("weak", isBn), LojiaColors.R500, LojiaColors.R100)
-        2 -> Triple(LojiaStrings.get("fair", isBn), Color(0xFFF59E0B), Color(0xFFFEF3C7))
-        3 -> Triple(LojiaStrings.get("good", isBn), Color(0xFF3B82F6), Color(0xFFDBEAFE))
-        else -> Triple(LojiaStrings.get("strong", isBn), LojiaColors.G500, LojiaColors.G100)
+        1 -> Triple(stringResource(R.string.auth_weak), LojiaColors.R500, LojiaColors.R100)
+        2 -> Triple(stringResource(R.string.auth_fair), Color(0xFFF59E0B), Color(0xFFFEF3C7))
+        3 -> Triple(stringResource(R.string.auth_good), Color(0xFF3B82F6), Color(0xFFDBEAFE))
+        else -> Triple(stringResource(R.string.auth_strong), LojiaColors.G500, LojiaColors.G100)
     }
 
     Column(
@@ -546,7 +558,7 @@ fun LojiaPasswordStrengthMeter(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = LojiaStrings.get("pwStrengthLabel", isBn),
+                text = stringResource(R.string.auth_pw_strength_label),
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
                 color = LojiaColors.N500
             )
@@ -571,8 +583,8 @@ fun LojiaPasswordStrengthMeter(
                 .padding(top = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ReqIndicator(label = LojiaStrings.get("reqLen", isBn), isMet = hasLen)
-            ReqIndicator(label = LojiaStrings.get("reqCase", isBn), isMet = hasCase)
+            ReqIndicator(label = stringResource(R.string.auth_req_len), isMet = hasLen)
+            ReqIndicator(label = stringResource(R.string.auth_req_case), isMet = hasCase)
         }
         Row(
             modifier = Modifier
@@ -580,8 +592,8 @@ fun LojiaPasswordStrengthMeter(
                 .padding(top = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ReqIndicator(label = LojiaStrings.get("reqNum", isBn), isMet = hasNum)
-            ReqIndicator(label = LojiaStrings.get("reqSym", isBn), isMet = hasSym)
+            ReqIndicator(label = stringResource(R.string.auth_req_num), isMet = hasNum)
+            ReqIndicator(label = stringResource(R.string.auth_req_sym), isMet = hasSym)
         }
     }
 }
@@ -704,7 +716,7 @@ fun LojiaCountryPickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isBn) "দেশ ও কোড নির্বাচন করুন" else "Select Country & Dial Code",
+                        text = stringResource(R.string.auth_select_country_code),
                         fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = LojiaColors.N900

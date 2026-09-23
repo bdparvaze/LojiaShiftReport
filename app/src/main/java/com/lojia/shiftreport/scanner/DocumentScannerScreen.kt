@@ -4,6 +4,9 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -31,11 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.permission.AppFeaturePermission
+import com.lojia.shiftreport.permission.rememberPermissionRequester
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.PrimaryIndigo
 import com.lojia.shiftreport.ui.theme.PureWhite
@@ -61,6 +67,10 @@ fun DocumentScannerScreen(
     var pendingScanResult by remember { mutableStateOf<GmsDocumentScanningResult?>(null) }
     var pendingPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var tempCameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // CamScanner Advanced Flow State
+    var isCameraXScannerOpen by remember { mutableStateOf(false) }
+    var activeCamScannerBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // Selection mode state
     var isSelectionMode by remember { mutableStateOf(false) }
@@ -88,11 +98,12 @@ fun DocumentScannerScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            customDocumentTitle = "Doc_$timeStamp"
-            pendingScanResult = null
-            pendingPhotoUri = uri
-            showSaveTitleDialog = true
+            val bitmap = decodeUriToBitmap(context, uri)
+            if (bitmap != null) {
+                activeCamScannerBitmap = bitmap
+            } else {
+                Toast.makeText(context, "Could not load selected image", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -100,59 +111,38 @@ fun DocumentScannerScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempCameraImageUri != null) {
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            customDocumentTitle = "Doc_$timeStamp"
-            pendingScanResult = null
-            pendingPhotoUri = tempCameraImageUri
-            showSaveTitleDialog = true
+            val bitmap = decodeUriToBitmap(context, tempCameraImageUri!!)
+            if (bitmap != null) {
+                activeCamScannerBitmap = bitmap
+            } else {
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                customDocumentTitle = "Doc_$timeStamp"
+                pendingScanResult = null
+                pendingPhotoUri = tempCameraImageUri
+                showSaveTitleDialog = true
+            }
         }
     }
+
+    val cameraPermissionRequester = rememberPermissionRequester(
+        feature = AppFeaturePermission.CAMERA,
+        onGranted = {
+            isCameraXScannerOpen = true
+        },
+        onDenied = {
+            // User denied camera permission; rationale dialog is shown automatically with options to grant or open settings
+        }
+    )
 
     val startCameraCapture: () -> Unit = {
-        try {
-            val tempFile = File.createTempFile("camera_doc_", ".jpg", context.cacheDir).apply {
-                createNewFile()
-                deleteOnExit()
-            }
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                tempFile
-            )
-            tempCameraImageUri = uri
-            cameraFallbackLauncher.launch(uri)
-        } catch (e: Exception) {
-            Log.e("DocScanner", "Camera fallback failed to launch, trying gallery", e)
-            Toast.makeText(context, "Camera launch error: ${e.javaClass.simpleName} - ${e.message}", Toast.LENGTH_SHORT).show()
-            galleryFallbackLauncher.launch("image/*")
-        }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            startCameraCapture()
-        } else {
-            Toast.makeText(
-                context,
-                "Camera permission is required to capture documents",
-                Toast.LENGTH_SHORT
-            ).show()
-            galleryFallbackLauncher.launch("image/*")
+        cameraPermissionRequester.launch {
+            isCameraXScannerOpen = true
         }
     }
 
     val launchFallbackCapture = {
-        val hasCameraPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasCameraPermission) {
-            startCameraCapture()
-        } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        cameraPermissionRequester.launch {
+            isCameraXScannerOpen = true
         }
     }
 
@@ -185,37 +175,36 @@ fun DocumentScannerScreen(
     }
 
     val startScannerFlow: () -> Unit = {
-        val targetActivity = activity ?: context.findActivity()
-        if (targetActivity == null || targetActivity.isFinishing || targetActivity.isDestroyed) {
-            Log.w("DocScanner", "Target activity unavailable, direct fallback to camera")
-            launchFallbackCapture()
-        } else {
-            try {
-                val options = GmsDocumentScannerOptions.Builder()
-                    .setGalleryImportAllowed(true)
-                    .setPageLimit(25)
-                    .setResultFormats(
-                        GmsDocumentScannerOptions.RESULT_FORMAT_JPEG,
-                        GmsDocumentScannerOptions.RESULT_FORMAT_PDF
-                    )
-                    .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_BASE)
-                    .build()
+        // Launch our fully-integrated native CamScanner studio (CameraX + A4 reticle + 4-corner perspective crop + filters + OCR).
+        // This avoids known Google Play Services GmsDocScanDelAct crashes (IllegalStateException) on emulators and Android 15/16.
+        launchFallbackCapture()
+    }
 
-                GmsDocumentScanning.getClient(options)
-                    .getStartScanIntent(targetActivity)
-                    .addOnSuccessListener { intentSender ->
-                        val request = IntentSenderRequest.Builder(intentSender).build()
-                        scannerLauncher.launch(request)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("DocScanner", "Scanner start failed", e)
-                        showScannerFallbackPrompt = true
-                    }
-            } catch (e: Throwable) {
-                Log.e("DocScanner", "Scanner initialization failed", e)
-                showScannerFallbackPrompt = true
-            }
-        }
+    // CamScanner Studio Overlay
+    if (activeCamScannerBitmap != null) {
+        CamScannerEditorScreen(
+            initialBitmap = activeCamScannerBitmap!!,
+            viewModel = viewModel,
+            onFinish = { activeCamScannerBitmap = null },
+            onCancel = { activeCamScannerBitmap = null }
+        )
+        return
+    }
+
+    // CameraX Live Scanner Viewfinder Overlay
+    if (isCameraXScannerOpen) {
+        CameraXScannerView(
+            onImageCaptured = { capturedBitmap ->
+                isCameraXScannerOpen = false
+                activeCamScannerBitmap = capturedBitmap
+            },
+            onGalleryPick = {
+                isCameraXScannerOpen = false
+                galleryFallbackLauncher.launch("image/*")
+            },
+            onClose = { isCameraXScannerOpen = false }
+        )
+        return
     }
 
     Box(
@@ -502,4 +491,47 @@ fun Context.findActivity(): Activity? {
         currentContext = currentContext.baseContext
     }
     return null
+}
+
+fun decodeUriToBitmap(context: Context, uri: Uri): Bitmap? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeStream(inputStream, null, boundsOptions)
+        inputStream.close()
+
+        var sampleSize = 1
+        val maxDim = 2560
+        while (boundsOptions.outWidth / sampleSize > maxDim || boundsOptions.outHeight / sampleSize > maxDim) {
+            sampleSize *= 2
+        }
+
+        val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+        val stream = context.contentResolver.openInputStream(uri) ?: return null
+        val bitmap = BitmapFactory.decodeStream(stream, null, decodeOptions)
+        stream.close()
+
+        val exifStream = context.contentResolver.openInputStream(uri)
+        val rotationDegrees = if (exifStream != null) {
+            val exif = ExifInterface(exifStream)
+            val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            exifStream.close()
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        } else 0f
+
+        if (bitmap != null && rotationDegrees != 0f) {
+            val matrix = Matrix().apply { postRotate(rotationDegrees) }
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } else {
+            bitmap
+        }
+    } catch (e: Exception) {
+        Log.e("DocScanner", "Failed to decode uri to bitmap", e)
+        null
+    }
 }

@@ -1,5 +1,7 @@
 package com.lojia.shiftreport.auth
 
+import com.lojia.shiftreport.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -54,7 +56,7 @@ fun QuickPinScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (isBn) "পিন লিখুন" else "Enter PIN",
+            text = stringResource(R.string.quick_pin_enter_pin),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF1E293B)
@@ -63,7 +65,7 @@ fun QuickPinScreen(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = if (isBn) "অ্যাপটি আনলক করতে আপনার 4-সংখ্যার পিন লিখুন" else "Enter your 4-digit PIN to unlock the app",
+            text = stringResource(R.string.quick_pin_subtitle),
             fontSize = 14.sp,
             color = Color(0xFF64748B),
             textAlign = TextAlign.Center
@@ -90,7 +92,7 @@ fun QuickPinScreen(
         if (pinError) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = if (isBn) "ভুল পিন" else "Incorrect PIN",
+                text = stringResource(R.string.quick_pin_incorrect),
                 color = Color(0xFFEF4444),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -121,7 +123,7 @@ fun QuickPinScreen(
 
         TextButton(onClick = onFallbackToLogin) {
             Text(
-                text = if (isBn) "পাসওয়ার্ড ব্যবহার করুন" else "Use Password",
+                text = stringResource(R.string.quick_pin_use_password),
                 color = Color(0xFF3858F6),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold

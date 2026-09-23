@@ -98,14 +98,14 @@ fun ScannerFallbackPromptDialog(
         },
         title = {
             Text(
-                text = "Capture Document",
+                text = stringResource(R.string.doc_capture_doc),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
         },
         text = {
             Text(
-                text = "Capture with your device camera or select a photo from gallery to save as PDF.",
+                text = stringResource(R.string.doc_capture_desc),
                 fontSize = 13.5.sp,
                 color = Color(0xFF475569)
             )
@@ -121,7 +121,7 @@ fun ScannerFallbackPromptDialog(
             ) {
                 Icon(Icons.Outlined.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Open Camera")
+                Text(stringResource(R.string.doc_open_camera))
             }
         },
         dismissButton = {
@@ -134,7 +134,7 @@ fun ScannerFallbackPromptDialog(
             ) {
                 Icon(Icons.Outlined.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("From Gallery")
+                Text(stringResource(R.string.doc_from_gallery))
             }
         },
         containerColor = PureWhite,
@@ -154,7 +154,7 @@ fun RenameDocumentDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Rename Document",
+                text = stringResource(R.string.doc_rename_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -164,7 +164,7 @@ fun RenameDocumentDialog(
                 value = newTitle,
                 onValueChange = { newTitle = it },
                 singleLine = true,
-                label = { Text("Document Title") },
+                label = { Text(stringResource(R.string.doc_title_label)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("rename_title_input")
@@ -180,7 +180,7 @@ fun RenameDocumentDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
@@ -211,14 +211,14 @@ fun DeleteDocumentConfirmDialog(
         },
         title = {
             Text(
-                text = "Delete Document",
+                text = stringResource(R.string.doc_delete_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
         },
         text = {
             Text(
-                text = "Are you sure you want to delete \"$documentTitle\"? This action cannot be undone.",
+                text = stringResource(R.string.doc_delete_confirm, documentTitle),
                 fontSize = 13.5.sp,
                 color = Color(0xFF475569)
             )
@@ -229,7 +229,7 @@ fun DeleteDocumentConfirmDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         },
         dismissButton = {
@@ -260,14 +260,14 @@ fun BatchDeleteConfirmDialog(
         },
         title = {
             Text(
-                text = "Delete $count Documents",
+                text = stringResource(R.string.doc_batch_delete_title, count),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
         },
         text = {
             Text(
-                text = "Are you sure you want to delete $count selected documents? This cannot be undone.",
+                text = stringResource(R.string.doc_batch_delete_confirm, count),
                 fontSize = 13.5.sp,
                 color = Color(0xFF475569)
             )
@@ -278,7 +278,7 @@ fun BatchDeleteConfirmDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Delete All Selected")
+                Text(stringResource(R.string.doc_delete_all_selected))
             }
         },
         dismissButton = {
@@ -304,7 +304,7 @@ fun OcrTextPreviewDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Extracted Text (OCR)",
+                text = stringResource(R.string.doc_extracted_text_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -341,7 +341,7 @@ fun OcrTextPreviewDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No readable text found in document.",
+                            text = stringResource(R.string.doc_no_text_found),
                             color = Color(0xFF64748B),
                             fontSize = 13.sp
                         )
@@ -372,7 +372,7 @@ fun OcrTextPreviewDialog(
                     ) {
                         Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Copy")
+                        Text(stringResource(R.string.copy))
                     }
                     Button(
                         onClick = onShareWord,
@@ -381,7 +381,7 @@ fun OcrTextPreviewDialog(
                     ) {
                         Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Share Word")
+                        Text(stringResource(R.string.doc_btn_share_docx))
                     }
                 } else {
                     Button(
@@ -389,7 +389,7 @@ fun OcrTextPreviewDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Close")
+                        Text(stringResource(R.string.close))
                     }
                 }
             }
@@ -397,7 +397,7 @@ fun OcrTextPreviewDialog(
         dismissButton = {
             if (extractedText.isNotBlank()) {
                 TextButton(onClick = onDismiss) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         },
@@ -420,7 +420,7 @@ fun PasswordProtectDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Password Protect PDF",
+                text = stringResource(R.string.doc_protect_pdf_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -433,7 +433,7 @@ fun PasswordProtectDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Enter a password to encrypt \"$documentTitle\". Users will need this password to open the PDF.",
+                    text = stringResource(R.string.doc_protect_pdf_desc, documentTitle),
                     fontSize = 13.sp,
                     color = Color(0xFF64748B)
                 )
@@ -444,7 +444,7 @@ fun PasswordProtectDialog(
                         password = it
                         errorMessage = null
                     },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.password)) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
@@ -456,7 +456,7 @@ fun PasswordProtectDialog(
                         confirmPassword = it
                         errorMessage = null
                     },
-                    label = { Text("Confirm Password") },
+                    label = { Text(stringResource(R.string.auth_confirm_pw)) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
@@ -485,7 +485,7 @@ fun PasswordProtectDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Protect PDF")
+                Text(stringResource(R.string.doc_btn_protect_pdf))
             }
         },
         dismissButton = {

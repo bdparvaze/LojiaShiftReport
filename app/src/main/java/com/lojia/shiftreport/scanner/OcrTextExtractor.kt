@@ -98,7 +98,7 @@ object OcrTextExtractor {
     /**
      * Cleans character artifacts while preserving both English and Bengali Unicode code points.
      * Keeps Latin (A-Z, a-z), Bengali (U+0980 to U+09FF, including vowels, matras, digits 0-9, danda),
-     * common numerals, currency symbols (৳, $, €, £), and punctuation.
+     * common numerals, currency symbols (BDT, USD, EUR, GBP), and punctuation.
      */
     private fun cleanLineText(rawText: String): String {
         return rawText

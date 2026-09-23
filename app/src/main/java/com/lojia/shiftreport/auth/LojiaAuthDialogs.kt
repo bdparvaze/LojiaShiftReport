@@ -1,5 +1,7 @@
 package com.lojia.shiftreport.auth
 
+import com.lojia.shiftreport.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +34,7 @@ fun LojiaPasswordRecoveryDialog(
     var isAnswerCorrect by remember { mutableStateOf(false) }
 
     val question = userProfile?.securityQuestion.orEmpty().ifEmpty {
-        LojiaStrings.get("sq4", isBn)
+        stringResource(R.string.auth_sq4)
     }
     val actualAnswer = userProfile?.securityAnswer.orEmpty().ifEmpty { "School" }
 
@@ -40,7 +42,7 @@ fun LojiaPasswordRecoveryDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (isBn) "পাসওয়ার্ড উদ্ধার" else "Password Recovery",
+                text = stringResource(R.string.auth_password_recovery_title),
                 fontWeight = FontWeight.Bold,
                 color = LojiaColors.P600
             )
@@ -48,7 +50,7 @@ fun LojiaPasswordRecoveryDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = if (isBn) "নিরাপত্তা প্রশ্নের উত্তর দিয়ে অ্যাকাউন্ট আনলক করুন:" else "Answer security question to unlock your account:",
+                    text = stringResource(R.string.auth_answer_security_question),
                     fontSize = 12.sp,
                     color = LojiaColors.N600
                 )
@@ -61,7 +63,7 @@ fun LojiaPasswordRecoveryDialog(
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
                         Text(
-                            text = if (isBn) "প্রশ্ন:" else "Question:",
+                            text = stringResource(R.string.auth_question_label),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = LojiaColors.P600
@@ -82,8 +84,8 @@ fun LojiaPasswordRecoveryDialog(
                             recoveryAnswer = it
                             recoveryError = null
                         },
-                        label = if (isBn) "উত্তর" else "Answer",
-                        placeholder = if (isBn) "উত্তর লিখুন" else "Enter answer",
+                        label = stringResource(R.string.auth_answer_label),
+                        placeholder = stringResource(R.string.auth_enter_answer_placeholder),
                         errorMessage = recoveryError,
                         validationState = if (recoveryError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
                         testTag = "recoveryAnswer"
@@ -97,13 +99,13 @@ fun LojiaPasswordRecoveryDialog(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = if (isBn) "উত্তর সঠিক!" else "Identity Verified!",
+                                text = stringResource(R.string.auth_identity_verified),
                                 fontSize = 12.sp,
                                 color = LojiaColors.G500,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (isBn) "অ্যাকাউন্ট পুনরুদ্ধার সফল হয়েছে। এগিয়ে যেতে নিচের বোতাম চাপুন।" else "Security verification successful. Click below to continue.",
+                                text = stringResource(R.string.auth_recovery_success_msg),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = LojiaColors.N900
@@ -114,17 +116,18 @@ fun LojiaPasswordRecoveryDialog(
             }
         },
         confirmButton = {
+            val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
             if (!isAnswerCorrect) {
                 TextButton(
                     onClick = {
                         if (actualAnswer.isNotBlank() && recoveryAnswer.trim().equals(actualAnswer.trim(), ignoreCase = true)) {
                             isAnswerCorrect = true
                         } else {
-                            recoveryError = if (isBn) "ভুল উত্তর! আবার চেষ্টা করুন।" else "Incorrect answer! Please try again."
+                            recoveryError = incorrectAnswerError
                         }
                     }
                 ) {
-                    Text(if (isBn) "যাচাই করুন" else "Verify", color = LojiaColors.P500, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.auth_verify_btn), color = LojiaColors.P500, fontWeight = FontWeight.Bold)
                 }
             } else {
                 TextButton(
@@ -133,13 +136,13 @@ fun LojiaPasswordRecoveryDialog(
                         onAuthenticated()
                     }
                 ) {
-                    Text(if (isBn) "লগইন সম্পন্ন করুন" else "Complete Login", color = LojiaColors.G500, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.auth_complete_login_btn), color = LojiaColors.G500, fontWeight = FontWeight.Bold)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(if (isBn) "বাতিল" else "Cancel", color = LojiaColors.N500)
+                Text(stringResource(R.string.cancel), color = LojiaColors.N500)
             }
         }
     )
@@ -166,7 +169,7 @@ fun LojiaLanguageDialog(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isBn) "ভাষা পরিবর্তন করুন" else "Change Language",
+                    text = stringResource(R.string.auth_change_language_title),
                     fontWeight = FontWeight.Bold,
                     color = LojiaColors.P600,
                     fontSize = 18.sp
@@ -194,7 +197,7 @@ fun LojiaLanguageDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "বাংলা (Bengali)",
+                            text = stringResource(R.string.lang_bengali),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = if (isBn) LojiaColors.P600 else Color.Black
@@ -226,7 +229,7 @@ fun LojiaLanguageDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "English",
+                            text = stringResource(R.string.lang_english),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = if (!isBn) LojiaColors.P600 else Color.Black
@@ -246,7 +249,7 @@ fun LojiaLanguageDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(if (isBn) "বাতিল" else "Cancel", color = LojiaColors.N500)
+                Text(stringResource(R.string.cancel), color = LojiaColors.N500)
             }
         }
     )

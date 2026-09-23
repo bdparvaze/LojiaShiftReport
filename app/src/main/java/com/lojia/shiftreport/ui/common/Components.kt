@@ -125,7 +125,8 @@ fun SecureDeleteModal(
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
     val actualPasswordHash = userProfile?.passwordHash.orEmpty()
-    val actualQuestion = userProfile?.securityQuestion?.ifBlank { "আপনার স্টোরের অবস্থান কী?" } ?: "আপনার স্টোরের অবস্থান কী?"
+    val defaultQuestion = stringResource(R.string.default_security_question)
+    val actualQuestion = userProfile?.securityQuestion?.ifBlank { defaultQuestion } ?: defaultQuestion
     val actualAnswer = userProfile?.securityAnswer?.ifBlank { "Lojia" } ?: "Lojia"
 
     AlertDialog(

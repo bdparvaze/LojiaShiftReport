@@ -104,7 +104,7 @@ data class DueReceiptSummary(
 }
 
 /* ----------------------------------------------------------------------
- * TAB 1: DUE HISTORY LEDGER (آجل)
+ * TAB 1: DUE HISTORY LEDGER (Credit Sales)
  * ---------------------------------------------------------------------- */
 @Composable
 fun DueLedgerTab(reports: List<ShiftReport>) {
@@ -302,7 +302,7 @@ fun DueLedgerTab(reports: List<ShiftReport>) {
 }
 
 /* ----------------------------------------------------------------------
- * TAB 2: EMPLOYER ADVANCE LEDGER (এমপ্লয়ার অ্যাডভান্স)
+ * TAB 2: EMPLOYER ADVANCE LEDGER (Staff Advances)
  * ---------------------------------------------------------------------- */
 data class EmployerAdvanceItem(
     val staffName: String,
@@ -419,7 +419,7 @@ fun EmployerLedgerTab(reports: List<ShiftReport>) {
 }
 
 /* ----------------------------------------------------------------------
- * TAB 3: PAID OUT / SHOPPING LEDGER (المصروفات والمشتريات)
+ * TAB 3: PAID OUT / SHOPPING LEDGER (Expenses & Purchases)
  * ---------------------------------------------------------------------- */
 data class PaidOutShoppingItem(
     val itemName: String,
@@ -524,7 +524,7 @@ fun PaidOutShoppingLedgerTab(reports: List<ShiftReport>) {
 }
 
 /* ----------------------------------------------------------------------
- * TAB 4: WALKOUT LEDGER (فواتير غير مدفوعة / هروب)
+ * TAB 4: WALKOUT LEDGER (Unpaid Invoices / Walkouts)
  * ---------------------------------------------------------------------- */
 data class WalkoutLogItem(
     val description: String,

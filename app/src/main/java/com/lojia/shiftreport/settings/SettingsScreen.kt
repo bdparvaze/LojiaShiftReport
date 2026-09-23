@@ -138,7 +138,8 @@ fun SettingsScreen(
                     language = currentLanguage,
                     isAdmin = isAdmin,
                     onRestrictedClick = handleRestrictedClick,
-                    onSwitchModule = onSwitchModule
+                    onSwitchModule = onSwitchModule,
+                    onConfigurePrinterClick = { showTestPrintDialog = true }
                 )
             }
 

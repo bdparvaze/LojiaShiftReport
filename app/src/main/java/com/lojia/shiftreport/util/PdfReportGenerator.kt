@@ -229,67 +229,6 @@ object PdfReportGenerator {
         config.setLocale(locale)
         val localizedContext = context.createConfigurationContext(config)
 
-        val salesSummaryStr = when (language) {
-            AppLanguage.ARABIC -> "ملخص المبيعات"
-            AppLanguage.BENGALI -> "বিক্রয় সারাংশ"
-            else -> "Sales Summary"
-        }
-        val cashSalesStr = when (language) {
-            AppLanguage.ARABIC -> "مبيعات نقدية"
-            AppLanguage.BENGALI -> "নগদ বিক্রয়"
-            else -> "Cash Sales"
-        }
-        val cardMadaSalesStr = when (language) {
-            AppLanguage.ARABIC -> "مبيعات مدى / بطاقات"
-            AppLanguage.BENGALI -> "কার্ড / মাদা বিক্রয়"
-            else -> "Card / Mada Sales"
-        }
-        val cashReconciliationStr = when (language) {
-            AppLanguage.ARABIC -> "مطابقة درج النقدية"
-            AppLanguage.BENGALI -> "ক্যাশ ড্রয়ার সমন্বয়"
-            else -> "Cash Drawer Reconciliation"
-        }
-        val startingCashStr = when (language) {
-            AppLanguage.ARABIC -> "النقد الافتتاحي (العُهدة)"
-            AppLanguage.BENGALI -> "প্রারম্ভিক নগদ (ওপেনিং ফ্লোট)"
-            else -> "Starting Cash (Opening Float)"
-        }
-        val cashInStr = when (language) {
-            AppLanguage.ARABIC -> "نقد داخل (إيداعات + تحصيل آجل)"
-            AppLanguage.BENGALI -> "নগদ জমা (পে-ইন + পূর্বের বাকি আদায়)"
-            else -> "Cash In (Pay-Ins + Previous Due Collections)"
-        }
-        val cashOutStr = when (language) {
-            AppLanguage.ARABIC -> "نقد خارج (مصروفات + سلف + مشتريات)"
-            AppLanguage.BENGALI -> "নগদ খরচ (ব্যয় + অগ্রিম + নগদ ক্রয়)"
-            else -> "Cash Out (Expenses + Advances + Purchases)"
-        }
-        val expectedCashStr = when (language) {
-            AppLanguage.ARABIC -> "النقد المتوقع في الدرج"
-            AppLanguage.BENGALI -> "ড্রয়ারে প্রত্যাশিত নগদ"
-            else -> "Expected Cash in Drawer"
-        }
-        val actualCashCountStr = when (language) {
-            AppLanguage.ARABIC -> "الجرد الفعلي للنقد"
-            AppLanguage.BENGALI -> "প্রকৃত নগদ গণনা"
-            else -> "Actual Cash Count"
-        }
-        val varianceStr = when (language) {
-            AppLanguage.ARABIC -> "الفارق (زيادة / عجز)"
-            AppLanguage.BENGALI -> "পার্থক্য (অতিরিক্ত / ঘাটতি)"
-            else -> "Variance (Over / Short)"
-        }
-        val otherTrackingStr = when (language) {
-            AppLanguage.ARABIC -> "متابعات تشغيلية أخرى"
-            AppLanguage.BENGALI -> "অন্যান্য ট্র্যাকিং ও অপারেশনাল মেট্রিক্স"
-            else -> "Other Tracking & Operational Metrics"
-        }
-        val noticeStr = when (language) {
-            AppLanguage.ARABIC -> "هذا التقرير تم إنشاؤه آلياً بواسطة النظام"
-            AppLanguage.BENGALI -> "এটি সিস্টেম দ্বারা তৈরি শিফট রিপোর্ট"
-            else -> "This is a computer-generated shift report"
-        }
-
         return PdfStrings(
             title = localizedContext.getString(com.lojia.shiftreport.R.string.shift_closing_and_revenue_report),
             officialReport = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_official_report),
@@ -298,21 +237,21 @@ object PdfReportGenerator {
             shift = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_shift),
             date = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_date),
             financialBreakdown = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_financial_breakdown),
-            salesSummary = salesSummaryStr,
-            cashSales = cashSalesStr,
-            cardMadaSales = cardMadaSalesStr,
+            salesSummary = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_sales_summary_title),
+            cashSales = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_cash_sales_label),
+            cardMadaSales = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_card_mada_sales_label),
             digitalWallet = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_digital_wallet),
             grossTotalSales = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_gross_total_sales),
-            cashDrawerReconciliation = cashReconciliationStr,
-            startingCash = startingCashStr,
-            cashIn = cashInStr,
-            cashOut = cashOutStr,
+            cashDrawerReconciliation = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_cash_reconciliation_title),
+            startingCash = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_starting_cash_label),
+            cashIn = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_cash_in_label),
+            cashOut = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_cash_out_label),
             expenses = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_expenses),
-            expectedCashInDrawer = expectedCashStr,
-            actualCashCount = actualCashCountStr,
-            variance = varianceStr,
+            expectedCashInDrawer = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_expected_cash_drawer_label),
+            actualCashCount = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_actual_cash_count_label),
+            variance = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_variance_label),
             netMadaBank = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_net_mada_bank),
-            otherTracking = otherTrackingStr,
+            otherTracking = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_other_tracking_title),
             dueSales = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_due_sales),
             dueCollection = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_due_collection),
             employerAdvances = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_employer_advances),
@@ -334,7 +273,7 @@ object PdfReportGenerator {
             cashierSign = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_cashier_sign_1),
             supervisorSign = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_supervisor_sign),
             page = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_page),
-            computerGeneratedNotice = noticeStr
+            computerGeneratedNotice = localizedContext.getString(com.lojia.shiftreport.R.string.pdf_computer_generated_notice)
         )
     }
     fun generatePresetLogoBitmap(presetKey: String, size: Int = 200): Bitmap {
@@ -1205,11 +1144,7 @@ object PdfReportGenerator {
         drawDataRow(pStr.grossTotalSales, MoneyFormat.format(report.totalSales, currency), isBold = true, isHighlight = true)
 
         ensureSpace(14f)
-        val salesNote = when (language) {
-            AppLanguage.ARABIC -> "* لا تشمل المبيعات الآجلة أو وجبات الموظفين في إجمالي المبيعات"
-            AppLanguage.BENGALI -> "* বাকি বিক্রয় বা স্টাফ খাবার মোট বিক্রয়ে অন্তর্ভুক্ত নয়"
-            else -> "* Excludes Due / Credit Sales and Staff Meals (tracked separately)"
-        }
+        val salesNote = context.getString(R.string.pdf_sales_exclusion_note)
         canvas.drawText(salesNote, margin + 10f, currentY + 9f, secondaryPaint)
         currentY += 16f
 
@@ -1261,26 +1196,10 @@ object PdfReportGenerator {
         // ==========================================
         // SECTION 3: TAX & VAT SUMMARY
         // ==========================================
-        val taxTitle = when (language) {
-            AppLanguage.ARABIC -> "ملخص ضريبة القيمة المضافة (15%)"
-            AppLanguage.BENGALI -> "কর ও ভ্যাট সারাংশ (১৫%)"
-            else -> "Tax & VAT Summary (15% VAT)"
-        }
-        val netTaxableStr = when (language) {
-            AppLanguage.ARABIC -> "المبيعات الخاضعة للضريبة (قبل الضريبة)"
-            AppLanguage.BENGALI -> "করযোগ্য মোট বিক্রয় (ভ্যাট বাদে)"
-            else -> "Net Taxable Sales (Excl. VAT)"
-        }
-        val vatStr = when (language) {
-            AppLanguage.ARABIC -> "ضريبة القيمة المضافة (15%)"
-            AppLanguage.BENGALI -> "ভ্যাট (১৫%)"
-            else -> "VAT Amount (15%)"
-        }
-        val grossTaxStr = when (language) {
-            AppLanguage.ARABIC -> "إجمالي المبيعات شامل الضريبة"
-            AppLanguage.BENGALI -> "মোট বিক্রয় (ভ্যাটসহ)"
-            else -> "Gross Total Sales (Incl. VAT)"
-        }
+        val taxTitle = context.getString(R.string.pdf_tax_vat_summary_title)
+        val netTaxableStr = context.getString(R.string.pdf_net_taxable_sales_label)
+        val vatStr = context.getString(R.string.pdf_vat_amount_label)
+        val grossTaxStr = context.getString(R.string.pdf_gross_total_sales_label)
 
         val netTaxableVal = report.totalSales / 1.15
         val vatVal = report.totalSales - netTaxableVal

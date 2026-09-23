@@ -17,7 +17,7 @@ object MoneyFormat {
 
     /**
      * Formats a monetary double value into a locale-aware display string.
-     * E.g. "$1,234.50" or "1,234.50 USD" or "৳ 1,234.50" based on the currency and system locale.
+     * E.g. "$1,234.50" or "1,234.50 USD" or "1,234.50 BDT" based on the currency and system locale.
      */
     fun format(
         amount: Double,

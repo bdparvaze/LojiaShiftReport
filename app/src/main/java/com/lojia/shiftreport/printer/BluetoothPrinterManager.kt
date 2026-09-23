@@ -58,10 +58,24 @@ class BluetoothPrinterManager(private val context: Context) {
     }
 
     /**
+     * Checks whether runtime permissions required for Bluetooth thermal printing are granted.
+     */
+    fun hasBluetoothPermissions(): Boolean {
+        return com.lojia.shiftreport.permission.PermissionUtils.hasAllPermissions(
+            context,
+            com.lojia.shiftreport.permission.AppFeaturePermission.BLUETOOTH_PRINTER.permissions
+        )
+    }
+
+    /**
      * Retrieves list of paired Bluetooth devices that can act as thermal printers.
      */
     @SuppressLint("MissingPermission")
     fun getPairedPrinters(): List<BluetoothPrinterDevice> {
+        if (!hasBluetoothPermissions()) {
+            Log.w(TAG, "Bluetooth permissions not granted when querying paired devices.")
+            return emptyList()
+        }
         return try {
             val connections = BluetoothPrintersConnections.selectFirstPaired()
             val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter() ?: return emptyList()
@@ -248,6 +262,12 @@ class BluetoothPrinterManager(private val context: Context) {
         val printerAddress = getSavedPrinterAddress()
         if (printerAddress.isBlank()) {
             return@withContext Result.failure(IllegalStateException("No Bluetooth printer selected in settings."))
+        }
+
+        if (!hasBluetoothPermissions()) {
+            return@withContext Result.failure(
+                SecurityException("Bluetooth and Nearby Devices permission is required to print to your thermal printer.")
+            )
         }
 
         try {

@@ -104,7 +104,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                     activeLanguage = lang,
                     activeCountry = country,
                     activeCashier = activeCas,
-                    syncStatusMessage = "Synchronized: ${cashierList.size} Cashiers • ${lang.displayName} • ${country.flag} ${country.currencyCode}"
+                    syncStatusMessage = "Synchronized: ${cashierList.size} Cashiers • ${lang.displayName} • ${country.displayName} (${country.currencyCode})"
                 )
             }.collect { newState ->
                 _syncState.value = newState
@@ -118,8 +118,12 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     }
 
     private fun loadInitialCountry(): AppCountry {
-        val code = prefs.getString(KEY_SELECTED_COUNTRY, AppCountry.SAUDI_ARABIA.code) ?: AppCountry.SAUDI_ARABIA.code
-        return AppCountry.fromCode(code)
+        val storedCode = prefs.getString(KEY_SELECTED_COUNTRY, null)
+        return if (!storedCode.isNullOrBlank()) {
+            AppCountry.fromCode(storedCode)
+        } else {
+            com.lojia.shiftreport.util.CountryDetector.detectDefaultAppCountry(context)
+        }
     }
 
     private fun loadInitialActiveCashier(): String {
@@ -281,6 +285,28 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                     username = _activeCashier.value,
                     action = "COUNTRY_CHANGE",
                     details = "Country and Currency synchronized to ${country.displayNameEn} (${country.currencyCode} ${country.currencySymbol})"
+                )
+            )
+        }
+    }
+
+    /**
+     * Change and synchronize currency setting independently across all modules.
+     */
+    fun setCurrency(currencyCode: String) {
+        val matchedCountry = AppCountry.entries.find { it.currencyCode.equals(currencyCode, ignoreCase = true) }
+        scope.launch {
+            val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
+            val updatedProfile = currentProfile.copy(
+                currency = currencyCode,
+                vatRate = matchedCountry?.defaultVatRate ?: currentProfile.vatRate
+            )
+            reportDao.saveBusinessProfile(updatedProfile)
+            reportDao.insertAuditLog(
+                AuditLog(
+                    username = _activeCashier.value,
+                    action = "CURRENCY_CHANGE",
+                    details = "Currency set to $currencyCode"
                 )
             )
         }

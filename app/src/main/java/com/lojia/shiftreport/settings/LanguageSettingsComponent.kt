@@ -286,7 +286,7 @@ fun LanguageToggleSettingsCard(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "${currentLang.flag} ${currentLang.displayName} (DataStore)",
+                        text = "${currentLang.displayName} (DataStore)",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

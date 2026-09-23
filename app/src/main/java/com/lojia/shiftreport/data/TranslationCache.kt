@@ -30,15 +30,15 @@ interface TranslationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveAllTranslations(entities: List<TranslationCacheEntity>)
 
-    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%backup%' OR cacheKey LIKE '%Backup%' OR cacheKey LIKE '%restore%' OR cacheKey LIKE '%Restore%' OR cacheKey LIKE '%পুনরুদ্ধার%' OR translatedText LIKE '%পুনরুদ্ধার%' OR translatedText LIKE '%Restore%' OR translatedText LIKE '%restore%'")
+    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%backup%' OR cacheKey LIKE '%Backup%' OR cacheKey LIKE '%restore%' OR cacheKey LIKE '%Restore%' OR translatedText LIKE '%Restore%' OR translatedText LIKE '%restore%'")
     suspend fun clearBackupTranslations()
 
-    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%cashier%' OR cacheKey LIKE '%ক্যাশিয়ার%' OR translatedText LIKE '%ক্যাশিয়ার ব্যবস্থাপনা%' OR translatedText LIKE '%ক্যাশিয়ার ম্যানেজমেন্ট%'")
+    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%cashier%' OR cacheKey LIKE '%Cashier%' OR translatedText LIKE '%cashier%'")
     suspend fun clearCashierTranslations()
 
-    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%daily shift%' OR cacheKey LIKE '%দৈনিক শিফট%' OR translatedText LIKE '%দৈনিক শিফট%'")
+    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%daily shift%' OR cacheKey LIKE '%Daily Shift%' OR translatedText LIKE '%daily shift%'")
     suspend fun clearDailyShiftTranslations()
 
-    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%performance analytics%' OR cacheKey LIKE '%পারফরম্যান্স অ্যানালিটিক্স%' OR translatedText LIKE '%পারফরম্যান্স অ্যানালিটিক্স%'")
+    @Query("DELETE FROM translation_cache WHERE cacheKey LIKE '%performance analytics%' OR cacheKey LIKE '%Performance Analytics%' OR translatedText LIKE '%performance analytics%'")
     suspend fun clearPerformanceAnalyticsTranslations()
 }

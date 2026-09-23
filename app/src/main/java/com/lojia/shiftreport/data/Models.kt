@@ -32,6 +32,8 @@ data class UserProfile(
     val designation: String = "Store Owner & Manager",
     val nationalIdOrPassport: String = "",
     val address: String = "",
+    val mapLat: Double = 0.0,
+    val mapLng: Double = 0.0,
     val profilePictureUri: String = "",
     val avatarIndex: Int = 0,
     val dateOfBirthOrJoin: String = "",
@@ -366,6 +368,8 @@ data class BusinessProfile(
     val phone: String = "",
     val email: String = "",
     val address: String = "",
+    val mapLat: Double = 0.0,
+    val mapLng: Double = 0.0,
     val workingHours: String = "08:00 AM - 10:00 PM",
     val currency: String = "USD",
     val country: String = "United States",
@@ -382,6 +386,15 @@ data class BusinessProfile(
     val taxInclusive: Boolean get() = isTaxIncluded
 }
 
+data class UpdateBusinessRequest(
+    val businessName: String? = null,
+    val phone: String? = null,
+    val email: String? = null,
+    val address: String = "",
+    val mapLat: Double = 0.0,
+    val mapLng: Double = 0.0
+)
+
 @Entity(tableName = "app_settings")
 data class AppSetting(
     @PrimaryKey val key: String,
@@ -394,43 +407,35 @@ enum class AppModule(val key: String, @StringRes val titleRes: Int) {
 
 enum class AppCountry(
     val code: String,
-    val displayNameEn: String,
-    val displayNameBn: String,
-    val displayNameAr: String,
-    val flag: String,
+    val displayName: String,
+    @StringRes val nameRes: Int,
     val currencyCode: String,
     val currencySymbol: String,
     val defaultVatRate: Double = 15.0
 ) {
-    BANGLADESH("BD", "Bangladesh", "বাংলাদেশ", "بنغلاديش", "🇧🇩", "BDT", "৳", 15.0),
-    SAUDI_ARABIA("SA", "Saudi Arabia", "সৌদি আরব", "المملكة العربية السعودية", "🇸🇦", "SAR", "﷼", 15.0),
-    UNITED_ARAB_EMIRATES("AE", "United Arab Emirates", "সংযুক্ত আরব আমিরাত", "الإمارات العربية المتحدة", "🇦🇪", "AED", "د.إ", 5.0),
-    QATAR("QA", "Qatar", "কাতার", "قطر", "🇶🇦", "QAR", "ر.ق", 0.0),
-    KUWAIT("KW", "Kuwait", "কুয়েত", "الكويت", "🇰🇼", "KWD", "د.ك", 0.0),
-    OMAN("OM", "Oman", "ওমান", "سلطنة عمان", "🇴🇲", "OMR", "ر.ع", 5.0),
-    BAHRAIN("BH", "Bahrain", "বাহরাইন", "مملكة البحرين", "🇧🇭", "BHD", "د.ب", 10.0),
-    UNITED_STATES("US", "United States", "যুক্তরাষ্ট্র", "الولايات المتحدة", "🇺🇸", "USD", "$", 8.25),
-    UNITED_KINGDOM("GB", "United Kingdom", "যুক্তরাজ্য", "المملكة المتحدة", "🇬🇧", "GBP", "£", 20.0),
-    EUROPEAN_UNION("EU", "European Union", "ইউরোপীয় ইউনিয়ন", "الاتحاد الأوروبي", "🇪🇺", "EUR", "€", 19.0),
-    INDIA("IN", "India", "ভারত", "الهند", "🇮🇳", "INR", "₹", 18.0),
-    PAKISTAN("PK", "Pakistan", "পাকিস্তান", "باكستان", "🇵🇰", "PKR", "₨", 17.0),
-    MALAYSIA("MY", "Malaysia", "মালয়েশিয়া", "ماليزيا", "🇲🇾", "MYR", "RM", 6.0),
-    SINGAPORE("SG", "Singapore", "সিঙ্গাপুর", "سنغافورة", "🇸🇬", "SGD", "S$", 9.0),
-    CANADA("CA", "Canada", "কানাডা", "كندا", "🇨🇦", "CAD", "C$", 13.0),
-    AUSTRALIA("AU", "Australia", "অস্ট্রেলিয়া", "أستراليا", "🇦🇺", "AUD", "A$", 10.0),
-    TURKEY("TR", "Turkey", "তুরস্ক", "تركيا", "🇹🇷", "TRY", "₺", 20.0),
-    EGYPT("EG", "Egypt", "মিশর", "مصر", "🇪🇬", "EGP", "E£", 14.0),
-    JAPAN("JP", "Japan", "জাপান", "اليابان", "🇯🇵", "JPY", "¥", 10.0),
-    CHINA("CN", "China", "চীন", "الصين", "🇨🇳", "CNY", "¥", 13.0),
-    INDONESIA("ID", "Indonesia", "ইন্দোনেশিয়া", "إندونيسيا", "🇮🇩", "IDR", "Rp", 11.0);
+    BANGLADESH("BD", "Bangladesh", R.string.country_bangladesh, "BDT", "BDT", 15.0),
+    SAUDI_ARABIA("SA", "Saudi Arabia", R.string.country_saudi_arabia, "SAR", "SAR", 15.0),
+    UNITED_ARAB_EMIRATES("AE", "United Arab Emirates", R.string.country_uae, "AED", "AED", 5.0),
+    QATAR("QA", "Qatar", R.string.country_qatar, "QAR", "QAR", 0.0),
+    KUWAIT("KW", "Kuwait", R.string.country_kuwait, "KWD", "KWD", 0.0),
+    OMAN("OM", "Oman", R.string.country_oman, "OMR", "OMR", 5.0),
+    BAHRAIN("BH", "Bahrain", R.string.country_bahrain, "BHD", "BHD", 10.0),
+    UNITED_STATES("US", "United States", R.string.country_usa, "USD", "$", 8.25),
+    UNITED_KINGDOM("GB", "United Kingdom", R.string.country_uk, "GBP", "£", 20.0),
+    EUROPEAN_UNION("EU", "European Union", R.string.country_eu, "EUR", "€", 19.0),
+    INDIA("IN", "India", R.string.country_india, "INR", "INR", 18.0),
+    PAKISTAN("PK", "Pakistan", R.string.country_pakistan, "PKR", "PKR", 17.0),
+    MALAYSIA("MY", "Malaysia", R.string.country_malaysia, "MYR", "RM", 6.0),
+    SINGAPORE("SG", "Singapore", R.string.country_singapore, "SGD", "S$", 9.0),
+    CANADA("CA", "Canada", R.string.country_canada, "CAD", "C$", 13.0),
+    AUSTRALIA("AU", "Australia", R.string.country_australia, "AUD", "A$", 10.0),
+    TURKEY("TR", "Turkey", R.string.country_turkey, "TRY", "TRY", 20.0),
+    EGYPT("EG", "Egypt", R.string.country_egypt, "EGP", "EGP", 14.0),
+    JAPAN("JP", "Japan", R.string.country_japan, "JPY", "¥", 10.0),
+    CHINA("CN", "China", R.string.country_china, "CNY", "¥", 13.0),
+    INDONESIA("ID", "Indonesia", R.string.country_indonesia, "IDR", "Rp", 11.0);
 
-    fun getLocalizedName(language: AppLanguage): String {
-        return when (language) {
-            AppLanguage.BENGALI -> displayNameBn
-            AppLanguage.ARABIC -> displayNameAr
-            else -> displayNameEn
-        }
-    }
+    val displayNameEn: String get() = displayName
 
     companion object {
         fun fromCode(code: String?): AppCountry {
@@ -443,13 +448,14 @@ enum class AppCountry(
 enum class AppLanguage(
     val code: String,
     val displayName: String,
-    val nativeName: String,
-    val flag: String,
+    @StringRes val titleRes: Int,
     val isRtl: Boolean = false
 ) {
-    ENGLISH("en", "English", "English", "🇺🇸", isRtl = false),
-    BENGALI("bn", "Bengali", "বাংলা", "🇧🇩", isRtl = false),
-    ARABIC("ar", "Arabic", "العربية", "🇸🇦", isRtl = true);
+    ENGLISH("en", "English", R.string.lang_english, isRtl = false),
+    BENGALI("bn", "Bengali", R.string.lang_bengali, isRtl = false),
+    ARABIC("ar", "Arabic", R.string.lang_arabic, isRtl = true);
+
+    val nativeName: String get() = displayName
 
     companion object {
         fun fromCode(code: String?): AppLanguage {

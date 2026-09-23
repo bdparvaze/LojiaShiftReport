@@ -97,6 +97,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun setCurrency(currencyCode: String) {
+        syncManager.setCurrency(currencyCode)
+        viewModelScope.launch {
+            _uiMessage.emit(UiText.DynamicString("Currency set to $currencyCode"))
+        }
+    }
+
     // Centralized Dual Module System State (SHOPPING or SHIFT_REPORT)
     val currentModule: StateFlow<AppModule> = syncManager.currentModule
 
@@ -1413,6 +1420,31 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             reportDao.saveBusinessProfile(profile)
             _uiMessage.emit(UiText.StringResource(R.string.business_settings_updated))
+        }
+    }
+
+    fun updateBusiness(request: UpdateBusinessRequest) {
+        viewModelScope.launch {
+            val currentBp = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
+            val updatedBp = currentBp.copy(
+                businessName = request.businessName ?: currentBp.businessName,
+                phone = request.phone ?: currentBp.phone,
+                email = request.email ?: currentBp.email,
+                address = if (request.address.isNotBlank()) request.address else currentBp.address,
+                mapLat = if (request.mapLat != 0.0) request.mapLat else currentBp.mapLat,
+                mapLng = if (request.mapLng != 0.0) request.mapLng else currentBp.mapLng
+            )
+            reportDao.saveBusinessProfile(updatedBp)
+
+            val currentUp = reportDao.getUserProfileOnce() ?: UserProfile()
+            val updatedUp = currentUp.copy(
+                address = if (request.address.isNotBlank()) request.address else currentUp.address,
+                mapLat = if (request.mapLat != 0.0) request.mapLat else currentUp.mapLat,
+                mapLng = if (request.mapLng != 0.0) request.mapLng else currentUp.mapLng
+            )
+            reportDao.saveUserProfile(updatedUp)
+
+            _uiMessage.emit(UiText.StringResource(R.string.toast_location_updated))
         }
     }
 

@@ -102,18 +102,25 @@ fun AdminAuthDialog(
                             )
                         }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Text(
                                 text = "Admin Re-Authentication",
                                 fontSize = 17.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F172A)
+                                color = Color(0xFF0F172A),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = actionTitle,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFFDC2626)
+                                color = Color(0xFFDC2626),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -157,7 +164,8 @@ fun AdminAuthDialog(
                             fontSize = 11.5.sp,
                             color = Color(0xFF92400E),
                             lineHeight = 15.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }

@@ -311,26 +311,10 @@ fun SettingsCommonDialogs(
         )
     }
 
-    // Test Print Dialog
+    // Thermal Printer Setup & Test Dialog
     if (showTestPrintDialog) {
-        AlertDialog(
-            onDismissRequest = onDismissTestPrint,
-            icon = { Icon(Icons.Default.Print, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(stringResource(R.string.printer_test_simulated), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.thermal_print_command_sent), fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        stringResource(R.string.paper_width_80mmn_cash),
-                        fontSize = 13.sp,
-                        color = TextSecondaryLight
-                    )
-                }
-            },
-            confirmButton = {
-                Button(onClick = onDismissTestPrint) { Text(stringResource(R.string.ok)) }
-            }
+        com.lojia.shiftreport.printer.PrinterSetupDialog(
+            onDismiss = onDismissTestPrint
         )
     }
 }

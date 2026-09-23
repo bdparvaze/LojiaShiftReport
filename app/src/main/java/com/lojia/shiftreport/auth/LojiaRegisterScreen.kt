@@ -1,5 +1,7 @@
 package com.lojia.shiftreport.auth
 
+import com.lojia.shiftreport.R
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.telephony.TelephonyManager
 import android.widget.Toast
@@ -66,22 +68,8 @@ fun LojiaRegisterScreen(
     var phoneNum by remember { mutableStateOf("") }
 
     // Country Detection & Selection
-    val defaultCountry = remember {
-        var detectedCountry: LojiaCountry? = null
-        try {
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-            val simCountry = tm?.simCountryIso?.lowercase()
-            val netCountry = tm?.networkCountryIso?.lowercase()
-            val localeCountry = context.resources.configuration.locales[0]?.country?.lowercase()
-            val iso = when {
-                !simCountry.isNullOrEmpty() -> simCountry
-                !netCountry.isNullOrEmpty() -> netCountry
-                !localeCountry.isNullOrEmpty() -> localeCountry
-                else -> if (isBn) "bd" else "sa"
-            }
-            detectedCountry = LOJIA_COUNTRIES.find { it.code.lowercase() == iso }
-        } catch (_: Exception) {}
-        detectedCountry ?: LOJIA_COUNTRIES.find { it.code == (if (isBn) "BD" else "SA") } ?: LOJIA_COUNTRIES[0]
+    val defaultCountry = remember(context) {
+        com.lojia.shiftreport.util.CountryDetector.detectDefaultLojiaCountry(context)
     }
     var selectedCountry by remember { mutableStateOf(defaultCountry) }
     var showCountryPicker by remember { mutableStateOf(false) }
@@ -195,9 +183,9 @@ fun LojiaRegisterScreen(
 
         if (hasError) {
             val toastMsg = if (!agreeTerms) {
-                if (isBn) "রেজিস্ট্রেশন করতে শর্তাবলীতে সম্মত হন এবং সকল তথ্য সঠিকভাবে পূরণ করুন!" else "Please agree to the Terms of Service and fill out all required fields!"
+                context.getString(R.string.auth_toast_agree_terms)
             } else {
-                if (isBn) "অনুগ্রহ করে সকল তথ্য সঠিকভাবে পূরণ করুন!" else "Please fill out all required fields correctly!"
+                context.getString(R.string.auth_toast_fill_required)
             }
             Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
             return
@@ -250,8 +238,8 @@ fun LojiaRegisterScreen(
             LojiaCard(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 LojiaSectionHeader(
                     icon = Icons.Outlined.Person,
-                    title = LojiaStrings.get("profileTitle", isBn),
-                    subtitle = LojiaStrings.get("profileSub", isBn)
+                    title = stringResource(R.string.auth_profile_title),
+                    subtitle = stringResource(R.string.auth_profile_sub)
                 )
 
                 Row(
@@ -261,14 +249,14 @@ fun LojiaRegisterScreen(
                     LojiaInputField(
                         value = rFn,
                         onValueChange = { rFn = it },
-                        label = LojiaStrings.get("firstName", isBn),
-                        placeholder = LojiaStrings.get("phFirstName", isBn),
+                        label = stringResource(R.string.auth_first_name),
+                        placeholder = stringResource(R.string.auth_ph_first_name),
                         leadingIcon = Icons.Outlined.Person,
                         isRequired = true,
                         isValid = rFn.trim().isNotEmpty(),
                         validationState = vFn,
-                        errorMessage = LojiaStrings.get("errRequired", isBn),
-                        successMessage = LojiaStrings.get("okGood", isBn),
+                        errorMessage = stringResource(R.string.auth_err_required),
+                        successMessage = stringResource(R.string.auth_ok_good),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Right) }),
                         modifier = Modifier.weight(1f),
@@ -278,14 +266,14 @@ fun LojiaRegisterScreen(
                     LojiaInputField(
                         value = rLn,
                         onValueChange = { rLn = it },
-                        label = LojiaStrings.get("lastName", isBn),
-                        placeholder = LojiaStrings.get("phLastName", isBn),
+                        label = stringResource(R.string.auth_last_name),
+                        placeholder = stringResource(R.string.auth_ph_last_name),
                         leadingIcon = Icons.Outlined.Person,
                         isRequired = true,
                         isValid = rLn.trim().isNotEmpty(),
                         validationState = vLn,
-                        errorMessage = LojiaStrings.get("errRequired", isBn),
-                        successMessage = LojiaStrings.get("okGood", isBn),
+                        errorMessage = stringResource(R.string.auth_err_required),
+                        successMessage = stringResource(R.string.auth_ok_good),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         modifier = Modifier.weight(1f),
@@ -300,15 +288,15 @@ fun LojiaRegisterScreen(
                     onValueChange = {
                         rUn = it.filter { ch -> !ch.isWhitespace() }.lowercase()
                     },
-                    label = LojiaStrings.get("username", isBn),
-                    placeholder = LojiaStrings.get("phUsername", isBn),
+                    label = stringResource(R.string.username),
+                    placeholder = stringResource(R.string.auth_ph_username),
                     leadingIcon = Icons.Outlined.Person,
                     isRequired = true,
                     isValid = rUn.trim().length in 3..20,
                     validationState = vUn,
-                    errorMessage = LojiaStrings.get("errUserLength", isBn),
-                    successMessage = LojiaStrings.get("okUserAvail", isBn),
-                    infoTooltip = LojiaStrings.get("userTip", isBn),
+                    errorMessage = stringResource(R.string.auth_err_user_length),
+                    successMessage = stringResource(R.string.auth_ok_user_avail),
+                    infoTooltip = stringResource(R.string.auth_user_tip),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                     testTag = "rUn"
@@ -319,14 +307,14 @@ fun LojiaRegisterScreen(
                 LojiaInputField(
                     value = rEm,
                     onValueChange = { rEm = it },
-                    label = LojiaStrings.get("workEmail", isBn),
-                    placeholder = LojiaStrings.get("phEmail", isBn),
+                    label = stringResource(R.string.auth_work_email),
+                    placeholder = stringResource(R.string.auth_ph_email),
                     leadingIcon = Icons.Outlined.Email,
                     isRequired = true,
                     isValid = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$".toRegex().matches(rEm.trim()),
                     validationState = vEm,
-                    errorMessage = LojiaStrings.get("errValidEmail", isBn),
-                    successMessage = LojiaStrings.get("okValidEmail", isBn),
+                    errorMessage = stringResource(R.string.auth_err_valid_email),
+                    successMessage = stringResource(R.string.auth_ok_valid_email),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                     testTag = "rEm"
@@ -336,7 +324,7 @@ fun LojiaRegisterScreen(
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = LojiaStrings.get("phoneNumber", isBn),
+                        text = stringResource(R.string.phone_number),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = LojiaColors.N600,
@@ -381,10 +369,10 @@ fun LojiaRegisterScreen(
                                 value = phoneNum,
                                 onValueChange = { phoneNum = it },
                                 label = "",
-                                placeholder = LojiaStrings.get("phPhone", isBn),
+                                placeholder = stringResource(R.string.auth_ph_phone),
                                 leadingIcon = Icons.Outlined.Phone,
                                 validationState = vPhone,
-                                errorMessage = LojiaStrings.get("errValidPhone", isBn),
+                                errorMessage = stringResource(R.string.auth_err_valid_phone),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
                                 keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                                 testTag = "phoneNum"
@@ -398,20 +386,20 @@ fun LojiaRegisterScreen(
             LojiaCard(modifier = Modifier.padding(top = 12.dp)) {
                 LojiaSectionHeader(
                     icon = Icons.Outlined.Shield,
-                    title = LojiaStrings.get("secTitle", isBn),
-                    subtitle = LojiaStrings.get("secSub", isBn)
+                    title = stringResource(R.string.auth_sec_title),
+                    subtitle = stringResource(R.string.auth_sec_sub)
                 )
 
                 LojiaInputField(
                     value = rPw,
                     onValueChange = { rPw = it },
-                    label = LojiaStrings.get("password", isBn),
-                    placeholder = LojiaStrings.get("phPwMin", isBn),
+                    label = stringResource(R.string.password),
+                    placeholder = stringResource(R.string.auth_ph_pw_min),
                     leadingIcon = Icons.Outlined.Lock,
                     isRequired = true,
                     isValid = rPw.length >= 8,
                     validationState = vPw,
-                    errorMessage = LojiaStrings.get("errPwMin", isBn),
+                    errorMessage = stringResource(R.string.auth_err_pw_min),
                     visualTransformation = if (rPwVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(
@@ -438,14 +426,14 @@ fun LojiaRegisterScreen(
                 LojiaInputField(
                     value = rCp,
                     onValueChange = { rCp = it },
-                    label = LojiaStrings.get("confirmPw", isBn),
-                    placeholder = LojiaStrings.get("phReEnterPw", isBn),
+                    label = stringResource(R.string.auth_confirm_pw),
+                    placeholder = stringResource(R.string.auth_ph_reenter_pw),
                     leadingIcon = Icons.Outlined.Shield,
                     isRequired = true,
                     isValid = rCp == rPw && rPw.isNotEmpty(),
                     validationState = vCp,
-                    errorMessage = LojiaStrings.get("errPwMatch", isBn),
-                    successMessage = LojiaStrings.get("okPwMatch", isBn),
+                    errorMessage = stringResource(R.string.auth_err_pw_match),
+                    successMessage = stringResource(R.string.auth_ok_pw_match),
                     visualTransformation = if (rCpVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(
@@ -470,12 +458,18 @@ fun LojiaRegisterScreen(
             LojiaCard(modifier = Modifier.padding(top = 12.dp)) {
                 LojiaSectionHeader(
                     icon = Icons.Outlined.HelpOutline,
-                    title = LojiaStrings.get("recTitle", isBn),
-                    subtitle = LojiaStrings.get("recSub", isBn)
+                    title = stringResource(R.string.auth_rec_title),
+                    subtitle = stringResource(R.string.auth_rec_sub)
                 )
 
                 var showQuestionMenu by remember { mutableStateOf(false) }
-                val questionKeys = listOf("sq1", "sq2", "sq3", "sq4", "sq5")
+                val questionResIds = listOf(
+                    R.string.auth_sq1,
+                    R.string.auth_sq2,
+                    R.string.auth_sq3,
+                    R.string.auth_sq4,
+                    R.string.auth_sq5
+                )
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -483,7 +477,7 @@ fun LojiaRegisterScreen(
                         modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
                     ) {
                         Text(
-                            text = LojiaStrings.get("secQuestion", isBn),
+                            text = stringResource(R.string.auth_sec_question),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = LojiaColors.N600
@@ -523,7 +517,7 @@ fun LojiaRegisterScreen(
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = if (rSq.isBlank()) LojiaStrings.get("chooseQuestion", isBn) else rSq,
+                                text = if (rSq.isBlank()) stringResource(R.string.auth_choose_question) else rSq,
                                 fontSize = 13.sp,
                                 color = if (rSq.isBlank()) LojiaColors.N400 else LojiaColors.N900,
                                 modifier = Modifier.weight(1f),
@@ -542,8 +536,8 @@ fun LojiaRegisterScreen(
                             onDismissRequest = { showQuestionMenu = false },
                             modifier = Modifier.background(LojiaColors.White)
                         ) {
-                            questionKeys.forEach { key ->
-                                val qText = LojiaStrings.get(key, isBn)
+                            questionResIds.forEach { resId ->
+                                val qText = stringResource(resId)
                                 DropdownMenuItem(
                                     text = { Text(text = qText, fontSize = 13.sp, color = LojiaColors.N900) },
                                     onClick = {
@@ -558,7 +552,7 @@ fun LojiaRegisterScreen(
 
                     if (vSq == FieldValidationState.ERROR) {
                         Text(
-                            text = LojiaStrings.get("errSelQuestion", isBn),
+                            text = stringResource(R.string.auth_err_sel_question),
                             color = LojiaColors.R500,
                             fontSize = 11.sp,
                             modifier = Modifier.padding(top = 3.dp, start = 2.dp)
@@ -571,42 +565,24 @@ fun LojiaRegisterScreen(
                 LojiaInputField(
                     value = rSa,
                     onValueChange = { rSa = it },
-                    label = LojiaStrings.get("secAnswer", isBn),
-                    placeholder = LojiaStrings.get("phAnswer", isBn),
+                    label = stringResource(R.string.auth_sec_answer),
+                    placeholder = stringResource(R.string.auth_ph_answer),
                     leadingIcon = Icons.Outlined.CheckCircle,
                     isRequired = true,
                     isValid = rSa.trim().isNotEmpty(),
                     validationState = vSa,
-                    hintMessage = if (isBn) "এনক্রিপ্ট করে সংরক্ষিত · কাউকে দেখানো হবে না" else "Stored encrypted · never shown to anyone",
-                    errorMessage = LojiaStrings.get("errRequired", isBn),
+                    hintMessage = stringResource(R.string.auth_ans_hint),
+                    errorMessage = stringResource(R.string.auth_err_required),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     testTag = "rSa"
                 )
 
-                val termsAnnotated = remember(isBn) {
+                val termsTextFull = stringResource(R.string.auth_terms_text)
+
+                val termsAnnotated = remember(termsTextFull) {
                     buildAnnotatedString {
-                        if (isBn) {
-                            append("আমি ")
-                            withStyle(SpanStyle(color = LojiaColors.P500, fontWeight = FontWeight.SemiBold)) {
-                                append("শর্তাবলী")
-                            }
-                            append(" এবং ")
-                            withStyle(SpanStyle(color = LojiaColors.P500, fontWeight = FontWeight.SemiBold)) {
-                                append("গোপনীয়তা নীতি")
-                            }
-                            append(" মেনে চলছি এবং ব্যবসায়িক নিয়ম মেনে Lojia ব্যবহার করার অঙ্গীকার করছি।")
-                        } else {
-                            append("I agree to the ")
-                            withStyle(SpanStyle(color = LojiaColors.P500, fontWeight = FontWeight.SemiBold)) {
-                                append("Terms of Service")
-                            }
-                            append(" and ")
-                            withStyle(SpanStyle(color = LojiaColors.P500, fontWeight = FontWeight.SemiBold)) {
-                                append("Privacy Policy")
-                            }
-                            append(", and certify I will use Lojia in compliance with business policies.")
-                        }
+                        append(termsTextFull)
                     }
                 }
 
@@ -647,7 +623,7 @@ fun LojiaRegisterScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             LojiaGradientButton(
-                text = if (isProcessingReg) LojiaStrings.get("processing", isBn) else LojiaStrings.get("regBtn", isBn),
+                text = if (isProcessingReg) stringResource(R.string.auth_processing) else stringResource(R.string.auth_reg_btn),
                 onClick = { handleRegister() },
                 enabled = !isProcessingReg,
                 isLoading = isProcessingReg,
@@ -668,7 +644,7 @@ fun LojiaRegisterScreen(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = LojiaStrings.get("sslText", isBn),
+                    text = stringResource(R.string.auth_ssl_text),
                     fontSize = 10.sp,
                     color = LojiaColors.N400
                 )
@@ -681,12 +657,12 @@ fun LojiaRegisterScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = LojiaStrings.get("alreadyAccount", isBn) + " ",
+                    text = stringResource(R.string.auth_already_account) + " ",
                     fontSize = 12.sp,
                     color = LojiaColors.N500
                 )
                 Text(
-                    text = LojiaStrings.get("signInLink", isBn),
+                    text = stringResource(R.string.auth_sign_in_link),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = LojiaColors.P500,
@@ -768,7 +744,7 @@ fun LojiaRegisterSuccessScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = LojiaStrings.get("successTitle", isBn),
+                    text = stringResource(R.string.auth_success_title),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = LojiaColors.N900,
@@ -778,7 +754,7 @@ fun LojiaRegisterSuccessScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = LojiaStrings.get("successSub", isBn),
+                    text = stringResource(R.string.auth_success_sub),
                     fontSize = 13.sp,
                     color = LojiaColors.N500,
                     textAlign = TextAlign.Center,
@@ -791,7 +767,7 @@ fun LojiaRegisterSuccessScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 LojiaGradientButton(
-                    text = LojiaStrings.get("goToLogin", isBn),
+                    text = stringResource(R.string.auth_go_to_login),
                     onClick = onGoToLogin,
                     modifier = Modifier.widthIn(max = 280.dp),
                     testTag = "goLoginFromSuccess"

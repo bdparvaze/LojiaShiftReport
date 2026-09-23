@@ -60,6 +60,10 @@ fun ShiftReportPreviewDialog(
     var printerErrorMessage by remember { mutableStateOf<String?>(null) }
     var isPrinting by remember { mutableStateOf(false) }
 
+    val bluetoothPermissionRequester = com.lojia.shiftreport.permission.rememberPermissionRequester(
+        feature = com.lojia.shiftreport.permission.AppFeaturePermission.BLUETOOTH_PRINTER
+    )
+
     val titleLabel = stringResource(R.string.shift_closing_revenue_cert)
     val dateLabel = stringResource(R.string.date_2)
     val shiftLabel = stringResource(R.string.shift_2)
@@ -281,8 +285,11 @@ fun ShiftReportPreviewDialog(
                     onClick = {
                         printerErrorMessage = null
                         if (!printerManager.isPrinterConfigured()) {
-                            printerErrorMessage = "No Bluetooth thermal printer selected or connected. Please configure a printer in Settings."
-                        } else {
+                            printerErrorMessage = "No thermal printer selected or connected. Please configure a printer in Settings."
+                            return@Button
+                        }
+
+                        val executePrint = {
                             isPrinting = true
                             scope.launch {
                                 try {
@@ -299,7 +306,7 @@ fun ShiftReportPreviewDialog(
                                     isPrinting = false
                                     res.fold(
                                         onSuccess = {
-                                            Toast.makeText(context, "Z-Report sent to Bluetooth printer!", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Z-Report sent to printer!", Toast.LENGTH_SHORT).show()
                                         },
                                         onFailure = { err ->
                                             printerErrorMessage = "Printer error: ${err.message ?: "Could not connect to printer."}"
@@ -310,6 +317,14 @@ fun ShiftReportPreviewDialog(
                                     printerErrorMessage = "Print error: ${e.message}"
                                 }
                             }
+                        }
+
+                        if (printerManager.getPrinterConnectionType() == "bluetooth") {
+                            bluetoothPermissionRequester.launch {
+                                executePrint()
+                            }
+                        } else {
+                            executePrint()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AccentEmerald),

@@ -19,11 +19,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import com.lojia.shiftreport.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -305,7 +305,7 @@ fun ScannedDocumentItemCard(
                         onDismissRequest = { menuExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("View PDF") },
+                            text = { Text(stringResource(R.string.doc_btn_view_pdf)) },
                             leadingIcon = { Icon(Icons.Outlined.Visibility, contentDescription = null) },
                             onClick = {
                                 menuExpanded = false
@@ -313,7 +313,7 @@ fun ScannedDocumentItemCard(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Share PDF") },
+                            text = { Text(stringResource(R.string.doc_btn_share_pdf)) },
                             leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                             onClick = {
                                 menuExpanded = false
@@ -321,7 +321,7 @@ fun ScannedDocumentItemCard(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Extract Text (OCR)") },
+                            text = { Text(stringResource(R.string.doc_btn_extract_text)) },
                             leadingIcon = { Icon(Icons.Outlined.TextFields, contentDescription = null) },
                             onClick = {
                                 menuExpanded = false
@@ -329,7 +329,7 @@ fun ScannedDocumentItemCard(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Share Word (.docx)") },
+                            text = { Text(stringResource(R.string.doc_btn_share_docx)) },
                             leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
                             onClick = {
                                 menuExpanded = false
@@ -337,7 +337,7 @@ fun ScannedDocumentItemCard(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Password Protect") },
+                            text = { Text(stringResource(R.string.doc_btn_protect_pdf)) },
                             leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null) },
                             onClick = {
                                 menuExpanded = false
@@ -345,7 +345,7 @@ fun ScannedDocumentItemCard(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Rename") },
+                            text = { Text(stringResource(R.string.doc_btn_rename)) },
                             leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
                             onClick = {
                                 menuExpanded = false
@@ -354,7 +354,7 @@ fun ScannedDocumentItemCard(
                         )
                         HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                            text = { Text(stringResource(R.string.doc_btn_delete), color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 menuExpanded = false

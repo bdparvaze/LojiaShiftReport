@@ -119,7 +119,8 @@ fun SettingsReportSection(
     language: AppLanguage,
     isAdmin: Boolean,
     onRestrictedClick: (action: () -> Unit) -> Unit,
-    onSwitchModule: (AppModule) -> Unit
+    onSwitchModule: (AppModule) -> Unit,
+    onConfigurePrinterClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val userProfile by reportViewModel.userProfile.collectAsState()
@@ -147,6 +148,9 @@ fun SettingsReportSection(
     var password by remember(userProfile) { mutableStateOf("") }
     var phone by remember(userProfile) { mutableStateOf(userProfile?.phone ?: "") }
     var address by remember(userProfile) { mutableStateOf(userProfile?.address ?: "") }
+    var showMapLocationPicker by remember { mutableStateOf(false) }
+    var mapLat by remember(userProfile, businessProfile) { mutableDoubleStateOf(userProfile?.mapLat ?: businessProfile?.mapLat ?: 0.0) }
+    var mapLng by remember(userProfile, businessProfile) { mutableDoubleStateOf(userProfile?.mapLng ?: businessProfile?.mapLng ?: 0.0) }
 
     // 2. Security State
     val preferencesRepository = remember(context) { com.lojia.shiftreport.data.PreferencesRepository.getInstance(context) }
@@ -332,6 +336,13 @@ fun SettingsReportSection(
                     onClick = { reportViewModel.selectReportSettingsMenu("backup") }
                 )
 
+                LoyverseMenuItemRow(
+                    icon = Icons.Outlined.Print,
+                    title = "Thermal Printer (ESC/POS)",
+                    subtitle = "Configure Bluetooth & Network receipt printers",
+                    onClick = onConfigurePrinterClick
+                )
+
                 AutoText(
                     id = R.string.regional_interface_section,
                     fontSize = 11.sp,
@@ -340,11 +351,15 @@ fun SettingsReportSection(
                     modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
                 )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Language,
-                    title = "Language",
-                    subtitle = "${stringResource(R.string.language_subtitle)}: ${language.displayName}",
-                    onClick = { reportViewModel.selectReportSettingsMenu("language") }
+                RegionalPreferencesCard(
+                    currentCountry = currentCountry,
+                    currentLanguage = language,
+                    businessProfile = businessProfile,
+                    onOpenRegionalMenu = { tabIndex ->
+                        langCountryTab = tabIndex
+                        reportViewModel.selectReportSettingsMenu("regional")
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                 )
 
                 AutoText(
@@ -473,8 +488,15 @@ fun SettingsReportSection(
                                 icon = Icons.Outlined.LocationOn,
                                 label = stringResource(R.string.address),
                                 value = address,
+                                isLastItem = false,
+                                onClick = { showMapLocationPicker = true }
+                            )
+                            ProfileDetailItemRow(
+                                icon = Icons.Outlined.Map,
+                                label = stringResource(R.string.google_maps_location),
+                                value = if (mapLat != 0.0 && mapLng != 0.0) String.format(Locale.US, "📍 %.5f, %.5f", mapLat, mapLng) else stringResource(R.string.pick_on_google_maps),
                                 isLastItem = true,
-                                onClick = { editFieldDialog = "Address" to address }
+                                onClick = { showMapLocationPicker = true }
                             )
                         }
                     }
@@ -1249,166 +1271,21 @@ fun SettingsReportSection(
             }
 
             // =================================================================
-            // 4. LANGUAGE / COUNTRY SELECTION
+            // 4. REGIONAL & PREFERENCES SELECTION (LANGUAGE, COUNTRY, CURRENCY)
             // =================================================================
-            "country", "countries", "currency", "language" -> {
-                // Top Segmented Tab Row
-                TabRow(
-                    selectedTabIndex = langCountryTab,
-                    containerColor = Color(0xFFF8FAFC),
-                    contentColor = Color(0xFF4F46E5),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Tab(
-                        selected = langCountryTab == 0,
-                        onClick = { langCountryTab = 0 },
-                        text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Language,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.language),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = if (langCountryTab == 0) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                )
-                            }
-                        }
-                    )
-                    Tab(
-                        selected = langCountryTab == 1,
-                        onClick = { langCountryTab = 1 },
-                        text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Public,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.country),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = if (langCountryTab == 1) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                )
-                            }
-                        }
-                    )
-                }
-
-                if (langCountryTab == 0) {
-                    // ==========================================
-                    // 🌐 APP LANGUAGE TAB (POWERED BY DATASTORE)
-                    // ==========================================
-                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                        LanguageSettingsComponent(
-                            currentLanguage = language,
-                            accentColor = PrimaryIndigo,
-                            onLanguageChanged = { newLang ->
-                                reportViewModel.setLanguage(newLang)
-                            }
-                        )
-                    }
-                } else {
-                    // ==========================================
-                    // 🌍 COUNTRY TAB (RIGHT TAB - NO TOP CARD)
-                    // ==========================================
-                    LojiaTextField(
-                        value = countrySearch,
-                        onValueChange = { countrySearch = it },
-                        placeholder = { Text(stringResource(R.string.search_country), fontSize = 14.sp) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-
-                    val allCountries = AppCountry.values().filter {
-                        it.displayNameEn.contains(countrySearch, ignoreCase = true) ||
-                        it.displayNameBn.contains(countrySearch, ignoreCase = true) ||
-                        it.displayNameAr.contains(countrySearch, ignoreCase = true) ||
-                        it.currencyCode.contains(countrySearch, ignoreCase = true) ||
-                        it.currencySymbol.contains(countrySearch, ignoreCase = true)
-                    }
-
-                    allCountries.forEach { c ->
-                        val isSelected = c == currentCountry
-                        val displayName = c.getLocalizedName(language)
-
-                        Surface(
-                            color = if (isSelected) Color(0xFFF5F3FF) else Color.White,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 56.dp)
-                                .clickable {
-                                    reportViewModel.setCountry(c)
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.country_set_toast_fmt, displayName, c.currencyCode, c.currencySymbol),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = displayName,
-                                            fontSize = 14.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                            color = if (isSelected) Color(0xFF4F46E5) else Color(0xFF1E293B),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = "${c.currencyCode} (${c.currencySymbol}) • VAT: ${c.defaultVatRate.toInt()}%",
-                                            fontSize = 12.sp,
-                                            color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-
-                                if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Check,
-                                        contentDescription = stringResource(R.string.cd_selected),
-                                        tint = Color(0xFF4F46E5),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Outlined.RadioButtonUnchecked,
-                                        contentDescription = stringResource(R.string.cd_select),
-                                        tint = Color(0xFFCBD5E1),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                        HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 0.5.dp)
+            "country", "countries", "currency", "language", "regional" -> {
+                val initialTab = remember(currentMenu) {
+                    when (currentMenu) {
+                        "country", "countries" -> 1
+                        "currency" -> 2
+                        "language" -> 0
+                        else -> langCountryTab
                     }
                 }
+                RegionalPreferencesDetailView(
+                    reportViewModel = reportViewModel,
+                    initialTab = initialTab
+                )
             }
 
             // =================================================================
@@ -1520,6 +1397,31 @@ fun SettingsReportSection(
                 }
             },
             dismissButton = { TextButton(onClick = { editFieldDialog = null }) { Text(stringResource(R.string.cancel_18)) } }
+        )
+    }
+
+    // Google Maps Location Picker Modal
+    if (showMapLocationPicker) {
+        GoogleMapsLocationPickerModal(
+            initialAddress = address,
+            initialLat = mapLat,
+            initialLng = mapLng,
+            onLocationConfirmed = { newAddr, newLat, newLng ->
+                showMapLocationPicker = false
+                if (newAddr.isNotBlank()) {
+                    address = newAddr
+                }
+                mapLat = newLat
+                mapLng = newLng
+                reportViewModel.updateBusiness(
+                    com.lojia.shiftreport.data.UpdateBusinessRequest(
+                        address = newAddr,
+                        mapLat = newLat,
+                        mapLng = newLng
+                    )
+                )
+            },
+            onDismiss = { showMapLocationPicker = false }
         )
     }
 

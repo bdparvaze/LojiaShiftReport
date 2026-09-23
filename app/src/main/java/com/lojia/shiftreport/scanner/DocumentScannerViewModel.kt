@@ -233,6 +233,107 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
         }
     }
 
+    /**
+     * Saves a processed, filtered, and perspective-corrected bitmap as a document.
+     * Generates a 1-page PDF, thumbnail, executes OCR text recognition, creates Word .docx export,
+     * and persists the entry into Room.
+     */
+    fun saveBitmapAsScannedDocument(
+        bitmap: android.graphics.Bitmap,
+        customTitle: String? = null,
+        preExtractedOcr: String? = null,
+        onComplete: ((ScannedDocument) -> Unit)? = null
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val context = getApplication<Application>().applicationContext
+                val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
+                val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
+
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val title = customTitle?.ifBlank { null } ?: "Scan_$timeStamp"
+                val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+                val destPdfFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
+
+                // 1. Save processed JPEG page
+                val docPagesDir = File(docsDir, "pages_$timeStamp").apply { if (!exists()) mkdirs() }
+                val pageFile = File(docPagesDir, "page_1.jpg")
+                FileOutputStream(pageFile).use { out ->
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 92, out)
+                }
+
+                // 2. Create 1-page PDF using android.graphics.pdf.PdfDocument
+                val pdfDocument = android.graphics.pdf.PdfDocument()
+                val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(
+                    bitmap.width.coerceAtLeast(1),
+                    bitmap.height.coerceAtLeast(1),
+                    1
+                ).create()
+                val pdfPage = pdfDocument.startPage(pageInfo)
+                val canvas = pdfPage.canvas
+                canvas.drawBitmap(bitmap, 0f, 0f, null)
+                pdfDocument.finishPage(pdfPage)
+
+                FileOutputStream(destPdfFile).use { fos ->
+                    pdfDocument.writeTo(fos)
+                }
+                pdfDocument.close()
+
+                // 3. Save thumbnail
+                var thumbPath = ""
+                val thumbFile = File(thumbsDir, "thumb_$timeStamp.jpg")
+                try {
+                    val thumbW = 240
+                    val thumbH = ((bitmap.height.toFloat() / bitmap.width.toFloat()) * thumbW).toInt().coerceAtLeast(100)
+                    val thumbBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, thumbW, thumbH, true)
+                    FileOutputStream(thumbFile).use { out ->
+                        thumbBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+                    }
+                    thumbBitmap.recycle()
+                    if (thumbFile.exists() && thumbFile.length() > 0) {
+                        thumbPath = thumbFile.absolutePath
+                    }
+                } catch (e: Exception) {
+                    Log.e("DocumentScannerVM", "Failed to create thumbnail", e)
+                }
+
+                // 4. OCR text
+                val extractedText = preExtractedOcr ?: OcrTextExtractor.extractTextFromImages(context, listOf(pageFile.absolutePath))
+
+                // 5. Generate Word (.docx) if text extracted
+                var docxPath = ""
+                if (extractedText.isNotBlank()) {
+                    val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
+                    val docxFile = File(docxDir, "${sanitizedTitle}_$timeStamp.docx")
+                    val success = DocxExporter.createDocxFile(docxFile, title, extractedText)
+                    if (success && docxFile.exists()) {
+                        docxPath = docxFile.absolutePath
+                    }
+                }
+
+                val doc = ScannedDocument(
+                    title = title,
+                    pdfUriPath = destPdfFile.absolutePath,
+                    pageCount = 1,
+                    fileSizeBytes = destPdfFile.length(),
+                    createdAtMillis = System.currentTimeMillis(),
+                    thumbnailPath = thumbPath,
+                    ocrText = extractedText,
+                    docxUriPath = docxPath
+                )
+
+                val newId = dao.insertDocument(doc)
+                val savedDoc = doc.copy(id = newId.toInt())
+
+                withContext(Dispatchers.Main) {
+                    onComplete?.invoke(savedDoc)
+                }
+            } catch (e: Exception) {
+                Log.e("DocumentScannerVM", "Error saving bitmap as document", e)
+            }
+        }
+    }
+
     fun extractTextAndGenerateDocx(document: ScannedDocument, onComplete: (String, String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext
