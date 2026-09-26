@@ -804,4 +804,30 @@
     <dimen name="tooltip_vertical_padding">6.5dip</dimen>
     <dimen name="tooltip_y_offset_non_touch">0.0dip</dimen>
     <dimen name="tooltip_y_offset_touch">16.0dip</dimen>
+
+    <!-- ============ LOJIA SPACING ============ -->
+    <dimen name="lojia_spacing_xs">4dp</dimen>
+    <dimen name="lojia_spacing_sm">8dp</dimen>
+    <dimen name="lojia_spacing_md">16dp</dimen>
+    <dimen name="lojia_spacing_lg">24dp</dimen>
+    <dimen name="lojia_spacing_xl">32dp</dimen>
+
+    <!-- ============ LOJIA RADIUS ============ -->
+    <dimen name="lojia_radius_sm">8dp</dimen>
+    <dimen name="lojia_radius_md">12dp</dimen>
+    <dimen name="lojia_radius_lg">16dp</dimen>
+    <dimen name="lojia_radius_pill">999dp</dimen>
+
+    <!-- ============ LOJIA ELEVATION ============ -->
+    <dimen name="lojia_elevation_none">0dp</dimen>
+    <dimen name="lojia_elevation_low">2dp</dimen>
+    <dimen name="lojia_elevation_medium">4dp</dimen>
+
+    <!-- ============ LOJIA FONT SIZES ============ -->
+    <dimen name="lojia_text_xs">11sp</dimen>
+    <dimen name="lojia_text_sm">13sp</dimen>
+    <dimen name="lojia_text_md">15sp</dimen>
+    <dimen name="lojia_text_lg">18sp</dimen>
+    <dimen name="lojia_text_xl">22sp</dimen>
+    <dimen name="lojia_text_xxl">28sp</dimen>
 </resources>

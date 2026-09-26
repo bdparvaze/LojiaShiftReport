@@ -218,22 +218,32 @@ fun LojiaRegisterScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .background(Color(0xFFF8F9FA))
+            .padding(horizontal = 32.dp)
             .imePadding(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        LojiaHeader(isBn = isBn)
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = (-14).dp)
-                .padding(horizontal = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .widthIn(max = 380.dp)
+                .wrapContentHeight(Alignment.CenterVertically)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            LojiaHeader(isBn = isBn)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Card 1: Personal Profile
             LojiaCard(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 LojiaSectionHeader(
@@ -534,6 +544,7 @@ fun LojiaRegisterScreen(
                         DropdownMenu(
                             expanded = showQuestionMenu,
                             onDismissRequest = { showQuestionMenu = false },
+                            containerColor = LojiaColors.White,
                             modifier = Modifier.background(LojiaColors.White)
                         ) {
                             questionResIds.forEach { resId ->
@@ -676,6 +687,7 @@ fun LojiaRegisterScreen(
             Spacer(modifier = Modifier.height(36.dp))
         }
     }
+}
 
     if (showCountryPicker) {
         LojiaCountryPickerDialog(
@@ -707,24 +719,27 @@ fun LojiaRegisterSuccessScreen(
         )
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .testTag("pgSuccess")
+            .background(Color(0xFFF8F9FA))
+            .padding(horizontal = 32.dp)
+            .testTag("pgSuccess"),
+        contentAlignment = Alignment.Center
     ) {
-        LojiaHeader(isBn = isBn)
-
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            contentAlignment = Alignment.Center
+                .widthIn(max = 380.dp)
+                .wrapContentHeight(Alignment.CenterVertically)
+                .padding(vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+            LojiaHeader(isBn = isBn)
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Box(
                     modifier = Modifier
                         .scale(scale.value)
@@ -761,7 +776,7 @@ fun LojiaRegisterSuccessScreen(
                     lineHeight = 20.sp,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
-                        .widthIn(max = 280.dp)
+                        .fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(28.dp))
@@ -769,10 +784,9 @@ fun LojiaRegisterSuccessScreen(
                 LojiaGradientButton(
                     text = stringResource(R.string.auth_go_to_login),
                     onClick = onGoToLogin,
-                    modifier = Modifier.widthIn(max = 280.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     testTag = "goLoginFromSuccess"
                 )
             }
         }
     }
-}

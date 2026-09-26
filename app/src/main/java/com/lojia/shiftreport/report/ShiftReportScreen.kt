@@ -16,6 +16,7 @@ import android.widget.Toast
 
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 
 
 import androidx.compose.foundation.background
@@ -159,6 +160,10 @@ data class ShiftReportData(
     val madaPayments: Double,
     val digitalWallet: Double = 0.0,
     val startingCash: Double = 0.0,
+    val openingCash: Double = 0.0,
+    val closingCash: Double = 0.0,
+    val totalDiscounts: Double = 0.0,
+    val salesReturns: Double = 0.0,
     val actualCash: Double? = null,
     val notes: String = "",
     val staffCount: Int,
@@ -172,6 +177,9 @@ data class ShiftReportData(
     val itemEntries: List<ItemEntry>,
     val netCash: Double,
     val netMada: Double,
+    val isLocked: Boolean = false,
+    val managerSignedBy: String? = null,
+    val managerSignTime: Long? = null,
     val dateMillis: Long = System.currentTimeMillis()
 )
 
@@ -274,9 +282,13 @@ fun ShiftReportScreen(
                 cashierName = data.cashier.ifBlank { "Standard Cashier" },
                 shift = data.shift,
                 dateInMillis = data.dateMillis,
+                openingCash = if (data.openingCash > 0) data.openingCash else data.startingCash,
+                closingCash = if (data.closingCash > 0) data.closingCash else (data.actualCash ?: 0.0),
                 grossCash = data.cashReceipts,
                 madaPayments = data.madaPayments,
                 digitalWallet = data.digitalWallet,
+                totalDiscounts = data.totalDiscounts,
+                salesReturns = data.salesReturns,
                 staffMealsCount = data.staffCount,
                 totalExpenses = data.totalExpenses,
                 muasselQty = data.muassel.toDouble(),
@@ -286,7 +298,10 @@ fun ShiftReportScreen(
                 staffAdvancesJson = staffAdvJson,
                 unpaidBillsJson = walkoutJson,
                 purchasedItemsJson = itemsJson,
-                notes = formattedNotes
+                notes = formattedNotes,
+                isLocked = data.isLocked,
+                managerSignedBy = data.managerSignedBy,
+                managerSignTime = data.managerSignTime
             )
 
             viewModel.saveShiftReportDirect(report) { savedReport ->
@@ -353,7 +368,7 @@ fun ShiftReportScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ShiftColors.Bg)
+            .background(Color.White)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -465,8 +480,15 @@ private fun ReportEntryTab(
     var cashReceipts by rememberSaveable { mutableStateOf("") }
     var madaPayments by rememberSaveable { mutableStateOf("") }
     var digitalWalletInput by rememberSaveable { mutableStateOf("") }
+    var totalDiscountsInput by rememberSaveable { mutableStateOf("") }
+    var salesReturnsInput by rememberSaveable { mutableStateOf("") }
     var actualCashCountInput by rememberSaveable { mutableStateOf("") }
     var notesInput by rememberSaveable { mutableStateOf("") }
+
+    var isShiftLocked by rememberSaveable { mutableStateOf(false) }
+    var managerSignedBy by rememberSaveable { mutableStateOf<String?>(null) }
+    var managerSignTime by rememberSaveable { mutableStateOf<Long?>(null) }
+    var showManagerLockDialog by rememberSaveable { mutableStateOf(false) }
 
     var staffCount by rememberSaveable { mutableStateOf(0) }
     var totalExpenses by rememberSaveable { mutableStateOf("") }
@@ -490,6 +512,8 @@ private fun ReportEntryTab(
     val cash = d(cashReceipts)
     val mada = d(madaPayments)
     val digitalWallet = d(digitalWalletInput)
+    val totalDiscounts = d(totalDiscountsInput)
+    val salesReturns = d(salesReturnsInput)
     val actualCashVal = actualCashCountInput.toDoubleOrNull()
     val expenses = d(totalExpenses)
 
@@ -503,14 +527,16 @@ private fun ReportEntryTab(
 
     // International Standard Formulas
     val totalSales = cash + mada + digitalWallet
-    val totalCashIn = cash + totalOldDueCash
+    val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0.0)
+    val totalCashIn = startingCash + cash + totalOldDueCash
     val totalCashOut = expenses + totalStaffCash + totalItems
-    val expectedCash = startingCash + totalCashIn - totalCashOut
+    val expectedCash = totalCashIn - totalCashOut
     val variance = actualCashVal?.let { it - expectedCash }
     val netMada = mada + digitalWallet + totalOldDueBank - totalStaffBank
 
     val hasEnteredData = cashier.isNotBlank() || startingCashInput.isNotBlank() ||
             cashReceipts.isNotBlank() || madaPayments.isNotBlank() || digitalWalletInput.isNotBlank() ||
+            totalDiscountsInput.isNotBlank() || salesReturnsInput.isNotBlank() ||
             actualCashCountInput.isNotBlank() || notesInput.isNotBlank() ||
             totalExpenses.isNotBlank() || staffCount > 0 ||
             muassel.isNotBlank() || outdoorMuassel.isNotBlank() ||
@@ -520,6 +546,7 @@ private fun ReportEntryTab(
 
     val canSave = cashier.isNotBlank() && (
             cash > 0.0 || mada > 0.0 || digitalWallet > 0.0 || expenses > 0.0 || startingCash > 0.0 ||
+            totalDiscounts > 0.0 || salesReturns > 0.0 ||
             (muassel.toIntOrNull() ?: 0) > 0 || (outdoorMuassel.toIntOrNull() ?: 0) > 0 ||
             creditEntries.isNotEmpty() || oldDueEntries.isNotEmpty() ||
             staffEntries.isNotEmpty() || walkoutEntries.isNotEmpty() ||
@@ -529,7 +556,9 @@ private fun ReportEntryTab(
     fun resetAll() {
         cashier = ""; shift = "Day"; dateMillis = System.currentTimeMillis()
         startingCashInput = ""; cashReceipts = ""; madaPayments = ""; digitalWalletInput = ""
+        totalDiscountsInput = ""; salesReturnsInput = ""
         actualCashCountInput = ""; notesInput = ""
+        isShiftLocked = false; managerSignedBy = null; managerSignTime = null
         staffCount = 0; totalExpenses = ""
         muassel = ""; outdoorMuassel = ""
         creditEntries.clear(); oldDueEntries.clear(); staffEntries.clear()
@@ -541,19 +570,30 @@ private fun ReportEntryTab(
     }
 
     Scaffold(
-        containerColor = ShiftColors.Bg,
+        containerColor = Color.White,
         bottomBar = {
             StickySummaryBar(expectedCash = expectedCash, variance = variance)
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-                .testTag("shift_report_dashboard")
+                .imePadding(),
+            contentAlignment = Alignment.Center
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .widthIn(max = 680.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .testTag("shift_report_dashboard"),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
             // ---- Header card ----
             Card(
                 shape = RoundedCornerShape(14.dp),
@@ -631,6 +671,11 @@ private fun ReportEntryTab(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             NumberField(stringResource(R.string.mada_bank), madaPayments, { madaPayments = it }, Modifier.weight(1f))
                             NumberField(stringResource(R.string.digital_wallet), digitalWalletInput, { digitalWalletInput = it }, Modifier.weight(1f))
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            NumberField(stringResource(R.string.total_discounts_label), totalDiscountsInput, { totalDiscountsInput = it }, Modifier.weight(1f))
+                            NumberField(stringResource(R.string.sales_returns_label), salesReturnsInput, { salesReturnsInput = it }, Modifier.weight(1f))
                         }
 
                         // ---- Operational Expenses ----
@@ -732,6 +777,8 @@ private fun ReportEntryTab(
                             cashSales = cash,
                             madaSales = mada,
                             digitalWalletSales = digitalWallet,
+                            totalDiscounts = totalDiscounts,
+                            salesReturns = salesReturns,
                             totalExpenses = expenses,
                             totalDueCredit = totalCredit,
                             totalDueCollectedCash = totalOldDueCash,
@@ -748,6 +795,81 @@ private fun ReportEntryTab(
                             notes = notesInput,
                             onNotesChange = { notesInput = it }
                         )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // ---- Enterprise Manager Sign-Off & Lock Card ----
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isShiftLocked) Color(0xFFF0FDF4) else Color(0xFFF8FAFC)
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isShiftLocked) Color(0xFF86EFAC) else ShiftColors.Border
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(if (isShiftLocked) "🔒" else "🛡️", fontSize = 16.sp)
+                                        Spacer(Modifier.width(8.dp))
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.manager_sign_off_title),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.5.sp,
+                                                color = ShiftColors.Charcoal
+                                            )
+                                            Text(
+                                                text = if (isShiftLocked) "Approved by ${managerSignedBy ?: "Manager"}" else "Optional audit lock & verification",
+                                                fontSize = 11.sp,
+                                                color = if (isShiftLocked) Color(0xFF166534) else ShiftColors.TextMuted
+                                            )
+                                        }
+                                    }
+
+                                    Surface(
+                                        color = if (isShiftLocked) Color(0xFFDCFCE7) else Color(0xFFE2E8F0),
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(if (isShiftLocked) R.string.shift_locked_badge else R.string.shift_draft_badge),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isShiftLocked) Color(0xFF15803D) else Color(0xFF475569),
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(8.dp))
+
+                                if (!isShiftLocked) {
+                                    OutlinedButton(
+                                        onClick = { showManagerLockDialog = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(1.dp, ShiftColors.Primary),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ShiftColors.Primary)
+                                    ) {
+                                        Text("🔐 " + stringResource(R.string.lock_and_finalize_btn), fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp)
+                                    }
+                                } else {
+                                    Text(
+                                        text = "✓ Shift report is verified and locked against edits.",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF166534)
+                                    )
+                                }
+                            }
+                        }
 
                         Spacer(Modifier.height(24.dp))
 
@@ -801,6 +923,10 @@ private fun ReportEntryTab(
                                             madaPayments = mada,
                                             digitalWallet = digitalWallet,
                                             startingCash = startingCash,
+                                            openingCash = startingCash,
+                                            closingCash = actualCashVal ?: 0.0,
+                                            totalDiscounts = totalDiscounts,
+                                            salesReturns = salesReturns,
                                             actualCash = actualCashVal,
                                             notes = notesInput,
                                             staffCount = staffCount,
@@ -814,6 +940,9 @@ private fun ReportEntryTab(
                                             itemEntries = itemEntries.toList(),
                                             netCash = expectedCash,
                                             netMada = netMada,
+                                            isLocked = isShiftLocked,
+                                            managerSignedBy = managerSignedBy,
+                                            managerSignTime = managerSignTime,
                                             dateMillis = dateMillis
                                         )
                                     )
@@ -856,18 +985,22 @@ private fun ReportEntryTab(
             Spacer(Modifier.height(80.dp)) // room for sticky bottom bar
         }
     }
+}
 
     // ---- Reset confirmation ----
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            title = { Text(stringResource(R.string.clean_data)) },
-            text = { Text(stringResource(R.string.confirm_clean_data)) },
+            containerColor = Color.White,
+            titleContentColor = Color(0xFF0F172A),
+            textContentColor = Color(0xFF1E293B),
+            title = { Text(stringResource(R.string.clean_data), color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.confirm_clean_data), color = Color(0xFF1E293B)) },
             confirmButton = {
-                TextButton(onClick = { resetAll(); showResetConfirm = false }) { Text(stringResource(R.string.yes), color = ShiftColors.Danger) }
+                TextButton(onClick = { resetAll(); showResetConfirm = false }) { Text(stringResource(R.string.yes), color = ShiftColors.Danger, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.cancel), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.cancel), color = Color(0xFF475569), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         )
     }
@@ -877,14 +1010,29 @@ private fun ReportEntryTab(
         val state = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
+            colors = DatePickerDefaults.colors(containerColor = Color.White),
             confirmButton = {
                 TextButton(onClick = {
                     state.selectedDateMillis?.let { dateMillis = it }
                     showDatePicker = false
-                }) { Text(stringResource(R.string.ok)) }
+                }) { Text(stringResource(R.string.ok), color = ShiftColors.Primary, fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
-        ) { DatePicker(state = state) }
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel), color = Color(0xFF475569), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+        ) {
+            DatePicker(
+                state = state,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color.White,
+                    titleContentColor = Color(0xFF0F172A),
+                    headlineContentColor = Color(0xFF0F172A),
+                    weekdayContentColor = Color(0xFF475569),
+                    subheadContentColor = Color(0xFF0F172A),
+                    dayContentColor = Color(0xFF0F172A),
+                    selectedDayContainerColor = ShiftColors.Primary,
+                    selectedDayContentColor = Color.White
+                )
+            )
+        }
     }
 
     // ---- Add-entry modal ----
@@ -908,6 +1056,84 @@ private fun ReportEntryTab(
                     ModalType.NONE -> {}
                 }
                 modalType = ModalType.NONE
+            }
+        )
+    }
+
+    // ---- Manager Lock / Sign-off Dialog ----
+    if (showManagerLockDialog) {
+        val prefs = PreferencesRepository.getInstance(LocalContext.current)
+        var mgrName by remember { mutableStateOf("Shift Manager") }
+        var mgrPin by remember { mutableStateOf("") }
+        var pinError by remember { mutableStateOf<String?>(null) }
+
+        AlertDialog(
+            onDismissRequest = { showManagerLockDialog = false },
+            containerColor = Color.White,
+            titleContentColor = Color(0xFF0F172A),
+            textContentColor = Color(0xFF1E293B),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("🛡️", fontSize = 18.sp)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.manager_sign_off_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF0F172A))
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        stringResource(R.string.manager_sign_off_desc),
+                        fontSize = 12.5.sp,
+                        color = ShiftColors.TextMuted
+                    )
+                    LojiaTextField(
+                        value = mgrName,
+                        onValueChange = { mgrName = it },
+                        label = { Text(stringResource(R.string.manager_name_label)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    LojiaTextField(
+                        value = mgrPin,
+                        onValueChange = { mgrPin = it; pinError = null },
+                        label = { Text(stringResource(R.string.manager_pin_label)) },
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
+                        ),
+                        isError = pinError != null,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (pinError != null) {
+                        Text(pinError ?: "", color = ShiftColors.Danger, fontSize = 11.5.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val isPinValid = if (prefs.hasPinConfigured() || prefs.isQuickLoginEnabled()) {
+                            prefs.verifyPin(mgrPin)
+                        } else {
+                            mgrPin.length >= 4
+                        }
+                        if (isPinValid) {
+                            isShiftLocked = true
+                            managerSignedBy = mgrName.ifBlank { "Shift Manager" }
+                            managerSignTime = System.currentTimeMillis()
+                            showManagerLockDialog = false
+                        } else {
+                            pinError = "Invalid Manager PIN. Please verify credentials."
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ShiftColors.Primary)
+                ) {
+                    Text(stringResource(R.string.lock_and_finalize_btn), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showManagerLockDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         )
     }
@@ -1292,6 +1518,9 @@ private fun LiveCashflowTab(
 
         AlertDialog(
             onDismissRequest = { showOpenShiftModal = false },
+            containerColor = Color.White,
+            titleContentColor = Color(0xFF0F172A),
+            textContentColor = Color(0xFF1E293B),
             shape = RoundedCornerShape(18.dp),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1299,7 +1528,8 @@ private fun LiveCashflowTab(
                     Text(
                         text = stringResource(R.string.open_shift_session),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color(0xFF0F172A)
                     )
                 }
             },
@@ -1375,6 +1605,9 @@ private fun LiveCashflowTab(
 
         AlertDialog(
             onDismissRequest = { showCloseShiftModal = false },
+            containerColor = Color.White,
+            titleContentColor = Color(0xFF0F172A),
+            textContentColor = Color(0xFF1E293B),
             shape = RoundedCornerShape(18.dp),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1382,7 +1615,8 @@ private fun LiveCashflowTab(
                     Text(
                         text = stringResource(R.string.close_shift_session),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color(0xFF0F172A)
                     )
                 }
             },
@@ -2119,6 +2353,8 @@ fun PosReconciliationSummary(
     cashSales: Double,
     madaSales: Double,
     digitalWalletSales: Double,
+    totalDiscounts: Double = 0.0,
+    salesReturns: Double = 0.0,
     totalExpenses: Double,
     totalDueCredit: Double,
     totalDueCollectedCash: Double,
@@ -2137,9 +2373,10 @@ fun PosReconciliationSummary(
 ) {
     val currency = stringResource(R.string.currency_unit)
     val totalSales = cashSales + madaSales + digitalWalletSales
-    val totalCashIn = cashSales + totalDueCollectedCash
+    val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0.0)
+    val totalCashIn = startingCash + cashSales + totalDueCollectedCash
     val totalCashOut = totalExpenses + totalStaffAdvanceCash + totalPurchasesCash
-    val expectedCash = startingCash + totalCashIn - totalCashOut
+    val expectedCash = totalCashIn - totalCashOut
     val actualCountVal = actualCashCount.toDoubleOrNull()
     val variance = actualCountVal?.let { it - expectedCash }
     val netMada = madaSales + digitalWalletSales + totalDueCollectedBank - totalStaffAdvanceBank
@@ -2149,7 +2386,7 @@ fun PosReconciliationSummary(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // ==========================================
-        // CARD 1: SALES SUMMARY (Payment Methods Only)
+        // CARD 1: SALES SUMMARY (Payment Methods & Adjustments)
         // ==========================================
         Card(
             shape = RoundedCornerShape(14.dp),
@@ -2180,7 +2417,7 @@ fun PosReconciliationSummary(
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = "Payment Methods Only",
+                            text = "POS Revenue Breakdown",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ShiftColors.Brass,
@@ -2199,7 +2436,7 @@ fun PosReconciliationSummary(
 
                 DashedDivider(Modifier.padding(vertical = 8.dp), color = ShiftColors.Border)
 
-                // TOTAL SALES (Prominent)
+                // TOTAL GROSS SALES (Prominent)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -2222,6 +2459,50 @@ fun PosReconciliationSummary(
                         fontSize = 15.sp,
                         color = Color(0xFF92400E)
                     )
+                }
+
+                if (totalDiscounts > 0 || salesReturns > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    if (totalDiscounts > 0) {
+                        ReconciliationRow(
+                            label = "- ${stringResource(R.string.total_discounts_label)}",
+                            value = totalDiscounts,
+                            currency = currency,
+                            valueColor = ShiftColors.Danger
+                        )
+                    }
+                    if (salesReturns > 0) {
+                        ReconciliationRow(
+                            label = "- ${stringResource(R.string.sales_returns_label)}",
+                            value = salesReturns,
+                            currency = currency,
+                            valueColor = ShiftColors.Danger
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF0FDF4))
+                            .border(1.dp, Color(0xFFBBF7D0), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            stringResource(R.string.net_sales_label),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = Color(0xFF166534)
+                        )
+                        Text(
+                            "%.2f %s".format(netSales, currency),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 14.5.sp,
+                            color = Color(0xFF166534)
+                        )
+                    }
                 }
             }
         }
@@ -2274,7 +2555,7 @@ fun PosReconciliationSummary(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(stringResource(R.string.total_cash_in), fontSize = 11.5.sp, color = Color(0xFF065F46), fontWeight = FontWeight.SemiBold)
-                    Text("+ %.2f %s".format(totalCashIn + startingCash, currency), fontSize = 12.sp, color = Color(0xFF065F46), fontWeight = FontWeight.Bold)
+                    Text("+ %.2f %s".format(totalCashIn, currency), fontSize = 12.sp, color = Color(0xFF065F46), fontWeight = FontWeight.Bold)
                 }
 
                 DashedDivider(Modifier.padding(vertical = 6.dp))
@@ -2696,13 +2977,19 @@ private fun FieldLabel(text: String) {
 
 @Composable
 private fun fieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Color(0xFF0F172A),
+    unfocusedTextColor = Color(0xFF0F172A),
+    disabledTextColor = Color(0xFF475569),
     focusedContainerColor = Color.White,
     unfocusedContainerColor = Color.White,
     disabledContainerColor = Color(0xFFF8FAFC),
     focusedBorderColor = ShiftColors.Primary,
     unfocusedBorderColor = Color(0xFFCBD5E1),
     focusedLabelColor = ShiftColors.Primary,
-    unfocusedLabelColor = Color(0xFF64748B)
+    unfocusedLabelColor = Color(0xFF475569),
+    focusedPlaceholderColor = Color(0xFF64748B),
+    unfocusedPlaceholderColor = Color(0xFF64748B),
+    cursorColor = ShiftColors.Primary
 )
 
 @Composable
@@ -2825,16 +3112,35 @@ private fun LabeledDropdown(
             }
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
                 options.forEach { opt ->
+                    val isSelected = opt == selected
                     DropdownMenuItem(
-                        text = { Text(opt, fontSize = 13.sp) },
+                        text = {
+                            Text(
+                                text = opt,
+                                fontSize = 13.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) ShiftColors.Primary else Color(0xFF0F172A)
+                            )
+                        },
                         onClick = {
                             onSelected(opt)
                             expanded = false
                         },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        colors = MenuDefaults.itemColors(
+                            textColor = Color(0xFF0F172A),
+                            leadingIconColor = Color(0xFF0F172A),
+                            trailingIconColor = Color(0xFF0F172A)
+                        ),
+                        modifier = Modifier.background(
+                            if (isSelected) Color(0xFFEFF6FF) else Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     )
                 }
             }
@@ -2885,7 +3191,10 @@ private fun AddEntryDialog(
             keyboardController?.hide()
             onDismiss()
         },
-        title = { Text(title) },
+        containerColor = Color.White,
+        titleContentColor = Color(0xFF0F172A),
+        textContentColor = Color(0xFF0F172A),
+        title = { Text(title, color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
                 when (type) {

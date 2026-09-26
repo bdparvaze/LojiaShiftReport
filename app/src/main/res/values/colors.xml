@@ -1,16 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#ff2563eb</color>
-    <color name="primary_dark">#ff1d4ed8</color>
-    <color name="primary_container">#ffeff6ff</color>
-    <color name="secondary">#ff64748b</color>
-    <color name="success">#ff059669</color>
-    <color name="warning">#ffd97706</color>
-    <color name="error">#ffdc2626</color>
-    <color name="background">#ffffffff</color>
-    <color name="surface">#fff8fafc</color>
-    <color name="border">#ffe2e8f0</color>
-    <color name="text_primary">#ff0f172a</color>
-    <color name="text_secondary">#ff64748b</color>
-    <color name="text_hint">#ff94a3b8</color>
+
+    <!-- ============ PRIMARY (Brand Blue) ============ -->
+    <color name="primary">#FF1D4ED8</color>
+    <color name="primary_dark">#FF1E3A8A</color>
+    <color name="primary_light">#FF3B82F6</color>
+    <color name="primary_container">#FFDBEAFE</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_primary_container">#FF1E3A8A</color>
+
+    <!-- ============ SECONDARY (Teal) ============ -->
+    <color name="secondary">#FF0F766E</color>
+    <color name="secondary_container">#FFCCFBF1</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    <color name="on_secondary_container">#FF134E4A</color>
+
+    <!-- ============ TERTIARY (Purple) ============ -->
+    <color name="tertiary">#FF7C3AED</color>
+    <color name="tertiary_container">#FFEDE9FE</color>
+    <color name="on_tertiary">#FFFFFFFF</color>
+
+    <!-- ============ STATUS COLORS ============ -->
+    <color name="success">#FF047857</color>
+    <color name="success_container">#FFD1FAE5</color>
+    <color name="on_success">#FFFFFFFF</color>
+
+    <color name="warning">#FFB45309</color>
+    <color name="warning_container">#FFFEF3C7</color>
+    <color name="on_warning">#FFFFFFFF</color>
+
+    <color name="error">#FFB91C1C</color>
+    <color name="error_container">#FFFEE2E2</color>
+    <color name="on_error">#FFFFFFFF</color>
+
+    <color name="info">#FF0369A1</color>
+    <color name="info_container">#FFE0F2FE</color>
+    <color name="on_info">#FFFFFFFF</color>
+
+    <!-- ============ BACKGROUND / SURFACE ============ -->
+    <color name="background">#FFF8FAFC</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="surface_variant">#FFF1F5F9</color>
+    <color name="surface_elevated">#FFFFFFFF</color>
+    <color name="border">#FFCBD5E1</color>
+    <color name="divider">#FFE2E8F0</color>
+    <color name="overlay_scrim">#80000000</color>
+
+    <!-- ============ TEXT ============ -->
+    <color name="text_primary">#FF0F172A</color>
+    <color name="text_secondary">#FF475569</color>
+    <color name="text_hint">#FF64748B</color>
+    <color name="text_disabled">#FF94A3B8</color>
+    <color name="text_on_dark">#FFFFFFFF</color>
+    <color name="text_on_primary">#FFFFFFFF</color>
+
+    <!-- ============ POS SEMANTIC COLORS (VERY IMPORTANT) ============ -->
+    <color name="cash_green">#FF059669</color>
+    <color name="card_blue">#FF2563EB</color>
+    <color name="due_orange">#FFEA580C</color>
+    <color name="expense_red">#FFDC2626</color>
+    <color name="shortage_red">#FFDC2626</color>
+    <color name="surplus_green">#FF059669</color>
+    <color name="variance_neutral">#FF64748B</color>
+
+    <!-- ============ CHART COLORS ============ -->
+    <color name="chart_blue">#FF2563EB</color>
+    <color name="chart_green">#FF059669</color>
+    <color name="chart_orange">#FFEA580C</color>
+    <color name="chart_purple">#FF7C3AED</color>
+    <color name="chart_teal">#FF0F766E</color>
+
 </resources>

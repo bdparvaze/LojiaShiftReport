@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- PRIMARY DARK -->
+    <color name="primary">#FF60A5FA</color>
+    <color name="primary_dark">#FF3B82F6</color>
+    <color name="primary_light">#FF93C5FD</color>
+    <color name="primary_container">#FF1E3A8A</color>
+    <color name="on_primary">#FF0F172A</color>
+    <color name="on_primary_container">#FFDBEAFE</color>
+
+    <!-- SECONDARY DARK -->
+    <color name="secondary">#FF5EEAD4</color>
+    <color name="secondary_container">#FF134E4A</color>
+    <color name="on_secondary">#FF0F172A</color>
+    <color name="on_secondary_container">#FFCCFBF1</color>
+
+    <!-- TERTIARY DARK -->
+    <color name="tertiary">#FFA78BFA</color>
+    <color name="tertiary_container">#FF4C1D95</color>
+    <color name="on_tertiary">#FF0F172A</color>
+
+    <!-- STATUS DARK -->
+    <color name="success">#FF34D399</color>
+    <color name="success_container">#FF064E3B</color>
+    <color name="on_success">#FF0F172A</color>
+
+    <color name="warning">#FFFBBF24</color>
+    <color name="warning_container">#FF78350F</color>
+    <color name="on_warning">#FF0F172A</color>
+
+    <color name="error">#FFF87171</color>
+    <color name="error_container">#FF7F1D1D</color>
+    <color name="on_error">#FF0F172A</color>
+
+    <color name="info">#FF38BDF8</color>
+    <color name="info_container">#FF0C4A6E</color>
+    <color name="on_info">#FF0F172A</color>
+
+    <!-- BACKGROUND DARK -->
+    <color name="background">#FF0F172A</color>
+    <color name="surface">#FF1E293B</color>
+    <color name="surface_variant">#FF334155</color>
+    <color name="surface_elevated">#FF1E293B</color>
+    <color name="border">#FF475569</color>
+    <color name="divider">#FF334155</color>
+    <color name="overlay_scrim">#B3000000</color>
+
+    <!-- TEXT DARK -->
+    <color name="text_primary">#FFF1F5F9</color>
+    <color name="text_secondary">#FFCBD5E1</color>
+    <color name="text_hint">#FF94A3B8</color>
+    <color name="text_disabled">#FF64748B</color>
+    <color name="text_on_dark">#FFFFFFFF</color>
+    <color name="text_on_primary">#FF0F172A</color>
+
+    <!-- POS SEMANTIC DARK -->
+    <color name="cash_green">#FF34D399</color>
+    <color name="card_blue">#FF60A5FA</color>
+    <color name="due_orange">#FFFBBF24</color>
+    <color name="expense_red">#FFF87171</color>
+    <color name="shortage_red">#FFF87171</color>
+    <color name="surplus_green">#FF34D399</color>
+    <color name="variance_neutral">#FF94A3B8</color>
+
+    <!-- CHART DARK -->
+    <color name="chart_blue">#FF60A5FA</color>
+    <color name="chart_green">#FF34D399</color>
+    <color name="chart_orange">#FFFBBF24</color>
+    <color name="chart_purple">#FFA78BFA</color>
+    <color name="chart_teal">#FF5EEAD4</color>
+
+</resources>

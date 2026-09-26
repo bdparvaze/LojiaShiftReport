@@ -138,7 +138,7 @@ fun BusinessLogoPickerCard(
         }
     }
 
-    val primaryBrand = Color(0xFF00796B)
+    val primaryBrand = PrimaryIndigoLight
     var showOptionSheet by remember { mutableStateOf(false) }
 
     // Change photo options dialog
@@ -148,7 +148,7 @@ fun BusinessLogoPickerCard(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showOptionSheet = false }) {
-                    Text(stringResource(R.string.close), color = Color(0xFF64748B))
+                    Text(stringResource(R.string.close), color = OnSurfaceVariantLight)
                 }
             },
             title = {
@@ -156,7 +156,7 @@ fun BusinessLogoPickerCard(
                     text = "Change photo",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0F172A)
+                        color = OnSurfaceLight
                     )
                 )
             },
@@ -180,7 +180,7 @@ fun BusinessLogoPickerCard(
                                     Toast.makeText(context, e.localizedMessage ?: "Gallery error", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                        color = Color(0xFFF1F5F9)
+                        color = SurfaceVariantLight
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -197,7 +197,7 @@ fun BusinessLogoPickerCard(
                                 text = stringResource(R.string.upload_logo),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A),
+                                    color = OnSurfaceLight,
                                     fontSize = 15.sp
                                 )
                             )
@@ -213,7 +213,7 @@ fun BusinessLogoPickerCard(
                                 showOptionSheet = false
                                 showPresetDialog = true
                             },
-                        color = Color(0xFFF1F5F9)
+                        color = SurfaceVariantLight
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -230,7 +230,7 @@ fun BusinessLogoPickerCard(
                                 text = stringResource(R.string.preset_logos),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A),
+                                    color = OnSurfaceLight,
                                     fontSize = 15.sp
                                 )
                             )
@@ -248,7 +248,7 @@ fun BusinessLogoPickerCard(
                                     onSaveProfile(businessProfile.copy(logoUri = ""))
                                     Toast.makeText(context, removedMsg, Toast.LENGTH_SHORT).show()
                                 },
-                            color = Color(0xFFFEF2F2)
+                            color = ErrorContainer
                         ) {
                             Row(
                                 modifier = Modifier.padding(14.dp),
@@ -258,14 +258,14 @@ fun BusinessLogoPickerCard(
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = null,
-                                    tint = Color(0xFFDC2626),
+                                    tint = ErrorRedLight,
                                     modifier = Modifier.size(22.dp)
                                 )
                                 Text(
                                     text = stringResource(R.string.remove_logo),
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFFDC2626),
+                                        color = ErrorRedLight,
                                         fontSize = 15.sp
                                     )
                                 )
@@ -275,7 +275,7 @@ fun BusinessLogoPickerCard(
                 }
             },
             shape = RoundedCornerShape(20.dp),
-            containerColor = Color.White
+            containerColor = SurfaceLight
         )
     }
 
@@ -293,7 +293,7 @@ fun BusinessLogoPickerCard(
             modifier = Modifier
                 .size(136.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE2E8F0))
+                .background(OutlineVariantLight)
                 .clickable {
                     try {
                         photoPickerLauncher.launch(
@@ -319,14 +319,14 @@ fun BusinessLogoPickerCard(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF94A3B8)),
+                        .background(TextDisabledColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = initial,
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = PureWhite,
                             fontSize = 46.sp
                         )
                     )
@@ -337,13 +337,13 @@ fun BusinessLogoPickerCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.25f)),
+                    .background(PureBlack.copy(alpha = 0.25f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.PhotoCamera,
                     contentDescription = "Change photo",
-                    tint = Color.White,
+                    tint = PureWhite,
                     modifier = Modifier.size(40.dp)
                 )
             }
@@ -387,15 +387,15 @@ fun BusinessLogoPickerCard(
 fun ProfileGroupCard(
     title: String,
     icon: ImageVector,
-    iconTint: Color = Color(0xFF00796B),
+    iconTint: Color = PrimaryIndigoLight,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -430,7 +430,7 @@ fun ProfileGroupCard(
                     text = title.uppercase(),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF475569),
+                        color = OnSurfaceVariantLight,
                         letterSpacing = 0.8.sp,
                         fontSize = 12.sp
                     )
@@ -439,7 +439,7 @@ fun ProfileGroupCard(
 
             Spacer(modifier = Modifier.height(4.dp))
             HorizontalDivider(
-                color = Color(0xFFF1F5F9),
+                color = OutlineVariantLight,
                 thickness = 1.dp,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -486,14 +486,14 @@ fun ProfileDetailItemRow(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFF8FAFC))
-                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp)),
+                        .background(BackgroundLight)
+                        .border(1.dp, OutlineLight, RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        tint = Color(0xFF475569),
+                        tint = OnSurfaceVariantLight,
                         modifier = Modifier.size(19.dp)
                     )
                 }
@@ -502,7 +502,7 @@ fun ProfileDetailItemRow(
                     AutoText(
                         text = label,
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = Color(0xFF64748B),
+                            color = TextHintColor,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         ),
@@ -513,7 +513,7 @@ fun ProfileDetailItemRow(
                     Text(
                         text = displayValue,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            color = Color(0xFF0F172A),
+                            color = OnSurfaceLight,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -525,7 +525,7 @@ fun ProfileDetailItemRow(
 
             // Edit badge
             Surface(
-                color = Color(0xFFF1F5F9),
+                color = SurfaceVariantLight,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.size(28.dp)
             ) {
@@ -533,7 +533,7 @@ fun ProfileDetailItemRow(
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = "Edit $label",
-                        tint = Color(0xFF64748B),
+                        tint = OnSurfaceVariantLight,
                         modifier = Modifier.size(14.dp)
                     )
                 }
@@ -542,7 +542,7 @@ fun ProfileDetailItemRow(
 
         if (!isLastItem) {
             HorizontalDivider(
-                color = Color(0xFFF1F5F9),
+                color = OutlineVariantLight,
                 thickness = 0.8.dp,
                 modifier = Modifier.padding(start = 68.dp, end = 16.dp)
             )
@@ -556,7 +556,7 @@ fun PresetLogoPickerDialog(
     onSelectPreset: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val primaryBrand = Color(0xFF00796B)
+    val primaryBrand = PrimaryIndigoLight
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -564,7 +564,7 @@ fun PresetLogoPickerDialog(
                 .fillMaxWidth()
                 .padding(12.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
             elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
         ) {
             Column(
@@ -586,7 +586,7 @@ fun PresetLogoPickerDialog(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .background(primaryBrand.copy(alpha = 0.12f)),
+                                .background(PrimaryContainerLight),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -600,7 +600,7 @@ fun PresetLogoPickerDialog(
                             text = stringResource(R.string.choose_preset_logo),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F172A),
+                                color = OnSurfaceLight,
                                 fontSize = 17.sp
                             )
                         )
@@ -613,7 +613,7 @@ fun PresetLogoPickerDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.close),
-                            tint = Color(0xFF64748B)
+                            tint = OnSurfaceVariantLight
                         )
                     }
                 }
@@ -637,12 +637,12 @@ fun PresetLogoPickerDialog(
                                 .clip(RoundedCornerShape(14.dp))
                                 .border(
                                     width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) primaryBrand else Color(0xFFE2E8F0),
+                                    color = if (isSelected) primaryBrand else OutlineLight,
                                     shape = RoundedCornerShape(14.dp)
                                 )
                                 .clickable { onSelectPreset(item.key) },
                             colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) primaryBrand.copy(alpha = 0.08f) else Color(0xFFF8FAFC)
+                                containerColor = if (isSelected) PrimaryContainerLight else SurfaceLight
                             )
                         ) {
                             Box(modifier = Modifier.fillMaxSize()) {
@@ -671,7 +671,7 @@ fun PresetLogoPickerDialog(
                                         text = stringResource(item.nameResId),
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) primaryBrand else Color(0xFF1E293B),
+                                            color = if (isSelected) primaryBrand else OnSurfaceLight,
                                             fontSize = 12.sp
                                         ),
                                         textAlign = TextAlign.Center,
@@ -693,7 +693,7 @@ fun PresetLogoPickerDialog(
                                         Icon(
                                             imageVector = Icons.Default.Check,
                                             contentDescription = null,
-                                            tint = Color.White,
+                                            tint = PureWhite,
                                             modifier = Modifier.size(13.dp)
                                         )
                                     }

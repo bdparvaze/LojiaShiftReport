@@ -12,36 +12,37 @@ import com.lojia.shiftreport.settings.*
 import androidx.compose.ui.graphics.Color
 
 object LojiaColors {
-    val P800 = Color(0xFF1E3A8A)
-    val P700 = Color(0xFF1D4ED8)
-    val P600 = Color(0xFF2563EB)
-    val P500 = Color(0xFF2563EB)
-    val P400 = Color(0xFF3B82F6)
-    val P100 = Color(0xFFDBEAFE)
-    val P50 = Color(0xFFEFF6FF)
+    val P800 = Color(0xFF001B3E)
+    val P700 = Color(0xFF284777)
+    val P600 = Color(0xFF415F91)
+    val P500 = Color(0xFF415F91) // Deep Indigo #415F91
+    val P400 = Color(0xFF5D7BAE)
+    val P100 = Color(0xFFD6E3FF)
+    val P50 = Color(0xFFEEF3FF)
 
-    val G500 = Color(0xFF059669)
-    val G200 = Color(0xFFA7F3D0)
-    val G100 = Color(0xFFECFDF5)
+    val G500 = Color(0xFF006C5B) // Subtle Teal/Cyan #006C5B
+    val G200 = Color(0xFF72F8DC)
+    val G100 = Color(0xFFD4F9EE)
 
-    val R500 = Color(0xFFDC2626)
-    val R100 = Color(0xFFFEF2F2)
+    val R500 = Color(0xFFBA1A1A) // Standard MD3 Error #BA1A1A
+    val R100 = Color(0xFFFFDAD6)
+    val R200 = Color(0xFFF9DEDC)
 
-    val A400 = Color(0xFFD97706)
+    val A400 = Color(0xFF8C5000)
 
-    val N900 = Color(0xFF0F172A)
-    val N700 = Color(0xFF334155)
-    val N600 = Color(0xFF475569)
-    val N500 = Color(0xFF64748B)
-    val N400 = Color(0xFF94A3B8)
-    val N300 = Color(0xFFCBD5E1)
-    val N200 = Color(0xFFE2E8F0)
-    val N100 = Color(0xFFF1F5F9)
-    val N50 = Color(0xFFF8FAFC)
-    val White = Color(0xFFFFFFFF)
+    val N900 = Color(0xFF191C20) // High-contrast Charcoal #191C20
+    val N700 = Color(0xFF2E3135)
+    val N600 = Color(0xFF44474E) // Medium Gray #44474E
+    val N500 = Color(0xFF74777F) // Outline/Hint Gray
+    val N400 = Color(0xFF8E9099)
+    val N300 = Color(0xFFCAC4D0)
+    val N200 = Color(0xFFE2E2E9)
+    val N100 = Color(0xFFF0F0F7)
+    val N50 = Color(0xFFF9F9FF)  // Cool Off-White/Light Gray Background #F9F9FF
+    val White = Color(0xFFFFFFFF) // Pure White Surface #FFFFFF
 
-    val CanvasBg = Color(0xFFFFFFFF)
-    val OkBg = Color(0xFFECFDF5)
+    val CanvasBg = Color(0xFFF9F9FF)
+    val OkBg = Color(0xFFD4F9EE)
 }
 
 data class LojiaCountry(

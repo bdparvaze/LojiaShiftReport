@@ -419,15 +419,18 @@ class BluetoothPrinterManager(private val context: Context) {
         businessPhone: String = "",
         vatNumber: String = "",
         report: com.lojia.shiftreport.data.ShiftReport,
-        currencySymbol: String = "$"
+        currencySymbol: String = "$",
+        vatRate: Double = 15.0,
+        isTaxEnabled: Boolean = true,
+        isTaxIncluded: Boolean = true
     ): String {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
         val is58 = paperWidth == PrinterPaperWidth.MM_58
         val lineSeparator = if (is58) "--------------------------------" else "------------------------------------------------"
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
-        val startingCash = com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashFromNotes(report.notes) ?: 0.0
-        val actualCashCount = com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashFromNotes(report.notes)
+        val startingCash = com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashFromNotes(report)
+        val actualCashCount = com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashFromNotes(report)
         val cashIn = report.totalDueCollectedCash
         val cashOut = report.totalCashOut
         val expectedCash = startingCash + report.grossCash + cashIn - cashOut
@@ -493,12 +496,29 @@ class BluetoothPrinterManager(private val context: Context) {
         sb.append("[C]$lineSeparator\n")
 
         // 3. TAX & VAT SUMMARY
-        val netTaxable = report.totalSales / 1.15
-        val vatAmount = report.totalSales - netTaxable
+        val (netTaxable, vatAmount, grossTotal) = if (isTaxEnabled && vatRate > 0.0) {
+            if (isTaxIncluded) {
+                val divisor = 1.0 + (vatRate / 100.0)
+                val net = report.totalSales / divisor
+                val vat = report.totalSales - net
+                Triple(net, vat, report.totalSales)
+            } else {
+                val net = report.totalSales
+                val vat = net * (vatRate / 100.0)
+                Triple(net, vat, net + vat)
+            }
+        } else {
+            Triple(report.totalSales, 0.0, report.totalSales)
+        }
         sb.append("[L]<b>3. TAX & VAT SUMMARY</b>\n")
-        sb.append("[L]Net Taxable Sales:[R]$currencySymbol${String.format("%.2f", netTaxable)}\n")
-        sb.append("[L]VAT (15%):[R]$currencySymbol${String.format("%.2f", vatAmount)}\n")
-        sb.append("[L]Gross Total (Inc VAT):[R]$currencySymbol${String.format("%.2f", report.totalSales)}\n")
+        if (isTaxEnabled && vatRate > 0.0) {
+            sb.append("[L]Net Taxable Sales:[R]$currencySymbol${String.format("%.2f", netTaxable)}\n")
+            sb.append("[L]VAT (${String.format(Locale.US, "%.1f", vatRate)}%):[R]$currencySymbol${String.format("%.2f", vatAmount)}\n")
+            sb.append("[L]Gross Total (${if (isTaxIncluded) "Inc VAT" else "Exc VAT"}):[R]$currencySymbol${String.format("%.2f", grossTotal)}\n")
+        } else {
+            sb.append("[L]Tax Status:[R]Non-Taxable\n")
+            sb.append("[L]Net Total Sales:[R]$currencySymbol${String.format("%.2f", report.totalSales)}\n")
+        }
         sb.append("[C]$lineSeparator\n")
 
         // 4. OTHER TRACKING

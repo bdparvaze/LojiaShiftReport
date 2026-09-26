@@ -302,57 +302,58 @@ fun ScannedDocumentItemCard(
 
                     DropdownMenu(
                         expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false }
+                        onDismissRequest = { menuExpanded = false },
+                        containerColor = Color.White
                     ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_view_pdf)) },
-                            leadingIcon = { Icon(Icons.Outlined.Visibility, contentDescription = null) },
+                            text = { Text(stringResource(R.string.doc_btn_view_pdf), color = Color(0xFF0F172A)) },
+                            leadingIcon = { Icon(Icons.Outlined.Visibility, contentDescription = null, tint = Color(0xFF334155)) },
                             onClick = {
                                 menuExpanded = false
                                 onViewClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_share_pdf)) },
-                            leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+                            text = { Text(stringResource(R.string.doc_btn_share_pdf), color = Color(0xFF0F172A)) },
+                            leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null, tint = Color(0xFF334155)) },
                             onClick = {
                                 menuExpanded = false
                                 onSharePdfClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_extract_text)) },
-                            leadingIcon = { Icon(Icons.Outlined.TextFields, contentDescription = null) },
+                            text = { Text(stringResource(R.string.doc_btn_extract_text), color = Color(0xFF0F172A)) },
+                            leadingIcon = { Icon(Icons.Outlined.TextFields, contentDescription = null, tint = Color(0xFF334155)) },
                             onClick = {
                                 menuExpanded = false
                                 onExtractTextClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_share_docx)) },
-                            leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
+                            text = { Text(stringResource(R.string.doc_btn_share_docx), color = Color(0xFF0F172A)) },
+                            leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null, tint = Color(0xFF334155)) },
                             onClick = {
                                 menuExpanded = false
                                 onShareDocxClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_protect_pdf)) },
-                            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null) },
+                            text = { Text(stringResource(R.string.doc_btn_protect_pdf), color = Color(0xFF0F172A)) },
+                            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = Color(0xFF334155)) },
                             onClick = {
                                 menuExpanded = false
                                 onPasswordProtectClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_rename)) },
-                            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+                            text = { Text(stringResource(R.string.doc_btn_rename), color = Color(0xFF0F172A)) },
+                            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null, tint = Color(0xFF334155)) },
                             onClick = {
                                 menuExpanded = false
                                 onRenameClick()
                             }
                         )
-                        HorizontalDivider()
+                        HorizontalDivider(color = Color(0xFFE2E8F0))
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.doc_btn_delete), color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },

@@ -1,22 +1,37 @@
 package com.lojia.shiftreport.settings
 
 import android.widget.Toast
-import androidx.compose.animation.*
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -31,8 +46,12 @@ import com.lojia.shiftreport.data.AppCountry
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.report.ReportViewModel
-import com.lojia.shiftreport.ui.common.LojiaTextField
-import com.lojia.shiftreport.ui.theme.PrimaryIndigo
+import com.lojia.shiftreport.ui.common.LojiaDimens
+import com.lojia.shiftreport.ui.common.LojiaOutlinedButton
+import com.lojia.shiftreport.ui.common.LojiaPrimaryButton
+import com.lojia.shiftreport.ui.common.LojiaSectionHeader
+import com.lojia.shiftreport.ui.common.LojiaSettingsCard
+import com.lojia.shiftreport.ui.theme.*
 
 /**
  * Converts a 2-letter Country ISO code (e.g., "BD", "SA", "US", "AE") into its corresponding Flag Emoji.
@@ -81,35 +100,94 @@ fun getCurrencySymbol(currencyCode: String): String {
 }
 
 /**
- * Data holder for currency option items derived from AppCountry or custom presets.
+ * Metadata helper for rich international language display.
  */
-data class CurrencyOption(
-    val code: String,
-    val symbol: String,
-    val countryNameRes: Int
+private data class LanguageInternationalMeta(
+    val flag: String,
+    val nativeScript: String,
+    val internationalTitle: String,
+    val regionSubtitle: String,
+    val directionLabel: String,
+    val isoBadge: String
 )
 
+private fun getLanguageMeta(lang: AppLanguage): LanguageInternationalMeta {
+    return when (lang) {
+        AppLanguage.ENGLISH -> LanguageInternationalMeta(
+            flag = "🇺🇸",
+            nativeScript = "English",
+            internationalTitle = "English (International)",
+            regionSubtitle = "United States & Global • Standard POS",
+            directionLabel = "LTR",
+            isoBadge = "EN-US"
+        )
+        AppLanguage.BENGALI -> LanguageInternationalMeta(
+            flag = "🇧🇩",
+            nativeScript = "বাংলা",
+            internationalTitle = "বাংলা • Bengali",
+            regionSubtitle = "Bangladesh & South Asia • বাংলা সংস্করণ",
+            directionLabel = "LTR",
+            isoBadge = "BN-BD"
+        )
+        AppLanguage.ARABIC -> LanguageInternationalMeta(
+            flag = "🇸🇦",
+            nativeScript = "العربية",
+            internationalTitle = "العربية • Arabic",
+            regionSubtitle = "Saudi Arabia & GCC • الشرق الأوسط",
+            directionLabel = "RTL",
+            isoBadge = "AR-SA"
+        )
+    }
+}
+
 /**
- * Modern, unified "Regional & Preferences" card for the main settings overview.
- * Displays Country, Language, and Currency under a single unbreakable section.
+ * Groups countries into international regions for quick filtering.
+ */
+private enum class WorldRegionFilter(val label: String) {
+    ALL("All Regions"),
+    SOUTH_ASIA("South Asia"),
+    MIDDLE_EAST("Middle East & GCC"),
+    EUROPE_AMERICAS("Europe & Americas"),
+    ASIA_PACIFIC("Asia Pacific")
+}
+
+private fun getCountryRegion(country: AppCountry): WorldRegionFilter {
+    return when (country) {
+        AppCountry.BANGLADESH, AppCountry.INDIA, AppCountry.PAKISTAN -> WorldRegionFilter.SOUTH_ASIA
+        AppCountry.SAUDI_ARABIA, AppCountry.UNITED_ARAB_EMIRATES, AppCountry.QATAR,
+        AppCountry.KUWAIT, AppCountry.OMAN, AppCountry.BAHRAIN,
+        AppCountry.TURKEY, AppCountry.EGYPT -> WorldRegionFilter.MIDDLE_EAST
+        AppCountry.UNITED_STATES, AppCountry.UNITED_KINGDOM,
+        AppCountry.EUROPEAN_UNION, AppCountry.CANADA -> WorldRegionFilter.EUROPE_AMERICAS
+        AppCountry.MALAYSIA, AppCountry.SINGAPORE, AppCountry.AUSTRALIA,
+        AppCountry.JAPAN, AppCountry.CHINA, AppCountry.INDONESIA -> WorldRegionFilter.ASIA_PACIFIC
+    }
+}
+
+/**
+ * Modern "Language & Regional Preferences" card for the main settings overview.
+ * Displays 2 primary options:
+ * 1. Language Select
+ * 2. Country & Currency
  */
 @Composable
 fun RegionalPreferencesCard(
     currentCountry: AppCountry,
     currentLanguage: AppLanguage,
     businessProfile: BusinessProfile?,
-    onOpenRegionalMenu: (initialTab: Int) -> Unit,
+    onOpenRegionalMenu: (initialOption: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val activeCurrency = businessProfile?.currency ?: currentCountry.currencyCode
+    val activeCurrency = businessProfile?.currency?.ifBlank { currentCountry.currencyCode } ?: currentCountry.currencyCode
     val activeSymbol = getCurrencySymbol(activeCurrency)
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
+    val langMeta = getLanguageMeta(currentLanguage)
 
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        shape = RoundedCornerShape(LojiaDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, OutlineLight),
         modifier = modifier
             .fillMaxWidth()
             .testTag("regional_preferences_card")
@@ -117,27 +195,27 @@ fun RegionalPreferencesCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(LojiaDimens.CardPadding),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header
+            // Card Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(40.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFEEF2FF)),
+                        .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Public,
+                        imageVector = Icons.Outlined.Language,
                         contentDescription = null,
-                        tint = Color(0xFF4F46E5),
-                        modifier = Modifier.size(20.dp)
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -145,73 +223,57 @@ fun RegionalPreferencesCard(
                         text = stringResource(R.string.regional_interface_section),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B),
+                        color = OnSurfaceLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = stringResource(R.string.centralized_sync_desc),
-                        fontSize = 11.5.sp,
-                        color = Color(0xFF64748B),
+                        text = "International language, store country & POS currency",
+                        fontSize = 12.sp,
+                        color = OnSurfaceVariantLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
 
-            // 1. Country Selector Row
+            // 1. Language Select Row
             RegionalPreferenceItemRow(
-                emojiText = countryFlag,
-                iconBgColor = Color(0xFFEFF6FF),
-                iconTint = Color(0xFF2563EB),
-                title = stringResource(R.string.country),
-                subtitle = stringResource(currentCountry.nameRes),
-                badgeText = "$countryFlag ${currentCountry.code}",
-                badgeBgColor = Color(0xFFDBEAFE),
-                badgeTextColor = Color(0xFF1E40AF),
-                onClick = { onOpenRegionalMenu(1) },
-                testTag = "regional_row_country"
-            )
-
-            HorizontalDivider(color = Color(0xFFF8FAFC), thickness = 0.5.dp)
-
-            // 2. Language Selector Row
-            RegionalPreferenceItemRow(
-                emojiText = "🌐",
-                iconBgColor = Color(0xFFF5F3FF),
-                iconTint = Color(0xFF7C3AED),
-                title = stringResource(R.string.language),
-                subtitle = currentLanguage.displayName,
-                badgeText = currentLanguage.code.uppercase(),
-                badgeBgColor = Color(0xFFEDE9FE),
-                badgeTextColor = Color(0xFF5B21B6),
+                emojiText = langMeta.flag,
+                iconBgColor = PrimaryContainerLight,
+                iconTint = PrimaryIndigoLight,
+                title = "Language Select",
+                subtitle = "${langMeta.internationalTitle} • ${langMeta.directionLabel}",
+                badgeText = langMeta.isoBadge,
+                badgeBgColor = PrimaryContainerLight,
+                badgeTextColor = OnPrimaryContainerLight,
                 onClick = { onOpenRegionalMenu(0) },
                 testTag = "regional_row_language"
             )
 
-            HorizontalDivider(color = Color(0xFFF8FAFC), thickness = 0.5.dp)
+            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
 
-            // 3. Currency Selector Row
+            // 2. Country & Currency Row
             RegionalPreferenceItemRow(
-                emojiText = activeSymbol,
-                iconBgColor = Color(0xFFECFDF5),
-                iconTint = Color(0xFF059669),
-                title = stringResource(R.string.currency),
-                subtitle = "$activeCurrency ($activeSymbol)",
+                emojiText = countryFlag,
+                iconBgColor = SuccessContainer,
+                iconTint = SuccessGreen,
+                title = "Country & Currency",
+                subtitle = "${stringResource(currentCountry.nameRes)} • $activeCurrency ($activeSymbol)",
                 badgeText = "$activeSymbol $activeCurrency",
-                badgeBgColor = Color(0xFFD1FAE5),
-                badgeTextColor = Color(0xFF065F46),
-                onClick = { onOpenRegionalMenu(2) },
-                testTag = "regional_row_currency"
+                badgeBgColor = SuccessContainer,
+                badgeTextColor = SuccessGreen,
+                onClick = { onOpenRegionalMenu(1) },
+                testTag = "regional_row_country_currency"
             )
         }
     }
 }
 
 /**
- * Reusable, overflow-safe single preference row.
+ * Reusable single preference row for settings overview.
  */
 @Composable
 fun RegionalPreferenceItemRow(
@@ -230,39 +292,36 @@ fun RegionalPreferenceItemRow(
 ) {
     Surface(
         color = Color.Transparent,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(LojiaDimens.CardRadius),
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 52.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .defaultMinSize(minHeight = 54.dp)
+            .clip(RoundedCornerShape(LojiaDimens.CardRadius))
             .clickable { onClick() }
             .testTag(testTag)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp, horizontal = 4.dp),
+                .padding(vertical = 8.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(42.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(iconBgColor),
+                        .background(iconBgColor)
+                        .border(1.dp, OutlineLight, RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (!emojiText.isNullOrBlank()) {
-                        Text(
-                            text = emojiText,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = iconTint
-                        )
+                    if (emojiText != null) {
+                        Text(text = emojiText, fontSize = 20.sp)
                     } else if (icon != null) {
                         Icon(
                             imageVector = icon,
@@ -273,21 +332,20 @@ fun RegionalPreferenceItemRow(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
-
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF1E293B),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurfaceLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = subtitle,
-                        fontSize = 12.sp,
-                        color = Color(0xFF64748B),
+                        fontSize = 13.sp,
+                        color = OnSurfaceVariantLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -301,13 +359,13 @@ fun RegionalPreferenceItemRow(
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(badgeBgColor)
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 9.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = badgeText,
-                        fontSize = 11.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = badgeTextColor,
                         maxLines = 1,
@@ -318,8 +376,8 @@ fun RegionalPreferenceItemRow(
                 Icon(
                     imageVector = Icons.Outlined.ChevronRight,
                     contentDescription = null,
-                    tint = Color(0xFF94A3B8),
-                    modifier = Modifier.size(18.dp)
+                    tint = TextHintColor,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -327,370 +385,990 @@ fun RegionalPreferenceItemRow(
 }
 
 /**
- * Detailed 3-Tab View for Regional & Preferences settings (Language, Country, Currency).
+ * International-Standard Language & Regional Preferences Screen.
+ *
+ * Features two sleek, inline-expandable cards:
+ * 1. Language Select -> Clicking opens a downward inline accordion with rich international language options + Cancel/Save.
+ * 2. Country & Currency -> Clicking opens a downward inline accordion with region filters, search, and international currency cards + Cancel/Save.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegionalPreferencesDetailView(
     reportViewModel: ReportViewModel,
-    initialTab: Int = 0,
+    initialTab: Int = -1,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val currentLanguage by reportViewModel.currentLanguage.collectAsState()
     val currentCountry by reportViewModel.currentCountry.collectAsState()
     val businessProfile by reportViewModel.businessProfile.collectAsState()
+    val bProfile = businessProfile ?: BusinessProfile()
 
-    var selectedTab by remember(initialTab) { mutableIntStateOf(initialTab.coerceIn(0, 2)) }
-    var searchQuery by remember { mutableStateOf("") }
+    // null = both collapsed (clean 2-option view), 0 = Language Select expanded, 1 = Country & Currency expanded
+    var expandedOption by remember(initialTab) {
+        mutableStateOf<Int?>(
+            when (initialTab) {
+                0 -> 0
+                1, 2 -> 1
+                else -> null
+            }
+        )
+    }
 
-    val activeCurrency = businessProfile?.currency ?: currentCountry.currencyCode
+    // Track initial values when opening an accordion so "Cancel" can revert cleanly
+    var languageBeforeExpand by remember { mutableStateOf(currentLanguage) }
+    var countryBeforeExpand by remember { mutableStateOf(currentCountry) }
+
+    var countrySearchQuery by remember { mutableStateOf("") }
+    var selectedRegionFilter by remember { mutableStateOf(WorldRegionFilter.ALL) }
+
+    val activeCurrency = bProfile.currency.ifBlank { currentCountry.currencyCode }
+    val activeSymbol = getCurrencySymbol(activeCurrency)
+    val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
+    val activeLangMeta = getLanguageMeta(currentLanguage)
+
+    BackHandler {
+        if (expandedOption != null) {
+            expandedOption = null
+        } else {
+            reportViewModel.selectReportSettingsMenu("root")
+        }
+    }
+
+    val allCountries = remember { AppCountry.entries }
+    val filteredCountries = remember(countrySearchQuery, selectedRegionFilter, currentLanguage) {
+        allCountries.filter { country ->
+            val matchesRegion = selectedRegionFilter == WorldRegionFilter.ALL ||
+                getCountryRegion(country) == selectedRegionFilter
+            val matchesSearch = if (countrySearchQuery.isBlank()) {
+                true
+            } else {
+                val localizedName = context.getString(country.nameRes)
+                localizedName.contains(countrySearchQuery, ignoreCase = true) ||
+                    country.displayName.contains(countrySearchQuery, ignoreCase = true) ||
+                    country.code.contains(countrySearchQuery, ignoreCase = true) ||
+                    country.currencyCode.contains(countrySearchQuery, ignoreCase = true) ||
+                    country.currencySymbol.contains(countrySearchQuery, ignoreCase = true) ||
+                    country.dialCode.contains(countrySearchQuery, ignoreCase = true)
+            }
+            matchesRegion && matchesSearch
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .testTag("regional_preferences_detail_view")
+            .background(PureWhite)
+            .testTag("regional_preferences_detail_view"),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Segmented 3-Tab Control
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = Color(0xFFF8FAFC),
-            contentColor = Color(0xFF4F46E5),
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth()
+                .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
         ) {
-            // Tab 0: Language
-            Tab(
-                selected = selectedTab == 0,
-                onClick = {
-                    selectedTab = 0
-                    searchQuery = ""
-                },
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Translate,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.language),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            )
-
-            // Tab 1: Country
-            Tab(
-                selected = selectedTab == 1,
-                onClick = {
-                    selectedTab = 1
-                    searchQuery = ""
-                },
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Public,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.country),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            )
-
-            // Tab 2: Currency
-            Tab(
-                selected = selectedTab == 2,
-                onClick = {
-                    selectedTab = 2
-                    searchQuery = ""
-                },
-                text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Payments,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.currency),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Medium
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        when (selectedTab) {
-            // ==========================================
-            // 🌐 TAB 0: LANGUAGE SELECTION
-            // ==========================================
-            0 -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+            // =================================================================
+            // 1. INTERNATIONAL LOCALIZATION & CURRENCY OVERVIEW CARD
+            // =================================================================
+            LojiaSettingsCard {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    LanguageSettingsComponent(
-                        currentLanguage = currentLanguage,
-                        accentColor = PrimaryIndigo,
-                        onLanguageChanged = { newLang ->
-                            reportViewModel.setLanguage(newLang)
-                        }
-                    )
-                }
-            }
-
-            // ==========================================
-            // 🌍 TAB 1: COUNTRY SELECTION
-            // ==========================================
-            1 -> {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    LojiaTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text(stringResource(R.string.search_country), fontSize = 14.sp) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-
-                    val allCountries = AppCountry.entries.filter { c ->
-                        val localizedName = context.getString(c.nameRes)
-                        localizedName.contains(searchQuery, ignoreCase = true) ||
-                        c.displayName.contains(searchQuery, ignoreCase = true) ||
-                        c.code.contains(searchQuery, ignoreCase = true) ||
-                        c.currencyCode.contains(searchQuery, ignoreCase = true)
-                    }
-
-                    allCountries.forEach { country ->
-                        val isSelected = country == currentCountry
-                        val displayName = stringResource(country.nameRes)
-
-                        Surface(
-                            color = if (isSelected) Color(0xFFF5F3FF) else Color.White,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 56.dp)
-                                .clickable {
-                                    reportViewModel.setCountry(country)
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(
-                                            R.string.country_set_toast_fmt,
-                                            displayName,
-                                            country.currencyCode,
-                                            country.currencySymbol
-                                        ),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Row(
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(PrimaryContainerLight),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    val flagEmoji = countryCodeToFlagEmoji(country.code)
-                                    Box(
-                                        modifier = Modifier
-                                            .size(38.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(if (isSelected) Color(0xFFEFF6FF) else Color(0xFFF1F5F9)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = flagEmoji,
-                                            fontSize = 20.sp
-                                        )
-                                    }
+                                Icon(
+                                    imageVector = Icons.Outlined.Public,
+                                    contentDescription = null,
+                                    tint = PrimaryIndigoLight,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
 
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = displayName,
-                                            fontSize = 14.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                            color = if (isSelected) Color(0xFF4F46E5) else Color(0xFF1E293B),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = "${country.currencyCode} (${country.currencySymbol})",
-                                            fontSize = 12.sp,
-                                            color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-
-                                if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = stringResource(R.string.cd_selected),
-                                        tint = Color(0xFF4F46E5),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Localization & Currency",
+                                    fontWeight = FontWeight.Bold,
+                                    color = OnSurfaceLight,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Configure display language, store country & ISO currency",
+                                    color = OnSurfaceVariantLight,
+                                    fontSize = 13.sp
+                                )
                             }
                         }
-                        HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 0.5.dp)
-                    }
-                }
-            }
 
-            // ==========================================
-            // 💰 TAB 2: CURRENCY SELECTION
-            // ==========================================
-            2 -> {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    LojiaTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text(stringResource(R.string.search_country), fontSize = 14.sp) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-
-                    val currencyList = remember {
-                        AppCountry.entries.map { c ->
-                            CurrencyOption(
-                                code = c.currencyCode,
-                                symbol = c.currencySymbol,
-                                countryNameRes = c.nameRes
+                        // Active ISO Badge
+                        Surface(
+                            shape = RoundedCornerShape(LojiaDimens.ChipRadius),
+                            color = PrimaryContainerLight,
+                            border = BorderStroke(1.dp, PrimaryIndigoLight)
+                        ) {
+                            Text(
+                                text = "${currentLanguage.code.uppercase()} • $activeCurrency",
+                                fontWeight = FontWeight.Bold,
+                                color = OnPrimaryContainerLight,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
-                        }.distinctBy { it.code }
+                        }
                     }
 
-                    val filteredCurrencies = currencyList.filter { cur ->
-                        val countryName = context.getString(cur.countryNameRes)
-                        cur.code.contains(searchQuery, ignoreCase = true) ||
-                        cur.symbol.contains(searchQuery, ignoreCase = true) ||
-                        countryName.contains(searchQuery, ignoreCase = true)
-                    }
+                    HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
 
-                    filteredCurrencies.forEach { currency ->
-                        val isSelected = currency.code.equals(activeCurrency, ignoreCase = true)
-                        val countryName = stringResource(currency.countryNameRes)
-
+                    // Two-Column Active Status Strip (Language + Currency Format Preview)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Active Language Pill Box
                         Surface(
-                            color = if (isSelected) Color(0xFFECFDF5) else Color.White,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 56.dp)
-                                .clickable {
-                                    reportViewModel.setCurrency(currency.code)
-                                    Toast.makeText(
-                                        context,
-                                        "Currency set to ${currency.code} (${currency.symbol})",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                            shape = RoundedCornerShape(LojiaDimens.InputRadius),
+                            color = BackgroundLight,
+                            border = BorderStroke(1.dp, OutlineLight),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    val currencySymbol = getCurrencySymbol(currency.code)
-                                    Box(
-                                        modifier = Modifier
-                                            .size(38.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(if (isSelected) Color(0xFFECFDF5) else Color(0xFFF1F5F9)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = currencySymbol,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (isSelected) Color(0xFF059669) else Color(0xFF334155),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "${currency.code} (${currency.symbol})",
-                                            fontSize = 14.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                            color = if (isSelected) Color(0xFF059669) else Color(0xFF1E293B),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = countryName,
-                                            fontSize = 12.sp,
-                                            color = if (isSelected) Color(0xFF10B981) else Color(0xFF64748B),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-
-                                if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = stringResource(R.string.cd_selected),
-                                        tint = Color(0xFF059669),
-                                        modifier = Modifier.size(22.dp)
+                                Text(text = activeLangMeta.flag, fontSize = 20.sp)
+                                Column {
+                                    Text(
+                                        text = "ACTIVE LANGUAGE",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextHintColor,
+                                        letterSpacing = 0.4.sp
+                                    )
+                                    Text(
+                                        text = activeLangMeta.nativeScript,
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OnSurfaceLight,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
                         }
-                        HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 0.5.dp)
+
+                        // Active Currency & Format Pill Box
+                        Surface(
+                            shape = RoundedCornerShape(LojiaDimens.InputRadius),
+                            color = BackgroundLight,
+                            border = BorderStroke(1.dp, OutlineLight),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(text = countryFlag, fontSize = 20.sp)
+                                Column {
+                                    Text(
+                                        text = "POS CURRENCY",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextHintColor,
+                                        letterSpacing = 0.4.sp
+                                    )
+                                    Text(
+                                        text = "$activeSymbol 1,250.00 ($activeCurrency)",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SuccessGreen,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
+
+            LojiaSectionHeader("REGIONAL PREFERENCES")
+
+            // =================================================================
+            // OPTION 1: LANGUAGE SELECT (Downward Expandable International Card)
+            // =================================================================
+            val isLangExpanded = expandedOption == 0
+            val langArrowRotation by animateFloatAsState(
+                targetValue = if (isLangExpanded) 180f else 0f,
+                animationSpec = tween(durationMillis = 220),
+                label = "language_arrow_rotation"
+            )
+
+            Card(
+                shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = BorderStroke(
+                    width = if (isLangExpanded) 1.5.dp else 1.dp,
+                    color = if (isLangExpanded) PrimaryIndigoLight else OutlineLight
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = LojiaDimens.CardSpacing)
+                    .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    .testTag("card_language_select_accordion")
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Clickable Header Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (isLangExpanded) {
+                                    expandedOption = null
+                                } else {
+                                    languageBeforeExpand = currentLanguage
+                                    expandedOption = 0
+                                }
+                            }
+                            .padding(LojiaDimens.CardPadding),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(LojiaDimens.IconTextGap),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Translate,
+                                contentDescription = null,
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(LojiaDimens.IconSize)
+                            )
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Language Select",
+                                    fontWeight = FontWeight.Medium,
+                                    color = OnSurfaceLight,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${activeLangMeta.flag} ${activeLangMeta.internationalTitle}",
+                                    color = OnSurfaceVariantLight,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            // ISO Code Pill
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = PrimaryContainerLight,
+                                border = BorderStroke(1.dp, PrimaryIndigoLight)
+                            ) {
+                                Text(
+                                    text = activeLangMeta.isoBadge,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OnPrimaryContainerLight,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (isLangExpanded) "Collapse" else "Expand",
+                                tint = TextHintColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .rotate(langArrowRotation)
+                            )
+                        }
+                    }
+
+                    // Downward Expandable Language Selector Panel
+                    AnimatedVisibility(
+                        visible = isLangExpanded,
+                        enter = expandVertically(animationSpec = tween(220)) + fadeIn(animationSpec = tween(220)),
+                        exit = shrinkVertically(animationSpec = tween(180)) + fadeOut(animationSpec = tween(180))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(BackgroundLight)
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            HorizontalDivider(color = OutlineVariantLight, modifier = Modifier.padding(bottom = 2.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "SELECT INTERFACE LANGUAGE",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextHintColor,
+                                    letterSpacing = 0.5.sp
+                                )
+                                Text(
+                                    text = "${AppLanguage.entries.size} Languages Available",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = OnSurfaceVariantLight
+                                )
+                            }
+
+                            // Language Option Cards
+                            AppLanguage.entries.forEach { lang ->
+                                val isSelected = lang == currentLanguage
+                                val meta = getLanguageMeta(lang)
+
+                                Surface(
+                                    onClick = {
+                                        reportViewModel.setLanguage(lang)
+                                    },
+                                    shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                                    color = if (isSelected) PrimaryContainerLight else SurfaceLight,
+                                    shadowElevation = 0.dp,
+                                    border = BorderStroke(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = if (isSelected) PrimaryIndigoLight else OutlineLight
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("option_language_${lang.code}")
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            // Flag Container
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(
+                                                        if (isSelected) SurfaceLight else BackgroundLight
+                                                    )
+                                                    .border(
+                                                        1.dp,
+                                                        if (isSelected) PrimaryIndigoLight else OutlineLight,
+                                                        RoundedCornerShape(10.dp)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(text = meta.flag, fontSize = 24.sp)
+                                            }
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = meta.internationalTitle,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isSelected) OnPrimaryContainerLight else OnSurfaceLight,
+                                                    fontSize = 15.sp
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = meta.regionSubtitle,
+                                                    fontSize = 13.sp,
+                                                    color = OnSurfaceVariantLight,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            // Script Direction Badge (LTR / RTL)
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = if (meta.directionLabel == "RTL") WarningContainer else SurfaceVariantLight
+                                            ) {
+                                                Text(
+                                                    text = meta.directionLabel,
+                                                    fontSize = 10.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (meta.directionLabel == "RTL") WarningOrange else OnSurfaceVariantLight,
+                                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                                )
+                                            }
+
+                                            // Radio / Checkmark Indicator
+                                            if (isSelected) {
+                                                Surface(
+                                                    shape = CircleShape,
+                                                    color = PrimaryIndigoLight,
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Check,
+                                                            contentDescription = "Selected",
+                                                            tint = PureWhite,
+                                                            modifier = Modifier.size(15.dp)
+                                                        )
+                                                    }
+                                                }
+                                            } else {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .clip(CircleShape)
+                                                        .border(1.5.dp, OutlineLight, CircleShape)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Cancel & Save Action Footer
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                LojiaOutlinedButton(
+                                    text = "Cancel",
+                                    onClick = {
+                                        reportViewModel.setLanguage(languageBeforeExpand)
+                                        expandedOption = null
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                LojiaPrimaryButton(
+                                    text = "Save",
+                                    onClick = {
+                                        expandedOption = null
+                                        Toast.makeText(
+                                            context,
+                                            "Language set to ${currentLanguage.displayName}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // =================================================================
+            // OPTION 2: COUNTRY & CURRENCY (Downward Expandable International Card)
+            // =================================================================
+            val isCountryExpanded = expandedOption == 1
+            val countryArrowRotation by animateFloatAsState(
+                targetValue = if (isCountryExpanded) 180f else 0f,
+                animationSpec = tween(durationMillis = 220),
+                label = "country_arrow_rotation"
+            )
+
+            Card(
+                shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = BorderStroke(
+                    width = if (isCountryExpanded) 1.5.dp else 1.dp,
+                    color = if (isCountryExpanded) PrimaryIndigoLight else OutlineLight
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = LojiaDimens.CardSpacing)
+                    .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                    .testTag("card_country_currency_accordion")
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Clickable Header Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (isCountryExpanded) {
+                                    expandedOption = null
+                                } else {
+                                    countryBeforeExpand = currentCountry
+                                    expandedOption = 1
+                                }
+                            }
+                            .padding(LojiaDimens.CardPadding),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(LojiaDimens.IconTextGap),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CurrencyExchange,
+                                contentDescription = null,
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(LojiaDimens.IconSize)
+                            )
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Country & Currency",
+                                    fontWeight = FontWeight.Medium,
+                                    color = OnSurfaceLight,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "$countryFlag ${stringResource(currentCountry.nameRes)} • $activeCurrency ($activeSymbol)",
+                                    color = OnSurfaceVariantLight,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            // Active Currency Pill
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = SuccessContainer,
+                                border = BorderStroke(1.dp, SuccessGreen)
+                            ) {
+                                Text(
+                                    text = "$activeSymbol $activeCurrency",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SuccessGreen,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (isCountryExpanded) "Collapse" else "Expand",
+                                tint = TextHintColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .rotate(countryArrowRotation)
+                            )
+                        }
+                    }
+
+                    // Downward Expandable Country & Currency Selector Panel
+                    AnimatedVisibility(
+                        visible = isCountryExpanded,
+                        enter = expandVertically(animationSpec = tween(220)) + fadeIn(animationSpec = tween(220)),
+                        exit = shrinkVertically(animationSpec = tween(180)) + fadeOut(animationSpec = tween(180))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(BackgroundLight)
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            HorizontalDivider(color = OutlineVariantLight, modifier = Modifier.padding(bottom = 2.dp))
+
+                            // Selected Country & Currency Live Summary Bar
+                            Surface(
+                                shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                                color = PrimaryContainerLight,
+                                border = BorderStroke(1.dp, PrimaryIndigoLight),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(text = countryFlag, fontSize = 24.sp)
+                                        Column {
+                                            Text(
+                                                text = "${stringResource(currentCountry.nameRes)} (${currentCountry.code})",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.5.sp,
+                                                color = OnPrimaryContainerLight
+                                            )
+                                            Text(
+                                                text = "Dial: ${currentCountry.dialCode} • Standard VAT: ${currentCountry.defaultVatRate}%",
+                                                fontSize = 11.5.sp,
+                                                color = PrimaryIndigoLight
+                                            )
+                                        }
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = SurfaceLight,
+                                        border = BorderStroke(1.dp, PrimaryIndigoLight)
+                                    ) {
+                                        Text(
+                                            text = "$activeCurrency ($activeSymbol)",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.5.sp,
+                                            color = PrimaryIndigoLight,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // International Search Box
+                            OutlinedTextField(
+                                value = countrySearchQuery,
+                                onValueChange = { countrySearchQuery = it },
+                                placeholder = {
+                                    Text(
+                                        text = "Search country, currency or ISO code (e.g. BD, SAR, USD, $)",
+                                        fontSize = 13.sp,
+                                        color = TextHintColor
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Search,
+                                        contentDescription = null,
+                                        tint = OnSurfaceVariantLight
+                                    )
+                                },
+                                trailingIcon = if (countrySearchQuery.isNotEmpty()) {
+                                    {
+                                        IconButton(onClick = { countrySearchQuery = "" }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Clear",
+                                                tint = OnSurfaceVariantLight,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                } else null,
+                                singleLine = true,
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                    color = OnSurfaceLight,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 14.sp
+                                ),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = OnSurfaceLight,
+                                    unfocusedTextColor = OnSurfaceLight,
+                                    focusedContainerColor = SurfaceLight,
+                                    unfocusedContainerColor = SurfaceLight,
+                                    focusedBorderColor = PrimaryIndigoLight,
+                                    unfocusedBorderColor = OutlineLight,
+                                    cursorColor = PrimaryIndigoLight
+                                ),
+                                shape = RoundedCornerShape(LojiaDimens.InputRadius),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("input_search_country_currency")
+                            )
+
+                            // Horizontal World Region Filter Pills
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                WorldRegionFilter.entries.forEach { region ->
+                                    val isRegionSelected = selectedRegionFilter == region
+                                    Surface(
+                                        onClick = { selectedRegionFilter = region },
+                                        shape = RoundedCornerShape(LojiaDimens.ChipRadius),
+                                        color = if (isRegionSelected) PrimaryContainerLight else SurfaceVariantLight,
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (isRegionSelected) PrimaryIndigoLight else OutlineLight
+                                        )
+                                    ) {
+                                        Text(
+                                            text = region.label,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isRegionSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isRegionSelected) PrimaryIndigoLight else OnSurfaceVariantLight,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Country & Currency Cards List
+                            if (filteredCountries.isEmpty()) {
+                                Surface(
+                                    shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                                    color = SurfaceLight,
+                                    border = BorderStroke(1.dp, OutlineLight),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 32.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.SearchOff,
+                                            contentDescription = null,
+                                            tint = TextHintColor,
+                                            modifier = Modifier.size(64.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Text(
+                                            text = "No country found",
+                                            fontSize = 16.sp,
+                                            color = OnSurfaceVariantLight
+                                        )
+                                    }
+                                }
+                            } else {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    filteredCountries.forEach { country ->
+                                        val isSelected = country == currentCountry
+                                        val flag = countryCodeToFlagEmoji(country.code)
+                                        val sym = getCurrencySymbol(country.currencyCode)
+                                        val countryName = stringResource(country.nameRes)
+
+                                        Surface(
+                                            onClick = {
+                                                reportViewModel.setCountry(country)
+                                                reportViewModel.saveBusinessProfile(
+                                                    bProfile.copy(
+                                                        country = country.displayName,
+                                                        currency = country.currencyCode
+                                                    )
+                                                )
+                                            },
+                                            shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                                            color = if (isSelected) PrimaryContainerLight else SurfaceLight,
+                                            shadowElevation = 0.dp,
+                                            border = BorderStroke(
+                                                width = if (isSelected) 2.dp else 1.dp,
+                                                color = if (isSelected) PrimaryIndigoLight else OutlineLight
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .testTag("option_country_${country.code}")
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 12.dp, vertical = 11.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    // Flag Badge
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(42.dp)
+                                                            .clip(RoundedCornerShape(10.dp))
+                                                            .background(
+                                                                if (isSelected) SurfaceLight else BackgroundLight
+                                                            )
+                                                            .border(
+                                                                1.dp,
+                                                                if (isSelected) PrimaryIndigoLight else OutlineLight,
+                                                                RoundedCornerShape(10.dp)
+                                                            ),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(text = flag, fontSize = 22.sp)
+                                                    }
+
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(
+                                                            text = countryName,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                            color = if (isSelected) OnPrimaryContainerLight else OnSurfaceLight,
+                                                            fontSize = 15.sp,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                        Spacer(modifier = Modifier.height(2.dp))
+                                                        Text(
+                                                            text = "${country.displayName} • ${country.code} (${country.dialCode})",
+                                                            fontSize = 13.sp,
+                                                            color = OnSurfaceVariantLight,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                    }
+                                                }
+
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    // International Currency Capsule (Symbol + ISO Code)
+                                                    Surface(
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        color = if (isSelected) SurfaceLight else BackgroundLight,
+                                                        border = BorderStroke(
+                                                            1.dp,
+                                                            if (isSelected) PrimaryIndigoLight else OutlineLight
+                                                        )
+                                                    ) {
+                                                        Row(
+                                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                                        ) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(20.dp)
+                                                                    .clip(CircleShape)
+                                                                    .background(
+                                                                        if (isSelected) SuccessContainer else PrimaryContainerLight
+                                                                    ),
+                                                                contentAlignment = Alignment.Center
+                                                            ) {
+                                                                Text(
+                                                                    text = sym,
+                                                                    fontSize = 10.5.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = if (isSelected) SuccessGreen else PrimaryIndigoLight
+                                                                )
+                                                            }
+                                                            Text(
+                                                                text = country.currencyCode,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = if (isSelected) OnPrimaryContainerLight else OnSurfaceLight,
+                                                                fontSize = 12.5.sp
+                                                            )
+                                                        }
+                                                    }
+
+                                                    // Selection Checkmark / Radio Circle
+                                                    if (isSelected) {
+                                                        Surface(
+                                                            shape = CircleShape,
+                                                            color = PrimaryIndigoLight,
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Box(contentAlignment = Alignment.Center) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Check,
+                                                                    contentDescription = "Selected",
+                                                                    tint = PureWhite,
+                                                                    modifier = Modifier.size(15.dp)
+                                                                )
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(24.dp)
+                                                                .clip(CircleShape)
+                                                                .border(1.5.dp, OutlineLight, CircleShape)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Cancel & Save Action Footer
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                LojiaOutlinedButton(
+                                    text = "Cancel",
+                                    onClick = {
+                                        reportViewModel.setCountry(countryBeforeExpand)
+                                        reportViewModel.saveBusinessProfile(
+                                            bProfile.copy(
+                                                country = countryBeforeExpand.displayName,
+                                                currency = countryBeforeExpand.currencyCode
+                                            )
+                                        )
+                                        expandedOption = null
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                LojiaPrimaryButton(
+                                    text = "Save",
+                                    onClick = {
+                                        expandedOption = null
+                                        val countryName = context.getString(currentCountry.nameRes)
+                                        Toast.makeText(
+                                            context,
+                                            "Country & Currency saved: $countryName (${currentCountry.currencyCode})",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

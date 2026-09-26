@@ -57,26 +57,27 @@ fun AddCashierDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = Color.White,
-            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+            shape = RoundedCornerShape(16.dp),
+            color = SurfaceLight,
+            border = BorderStroke(1.dp, OutlineLight),
+            shadowElevation = 8.dp,
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight()
-                .shadow(8.dp, RoundedCornerShape(20.dp), ambientColor = Color(0x1A000000))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // =============================================================
-                // 1. HEADER
+                // 1. HEADER (Solid PrimaryIndigoDark — no gradient)
                 // =============================================================
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(PrimaryIndigoDark)
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
@@ -89,14 +90,14 @@ fun AddCashierDialog(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFFF0FDF4))
-                                .border(1.dp, Color(0xFFDCFCE7), RoundedCornerShape(10.dp)),
+                                .background(PrimaryContainerLight)
+                                .border(1.dp, OutlineLight, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.PointOfSale,
                                 contentDescription = null,
-                                tint = Color(0xFF00796B),
+                                tint = PrimaryIndigoLight,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -106,12 +107,12 @@ fun AddCashierDialog(
                                 text = stringResource(R.string.add_cashier_4),
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F172A)
+                                color = PureWhite
                             )
                             Text(
                                 text = stringResource(R.string.add_cashiers_here_to),
                                 fontSize = 12.sp,
-                                color = Color(0xFF64748B)
+                                color = OnPrimaryContainerDark
                             )
                         }
                     }
@@ -121,181 +122,193 @@ fun AddCashierDialog(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFF8FAFC))
+                            .background(PrimaryContainerLight)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
                             contentDescription = stringResource(R.string.cancel_18),
-                            tint = Color(0xFF64748B),
+                            tint = PrimaryIndigoDark,
                             modifier = Modifier.size(16.dp)
                         )
                     }
                 }
 
-                Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
-
-                // =============================================================
-                // 2. FORM FIELDS
-                // =============================================================
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // --- Cashier Name ---
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = stringResource(R.string.cashier_name),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF334155)
-                        )
-
-                        LojiaTextField(
-                            value = nameInput,
-                            onValueChange = {
-                                nameInput = it
-                                if (isError && it.isNotBlank()) isError = false
-                            },
-                            placeholder = {
-                                Text(
-                                    stringResource(R.string.eg_john_doe_sarah_1),
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF94A3B8)
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Person,
-                                    contentDescription = null,
-                                    tint = if (isError) Color(0xFFEF4444) else Color(0xFF00796B),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            isError = isError,
-                            singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF00796B),
-                                unfocusedBorderColor = Color(0xFFE2E8F0),
-                                focusedContainerColor = Color(0xFFF8FAFC),
-                                unfocusedContainerColor = Color(0xFFF8FAFC),
-                                errorBorderColor = Color(0xFFEF4444)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        if (isError) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // =============================================================
+                    // 2. FORM FIELDS
+                    // =============================================================
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // --- Cashier Name ---
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
-                                text = "Cashier name is required",
-                                fontSize = 11.sp,
-                                color = Color(0xFFEF4444),
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    // --- 6-Digit PIN ---
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Lock,
-                                contentDescription = null,
-                                tint = Color(0xFF00796B),
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.msg_6digit_security_pin_1),
+                                text = stringResource(R.string.cashier_name),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF334155)
+                                color = OnSurfaceLight
                             )
-                        }
 
-                        OtpInputField(
-                            pin = pinInput,
-                            onPinChange = { pinInput = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Surface(
-                            color = Color(0xFFF0FDF4),
-                            shape = RoundedCornerShape(6.dp),
-                            border = BorderStroke(1.dp, Color(0xFFDCFCE7)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Default PIN is 111111 if left blank.",
-                                fontSize = 11.sp,
-                                color = Color(0xFF166534),
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                            LojiaTextField(
+                                value = nameInput,
+                                onValueChange = {
+                                    nameInput = it
+                                    if (isError && it.isNotBlank()) isError = false
+                                },
+                                placeholder = {
+                                    Text(
+                                        stringResource(R.string.eg_john_doe_sarah_1),
+                                        fontSize = 13.sp,
+                                        color = TextHintColor
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Person,
+                                        contentDescription = null,
+                                        tint = if (isError) ErrorRedLight else PrimaryIndigoLight,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                isError = isError,
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = PrimaryIndigoLight,
+                                    unfocusedBorderColor = OutlineLight,
+                                    focusedContainerColor = BackgroundLight,
+                                    unfocusedContainerColor = BackgroundLight,
+                                    errorBorderColor = ErrorRedLight
+                                ),
+                                modifier = Modifier.fillMaxWidth()
                             )
-                        }
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(2.dp))
-
-                // =============================================================
-                // 3. ACTIONS
-                // =============================================================
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(
-                        onClick = onDismissRequest,
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color(0xFFF8FAFC),
-                            contentColor = Color(0xFF475569)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 42.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cancel_18),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            if (nameInput.isBlank()) {
-                                isError = true
-                            } else {
-                                onConfirmAdd(nameInput.trim(), pinInput.ifBlank { "111111" })
+                            if (isError) {
+                                Surface(
+                                    color = ErrorContainer,
+                                    shape = RoundedCornerShape(6.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Cashier name is required",
+                                        fontSize = 11.sp,
+                                        color = ErrorRedLight,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00796B),
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .weight(1.2f)
-                            .defaultMinSize(minHeight = 42.dp)
+                        }
+
+                        // --- 6-Digit PIN ---
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Lock,
+                                    contentDescription = null,
+                                    tint = PrimaryIndigoLight,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.msg_6digit_security_pin_1),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = OnSurfaceLight
+                                )
+                            }
+
+                            OtpInputField(
+                                pin = pinInput,
+                                onPinChange = { pinInput = it },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Surface(
+                                color = PrimaryContainerLight,
+                                shape = RoundedCornerShape(6.dp),
+                                border = BorderStroke(1.dp, OutlineLight),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Default PIN is 111111 if left blank.",
+                                    fontSize = 11.sp,
+                                    color = OnSurfaceVariantLight,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    // =============================================================
+                    // 3. ACTIONS
+                    // =============================================================
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        OutlinedButton(
+                            onClick = onDismissRequest,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, PrimaryIndigoLight),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = SurfaceLight,
+                                contentColor = PrimaryIndigoLight
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 42.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.PersonAdd,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
                             Text(
-                                text = stringResource(R.string.add_cashier_4),
+                                text = stringResource(R.string.cancel_18),
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
+                        }
+
+                        Button(
+                            onClick = {
+                                if (nameInput.isBlank()) {
+                                    isError = true
+                                } else {
+                                    onConfirmAdd(nameInput.trim(), pinInput.ifBlank { "111111" })
+                                }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryIndigoLight,
+                                contentColor = PureWhite
+                            ),
+                            modifier = Modifier
+                                .weight(1.2f)
+                                .defaultMinSize(minHeight = 42.dp)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.PersonAdd,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.add_cashier_4),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
+                                )
+                            }
                         }
                     }
                 }

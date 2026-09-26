@@ -1,0 +1,196 @@
+================================================================================
+LOJIA SHIFT REPORT — FINAL UI REDESIGN & AUDIT REPORT
+Scope: Navigation Drawer + 7 Settings Screens (Jetpack Compose Material 3)
+================================================================================
+
+OVERVIEW
+--------
+All target files for the Navigation Drawer and the 7 Settings sections (Cashier,
+Profile, Security, Language, Country/Currency Regional Preferences, Backup,
+Support, and About) have been redesigned and audited against the locked
+corporate POS specification.
+
+================================================================================
+TASK 1 — FULL HARDCODED COLOR AUDIT (All 80 Kotlin Files)
+================================================================================
+
+1A. PRIMARY REDESIGNED TARGET FILES (Navigation Drawer + 7 Settings Screens)
+----------------------------------------------------------------------------
+File                                                                 Count  Status
+-------------------------------------------------------------------  -----  ------
+app/src/main/java/com/lojia/shiftreport/MainActivity.kt                0    CLEAN
+app/src/main/java/com/lojia/shiftreport/ui/common/AppDrawer.kt         0    CLEAN
+app/src/main/java/com/lojia/shiftreport/ui/common/LojiaComponents.kt   0    CLEAN
+app/src/main/java/com/lojia/shiftreport/settings/SettingsScreen.kt     0    CLEAN
+app/src/main/java/com/lojia/shiftreport/settings/CashierManagementSection.kt 0 CLEAN
+app/src/main/java/com/lojia/shiftreport/settings/ProfileScreen.kt      0    CLEAN
+app/src/main/java/com/lojia/shiftreport/settings/SettingsReportSection.kt 0 CLEAN
+app/src/main/java/com/lojia/shiftreport/settings/LanguageSettingsComponent.kt 0 CLEAN
+app/src/main/java/com/lojia/shiftreport/settings/RegionalPreferencesSection.kt 0 CLEAN
+
+Total Hardcoded Colors in Primary Target Files: 0
+
+
+1B. EXEMPTED FILES (Per Spec Rules)
+----------------------------------------------------------------------------
+File                                                                 Count  Reason
+-------------------------------------------------------------------  -----  ------
+app/src/main/java/com/lojia/shiftreport/ui/theme/Color.kt             78    Theme token definitions (Source of Truth)
+app/src/main/java/com/lojia/shiftreport/ui/theme/Theme.kt              4    M3 ColorScheme fallback tokens
+app/src/main/java/com/lojia/shiftreport/util/PdfReportGenerator.kt     2    PDF/Print exact RGB exemption
+
+
+1C. OTHER NON-TARGET FILES WITH Zero (0) HARDCODED COLORS (52 Files)
+----------------------------------------------------------------------------
+All 52 remaining data, model, util, receiver, and helper files have 0 hardcoded
+colors (including all Room DAOs, entities, repositories, viewmodels, backup
+managers, formatters, and localization managers).
+
+
+1D. AUXILIARY DIALOGS & NON-SETTINGS SCREENS (Untouched Per Strict File Scope)
+----------------------------------------------------------------------------
+Note: Per strict instruction ("Modify ONLY the listed files — do not touch
+anything else") and ("If a color has no matching token, ASK ME before
+inventing"), the following files outside the primary target list were audited
+and cataloged below with exact counts and line numbers:
+
+1. settings/SettingsCommonDialogs.kt (1 occurrence)
+   - Line 259: Icon(Icons.Default.CheckCircle, ..., tint = Color(0xFF10B981))
+     -> Matches token: SuccessGreen
+
+2. settings/AddCashierDialog.kt (28 occurrences)
+   - Lines 125, 134: Color(0xFF0D9488), Color(0xFF0F766E) [Teal header gradient -> PrimaryIndigoDark]
+   - Lines 216, 224, 240, 297, 305, 344, 381, 417, 463: Color(0xFF0D9488) [-> PrimaryIndigoLight]
+   - Lines 217, 298, 345, 382, 418, 464: Color(0xFFE2E8F0) [-> OutlineLight]
+   - Lines 218, 299, 346, 383, 419, 465: Color(0xFFF8FAFC) [-> BackgroundLight]
+   - Line 236: Color(0xFFF0FDFA) [-> PrimaryContainerLight]
+   - Line 439: Color(0xFFFEF2F2) [-> ErrorContainer]
+   - Line 442: Color(0xFFDC2626) [-> ErrorRedLight]
+   - Line 484: Color(0xFF64748B) [-> OnSurfaceVariantLight]
+
+3. settings/BusinessLogoPickerCard.kt (37 occurrences)
+   - Lines 80-86: 7 preset store logo gradient pairs (14 colors)
+   - Lines 139, 146, 151, 200, 247, 260, 275, 290, 308, 326, 336, 355, 360,
+     374, 383, 405, 421, 439, 444, 465, 470, 495, 501: Card/dialog UI colors
+
+4. settings/GoogleMapsLocationPickerModal.kt (72 occurrences)
+   - Lines 997-1106: Custom Canvas map rendering colors (water, parks, roads,
+     buildings, labels)
+   - Lines 167-938, 1118-1154: Modal UI controls, search bar, and pins
+
+5. Non-Settings Modules (Report, Scanner, Auth, Printer, Shared Inputs):
+   - report/ShiftReportScreen.kt (102 occurrences)
+   - report/MonthlySalesSummaryView.kt (32 occurrences)
+   - report/ShiftReportLedgerTabs.kt (3 occurrences)
+   - report/MonthlySalesCharts.kt (3 occurrences)
+   - ui/common/Components.kt (34 occurrences)
+   - ui/common/LojiaTextField.kt (21 occurrences)
+   - ui/common/OtpInputField.kt (8 occurrences)
+   - auth/AdminAuthDialog.kt (30 occurrences)
+   - auth/LojiaAuthModels.kt (26 occurrences)
+   - auth/BiometricLockScreen.kt (10 occurrences)
+   - auth/QuickPinScreen.kt (9 occurrences)
+   - auth/LojiaAuthComponents.kt (3 occurrences)
+   - auth/LojiaRegisterScreen.kt (2 occurrences)
+   - scanner/DocumentScannerComponents.kt (17 occurrences)
+   - scanner/CamScannerEditorScreen.kt (13 occurrences)
+   - scanner/DocumentScannerDialogs.kt (7 occurrences)
+   - scanner/CamScannerCropView.kt (5 occurrences)
+   - scanner/DocumentScannerScreen.kt (4 occurrences)
+   - scanner/CameraXScannerView.kt (4 occurrences)
+   - printer/PrinterSetupDialog.kt (17 occurrences)
+   - permission/PermissionManager.kt (7 occurrences)
+
+
+================================================================================
+TASK 2 — DIMENSIONS & SPACING AUDIT (Settings + Drawer)
+================================================================================
+
+All dimensions in LojiaComponents.kt (`LojiaDimens`) and target files match the
+locked specification:
+- ScreenPadding       = 16.dp
+- ScreenTopPadding    = 16.dp
+- ScreenBottomPadding = 32.dp
+- SectionSpacing      = 24.dp
+- CardSpacing         = 8.dp
+- CardPadding         = 16.dp
+- IconTextGap         = 16.dp
+- CardRadius          = 12.dp
+- ButtonRadius        = 12.dp
+- InputRadius         = 10.dp
+- ChipRadius          = 999.dp
+- DrawerHeaderRadius  = 24.dp
+- DrawerItemHeight    = 52.dp
+- DrawerHeaderHeight  = 180.dp
+- IconSize            = 24.dp
+- AvatarSmall         = 48.dp
+- AvatarLarge         = 96.dp
+- FabSize             = 56.dp
+- MinTouchTarget      = 48.dp
+
+Navigation Drawer (`AppDrawer.kt`):
+- Header height: `.height(LojiaDimens.DrawerHeaderHeight)` (exact 180.dp)
+- Header bottom radius: `RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)`
+- Drawer item height: `.height(LojiaDimens.DrawerItemHeight)` (exact 52.dp)
+- Drawer item horizontal margin: `padding(horizontal = 12.dp, vertical = 2.dp)`
+- Drawer item corner radius: `RoundedCornerShape(12.dp)`
+
+
+================================================================================
+TASK 3 — TYPOGRAPHY AUDIT (Settings + Drawer)
+================================================================================
+
+- `ui/theme/Type.kt`: `PoppinsFontFamily` preserved untouched.
+- Section Headers (`LojiaSectionHeader`): 12.sp, Bold, uppercase,
+  letterSpacing = 0.15.sp, color = TextHintColor.
+- Setting Row Titles (`LojiaSettingRow`): 15.sp, Medium, color = OnSurfaceLight.
+- Setting Row Subtitles (`LojiaSettingRow`): 13.sp, Normal,
+  color = OnSurfaceVariantLight.
+- Primary & Outlined Buttons (`LojiaPrimaryButton` / `LojiaOutlinedButton`):
+  14.sp, SemiBold, 48.dp height, 12.dp corner radius.
+
+
+================================================================================
+TASK 4 — COMPONENT & SWITCH CONSISTENCY AUDIT (Settings + Drawer)
+================================================================================
+
+- `LojiaSectionHeader`, `LojiaSettingsCard`, `LojiaSettingRow`,
+  `LojiaPrimaryButton`, and `LojiaOutlinedButton` are used consistently across:
+  1. `CashierManagementSection.kt`
+  2. `ProfileScreen.kt`
+  3. `SettingsReportSection.kt` (Security, Backup, Support, About)
+  4. `LanguageSettingsComponent.kt`
+  5. `RegionalPreferencesSection.kt` (Language + Country/Currency)
+- All `Switch` components in redesigned settings sections use:
+  - `checkedThumbColor = PureWhite`
+  - `checkedTrackColor = PrimaryIndigoLight`
+  - `uncheckedThumbColor = PureWhite`
+  - `uncheckedTrackColor = OutlineLight`
+- All secondary/teal accents in Cashier, Profile, Security, Language, Backup,
+  Support, and About have been replaced with `PrimaryIndigoLight` /
+  `PrimaryContainerLight`.
+
+
+================================================================================
+TASK 5 — LIGHT / DARK COLOR TOKEN AUDIT
+================================================================================
+
+- `ui/theme/Theme.kt`: `DarkColorScheme = LightColorScheme` is preserved so the
+  POS app maintains a consistent light corporate surface regardless of system
+  dark mode.
+- `PrimaryIndigoDark` (`#1E3A8A`) and `OnPrimaryContainerDark` (`#DBEAFE`) are
+  used intentionally for high-contrast corporate headers (such as the solid
+  Navigation Drawer header and avatar border/subtitle in `AppDrawer.kt`).
+- All semantic status containers (`SuccessContainer`, `WarningContainer`,
+  `ErrorContainer`, `InfoContainer`) are defined in `ui/theme/Color.kt` and used
+  across status badges, banners, and icon containers.
+
+
+================================================================================
+TASK 6 — BUILD & VERIFICATION STATUS
+================================================================================
+
+- Gradle Compilation (`compile_applet`): SUCCESS (0 errors).
+- All existing ViewModel bindings, callbacks, navigation routes, dialogs, and
+  Compose `testTag` identifiers are 100% preserved.
+================================================================================

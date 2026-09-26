@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
         ShopReceiptConfig::class,
         ScannedDocument::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -79,17 +79,7 @@ abstract class AppDatabase : RoomDatabase() {
         }
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `scanned_documents` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `title` TEXT NOT NULL,
-                        `pdfUriPath` TEXT NOT NULL,
-                        `pageCount` INTEGER NOT NULL,
-                        `fileSizeBytes` INTEGER NOT NULL,
-                        `createdAtMillis` INTEGER NOT NULL,
-                        `notes` TEXT NOT NULL
-                    )
-                """.trimIndent())
+                // Table scanned_documents created in MIGRATION_7_8; no-op migration for 8->9
             }
         }
         val MIGRATION_9_10 = object : Migration(9, 10) {
@@ -111,6 +101,31 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE `business_profile` ADD COLUMN `mapLng` REAL NOT NULL DEFAULT 0.0")
             }
         }
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // shift_sessions upgrades
+                db.execSQL("ALTER TABLE `shift_sessions` ADD COLUMN `totalDiscounts` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `shift_sessions` ADD COLUMN `salesReturns` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `shift_sessions` ADD COLUMN `isLocked` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `shift_sessions` ADD COLUMN `managerSignedBy` TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE `shift_sessions` ADD COLUMN `managerSignTime` INTEGER DEFAULT NULL")
+
+                // shift_reports upgrades
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `openingCash` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `closingCash` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `totalDiscounts` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `salesReturns` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `isLocked` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `managerSignedBy` TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `managerSignTime` INTEGER DEFAULT NULL")
+
+                // draft_reports upgrades
+                db.execSQL("ALTER TABLE `draft_reports` ADD COLUMN `openingCash` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `draft_reports` ADD COLUMN `closingCash` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `draft_reports` ADD COLUMN `totalDiscounts` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `draft_reports` ADD COLUMN `salesReturns` REAL NOT NULL DEFAULT 0.0")
+            }
+        }
 
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -122,11 +137,11 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
                     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
-                    MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12
+                    MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13
                 )
                 .fallbackToDestructiveMigration()
 
-                builder.addCallback(DatabaseCallback(scope))
+                builder.addCallback(DatabaseCallback(scope) { INSTANCE })
                 val instance = builder.build()
                 INSTANCE = instance
                 instance
@@ -139,13 +154,15 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     private class DatabaseCallback(
-        private val scope: CoroutineScope
+        private val scope: CoroutineScope,
+        private val databaseProvider: () -> AppDatabase?
     ) : RoomDatabase.Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            INSTANCE?.let { database ->
-                scope.launch(Dispatchers.IO) {
-                    populateInitialData(database.reportDao())
+            scope.launch(Dispatchers.IO) {
+                val database = databaseProvider() ?: INSTANCE
+                database?.let {
+                    populateInitialData(it.reportDao())
                 }
             }
         }

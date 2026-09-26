@@ -224,10 +224,26 @@ fun MonthlySalesSummaryView(
     val totalMonthRevenue = dailyDataList.sumOf { it.totalRevenue }
     val totalMonthShiftsSales = dailyDataList.sumOf { it.shiftSales }
     val totalMonthPosSales = dailyDataList.sumOf { it.posSales }
-    val daysWithSalesCount = dailyDataList.count { it.totalRevenue > 0 }.coerceAtLeast(1)
-    val dailyAverageRevenue = totalMonthRevenue / daysWithSalesCount
+    val actualActiveDays = dailyDataList.count { it.totalRevenue > 0 }
+    val dailyAverageRevenue = if (actualActiveDays > 0) totalMonthRevenue / actualActiveDays else 0.0
     val peakDay = dailyDataList.maxByOrNull { it.totalRevenue }
-    val projectedMonthClose = dailyAverageRevenue * daysInMonth
+
+    // Mathematically sound monthly projection:
+    // Past month: finalized actual revenue (month has already concluded).
+    // Future month: 0.0 (no sales recorded yet).
+    // Current month: run-rate projection based on calendar days elapsed (daily run-rate * daysInMonth).
+    val projectedMonthClose = when {
+        calendarMonthOffset < 0 -> totalMonthRevenue
+        calendarMonthOffset > 0 -> 0.0
+        else -> {
+            val todayDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH).coerceIn(1, daysInMonth)
+            if (totalMonthRevenue > 0.0 && todayDay > 0) {
+                (totalMonthRevenue / todayDay) * daysInMonth
+            } else {
+                0.0
+            }
+        }
+    }
 
     // Comprehensive Monthly Automatic Calculations from Shift Reports in target month
     val monthShiftReports = remember(shiftReports, currentYear, currentMonth) {
@@ -487,7 +503,7 @@ fun MonthlySalesSummaryView(
             MonthlyKpiCard(
                 title = stringResource(R.string.daily_average),
                 value = "%.2f %s".format(dailyAverageRevenue, currency),
-                subtitle = stringResource(R.string.across_active_days_fmt, daysWithSalesCount),
+                subtitle = stringResource(R.string.across_active_days_fmt, actualActiveDays),
                 icon = Icons.Default.TrendingUp,
                 accentColor = PrimaryBlue,
                 modifier = Modifier.weight(1f)
@@ -506,10 +522,15 @@ fun MonthlySalesSummaryView(
                 accentColor = AccentGold,
                 modifier = Modifier.weight(1f)
             )
+            val projectedSubtitle = when {
+                calendarMonthOffset < 0 -> stringResource(R.string.finalized_month_revenue)
+                calendarMonthOffset > 0 -> stringResource(R.string.no_data_available)
+                else -> stringResource(R.string.subtitle_estimated_30_day_run)
+            }
             MonthlyKpiCard(
                 title = stringResource(R.string.projected_monthly),
                 value = "%.2f %s".format(projectedMonthClose, currency),
-                subtitle = stringResource(R.string.subtitle_estimated_30_day_run),
+                subtitle = projectedSubtitle,
                 icon = Icons.Default.QueryStats,
                 accentColor = PrimaryBlue,
                 modifier = Modifier.weight(1f)

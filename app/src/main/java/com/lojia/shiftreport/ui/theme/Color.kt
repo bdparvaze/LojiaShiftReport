@@ -3,82 +3,163 @@ package com.lojia.shiftreport.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // =========================================================================
-// UNIFIED INTERNATIONAL DESIGN TOKEN SYSTEM (Material / Google M3 standard)
-// Single Source of Truth
+// LOJIA SHIFT REPORT - REFACTORED COLOR SYSTEM (Synchronized with colors.xml)
 // =========================================================================
 
-// Primary Brand Token
-val PrimaryBlue = Color(0xFF2563EB)         // #2563EB - Main buttons, links, selected states
-val PrimaryBlueDark = Color(0xFF1D4ED8)     // #1D4ED8
-val PrimaryContainer = Color(0xFFEFF6FF)    // #EFF6FF
+// ============ PRIMARY (Brand Blue) ============
+val PrimaryIndigoLight = Color(0xFF1D4ED8)
+val PrimaryIndigoDark = Color(0xFF1E3A8A)
+val PrimaryLight = Color(0xFF3B82F6)
+val PrimaryContainerLight = Color(0xFFDBEAFE)
+val OnPrimaryLight = Color(0xFFFFFFFF)
+val OnPrimaryContainerLight = Color(0xFF1E3A8A)
 
-// Aliases for compatibility
-val PrimaryIndigo = PrimaryBlue
-val PrimaryIndigoDark = PrimaryBlueDark
-val DarkCharcoal = Color(0xFF0F172A)
+// ============ SECONDARY (Teal) ============
+val SecondaryTealLight = Color(0xFF0F766E)
+val SecondaryContainerLight = Color(0xFFCCFBF1)
+val OnSecondaryLight = Color(0xFFFFFFFF)
+val OnSecondaryContainerLight = Color(0xFF134E4A)
 
-// Status Tokens
-val SuccessGreen = Color(0xFF059669)        // #059669 - Positive indicators, completed states ONLY
-val SuccessContainer = Color(0xFFECFDF5)    // #ECFDF5
-val AccentEmerald = SuccessGreen
+// ============ TERTIARY (Purple) ============
+val TertiaryCyanLight = Color(0xFF7C3AED)
+val TertiaryContainerLight = Color(0xFFEDE9FE)
+val OnTertiaryLight = Color(0xFFFFFFFF)
+val OnTertiaryContainerLight = Color(0xFF4C1D95)
 
-val WarningOrange = Color(0xFFD97706)       // #D97706
-val WarningContainer = Color(0xFFFFFBEB)    // #FFFBEB
+// ============ STATUS COLORS ============
+val SuccessGreen = Color(0xFF047857)
+val SuccessContainer = Color(0xFFD1FAE5)
+val OnSuccessLight = Color(0xFFFFFFFF)
+
+val WarningOrange = Color(0xFFB45309)
+val WarningContainer = Color(0xFFFEF3C7)
+val OnWarningLight = Color(0xFFFFFFFF)
+
+val ErrorRedLight = Color(0xFFB91C1C)
+val ErrorContainerLight = Color(0xFFFEE2E2)
+val OnErrorLight = Color(0xFFFFFFFF)
+val OnErrorContainerLight = Color(0xFF7F1D1D)
+
+val InfoBlue = Color(0xFF0369A1)
+val InfoContainer = Color(0xFFE0F2FE)
+val OnInfoLight = Color(0xFFFFFFFF)
+
+// ============ BACKGROUND / SURFACE ============
+val BackgroundLight = Color(0xFFF8FAFC)
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceVariantLight = Color(0xFFF1F5F9)
+val SurfaceElevatedLight = Color(0xFFFFFFFF)
+val OutlineLight = Color(0xFFCBD5E1)
+val OutlineVariantLight = Color(0xFFE2E8F0)
+val OverlayScrim = Color(0x80000000)
+
+// ============ TEXT ============
+val OnBackgroundLight = Color(0xFF0F172A)
+val OnSurfaceLight = Color(0xFF0F172A)
+val OnSurfaceVariantLight = Color(0xFF475569)
+val TextHintColor = Color(0xFF64748B)
+val TextDisabledColor = Color(0xFF94A3B8)
+val TextOnDark = Color(0xFFFFFFFF)
+val TextOnPrimary = Color(0xFFFFFFFF)
+
+// ============ POS SEMANTIC COLORS ============
+val PosCashGreen = Color(0xFF059669)
+val PosCardBlue = Color(0xFF2563EB)
+val PosDueOrange = Color(0xFFEA580C)
+val PosExpenseRed = Color(0xFFDC2626)
+val PosShortageRed = Color(0xFFDC2626)
+val PosSurplusGreen = Color(0xFF059669)
+val PosVarianceNeutral = Color(0xFF64748B)
+
+// ============ CHART COLORS ============
+val ChartBlue = Color(0xFF2563EB)
+val ChartGreen = Color(0xFF059669)
+val ChartOrange = Color(0xFFEA580C)
+val ChartPurple = Color(0xFF7C3AED)
+val ChartTeal = Color(0xFF0F766E)
+
+// ============ DARK TOKENS (Synchronized with values-night/colors.xml) ============
+val OnPrimaryDark = Color(0xFF0F172A)
+val PrimaryContainerDark = Color(0xFF1E3A8A)
+val OnPrimaryContainerDark = Color(0xFFDBEAFE)
+val SecondaryTealDark = Color(0xFF5EEAD4)
+val OnSecondaryDark = Color(0xFF0F172A)
+val SecondaryContainerDark = Color(0xFF134E4A)
+val OnSecondaryContainerDark = Color(0xFFCCFBF1)
+val TertiaryCyanDark = Color(0xFFA78BFA)
+val OnTertiaryDark = Color(0xFF0F172A)
+val TertiaryContainerDark = Color(0xFF4C1D95)
+val OnTertiaryContainerDark = Color(0xFFEDE9FE)
+val ErrorRedDark = Color(0xFFF87171)
+val OnErrorDark = Color(0xFF0F172A)
+val ErrorContainerDark = Color(0xFF7F1D1D)
+val OnErrorContainerDark = Color(0xFFFEE2E2)
+val BackgroundDark = Color(0xFF0F172A)
+val OnBackgroundDark = Color(0xFFF1F5F9)
+val SurfaceDark = Color(0xFF1E293B)
+val OnSurfaceDark = Color(0xFFF1F5F9)
+val SurfaceVariantDark = Color(0xFF334155)
+val OnSurfaceVariantDark = Color(0xFFCBD5E1)
+val OutlineDark = Color(0xFF475569)
+val OutlineVariantDark = Color(0xFF334155)
+
+// --- Common Token Aliases & System Compatibility ---
+val BgLightGrey = SurfaceVariantLight
+val BgWhite = SurfaceLight
+val CardWhite = SurfaceLight
+val BorderLight = OutlineLight
+val BorderDark = OutlineDark
+
+val PrimaryBlue = PrimaryIndigoLight
+val PrimaryBlueDark = PrimaryIndigoDark
+val PrimaryContainer = PrimaryContainerLight
+val PrimaryIndigo = PrimaryIndigoLight
+
+val AccentEmerald = PosCashGreen
 val AccentGold = WarningOrange
+val ErrorRed = ErrorRedLight
+val ErrorContainer = ErrorContainerLight
+val AccentRose = ErrorRedLight
 
-val ErrorRed = Color(0xFFDC2626)            // #DC2626
-val ErrorContainer = Color(0xFFFEF2F2)      // #FEF2F2
-val AccentRose = ErrorRed
+val PureWhite = Color(0xFFFFFFFF)
+val PureBlack = Color(0xFF000000)
+val DarkCharcoal = OnBackgroundLight
+val MediumGray = OnSurfaceVariantLight
 
-// Neutral Canvas System
-val PureWhite = Color(0xFFFFFFFF)           // #FFFFFF
-val PureBlack = Color(0xFF000000)           // #000000
-val BackgroundLight = Color(0xFFFFFFFF)     // #FFFFFF
-val SurfaceLight = Color(0xFFF8FAFC)        // #F8FAFC
-val SurfaceVariantLight = Color(0xFFF1F5F9) // #F1F5F9
-val OutlineLight = Color(0xFFE2E8F0)        // #E2E8F0
-val OutlineVariantLight = Color(0xFFCBD5E1) // #CBD5E1
-val BgLightGrey = SurfaceLight
+val TextPrimaryLight = OnBackgroundLight
+val TextSecondaryLight = OnSurfaceVariantLight
+val TextTertiaryLight = TextHintColor
 
-// Text Tokens
-val TextPrimaryLight = Color(0xFF0F172A)    // #0F172A
-val TextSecondaryLight = Color(0xFF64748B)  // #64748B
-val TextTertiaryLight = Color(0xFF94A3B8)   // #94A3B8
+val SecondaryTeal = SecondaryTealLight
 
-// Secondary Accent
-val SecondaryTeal = Color(0xFF0284C7)
-
-// Loyverse Theme Color Mapping (Unified to Global Tokens)
-val LoyverseTopGreen = PrimaryBlue          // Header uses brand primary
-val LoyverseGreenPrimary = PrimaryBlue      // Action buttons use brand primary
-val LoyverseGreenDark = PrimaryBlueDark
-val LoyverseGreenLight = PrimaryBlue
-val LoyverseHeaderButtonGreen = PrimaryBlue // Header buttons use brand primary
+val LoyverseTopGreen = PrimaryIndigoLight
+val LoyverseGreenPrimary = PrimaryIndigoLight
+val LoyverseGreenDark = PrimaryIndigoDark
+val LoyverseGreenLight = PrimaryLight
+val LoyverseHeaderButtonGreen = PrimaryIndigoLight
 val LoyverseItemGrey = SurfaceVariantLight
-val LoyverseDividerGrey = OutlineLight
+val LoyverseDividerGrey = OutlineVariantLight
 val LoyverseTextDark = TextPrimaryLight
-val LoyverseBlue = PrimaryBlue
+val LoyverseBlue = PrimaryIndigoLight
 
-// ShiftColors System (Unified to Global Tokens)
+// ShiftColors System
 object ShiftColors {
-    val Primary = PrimaryBlue               // #2563EB - Main buttons are Primary Blue
-    val PrimaryDark = PrimaryBlueDark       // #1D4ED8
-    val Bg = SurfaceLight                  // #F8FAFC
-    val Card = PureWhite                   // #FFFFFF
-    val Text = TextPrimaryLight            // #0F172A
-    val TextMuted = TextSecondaryLight      // #64748B
-    val Border = OutlineLight              // #E2E8F0
-    val SaveBtn = PrimaryBlue              // #2563EB
-    val Danger = ErrorRed                  // #DC2626
-    val DangerLight = ErrorContainer        // #FEF2F2
-    val Purple = PrimaryBlue               // #2563EB
-    val PurpleLight = PrimaryContainer     // #EFF6FF
-    val Charcoal = TextPrimaryLight        // #0F172A
-    val CharcoalSoft = TextSecondaryLight   // #64748B
-    val Brass = WarningOrange              // #D97706
-    val BrassLight = WarningContainer       // #FFFBEB
-    val NetCashGreen = SuccessGreen        // #059669
-    val NetMadaBlue = PrimaryBlue          // #2563EB
+    val Primary = PrimaryIndigoLight
+    val PrimaryDark = PrimaryIndigoDark
+    val Bg = BackgroundLight
+    val Card = SurfaceLight
+    val Text = OnBackgroundLight
+    val TextMuted = OnSurfaceVariantLight
+    val Border = OutlineLight
+    val SaveBtn = PrimaryIndigoLight
+    val Danger = ErrorRedLight
+    val DangerLight = ErrorContainerLight
+    val Purple = ChartPurple
+    val PurpleLight = TertiaryContainerLight
+    val Charcoal = OnBackgroundLight
+    val CharcoalSoft = OnSurfaceVariantLight
+    val Brass = WarningOrange
+    val BrassLight = WarningContainer
+    val NetCashGreen = PosCashGreen
+    val NetMadaBlue = PosCardBlue
 }
-
-

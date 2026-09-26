@@ -60,6 +60,7 @@ import androidx.compose.material.icons.Icons
 import androidx.fragment.app.FragmentActivity
 
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 
 
@@ -235,15 +236,15 @@ fun SettingsReportSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(SurfaceLight)
     ) {
 
         // Quick Action Banner: Daily Shift Report Generator (Shown only in root settings overview or shift sub-menu)
         if (isRootMenu || currentMenu == "daily_shift_report") {
             Surface(
-                color = Color(0xFFF0FDF4),
+                color = PrimaryContainerLight,
                 shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, Color(0xFFBBF7D0)),
+                border = BorderStroke(1.dp, PrimaryIndigoLight),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -263,19 +264,19 @@ fun SettingsReportSection(
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .background(Color(0xFF00796B), RoundedCornerShape(8.dp)),
+                                .background(PrimaryIndigoLight, RoundedCornerShape(8.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Outlined.Assessment, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Outlined.Assessment, contentDescription = null, tint = PureWhite, modifier = Modifier.size(20.dp))
                         }
                         Column {
-                            AutoText(id = R.string.daily_shift_report, fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = Color(0xFF0F172A))
-                            AutoText(id = R.string.audit_drawer_cash_create, fontSize = 11.5.sp, color = Color(0xFF475569))
+                            AutoText(id = R.string.daily_shift_report, fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = OnSurfaceLight)
+                            AutoText(id = R.string.audit_drawer_cash_create, fontSize = 11.5.sp, color = OnSurfaceVariantLight)
                         }
                     }
                     Button(
                         onClick = { onSwitchModule(AppModule.SHIFT_REPORT) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
@@ -284,7 +285,7 @@ fun SettingsReportSection(
                 }
             }
 
-            HorizontalDivider(color = Color(0xFFF1F5F9))
+            HorizontalDivider(color = OutlineVariantLight)
         }
 
         when (currentMenu) {
@@ -296,7 +297,7 @@ fun SettingsReportSection(
                     id = R.string.staff_admin_section,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF9E9E9E),
+                    color = TextHintColor,
                     modifier = Modifier.padding(start = 20.dp, top = 6.dp, bottom = 4.dp)
                 )
 
@@ -318,7 +319,7 @@ fun SettingsReportSection(
                     id = R.string.security_data_section,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF9E9E9E),
+                    color = TextHintColor,
                     modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
                 )
 
@@ -347,7 +348,7 @@ fun SettingsReportSection(
                     id = R.string.regional_interface_section,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF9E9E9E),
+                    color = TextHintColor,
                     modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
                 )
 
@@ -366,7 +367,7 @@ fun SettingsReportSection(
                     id = R.string.system_support_section,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF9E9E9E),
+                    color = TextHintColor,
                     modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
                 )
 
@@ -396,7 +397,7 @@ fun SettingsReportSection(
                     trailing = {
                         Button(
                             onClick = { onSwitchModule(AppModule.SHIFT_REPORT) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B)),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text(stringResource(R.string.launch_1), fontSize = 12.sp)
@@ -427,82 +428,12 @@ fun SettingsReportSection(
             // 1. PROFILE
             // =================================================================
             "profile" -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    val bProfile = businessProfile ?: com.lojia.shiftreport.data.BusinessProfile()
-                    BusinessLogoPickerCard(
-                        businessProfile = bProfile,
-                        onSaveProfile = { updated ->
-                            reportViewModel.saveBusinessProfile(updated)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Clean List Card for Profile Detail Items
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
-                    ) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.Badge,
-                                label = stringResource(R.string.full_name),
-                                value = fullName,
-                                onClick = { editFieldDialog = "Full name" to fullName }
-                            )
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.AccountCircle,
-                                label = stringResource(R.string.username),
-                                value = username,
-                                onClick = { editFieldDialog = "Username" to username }
-                            )
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.Email,
-                                label = stringResource(R.string.email),
-                                value = email,
-                                onClick = { editFieldDialog = "Email" to email }
-                            )
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.Lock,
-                                label = stringResource(R.string.password),
-                                value = "••••••••",
-                                onClick = { editFieldDialog = "Password" to password }
-                            )
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.Phone,
-                                label = stringResource(R.string.phone_number),
-                                value = phone,
-                                onClick = { editFieldDialog = "Number" to phone }
-                            )
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.LocationOn,
-                                label = stringResource(R.string.address),
-                                value = address,
-                                isLastItem = false,
-                                onClick = { showMapLocationPicker = true }
-                            )
-                            ProfileDetailItemRow(
-                                icon = Icons.Outlined.Map,
-                                label = stringResource(R.string.google_maps_location),
-                                value = if (mapLat != 0.0 && mapLng != 0.0) String.format(Locale.US, "📍 %.5f, %.5f", mapLat, mapLng) else stringResource(R.string.pick_on_google_maps),
-                                isLastItem = true,
-                                onClick = { showMapLocationPicker = true }
-                            )
-                        }
+                ProfileScreen(
+                    reportViewModel = reportViewModel,
+                    onLogoutClick = {
+                        reportViewModel.selectReportSettingsMenu("root")
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                )
             }
 
             // =================================================================
@@ -514,228 +445,177 @@ fun SettingsReportSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
-                    // Option 1: Quick Login (PIN)
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
-                        shadowElevation = 1.dp,
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 18.dp, vertical = 16.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .background(Color(0xFFEFF6FF), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Lock,
-                                            contentDescription = "Quick Login",
-                                            tint = Color(0xFF3858F6),
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                    Column {
-                                        Text(
-                                            text = "Quick Login",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color(0xFF1E293B)
-                                        )
-                                        Text(
-                                            text = if (quickLoginEnabled) "Active with 4-digit PIN" else "Login quickly with a 4-digit PIN",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = if (quickLoginEnabled) Color(0xFF3858F6) else Color(0xFF64748B)
-                                        )
-                                    }
-                                }
-                                Switch(
-                                    checked = quickLoginEnabled,
-                                    onCheckedChange = { enable ->
-                                        if (enable) {
-                                            if (preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank()) {
-                                                quickLoginEnabled = true
-                                                preferencesRepository.setQuickLoginEnabled(true)
-                                                Toast.makeText(context, "Quick Login enabled", Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                showQuickPinDialog = true
-                                            }
-                                        } else {
-                                            quickLoginEnabled = false
-                                            preferencesRepository.setQuickLoginEnabled(false)
-                                            // Disabling Quick Login also disables Biometric unlock as required
-                                            biometricEnabled = false
-                                            preferencesRepository.setBiometricEnabled(false)
-                                            persistProfile(bio = false)
-                                            Toast.makeText(context, "Quick Login disabled", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFF3858F6),
-                                        uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color(0xFFCBD5E1)
-                                    )
-                                )
-                            }
-                            if (quickLoginEnabled) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                HorizontalDivider(color = Color(0xFFF1F5F9))
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { showQuickPinDialog = true }
-                                        .padding(vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Change 4-Digit PIN",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF3858F6)
-                                    )
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                                        contentDescription = null,
-                                        tint = Color(0xFF94A3B8),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    LojiaSectionHeader("PIN & BIOMETRIC")
 
-                    // Option 2: Biometric Login
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
-                        shadowElevation = 1.dp,
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 18.dp, vertical = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .background(Color(0xFFF0FDF4), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Fingerprint,
-                                        contentDescription = stringResource(R.string.cd_biometric_icon),
-                                        tint = Color(0xFF16A34A),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.biometric_login),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF1E293B)
-                                    )
-                                    Text(
-                                        text = if (!quickLoginEnabled) "Requires Quick Login and PIN as fallback"
-                                               else if (biometricEnabled) stringResource(R.string.biometric_enabled_desc)
-                                               else stringResource(R.string.biometric_disabled_desc),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (!quickLoginEnabled) Color(0xFF94A3B8)
-                                                else if (biometricEnabled) Color(0xFF16A34A)
-                                                else Color(0xFF64748B)
-                                    )
-                                }
-                            }
-                            Switch(
-                                checked = biometricEnabled,
-                                onCheckedChange = { enable ->
-                                    if (enable) {
-                                        // 3. First check that Quick Login is already enabled and a PIN exists (as fallback)
-                                        if (!quickLoginEnabled || !preferencesRepository.hasPinConfigured()) {
-                                            Toast.makeText(context, "Please enable Quick Login with a PIN first before activating Biometric.", Toast.LENGTH_LONG).show()
-                                            showQuickPinDialog = true
-                                            return@Switch
-                                        }
-
-                                        val fragActivity = context as? FragmentActivity
-                                        val bioStatus = BiometricAuthManager.checkBiometricAvailability(context)
-                                        if (fragActivity != null && bioStatus == BiometricStatus.AVAILABLE) {
-                                            BiometricAuthManager.showBiometricPrompt(
-                                                activity = fragActivity,
-                                                title = "Biometric Verification",
-                                                subtitle = "Touch sensor to activate Biometric Login",
-                                                description = "Verifying biometric security for your account.",
-                                                onResult = { result ->
-                                                    when (result) {
-                                                        is BiometricAuthResult.Success -> {
-                                                            biometricEnabled = true
-                                                            preferencesRepository.setBiometricEnabled(true)
-                                                            persistProfile(bio = true)
-                                                            Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
-                                                        }
-                                                        is BiometricAuthResult.Failed -> {
-                                                            Toast.makeText(context, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
-                                                        }
-                                                        is BiometricAuthResult.Error -> {
-                                                            Toast.makeText(context, result.errString.toString(), Toast.LENGTH_SHORT).show()
-                                                        }
-                                                        else -> {}
-                                                    }
-                                                }
-                                            )
-                                        } else {
-                                            biometricEnabled = true
-                                            preferencesRepository.setBiometricEnabled(true)
-                                            persistProfile(bio = true)
-                                            Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
-                                        }
-                                    } else {
-                                        biometricEnabled = false
-                                        preferencesRepository.setBiometricEnabled(false)
-                                        persistProfile(bio = false)
-                                        Toast.makeText(context, context.getString(R.string.biometric_login_disabled), Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFF16A34A),
-                                    uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = Color(0xFFCBD5E1)
-                                )
+                    // Card 1 — Quick Login
+                    LojiaSettingsCard {
+                        Icon(
+                            imageVector = Icons.Outlined.Pin,
+                            contentDescription = "Quick Login with PIN",
+                            tint = OnSurfaceVariantLight,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Quick Login with PIN",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = OnSurfaceLight
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Unlock POS with 4-digit PIN",
+                                fontSize = 13.sp,
+                                color = OnSurfaceVariantLight
                             )
                         }
+                        Switch(
+                            checked = quickLoginEnabled,
+                            onCheckedChange = { enable ->
+                                if (enable) {
+                                    if (preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank()) {
+                                        quickLoginEnabled = true
+                                        preferencesRepository.setQuickLoginEnabled(true)
+                                        Toast.makeText(context, "Quick Login enabled", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        showQuickPinDialog = true
+                                    }
+                                } else {
+                                    quickLoginEnabled = false
+                                    preferencesRepository.setQuickLoginEnabled(false)
+                                    // Disabling Quick Login also disables Biometric unlock as required
+                                    biometricEnabled = false
+                                    preferencesRepository.setBiometricEnabled(false)
+                                    persistProfile(bio = false)
+                                    Toast.makeText(context, "Quick Login disabled", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = PureWhite,
+                                checkedTrackColor = PrimaryIndigoLight,
+                                uncheckedThumbColor = PureWhite,
+                                uncheckedTrackColor = OutlineLight
+                            )
+                        )
                     }
 
+                    // Card 2 — Change PIN row
+                    LojiaSettingsCard(onClick = { showQuickPinDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Key,
+                            contentDescription = "Change 4-Digit PIN",
+                            tint = OnSurfaceVariantLight,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Change 4-Digit PIN",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = OnSurfaceLight
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Tap to update your PIN",
+                                fontSize = 13.sp,
+                                color = OnSurfaceVariantLight
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = TextHintColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    LojiaSectionHeader("BIOMETRIC")
+
+                    // Card 3 — Biometric
+                    LojiaSettingsCard {
+                        Icon(
+                            imageVector = Icons.Outlined.Fingerprint,
+                            contentDescription = stringResource(R.string.cd_biometric_icon),
+                            tint = OnSurfaceVariantLight,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Biometric Login",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = OnSurfaceLight
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Fingerprint / Face ID",
+                                fontSize = 13.sp,
+                                color = OnSurfaceVariantLight
+                            )
+                        }
+                        Switch(
+                            checked = biometricEnabled,
+                            onCheckedChange = { enable ->
+                                if (enable) {
+                                    // 3. First check that Quick Login is already enabled and a PIN exists (as fallback)
+                                    if (!quickLoginEnabled || !preferencesRepository.hasPinConfigured()) {
+                                        Toast.makeText(context, "Please enable Quick Login with a PIN first before activating Biometric.", Toast.LENGTH_LONG).show()
+                                        showQuickPinDialog = true
+                                        return@Switch
+                                    }
+
+                                    val fragActivity = context as? FragmentActivity
+                                    val bioStatus = BiometricAuthManager.checkBiometricAvailability(context)
+                                    if (fragActivity != null && bioStatus == BiometricStatus.AVAILABLE) {
+                                        BiometricAuthManager.showBiometricPrompt(
+                                            activity = fragActivity,
+                                            title = "Biometric Verification",
+                                            subtitle = "Touch sensor to activate Biometric Login",
+                                            description = "Verifying biometric security for your account.",
+                                            onResult = { result ->
+                                                when (result) {
+                                                    is BiometricAuthResult.Success -> {
+                                                        biometricEnabled = true
+                                                        preferencesRepository.setBiometricEnabled(true)
+                                                        persistProfile(bio = true)
+                                                        Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    is BiometricAuthResult.Failed -> {
+                                                        Toast.makeText(context, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    is BiometricAuthResult.Error -> {
+                                                        Toast.makeText(context, result.errString.toString(), Toast.LENGTH_SHORT).show()
+                                                    }
+                                                    else -> {}
+                                                }
+                                            }
+                                        )
+                                    } else {
+                                        biometricEnabled = true
+                                        preferencesRepository.setBiometricEnabled(true)
+                                        persistProfile(bio = true)
+                                        Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    biometricEnabled = false
+                                    preferencesRepository.setBiometricEnabled(false)
+                                    persistProfile(bio = false)
+                                    Toast.makeText(context, context.getString(R.string.biometric_login_disabled), Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = PureWhite,
+                                checkedTrackColor = PrimaryIndigoLight,
+                                uncheckedThumbColor = PureWhite,
+                                uncheckedTrackColor = OutlineLight
+                            )
+                        )
+                    }
                 }
             }
 
@@ -746,89 +626,65 @@ fun SettingsReportSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
                 ) {
-                    // 1. Header
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = stringResource(R.string.backup_and_storage),
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF0F172A)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Keep your business data safe on this device",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF64748B)
-                        )
-                    }
+                    LojiaSectionHeader("LOCAL BACKUP")
 
-                    // 2. Status Card (Simple, clean, calm)
-                    Surface(
-                        color = Color(0xFFF8FAFC),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
+                    // 1. Status Card
+                    LojiaSettingsCard {
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .size(40.dp)
+                                .background(
+                                    if (lastBackupTime > 0L) SuccessContainer else WarningContainer,
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(
-                                            if (lastBackupTime > 0L) Color(0xFFDCFCE7) else Color(0xFFFEF3C7),
-                                            CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (lastBackupTime > 0L) Icons.Outlined.CheckCircle else Icons.Outlined.Schedule,
-                                        contentDescription = null,
-                                        tint = if (lastBackupTime > 0L) Color(0xFF16A34A) else Color(0xFFD97706),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.last_backup),
-                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        color = Color(0xFF64748B)
-                                    )
-                                    Text(
-                                        text = if (lastBackupTime > 0L) lastBackupFormatted else "Never",
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFF0F172A)
-                                    )
-                                }
-                            }
+                            Icon(
+                                imageVector = if (lastBackupTime > 0L) Icons.Outlined.CheckCircle else Icons.Outlined.Schedule,
+                                contentDescription = null,
+                                tint = if (lastBackupTime > 0L) SuccessGreen else WarningOrange,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.last_backup),
+                                fontSize = 13.sp,
+                                color = OnSurfaceVariantLight
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (lastBackupTime > 0L) lastBackupFormatted else "Never",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = OnSurfaceLight
+                            )
+                        }
 
-                            // Indicator Badge
-                            Surface(
-                                color = if (lastBackupTime > 0L) Color(0xFFDCFCE7) else Color(0xFFFEF3C7),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Text(
-                                    text = if (lastBackupTime > 0L) "Protected" else "Action Needed",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = if (lastBackupTime > 0L) Color(0xFF15803D) else Color(0xFFB45309)
-                                )
-                            }
+                        // Indicator Badge
+                        Surface(
+                            color = if (lastBackupTime > 0L) SuccessContainer else WarningContainer,
+                            shape = RoundedCornerShape(LojiaDimens.ChipRadius)
+                        ) {
+                            Text(
+                                text = if (lastBackupTime > 0L) "Protected" else "Action Needed",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (lastBackupTime > 0L) SuccessGreen else WarningOrange
+                            )
                         }
                     }
 
-                    // 3. Primary Actions (Clean, no duplicate buttons)
+                    // 2. Primary Actions
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = LojiaDimens.CardSpacing),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = {
@@ -839,8 +695,11 @@ fun SettingsReportSection(
                                 }
                             },
                             enabled = !isBackingUp,
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryIndigoLight,
+                                contentColor = PureWhite
+                            ),
+                            shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp)
@@ -850,19 +709,21 @@ fun SettingsReportSection(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.5.dp,
-                                    color = Color.White
+                                    color = PureWhite
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = stringResource(R.string.backup_in_progress),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                             } else {
                                 Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(20.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = stringResource(R.string.backup_data_title),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -871,7 +732,9 @@ fun SettingsReportSection(
                             onClick = {
                                 restoreFileLauncher.launch("*/*")
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
+                            border = BorderStroke(1.dp, PrimaryIndigoLight),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(48.dp)
@@ -881,7 +744,8 @@ fun SettingsReportSection(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = stringResource(R.string.restore_backup_title),
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
@@ -889,126 +753,105 @@ fun SettingsReportSection(
                     // Recently Created Backup Banner Card (if active)
                     if (lastCreatedBackupInfo != null) {
                         val info = lastCreatedBackupInfo!!
-                        Surface(
-                            color = Color(0xFFF0FDF4),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, Color(0xFF86EFAC)),
-                            modifier = Modifier.fillMaxWidth()
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = SuccessContainer),
+                            shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                            border = BorderStroke(1.dp, SuccessGreen),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = LojiaDimens.CardSpacing)
                         ) {
                             Row(
                                 modifier = Modifier.padding(14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(22.dp))
+                                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(22.dp))
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = stringResource(R.string.backup_created_success, info.fileName),
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFF15803D)
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SuccessGreen
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = "${info.savedPath} • ${info.totalRecords} records",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFF166534)
+                                        fontSize = 12.sp,
+                                        color = OnSurfaceLight
                                     )
                                 }
                                 IconButton(onClick = { lastCreatedBackupInfo = null }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = Color(0xFF166534), modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = SuccessGreen, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
                     }
 
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    LojiaSectionHeader("AUTOMATIC BACKUP")
 
-                    // 4. Auto Backup (Single Row)
-                    Surface(
-                        onClick = { showAutoBackupDialog = true },
-                        color = Color.White,
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                    // 3. Auto Backup Row
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.Autorenew,
+                        title = stringResource(R.string.auto_backups),
+                        subtitle = when (autoBackupFreq) {
+                            "Daily" -> stringResource(R.string.daily)
+                            "Weekly" -> stringResource(R.string.weekly)
+                            "Monthly" -> stringResource(R.string.monthly)
+                            else -> autoBackupFreq ?: stringResource(R.string.daily)
+                        },
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = TextHintColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = { showAutoBackupDialog = true }
+                    )
+
+                    LojiaSectionHeader("CLOUD BACKUP & SYNC")
+
+                    // 4. Google Drive Card
+                    LojiaSettingsCard {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .background(Color(0xFFF1F5F9), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Outlined.Autorenew, contentDescription = null, tint = Color(0xFF475569), modifier = Modifier.size(20.dp))
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = stringResource(R.string.auto_backups),
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                        color = Color(0xFF0F172A)
-                                    )
-                                    Text(
-                                        text = when (autoBackupFreq) {
-                                            "Daily" -> stringResource(R.string.daily)
-                                            "Weekly" -> stringResource(R.string.weekly)
-                                            "Monthly" -> stringResource(R.string.monthly)
-                                            else -> autoBackupFreq ?: stringResource(R.string.daily)
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color(0xFF64748B)
-                                    )
-                                }
-                            }
-                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF94A3B8))
-                        }
-                    }
-
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                    // 5. Google Drive (Separate Compact Section)
-                    Surface(
-                        color = Color(0xFFF8FAFC),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .background(Color(0xFFEFF6FF), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(20.dp))
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CloudQueue,
+                                        contentDescription = null,
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(LojiaDimens.IconSize)
+                                    )
+                                    Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
                                     Column {
                                         Text(
                                             text = "Google Drive",
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = Color(0xFF0F172A)
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = OnSurfaceLight
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = if (driveAccount.isConnected) {
                                                 driveAccount.email ?: stringResource(R.string.drive_connected_as, "")
                                             } else {
                                                 stringResource(R.string.drive_not_connected)
                                             },
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = if (driveAccount.isConnected) Color(0xFF16A34A) else Color(0xFF64748B)
+                                            fontSize = 13.sp,
+                                            color = if (driveAccount.isConnected) SuccessGreen else OnSurfaceVariantLight
                                         )
                                     }
                                 }
@@ -1018,12 +861,15 @@ fun SettingsReportSection(
                                         onClick = { reportViewModel.disconnectGoogleDrive() },
                                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                     ) {
-                                        Text(stringResource(R.string.btn_disconnect_drive), color = Color(0xFFDC2626), fontSize = 12.sp)
+                                        Text(stringResource(R.string.btn_disconnect_drive), color = ErrorRedLight, fontSize = 12.sp)
                                     }
                                 } else {
                                     Button(
                                         onClick = { reportViewModel.connectGoogleDrive(context) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = PrimaryIndigoLight,
+                                            contentColor = PureWhite
+                                        ),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
@@ -1035,22 +881,27 @@ fun SettingsReportSection(
                             if (driveAccount.isConnected) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     // Backup to Drive
                                     Button(
                                         onClick = { reportViewModel.backupToGoogleDrive() },
                                         enabled = !isDriveUploading,
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.weight(1f)
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = PrimaryIndigoLight,
+                                            contentColor = PureWhite
+                                        ),
+                                        shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(48.dp)
                                     ) {
                                         if (isDriveUploading) {
-                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
                                         } else {
                                             Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text(stringResource(R.string.backup_to_drive_title), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text(stringResource(R.string.backup_to_drive_title), fontSize = 12.sp, fontWeight = FontWeight.Medium)
                                         }
                                     }
 
@@ -1061,15 +912,19 @@ fun SettingsReportSection(
                                             showDriveBackupsPicker = true
                                         },
                                         enabled = !isDriveDownloading && !isDriveLoadingList,
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.weight(1f)
+                                        shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
+                                        border = BorderStroke(1.dp, PrimaryIndigoLight),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(48.dp)
                                     ) {
                                         if (isDriveDownloading || isDriveLoadingList) {
-                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFF2563EB), strokeWidth = 2.dp)
+                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PrimaryIndigoLight, strokeWidth = 2.dp)
                                         } else {
                                             Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text(stringResource(R.string.restore_from_drive_title), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text(stringResource(R.string.restore_from_drive_title), fontSize = 12.sp, fontWeight = FontWeight.Medium)
                                         }
                                     }
                                 }
@@ -1077,45 +932,41 @@ fun SettingsReportSection(
                         }
                     }
 
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                    // 6. Cloud Sync / Firebase (Clean Submenu)
-                    Surface(
-                        color = Color(0xFFF8FAFC),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, if (firebaseSyncState.isEnabled) Color(0xFF38BDF8) else Color(0xFFE2E8F0)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    // 5. Cloud Sync / Firebase Card
+                    LojiaSettingsCard {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .background(if (firebaseSyncState.isEnabled) Color(0xFF0284C7) else Color(0xFF94A3B8), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Icon(
+                                        imageVector = Icons.Outlined.CloudSync,
+                                        contentDescription = null,
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(LojiaDimens.IconSize)
+                                    )
+                                    Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
                                     Column {
                                         Text(
                                             text = stringResource(R.string.firebase_sync_title),
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = Color(0xFF0F172A)
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = OnSurfaceLight
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = if (firebaseSyncState.lastSyncTimestamp > 0L) {
                                                 stringResource(R.string.firebase_sync_last_time, FirebaseCloudSyncManager.formatSyncTime(firebaseSyncState.lastSyncTimestamp))
                                             } else {
                                                 stringResource(R.string.firebase_sync_never)
                                             },
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFF64748B)
+                                            fontSize = 13.sp,
+                                            color = OnSurfaceVariantLight
                                         )
                                     }
                                 }
@@ -1126,8 +977,10 @@ fun SettingsReportSection(
                                         reportViewModel.toggleFirebaseCloudSync(isChecked)
                                     },
                                     colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFF0284C7)
+                                        checkedThumbColor = PureWhite,
+                                        checkedTrackColor = PrimaryIndigoLight,
+                                        uncheckedThumbColor = PureWhite,
+                                        uncheckedTrackColor = OutlineLight
                                     )
                                 )
                             }
@@ -1140,19 +993,22 @@ fun SettingsReportSection(
                                 ) {
                                     Text(
                                         text = if (firebaseSyncState.isSyncing) "Syncing in background..." else firebaseSyncState.statusMessage,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (firebaseSyncState.isSyncing) Color(0xFF0284C7) else Color(0xFF15803D)
+                                        fontSize = 12.sp,
+                                        color = if (firebaseSyncState.isSyncing) InfoBlue else SuccessGreen
                                     )
 
                                     Button(
                                         onClick = { reportViewModel.syncFirebaseNow() },
                                         enabled = !firebaseSyncState.isSyncing,
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = PrimaryIndigoLight,
+                                            contentColor = PureWhite
+                                        ),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
                                         if (firebaseSyncState.isSyncing) {
-                                            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Color.White)
+                                            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = PureWhite)
                                         } else {
                                             Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
                                             Spacer(modifier = Modifier.width(4.dp))
@@ -1164,46 +1020,50 @@ fun SettingsReportSection(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    LojiaSectionHeader("DANGER ZONE")
 
-                    // 7. Danger Zone: Clear Data
-                    Surface(
-                        color = Color(0xFFFEF2F2),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                    // 6. Danger Zone: Clear Data
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = ErrorContainer),
+                        shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                        border = BorderStroke(1.dp, ErrorRedLight),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .padding(LojiaDimens.CardPadding),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.clear_all_data_title),
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = Color(0xFF991B1B)
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ErrorRedLight
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(R.string.clear_all_data_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFFB91C1C)
+                                    fontSize = 13.sp,
+                                    color = OnErrorContainerLight
                                 )
                             }
+                            Spacer(modifier = Modifier.width(12.dp))
                             OutlinedButton(
                                 onClick = {
                                     onRestrictedClick {
                                         showClearAllDataConfirmDialog = true
                                     }
                                 },
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
-                                border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRedLight),
+                                border = BorderStroke(1.dp, ErrorRedLight),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text(stringResource(R.string.clear_all_data_title), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.clear_all_data_title), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -1213,10 +1073,14 @@ fun SettingsReportSection(
                 if (showAutoBackupDialog) {
                     AlertDialog(
                         onDismissRequest = { showAutoBackupDialog = false },
+                        containerColor = SurfaceLight,
                         title = {
                             Text(
                                 text = stringResource(R.string.auto_backups),
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = OnSurfaceLight
+                                )
                             )
                         },
                         text = {
@@ -1229,9 +1093,9 @@ fun SettingsReportSection(
                                             showAutoBackupDialog = false
                                             Toast.makeText(context, context.getString(R.string.auto_backup_set_to, freq), Toast.LENGTH_SHORT).show()
                                         },
-                                        color = if (isSelected) Color(0xFFEFF6FF) else Color.Transparent,
+                                        color = if (isSelected) PrimaryContainerLight else Color.Transparent,
                                         shape = RoundedCornerShape(10.dp),
-                                        border = if (isSelected) BorderStroke(1.dp, Color(0xFF3B82F6)) else null,
+                                        border = if (isSelected) BorderStroke(1.dp, PrimaryIndigoLight) else null,
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
@@ -1251,10 +1115,10 @@ fun SettingsReportSection(
                                                 style = MaterialTheme.typography.bodyLarge.copy(
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                                 ),
-                                                color = if (isSelected) Color(0xFF1D4ED8) else Color(0xFF0F172A)
+                                                color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
                                             )
                                             if (isSelected) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF1D4ED8), modifier = Modifier.size(20.dp))
+                                                Icon(Icons.Default.Check, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(20.dp))
                                             }
                                         }
                                     }
@@ -1263,7 +1127,7 @@ fun SettingsReportSection(
                         },
                         confirmButton = {
                             TextButton(onClick = { showAutoBackupDialog = false }) {
-                                Text(stringResource(R.string.cancel_18))
+                                Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
                             }
                         }
                     )
@@ -1276,9 +1140,8 @@ fun SettingsReportSection(
             "country", "countries", "currency", "language", "regional" -> {
                 val initialTab = remember(currentMenu) {
                     when (currentMenu) {
-                        "country", "countries" -> 1
-                        "currency" -> 2
-                        "language" -> 0
+                        "country", "countries", "currency" -> 1
+                        "language" -> -1
                         else -> langCountryTab
                     }
                 }
@@ -1292,58 +1155,112 @@ fun SettingsReportSection(
             // 5. ABOUT
             // =================================================================
             "about" -> {
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Info,
-                    title = stringResource(R.string.title_lojia_pos_shift_system),
-                    subtitle = stringResource(R.string.desc_app_version_production),
-                    onClick = {}
-                )
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Verified,
-                    title = stringResource(R.string.title_system_architecture),
-                    subtitle = stringResource(R.string.desc_system_architecture),
-                    onClick = {}
-                )
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Description,
-                    title = stringResource(R.string.terms_conditions),
-                    subtitle = stringResource(R.string.desc_review_eula_terms),
-                    onClick = { showTermsModal = true }
-                )
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.PrivacyTip,
-                    title = stringResource(R.string.privacy_policy),
-                    subtitle = stringResource(R.string.desc_gdpr_cloud_security),
-                    onClick = { showPrivacyModal = true }
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
+                ) {
+                    LojiaSectionHeader("APPLICATION INFO")
+
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.Info,
+                        title = stringResource(R.string.title_lojia_pos_shift_system),
+                        subtitle = stringResource(R.string.desc_app_version_production),
+                        onClick = {}
+                    )
+
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.Verified,
+                        title = stringResource(R.string.title_system_architecture),
+                        subtitle = stringResource(R.string.desc_system_architecture),
+                        onClick = {}
+                    )
+
+                    LojiaSectionHeader("LEGAL")
+
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.Description,
+                        title = stringResource(R.string.terms_conditions),
+                        subtitle = stringResource(R.string.desc_review_eula_terms),
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = TextHintColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = { showTermsModal = true }
+                    )
+
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.PrivacyTip,
+                        title = stringResource(R.string.privacy_policy),
+                        subtitle = stringResource(R.string.desc_gdpr_cloud_security),
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = TextHintColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = { showPrivacyModal = true }
+                    )
+                }
             }
 
             // =================================================================
             // 6. SUPPORT
             // =================================================================
             "support" -> {
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.HeadsetMic,
-                    title = stringResource(R.string.title_24_7_helpline),
-                    subtitle = "+880 1700-000000",
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+8801700000000")).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
+                ) {
+                    LojiaSectionHeader("CONTACT SUPPORT")
+
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.HeadsetMic,
+                        title = stringResource(R.string.title_24_7_helpline),
+                        subtitle = "+880 1700-000000",
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = TextHintColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+8801700000000")).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
-                    }
-                )
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Chat,
-                    title = stringResource(R.string.title_whatsapp_support),
-                    subtitle = stringResource(R.string.desc_whatsapp_support),
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/8801700000000")).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+
+                    LojiaSettingRow(
+                        icon = Icons.Outlined.Chat,
+                        title = stringResource(R.string.title_whatsapp_support),
+                        subtitle = stringResource(R.string.desc_whatsapp_support),
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = TextHintColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/8801700000000")).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
-                    }
-                )
+                    )
+                }
             }
 
             // =================================================================
@@ -1365,6 +1282,7 @@ fun SettingsReportSection(
         var tempVal by remember(fieldName) { mutableStateOf(fieldVal) }
         AlertDialog(
             onDismissRequest = { editFieldDialog = null },
+            containerColor = SurfaceLight,
             title = { Text(stringResource(R.string.edit_field_title, fieldName), fontWeight = FontWeight.Bold) },
             text = {
                 androidx.compose.foundation.layout.Box(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
@@ -1429,6 +1347,7 @@ fun SettingsReportSection(
     if (showTermsModal) {
         AlertDialog(
             onDismissRequest = { showTermsModal = false },
+            containerColor = SurfaceLight,
             title = { Text(stringResource(R.string.terms_of_service), fontWeight = FontWeight.Bold) },
             text = {
                 Text(
@@ -1445,6 +1364,7 @@ fun SettingsReportSection(
     if (showPrivacyModal) {
         AlertDialog(
             onDismissRequest = { showPrivacyModal = false },
+            containerColor = SurfaceLight,
             title = { Text(stringResource(R.string.privacy_policy_2), fontWeight = FontWeight.Bold) },
             text = {
                 Text(
@@ -1474,6 +1394,7 @@ fun SettingsReportSection(
         val target = cashierToDelete!!
         AlertDialog(
             onDismissRequest = { cashierToDelete = null },
+            containerColor = SurfaceLight,
             title = { Text(stringResource(R.string.remove_member), fontWeight = FontWeight.Bold) },
             text = {
                 Text(stringResource(R.string.confirm_delete_cashier_prompt, target.name, target.role))
@@ -1485,7 +1406,7 @@ fun SettingsReportSection(
                         Toast.makeText(context, context.getString(R.string.user_deleted_msg, target.name), Toast.LENGTH_SHORT).show()
                         cashierToDelete = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRedLight)
                 ) {
                     Text(stringResource(R.string.delete_1))
                 }
@@ -1507,12 +1428,13 @@ fun SettingsReportSection(
                     preferencesRepository.setQuickLoginEnabled(false)
                 }
             },
+            containerColor = SurfaceLight,
             title = {
                 Text(
                     text = if (preferencesRepository.hasPinConfigured()) "Change 4-Digit Quick PIN" else "Set 4-Digit Quick PIN",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = Color(0xFF1E293B)
+                    color = OnSurfaceLight
                 )
             },
             text = {
@@ -1520,7 +1442,7 @@ fun SettingsReportSection(
                     Text(
                         text = "Enter a 4-digit numeric PIN for fast, secure app login.",
                         fontSize = 14.sp,
-                        color = Color(0xFF64748B)
+                        color = OnSurfaceVariantLight
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
@@ -1541,7 +1463,7 @@ fun SettingsReportSection(
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = pinError ?: "",
-                            color = Color(0xFFDC2626),
+                            color = ErrorRedLight,
                             fontSize = 12.sp
                         )
                     }
@@ -1562,7 +1484,7 @@ fun SettingsReportSection(
                             Toast.makeText(context, "Quick PIN saved & Quick Login enabled!", Toast.LENGTH_SHORT).show()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3858F6))
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)
                 ) {
                     Text("Save PIN")
                 }
@@ -1577,7 +1499,7 @@ fun SettingsReportSection(
                         }
                     }
                 ) {
-                    Text("Cancel", color = Color(0xFF64748B))
+                    Text("Cancel", color = OnSurfaceVariantLight)
                 }
             }
         )
@@ -1591,11 +1513,12 @@ fun SettingsReportSection(
                 pendingRestoreUri = null
                 pendingBackupSummary = null
             },
+            containerColor = SurfaceLight,
             icon = {
                 Icon(
                     Icons.Outlined.Restore,
                     contentDescription = null,
-                    tint = Color(0xFFD97706),
+                    tint = WarningOrange,
                     modifier = Modifier.size(32.dp)
                 )
             },
@@ -1603,7 +1526,8 @@ fun SettingsReportSection(
                 Text(
                     text = stringResource(R.string.restore_confirm_title),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = OnSurfaceLight
                 )
             },
             text = {
@@ -1611,15 +1535,15 @@ fun SettingsReportSection(
                     Text(
                         text = stringResource(R.string.restore_confirm_message),
                         fontSize = 14.sp,
-                        color = Color(0xFF334155),
+                        color = OnSurfaceVariantLight,
                         lineHeight = 20.sp
                     )
 
                     if (pendingBackupSummary != null) {
                         val s = pendingBackupSummary!!
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
-                            border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                            colors = CardDefaults.cardColors(containerColor = WarningContainer),
+                            border = BorderStroke(1.dp, WarningOrange),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1627,22 +1551,22 @@ fun SettingsReportSection(
                                     text = "📦 Backup Summary",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF92400E)
+                                    color = WarningOrange
                                 )
                                 Text(
                                     text = "• Shift Reports: ${s.shiftReportsCount}",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF92400E)
+                                    color = WarningOrange
                                 )
                                 Text(
                                     text = "• Shift Sessions: ${s.shiftSessionsCount} | Cashiers: ${s.cashiersCount}",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF92400E)
+                                    color = WarningOrange
                                 )
                                 Text(
                                     text = "• Total Records: ${s.totalRecords} (Date: ${s.exportDate})",
                                     fontSize = 11.sp,
-                                    color = Color(0xFF78350F)
+                                    color = WarningOrange
                                 )
                             }
                         }
@@ -1660,7 +1584,7 @@ fun SettingsReportSection(
                         pendingRestoreUri = null
                         pendingBackupSummary = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                    colors = ButtonDefaults.buttonColors(containerColor = WarningOrange)
                 ) {
                     Text("Restore Now", fontWeight = FontWeight.Bold)
                 }
@@ -1673,7 +1597,7 @@ fun SettingsReportSection(
                         pendingBackupSummary = null
                     }
                 ) {
-                    Text(stringResource(R.string.cancel_18), color = Color(0xFF64748B))
+                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
                 }
             }
         )
@@ -1686,11 +1610,12 @@ fun SettingsReportSection(
                 showDriveBackupsPicker = false
                 isFetchingDriveSummary = false
             },
+            containerColor = SurfaceLight,
             icon = {
                 Icon(
                     Icons.Outlined.CloudDownload,
                     contentDescription = null,
-                    tint = Color(0xFF2563EB),
+                    tint = PrimaryIndigoLight,
                     modifier = Modifier.size(32.dp)
                 )
             },
@@ -1698,7 +1623,8 @@ fun SettingsReportSection(
                 Text(
                     text = stringResource(R.string.drive_pick_backup_title),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = OnSurfaceLight
                 )
             },
             text = {
@@ -1715,25 +1641,32 @@ fun SettingsReportSection(
                                 .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color(0xFF2563EB))
+                            CircularProgressIndicator(color = PrimaryIndigoLight)
                         }
                     } else if (driveBackupsList.isEmpty()) {
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                            colors = CardDefaults.cardColors(containerColor = BackgroundLight),
+                            border = BorderStroke(1.dp, OutlineLight),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
-                                modifier = Modifier.padding(20.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(Icons.Outlined.FolderOpen, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(36.dp))
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Icon(
+                                    imageVector = Icons.Outlined.FolderOpen,
+                                    contentDescription = null,
+                                    tint = TextHintColor,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
                                     text = stringResource(R.string.drive_no_backups_found),
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF64748B),
+                                    fontSize = 16.sp,
+                                    color = OnSurfaceVariantLight,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
@@ -1742,13 +1675,15 @@ fun SettingsReportSection(
                         Text(
                             text = "Select a backup file from your Google Drive app folder:",
                             fontSize = 12.sp,
-                            color = Color(0xFF475569)
+                            color = OnSurfaceVariantLight
                         )
-                        LazyColumn(
+                        Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
                         ) {
-                            items(driveBackupsList) { item ->
+                            driveBackupsList.forEach { item ->
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -1762,8 +1697,8 @@ fun SettingsReportSection(
                                                 showDriveRestoreConfirmDialog = true
                                             }
                                         },
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
-                                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                                    colors = CardDefaults.cardColors(containerColor = SurfaceVariantLight),
+                                    border = BorderStroke(1.dp, OutlineLight),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Row(
@@ -1772,33 +1707,33 @@ fun SettingsReportSection(
                                             .padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(Icons.Outlined.Description, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(28.dp))
+                                        Icon(Icons.Outlined.Description, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(28.dp))
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = item.name,
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF0F172A)
+                                                color = OnSurfaceLight
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(
                                                 text = "${item.description.ifEmpty { "Backup" }} • ${item.modifiedTime.take(16)}",
                                                 fontSize = 11.sp,
-                                                color = Color(0xFF64748B)
+                                                color = OnSurfaceVariantLight
                                             )
                                             if (item.size > 0) {
                                                 Text(
                                                     text = "${item.size / 1024} KB",
                                                     fontSize = 10.sp,
-                                                    color = Color(0xFF94A3B8)
+                                                    color = TextHintColor
                                                 )
                                             }
                                         }
                                         Icon(
                                             Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                                             contentDescription = null,
-                                            tint = Color(0xFF94A3B8),
+                                            tint = TextHintColor,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -1813,9 +1748,9 @@ fun SettingsReportSection(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                         ) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color(0xFF2563EB))
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = PrimaryIndigoLight)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Reading backup details...", fontSize = 12.sp, color = Color(0xFF2563EB))
+                            Text("Reading backup details...", fontSize = 12.sp, color = PrimaryIndigoLight)
                         }
                     }
                 }
@@ -1827,7 +1762,7 @@ fun SettingsReportSection(
                         isFetchingDriveSummary = false
                     }
                 ) {
-                    Text(stringResource(R.string.cancel_18), color = Color(0xFF64748B))
+                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
                 }
             }
         )
@@ -1842,11 +1777,12 @@ fun SettingsReportSection(
                 pendingDriveBackupItem = null
                 pendingDriveBackupSummary = null
             },
+            containerColor = SurfaceLight,
             icon = {
                 Icon(
                     Icons.Outlined.CloudDownload,
                     contentDescription = null,
-                    tint = Color(0xFFD97706),
+                    tint = WarningOrange,
                     modifier = Modifier.size(32.dp)
                 )
             },
@@ -1854,7 +1790,8 @@ fun SettingsReportSection(
                 Text(
                     text = stringResource(R.string.drive_restore_confirm_title),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = OnSurfaceLight
                 )
             },
             text = {
@@ -1862,13 +1799,13 @@ fun SettingsReportSection(
                     Text(
                         text = stringResource(R.string.drive_restore_confirm_message),
                         fontSize = 14.sp,
-                        color = Color(0xFF334155),
+                        color = OnSurfaceVariantLight,
                         lineHeight = 20.sp
                     )
 
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
-                        border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                        colors = CardDefaults.cardColors(containerColor = WarningContainer),
+                        border = BorderStroke(1.dp, WarningOrange),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1876,30 +1813,30 @@ fun SettingsReportSection(
                                 text = "☁️ Google Drive: ${driveItem.name}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF92400E)
+                                color = WarningOrange
                             )
                             if (pendingDriveBackupSummary != null) {
                                 val s = pendingDriveBackupSummary!!
                                 Text(
                                     text = "• Shift Reports: ${s.shiftReportsCount}",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF92400E)
+                                    color = WarningOrange
                                 )
                                 Text(
                                     text = "• Shift Sessions: ${s.shiftSessionsCount} | Cashiers: ${s.cashiersCount}",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF92400E)
+                                    color = WarningOrange
                                 )
                                 Text(
                                     text = "• Total Records: ${s.totalRecords} (Export Date: ${s.exportDate})",
                                     fontSize = 11.sp,
-                                    color = Color(0xFF78350F)
+                                    color = WarningOrange
                                 )
                             } else {
                                 Text(
                                     text = "Size: ${driveItem.size / 1024} KB • Modified: ${driveItem.modifiedTime}",
                                     fontSize = 11.sp,
-                                    color = Color(0xFF78350F)
+                                    color = WarningOrange
                                 )
                             }
                         }
@@ -1917,7 +1854,7 @@ fun SettingsReportSection(
                         pendingDriveBackupItem = null
                         pendingDriveBackupSummary = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                    colors = ButtonDefaults.buttonColors(containerColor = WarningOrange)
                 ) {
                     Text("Restore Now", fontWeight = FontWeight.Bold)
                 }
@@ -1930,7 +1867,7 @@ fun SettingsReportSection(
                         pendingDriveBackupSummary = null
                     }
                 ) {
-                    Text(stringResource(R.string.cancel_18), color = Color(0xFF64748B))
+                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
                 }
             }
         )
@@ -1940,11 +1877,12 @@ fun SettingsReportSection(
     if (showClearAllDataConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showClearAllDataConfirmDialog = false },
+            containerColor = SurfaceLight,
             icon = {
                 Icon(
                     Icons.Outlined.WarningAmber,
                     contentDescription = null,
-                    tint = Color(0xFFDC2626),
+                    tint = ErrorRedLight,
                     modifier = Modifier.size(36.dp)
                 )
             },
@@ -1953,7 +1891,7 @@ fun SettingsReportSection(
                     text = stringResource(R.string.delete_all_data_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = Color(0xFF1E293B)
+                    color = OnSurfaceLight
                 )
             },
             text = {
@@ -1961,13 +1899,13 @@ fun SettingsReportSection(
                     Text(
                         text = stringResource(R.string.delete_all_data_message),
                         fontSize = 14.sp,
-                        color = Color(0xFF475569),
+                        color = OnSurfaceVariantLight,
                         lineHeight = 20.sp
                     )
 
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                        border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                        colors = CardDefaults.cardColors(containerColor = PrimaryContainerLight),
+                        border = BorderStroke(1.dp, PrimaryIndigoLight),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
@@ -1977,14 +1915,14 @@ fun SettingsReportSection(
                             Icon(
                                 Icons.Outlined.Shield,
                                 contentDescription = null,
-                                tint = Color(0xFF2563EB),
+                                tint = PrimaryIndigoLight,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = stringResource(R.string.backup_recommended_warning),
                                 fontSize = 12.sp,
-                                color = Color(0xFF1E40AF),
+                                color = OnPrimaryContainerLight,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -2003,7 +1941,8 @@ fun SettingsReportSection(
                                 onSuccess = { info -> lastCreatedBackupInfo = info }
                             )
                         },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                        border = BorderStroke(1.dp, PrimaryIndigoLight)
                     ) {
                         Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -2014,7 +1953,7 @@ fun SettingsReportSection(
                             showClearAllDataConfirmDialog = false
                             reportViewModel.clearAllBusinessData()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                        colors = ButtonDefaults.buttonColors(containerColor = ErrorRedLight)
                     ) {
                         Text(stringResource(R.string.btn_delete_everything), fontWeight = FontWeight.Bold)
                     }
@@ -2024,7 +1963,7 @@ fun SettingsReportSection(
                 TextButton(
                     onClick = { showClearAllDataConfirmDialog = false }
                 ) {
-                    Text(stringResource(R.string.cancel_18), color = Color(0xFF64748B))
+                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
                 }
             }
         )

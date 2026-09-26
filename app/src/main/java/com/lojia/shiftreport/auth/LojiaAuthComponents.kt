@@ -65,79 +65,58 @@ fun LojiaHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.height(180.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(PrimaryBlue, Color(0xFF2563EB))
-                )
-            )
+            .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.wrapContentHeight())
+            .background(Color.Transparent)
+            .padding(vertical = 12.dp)
             .testTag("lojiaHeader"),
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.Center
+            // Modern Fintech Branding Icon Badge
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = LojiaColors.P500.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, LojiaColors.P500.copy(alpha = 0.20f)),
+                modifier = Modifier.size(54.dp)
             ) {
-                // Stylized white 'L' with 'ojia' nested inside
-                Box(
-                    contentAlignment = Alignment.BottomStart
-                ) {
-                    Canvas(
-                        modifier = Modifier
-                            .height(46.dp)
-                            .width(68.dp)
-                    ) {
-                        val strokeW = 9.dp.toPx()
-                        // Vertical bar of L
-                        drawRect(
-                            color = Color.White,
-                            topLeft = Offset(0f, 0f),
-                            size = Size(strokeW, size.height)
-                        )
-                        // Bottom horizontal bar of L
-                        drawRect(
-                            color = Color.White,
-                            topLeft = Offset(0f, size.height - strokeW),
-                            size = Size(size.width, strokeW)
-                        )
-                    }
-
-                    Text(
-                        text = "ojia",
-                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.Assessment,
+                        contentDescription = "Lojia Logo",
+                        tint = LojiaColors.P500,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
-
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Text(
-                    text = "system",
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFACC15),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Main Branding Title: "Lojia Report" with prominent headlineMedium typography
+            Text(
+                text = "Lojia Report",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 24.sp
+                ),
+                color = LojiaColors.P500,
+                letterSpacing = 0.2.sp
+            )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "SECURE BUSINESS LEDGER",
+                text = if (isBn) "স্মার্ট শিফট ও বিজনেস লেজার" else "SMART SHIFT & BUSINESS LEDGER",
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                fontSize = 10.5.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.90f),
-                letterSpacing = 2.5.sp
+                color = LojiaColors.N600,
+                letterSpacing = 2.sp
             )
         }
     }
@@ -152,16 +131,16 @@ fun LojiaCard(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(18.dp),
-                spotColor = Color.Black.copy(alpha = 0.10f),
-                ambientColor = Color.Black.copy(alpha = 0.05f)
+                elevation = 3.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = Color.Black.copy(alpha = 0.08f),
+                ambientColor = Color.Black.copy(alpha = 0.04f)
             ),
-        shape = RoundedCornerShape(18.dp),
-        color = LojiaColors.White
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 18.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
             content = content
         )
     }
@@ -314,29 +293,29 @@ fun LojiaInputField(
             }
         }
 
-        // Dynamic Border and Background matching Section 16
+        // Dynamic Border and Background matching Material 3
         val (borderColor, bgColor) = when (validationState) {
             FieldValidationState.ERROR -> LojiaColors.R500 to LojiaColors.R100
             FieldValidationState.SUCCESS -> LojiaColors.G500 to LojiaColors.OkBg
             FieldValidationState.DEFAULT -> if (isFocused) {
-                LojiaColors.P500 to LojiaColors.White
+                LojiaColors.P500 to Color.White
             } else {
-                LojiaColors.N300 to LojiaColors.N50
+                LojiaColors.N300 to Color.White
             }
         }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 44.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .defaultMinSize(minHeight = 46.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(bgColor)
                 .border(
                     width = 1.5.dp,
                     color = borderColor,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(12.dp)
                 )
-                .padding(horizontal = 11.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -347,10 +326,10 @@ fun LojiaInputField(
                     Icon(
                         imageVector = leadingIcon,
                         contentDescription = null,
-                        tint = if (isFocused) LojiaColors.P500 else LojiaColors.N400,
-                        modifier = Modifier.size(15.dp)
+                        tint = if (isFocused) LojiaColors.P500 else LojiaColors.N500,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(9.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                 }
 
                 Box(
@@ -360,7 +339,7 @@ fun LojiaInputField(
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
-                            color = Color(0xFF9CA3AF),
+                            color = LojiaColors.N500,
                             fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.5.sp,
                             lineHeight = 18.sp
                         )
@@ -374,12 +353,12 @@ fun LojiaInputField(
                         keyboardOptions = keyboardOptions,
                         keyboardActions = keyboardActions,
                         textStyle = TextStyle(
-                            color = Color(0xFF111827),
+                            color = LojiaColors.N900,
                             fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.5.sp,
                             lineHeight = 18.sp,
                             fontWeight = FontWeight.Normal
                         ),
-                        cursorBrush = SolidColor(Color(0xFF4F3EE8)),
+                        cursorBrush = SolidColor(LojiaColors.P500),
                         modifier = Modifier
                             .fillMaxWidth()
                             .onFocusChanged { isFocused = it.isFocused }
@@ -398,21 +377,21 @@ fun LojiaInputField(
         if (validationState == FieldValidationState.ERROR && !errorMessage.isNullOrBlank()) {
             Text(
                 text = errorMessage,
-                color = Color(0xFFEF4444),
+                color = LojiaColors.R500,
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 2.dp)
             )
         } else if (validationState == FieldValidationState.SUCCESS && !successMessage.isNullOrBlank()) {
             Text(
                 text = successMessage,
-                color = Color(0xFF10B981),
+                color = LojiaColors.G500,
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 2.dp)
             )
         } else if (!hintMessage.isNullOrBlank()) {
             Text(
                 text = hintMessage,
-                color = Color(0xFF6B7280),
+                color = LojiaColors.N600,
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 2.dp)
             )
@@ -429,74 +408,76 @@ fun LojiaGradientButton(
     isLoading: Boolean = false,
     testTag: String = ""
 ) {
+    val primaryBlue = LojiaColors.P500
     val buttonBrush = if (enabled) {
-        Brush.linearGradient(
-            colors = listOf(LojiaColors.P700, LojiaColors.P500),
-            start = Offset(0f, 0f),
-            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-        )
+        SolidColor(primaryBlue)
     } else {
-        SolidColor(LojiaColors.P500.copy(alpha = 0.45f))
+        SolidColor(primaryBlue.copy(alpha = 0.45f))
     }
 
-    Box(
+    Surface(
+        onClick = onClick,
+        enabled = enabled && !isLoading,
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = if (enabled) 2.dp else 0.dp,
+        tonalElevation = 0.dp,
+        color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 46.dp)
-            .shadow(
-                elevation = if (enabled) 4.dp else 0.dp,
-                shape = RoundedCornerShape(10.dp),
-                spotColor = LojiaColors.P500.copy(alpha = 0.26f)
-            )
-            .clip(RoundedCornerShape(10.dp))
+            .height(52.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(buttonBrush)
-            .clickable(enabled = enabled && !isLoading, onClick = onClick)
-            .padding(vertical = 4.dp)
-            .testTag(testTag),
-        contentAlignment = Alignment.Center
+            .testTag(testTag)
     ) {
-        if (isLoading) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(
-                    color = Color.White,
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = text,
-                    color = Color.White,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(18.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.20f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(11.dp)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.5.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = text,
+                        color = Color.White,
+                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = text,
-                    color = Color.White,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.4.sp
-                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.20f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = text,
+                        color = Color.White,
+                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.3.sp
+                    )
+                }
             }
         }
     }

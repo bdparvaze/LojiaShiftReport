@@ -16,6 +16,27 @@ object MoneyFormat {
     const val DEFAULT_CURRENCY_SYMBOL = "$"
 
     /**
+     * Formats a monetary BigDecimal value with exact financial precision into a locale-aware display string.
+     */
+    fun format(
+        amount: java.math.BigDecimal,
+        currencyCodeOrSymbol: String? = null,
+        locale: Locale = Locale.getDefault()
+    ): String {
+        val rounded = amount.setScale(2, java.math.RoundingMode.HALF_UP)
+        return format(rounded.toDouble(), currencyCodeOrSymbol, locale)
+    }
+
+    /**
+     * Exact 2-decimal financial rounding to prevent IEEE-754 floating point inaccuracies.
+     */
+    fun round2Decimals(value: Double): Double {
+        return java.math.BigDecimal.valueOf(value)
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    /**
      * Formats a monetary double value into a locale-aware display string.
      * E.g. "$1,234.50" or "1,234.50 USD" or "1,234.50 BDT" based on the currency and system locale.
      */

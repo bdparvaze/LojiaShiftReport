@@ -572,9 +572,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     var selectedCashier = MutableStateFlow("")
     var selectedShift = MutableStateFlow("Day")
     var selectedDateInMillis = MutableStateFlow(System.currentTimeMillis())
+    var openingCashInput = MutableStateFlow("")
+    var closingCashInput = MutableStateFlow("")
     var grossCashInput = MutableStateFlow("")
     var madaPaymentsInput = MutableStateFlow("")
     var digitalWalletInput = MutableStateFlow("")
+    var totalDiscountsInput = MutableStateFlow("")
+    var salesReturnsInput = MutableStateFlow("")
     var staffMealsCountInput = MutableStateFlow("0")
     var totalExpensesInput = MutableStateFlow("")
     var muasselQtyInput = MutableStateFlow("")
@@ -584,12 +588,30 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     var startingCashInput = MutableStateFlow("")
     var actualCashCountInput = MutableStateFlow("")
 
-    val startingCash: StateFlow<Double> = startingCashInput.map { it.toDoubleOrNull() ?: 0.0 }
+    // Manager Sign-Off State
+    var isShiftLocked = MutableStateFlow(false)
+    var managerSignedBy = MutableStateFlow<String?>(null)
+    var managerSignTime = MutableStateFlow<Long?>(null)
+
+    val openingCash: StateFlow<Double> = combine(openingCashInput, startingCashInput) { open, start ->
+        open.toDoubleOrNull() ?: start.toDoubleOrNull() ?: 0.0
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val closingCash: StateFlow<Double> = combine(closingCashInput, actualCashCountInput) { close, actual ->
+        close.toDoubleOrNull() ?: actual.toDoubleOrNull() ?: 0.0
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalDiscounts: StateFlow<Double> = totalDiscountsInput.map { it.toDoubleOrNull() ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
-    val actualCashCount: StateFlow<Double> = actualCashCountInput.map { it.toDoubleOrNull() ?: 0.0 }
+
+    val salesReturns: StateFlow<Double> = salesReturnsInput.map { it.toDoubleOrNull() ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
-    val isActualCashEntered: StateFlow<Boolean> = actualCashCountInput.map { it.isNotBlank() && it.toDoubleOrNull() != null }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val startingCash: StateFlow<Double> = openingCash
+    val actualCashCount: StateFlow<Double> = closingCash
+    val isActualCashEntered: StateFlow<Boolean> = closingCashInput.combine(actualCashCountInput) { close, actual ->
+        (close.isNotBlank() && close.toDoubleOrNull() != null) || (actual.isNotBlank() && actual.toDoubleOrNull() != null)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     // Dynamic Section Lists
     val dueCreditItems = MutableStateFlow<List<DueCreditItem>>(emptyList())
@@ -686,12 +708,22 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     val calculatedTotalGrossSales: StateFlow<Double> = totalSales
     val totalRevenue: StateFlow<Double> = totalSales
 
+    // Net Sales = Total Sales - Discounts - Returns
+    val netSales: StateFlow<Double> = combine(
+        totalSales,
+        totalDiscounts,
+        salesReturns
+    ) { sales, disc, ret ->
+        (sales - disc - ret).coerceAtLeast(0.0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
     // 2. Cash In & Outflows
     val totalCashIn: StateFlow<Double> = combine(
+        openingCash,
         grossCash,
         totalPreviousDueCash
-    ) { cashSales, prevDueCash ->
-        cashSales + prevDueCash
+    ) { open, cashSales, prevDueCash ->
+        open + cashSales + prevDueCash
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalCashOut: StateFlow<Double> = combine(
@@ -705,12 +737,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     val calculatedTotalExpenses: StateFlow<Double> = totalCashOut
 
     // 3. Expected Cash in Drawer & Net Cash
+    // Note: totalCashIn already includes openingCash (start float)
     val expectedCashInDrawer: StateFlow<Double> = combine(
-        startingCash,
         totalCashIn,
         totalCashOut
-    ) { start, cin, cout ->
-        start + cin - cout
+    ) { cin, cout ->
+        cin - cout
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedCashInDrawer: StateFlow<Double> = expectedCashInDrawer
@@ -1003,9 +1035,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 selectedCashier.value = draft.cashierName
                 selectedShift.value = draft.shift
                 selectedDateInMillis.value = draft.dateInMillis
+                openingCashInput.value = if (draft.openingCash > 0) draft.openingCash.toString() else ""
+                closingCashInput.value = if (draft.closingCash > 0) draft.closingCash.toString() else ""
                 grossCashInput.value = if (draft.grossCash > 0) draft.grossCash.toString() else ""
                 madaPaymentsInput.value = if (draft.madaPayments > 0) draft.madaPayments.toString() else ""
                 digitalWalletInput.value = if (draft.digitalWallet > 0) draft.digitalWallet.toString() else ""
+                totalDiscountsInput.value = if (draft.totalDiscounts > 0) draft.totalDiscounts.toString() else ""
+                salesReturnsInput.value = if (draft.salesReturns > 0) draft.salesReturns.toString() else ""
                 staffMealsCountInput.value = draft.staffMealsCount.toString()
                 totalExpensesInput.value = if (draft.totalExpenses > 0) draft.totalExpenses.toString() else ""
                 muasselQtyInput.value = if (draft.muasselQty > 0) draft.muasselQty.toString() else ""
@@ -1021,9 +1057,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun validateAll(): Boolean {
-        return isValidDecimal(grossCashInput.value) &&
+        return isValidDecimal(openingCashInput.value) &&
+                isValidDecimal(closingCashInput.value) &&
+                isValidDecimal(grossCashInput.value) &&
                 isValidDecimal(madaPaymentsInput.value) &&
                 isValidDecimal(digitalWalletInput.value) &&
+                isValidDecimal(totalDiscountsInput.value) &&
+                isValidDecimal(salesReturnsInput.value) &&
                 isValidDecimal(totalExpensesInput.value) &&
                 isValidInteger(staffMealsCountInput.value) &&
                 isValidDecimal(muasselQtyInput.value) &&
@@ -1043,9 +1083,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 cashierName = selectedCashier.value,
                 shift = selectedShift.value,
                 dateInMillis = selectedDateInMillis.value,
+                openingCash = openingCashInput.value.toDoubleOrNull() ?: startingCashInput.value.toDoubleOrNull() ?: 0.0,
+                closingCash = closingCashInput.value.toDoubleOrNull() ?: actualCashCountInput.value.toDoubleOrNull() ?: 0.0,
                 grossCash = grossCashInput.value.toDoubleOrNull() ?: 0.0,
                 madaPayments = madaPaymentsInput.value.toDoubleOrNull() ?: 0.0,
                 digitalWallet = digitalWalletInput.value.toDoubleOrNull() ?: 0.0,
+                totalDiscounts = totalDiscountsInput.value.toDoubleOrNull() ?: 0.0,
+                salesReturns = salesReturnsInput.value.toDoubleOrNull() ?: 0.0,
                 staffMealsCount = staffMealsCountInput.value.toIntOrNull() ?: 0,
                 totalExpenses = totalExpensesInput.value.toDoubleOrNull() ?: 0.0,
                 muasselQty = muasselQtyInput.value.toDoubleOrNull() ?: 0.0,
@@ -1066,9 +1110,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         selectedCashier.value = ""
         selectedShift.value = "Day"
         selectedDateInMillis.value = System.currentTimeMillis()
+        openingCashInput.value = ""
+        closingCashInput.value = ""
         grossCashInput.value = ""
         madaPaymentsInput.value = ""
         digitalWalletInput.value = ""
+        totalDiscountsInput.value = ""
+        salesReturnsInput.value = ""
         staffMealsCountInput.value = "0"
         totalExpensesInput.value = ""
         muasselQtyInput.value = ""
@@ -1076,6 +1124,9 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         notesInput.value = ""
         startingCashInput.value = ""
         actualCashCountInput.value = ""
+        isShiftLocked.value = false
+        managerSignedBy.value = null
+        managerSignTime.value = null
         dueCreditItems.value = emptyList()
         previousDueCollections.value = emptyList()
         staffAdvances.value = emptyList()
@@ -1094,14 +1145,19 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
+        val openingVal = openingCashInput.value.toDoubleOrNull() ?: startingCashInput.value.toDoubleOrNull() ?: 0.0
+        val closingVal = closingCashInput.value.toDoubleOrNull() ?: actualCashCountInput.value.toDoubleOrNull() ?: 0.0
         val grossVal = grossCashInput.value.toDoubleOrNull() ?: 0.0
         val madaVal = madaPaymentsInput.value.toDoubleOrNull() ?: 0.0
         val walletVal = digitalWalletInput.value.toDoubleOrNull() ?: 0.0
+        val discountsVal = totalDiscountsInput.value.toDoubleOrNull() ?: 0.0
+        val returnsVal = salesReturnsInput.value.toDoubleOrNull() ?: 0.0
         val expVal = totalExpensesInput.value.toDoubleOrNull() ?: 0.0
         val muasselVal = muasselQtyInput.value.toDoubleOrNull() ?: 0.0
         val outdoorVal = outdoorShishaQtyInput.value.toDoubleOrNull() ?: 0.0
 
-        if (grossVal == 0.0 && madaVal == 0.0 && walletVal == 0.0 && expVal == 0.0 &&
+        if (openingVal == 0.0 && closingVal == 0.0 && grossVal == 0.0 && madaVal == 0.0 && walletVal == 0.0 &&
+            discountsVal == 0.0 && returnsVal == 0.0 && expVal == 0.0 &&
             staffMealsCountInput.value.toIntOrNull() == 0 && muasselVal == 0.0 && outdoorVal == 0.0 &&
             dueCreditItems.value.isEmpty() && previousDueCollections.value.isEmpty() &&
             staffAdvances.value.isEmpty() && unpaidBills.value.isEmpty() && purchasedItems.value.isEmpty()
@@ -1114,10 +1170,16 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             val cashier = if (selectedCashier.value.isBlank()) "Standard Cashier" else selectedCashier.value
-            val actualCountVal = actualCashCountInput.value.toDoubleOrNull()
+            val actualCountVal = if (closingVal > 0.0) closingVal else actualCashCountInput.value.toDoubleOrNull()
             val noteParts = mutableListOf<String>()
-            if (actualCountVal != null) {
+            if (openingVal > 0.0) {
+                noteParts.add("Starting Float: %.2f".format(Locale.US, openingVal))
+            }
+            if (actualCountVal != null && actualCountVal > 0.0) {
                 noteParts.add("Actual Cash Count: %.2f".format(Locale.US, actualCountVal))
+            }
+            if (managerSignedBy.value != null) {
+                noteParts.add("Manager Signed: ${managerSignedBy.value}")
             }
             if (notesInput.value.isNotBlank()) {
                 noteParts.add(notesInput.value)
@@ -1128,9 +1190,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 cashierName = cashier,
                 shift = selectedShift.value,
                 dateInMillis = selectedDateInMillis.value,
+                openingCash = openingVal,
+                closingCash = closingVal,
                 grossCash = grossVal,
                 madaPayments = madaVal,
                 digitalWallet = walletVal,
+                totalDiscounts = discountsVal,
+                salesReturns = returnsVal,
                 staffMealsCount = staffMealsCountInput.value.toIntOrNull() ?: 0,
                 totalExpenses = expVal,
                 muasselQty = muasselVal,
@@ -1140,14 +1206,17 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 staffAdvancesJson = serializeAdvances(staffAdvances.value),
                 unpaidBillsJson = serializeUnpaid(unpaidBills.value),
                 purchasedItemsJson = serializePurchased(purchasedItems.value),
-                notes = formattedNotes
+                notes = formattedNotes,
+                isLocked = isShiftLocked.value,
+                managerSignedBy = managerSignedBy.value,
+                managerSignTime = managerSignTime.value
             )
             repository.insertReport(report)
             reportDao.insertAuditLog(
                 AuditLog(
                     username = cashier,
-                    action = "SUBMIT_REPORT",
-                    details = "Submitted ${report.shift} shift report. Total sales: ${report.totalSales}, Net Cash: ${report.netCash}"
+                    action = if (report.isLocked) "LOCK_AND_FINALIZE_SHIFT" else "SUBMIT_REPORT",
+                    details = "Submitted ${report.shift} shift report. Net Sales: ${report.netSales}, Discrepancy: ${report.cashDiscrepancy} (${if (report.isExcess) "Excess" else if (report.isShortage) "Shortage" else "Balanced"}), Locked: ${report.isLocked}"
                 )
             )
 
@@ -1293,9 +1362,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 cashierName = session.cashierName,
                 shift = session.shiftName,
                 dateInMillis = System.currentTimeMillis(),
+                openingCash = session.startingCash,
+                closingCash = actualCashCount,
                 grossCash = session.cashSales,
                 madaPayments = session.cardSales,
                 digitalWallet = session.digitalSales,
+                totalDiscounts = session.totalDiscounts,
+                salesReturns = session.salesReturns,
+                totalExpenses = session.totalPayOut,
                 notes = notes
             )
             val id = repository.insertReport(report)

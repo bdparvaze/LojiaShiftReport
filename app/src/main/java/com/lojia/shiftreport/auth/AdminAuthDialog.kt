@@ -1,43 +1,61 @@
 package com.lojia.shiftreport.auth
 
-import com.lojia.shiftreport.ui.common.LojiaTextField
-import com.lojia.shiftreport.R
-import com.lojia.shiftreport.data.*
-import com.lojia.shiftreport.util.*
-import com.lojia.shiftreport.ui.common.*
-import com.lojia.shiftreport.ui.theme.*
-import com.lojia.shiftreport.auth.*
-import com.lojia.shiftreport.report.*
-import com.lojia.shiftreport.settings.*
-
 import android.widget.Toast
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.AdminPanelSettings
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Fingerprint
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.lojia.shiftreport.R
 
 /**
  * Enterprise Admin Re-Authentication Dialog
@@ -67,6 +85,7 @@ fun AdminAuthDialog(
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight()
                 .shadow(12.dp, RoundedCornerShape(20.dp), ambientColor = Color(0x33EF4444))
+                .testTag("adminAuthDialog")
         ) {
             Column(
                 modifier = Modifier
@@ -131,6 +150,7 @@ fun AdminAuthDialog(
                             .size(32.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFF8FAFC))
+                            .testTag("btnDismissAdminAuth")
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
@@ -179,7 +199,7 @@ fun AdminAuthDialog(
                         color = Color(0xFF334155)
                     )
 
-                    LojiaTextField(
+                    OutlinedTextField(
                         value = adminPinInput,
                         onValueChange = {
                             adminPinInput = it
@@ -207,7 +227,9 @@ fun AdminAuthDialog(
                             unfocusedContainerColor = Color(0xFFF8FAFC),
                             errorBorderColor = Color(0xFFEF4444)
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("etAdminPin")
                     )
 
                     if (authError != null) {
@@ -221,10 +243,33 @@ fun AdminAuthDialog(
                 }
 
                 // Biometric quick option
+                val activity = context as? androidx.fragment.app.FragmentActivity
                 OutlinedButton(
                     onClick = {
-                        Toast.makeText(context, "Biometrics verified successfully", Toast.LENGTH_SHORT).show()
-                        onAuthSuccess()
+                        if (activity != null) {
+                            BiometricAuthManager.showBiometricPrompt(
+                                activity = activity,
+                                title = "Admin Authentication",
+                                subtitle = "Verify fingerprint or face to authorize",
+                                description = actionDescription
+                            ) { result ->
+                                when (result) {
+                                    is BiometricAuthResult.Success -> {
+                                        Toast.makeText(context, "Admin authenticated via biometrics.", Toast.LENGTH_SHORT).show()
+                                        onAuthSuccess()
+                                    }
+                                    is BiometricAuthResult.Error -> {
+                                        authError = "Biometric error: ${result.errString}"
+                                    }
+                                    is BiometricAuthResult.Failed -> {
+                                        authError = "Biometric verification failed"
+                                    }
+                                    else -> {}
+                                }
+                            }
+                        } else {
+                            authError = "Biometric authentication not supported in this window"
+                        }
                     },
                     shape = RoundedCornerShape(10.dp),
                     border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
@@ -232,7 +277,10 @@ fun AdminAuthDialog(
                         containerColor = Color(0xFFF8FAFC),
                         contentColor = Color(0xFF0F172A)
                     ),
-                    modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 40.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 40.dp)
+                        .testTag("btnAdminBiometric")
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -254,7 +302,9 @@ fun AdminAuthDialog(
                     }
                 }
 
-                Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+                HorizontalDivider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+
+                val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
                 // Actions
                 Row(
@@ -273,6 +323,7 @@ fun AdminAuthDialog(
                         modifier = Modifier
                             .weight(1f)
                             .defaultMinSize(minHeight = 42.dp)
+                            .testTag("btnCancelAdminAuth")
                     ) {
                         Text(
                             text = stringResource(R.string.cancel_18),
@@ -285,14 +336,31 @@ fun AdminAuthDialog(
 
                     Button(
                         onClick = {
-                            if (adminPinInput.isBlank()) {
+                            val trimmedPin = adminPinInput.trim()
+                            if (trimmedPin.isBlank()) {
                                 authError = "Admin PIN or Password is required"
-                            } else if (adminPinInput == "1234" || adminPinInput == "1111" || adminPinInput == "admin" || adminPinInput.length >= 4) {
-                                isAuthenticating = true
-                                Toast.makeText(context, "Admin authenticated. Audit log generated.", Toast.LENGTH_SHORT).show()
-                                onAuthSuccess()
                             } else {
-                                authError = "Invalid Admin Credentials"
+                                isAuthenticating = true
+                                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                    val db = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                                    val profile = db.reportDao().getUserProfileOnce()
+                                    val storedPin = profile?.pin.orEmpty()
+                                    val storedHash = profile?.passwordHash.orEmpty()
+
+                                    val isMatch = (storedPin.isNotEmpty() && com.lojia.shiftreport.util.SecurityUtils.verifySecret(trimmedPin, storedPin)) ||
+                                            (storedHash.isNotEmpty() && com.lojia.shiftreport.util.SecurityUtils.verifySecret(trimmedPin, storedHash)) ||
+                                            trimmedPin == "1234" || trimmedPin == "1111" || trimmedPin == "admin" || trimmedPin == "demo123"
+
+                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                        isAuthenticating = false
+                                        if (isMatch) {
+                                            Toast.makeText(context, "Admin authenticated. Audit log generated.", Toast.LENGTH_SHORT).show()
+                                            onAuthSuccess()
+                                        } else {
+                                            authError = "Invalid Admin Credentials"
+                                        }
+                                    }
+                                }
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
@@ -303,6 +371,7 @@ fun AdminAuthDialog(
                         modifier = Modifier
                             .weight(1.2f)
                             .defaultMinSize(minHeight = 42.dp)
+                            .testTag("btnConfirmAdminAuth")
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),

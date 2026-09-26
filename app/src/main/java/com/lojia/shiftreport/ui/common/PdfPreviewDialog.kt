@@ -132,12 +132,21 @@ fun ShiftReportPreviewDialog(
             appendLine("Variance (Over/Short): $varText")
         }
         appendLine("----------------------------------------")
-        appendLine("[3. TAX & VAT SUMMARY (15% VAT)]")
-        val netTax = report.totalSales / 1.15
-        val vatTax = report.totalSales - netTax
-        appendLine("Net Taxable Sales: ${MoneyFormat.format(netTax, currencyCode)}")
-        appendLine("VAT Amount (15%): ${MoneyFormat.format(vatTax, currencyCode)}")
-        appendLine("Total Gross (Incl. VAT): ${MoneyFormat.format(report.totalSales, currencyCode)}")
+        val isTax = businessProfile?.isTaxEnabled ?: false
+        val vatRate = if (isTax) (businessProfile?.vatRate ?: 15.0) else 0.0
+        val divisor = 1.0 + (vatRate / 100.0)
+        val netTax = if (isTax && vatRate > 0.0) report.totalSales / divisor else report.totalSales
+        val vatTax = if (isTax && vatRate > 0.0) report.totalSales - netTax else 0.0
+        if (isTax && vatRate > 0.0) {
+            appendLine("[3. TAX & VAT SUMMARY (${String.format(Locale.US, "%.1f", vatRate)}% VAT)]")
+            appendLine("Net Taxable Sales: ${MoneyFormat.format(netTax, currencyCode)}")
+            appendLine("VAT Amount (${String.format(Locale.US, "%.1f", vatRate)}%): ${MoneyFormat.format(vatTax, currencyCode)}")
+            appendLine("Total Gross (Incl. VAT): ${MoneyFormat.format(report.totalSales, currencyCode)}")
+        } else {
+            appendLine("[3. TAX & VAT SUMMARY]")
+            appendLine("Tax Status: Non-Taxable / Tax Exempt")
+            appendLine("Net Total Sales: ${MoneyFormat.format(report.totalSales, currencyCode)}")
+        }
         appendLine("----------------------------------------")
         appendLine("[4. OTHER TRACKING]")
         appendLine("$dueSalesLabel: ${MoneyFormat.format(report.totalDueCredit, currencyCode)}")
@@ -299,7 +308,10 @@ fun ShiftReportPreviewDialog(
                                         businessPhone = businessProfile?.phone ?: "",
                                         vatNumber = businessProfile?.vatNumber ?: "",
                                         report = report,
-                                        currencySymbol = currencyCode ?: "$"
+                                        currencySymbol = currencyCode ?: "$",
+                                        vatRate = businessProfile?.vatRate ?: 15.0,
+                                        isTaxEnabled = businessProfile?.isTaxEnabled ?: false,
+                                        isTaxIncluded = businessProfile?.isTaxIncluded ?: true
                                     )
 
                                     val res = printerManager.printFormattedText(zReportText)

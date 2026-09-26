@@ -47,27 +47,35 @@ fun QuickPinScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(Color(0xFFF9F9FF))
+            .padding(horizontal = 32.dp)
+            .imePadding(),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = stringResource(R.string.quick_pin_enter_pin),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1E293B)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 360.dp)
+                .wrapContentHeight(Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = stringResource(R.string.quick_pin_enter_pin),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF191C20)
+            )
         
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
             text = stringResource(R.string.quick_pin_subtitle),
             fontSize = 14.sp,
-            color = Color(0xFF64748B),
+            color = Color(0xFF44474E),
             textAlign = TextAlign.Center
         )
 
@@ -80,7 +88,7 @@ fun QuickPinScreen(
         ) {
             for (i in 0 until 4) {
                 val isFilled = i < enteredPin.length
-                val color = if (pinError) Color(0xFFEF4444) else if (isFilled) Color(0xFF3858F6) else Color(0xFFE2E8F0)
+                val color = if (pinError) Color(0xFFBA1A1A) else if (isFilled) Color(0xFF415F91) else Color(0xFFCAC4D0)
                 Box(
                     modifier = Modifier
                         .size(16.dp)
@@ -93,7 +101,7 @@ fun QuickPinScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.quick_pin_incorrect),
-                color = Color(0xFFEF4444),
+                color = Color(0xFFBA1A1A),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -124,12 +132,13 @@ fun QuickPinScreen(
         TextButton(onClick = onFallbackToLogin) {
             Text(
                 text = stringResource(R.string.quick_pin_use_password),
-                color = Color(0xFF3858F6),
+                color = Color(0xFF415F91),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
     }
+}
 }
 
 @Composable
@@ -171,7 +180,7 @@ fun NumpadView(
                         Icon(
                             imageVector = Icons.Default.Fingerprint,
                             contentDescription = "Biometric",
-                            tint = Color(0xFF3858F6),
+                            tint = Color(0xFF415F91),
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -189,7 +198,7 @@ fun NumpadView(
                 TextButton(onClick = onDeleteClick) {
                     Text(
                         text = "DEL",
-                        color = Color(0xFF64748B),
+                        color = Color(0xFF44474E),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -205,11 +214,11 @@ fun NumpadButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifie
         onClick = onClick,
         modifier = modifier.aspectRatio(1.2f),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFF1F5F9),
-            contentColor = Color(0xFF1E293B)
+            containerColor = Color.White,
+            contentColor = Color(0xFF191C20)
         ),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        elevation = ButtonDefaults.buttonElevation(0.dp)
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
     ) {
         Text(
             text = text,

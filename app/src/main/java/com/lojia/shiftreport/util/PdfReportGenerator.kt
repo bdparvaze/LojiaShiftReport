@@ -533,9 +533,21 @@ object PdfReportGenerator {
         }
     }
 
+    fun extractStartingCashFromNotes(report: ShiftReport): Double {
+        if (report.openingCash > 0.0) return report.openingCash
+        val regex = Regex("""(?:Starting Cash|Starting Float|Float|Opening Cash)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
+        return regex.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+    }
+
     fun extractStartingCashFromNotes(notes: String): Double? {
         val regex = Regex("""(?:Starting Cash|Starting Float|Float|Opening Cash)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
         return regex.find(notes)?.groupValues?.get(1)?.toDoubleOrNull()
+    }
+
+    fun extractActualCashFromNotes(report: ShiftReport): Double? {
+        if (report.closingCash > 0.0) return report.closingCash
+        val regex = Regex("""(?:Actual Cash Count|Actual Cash|Actual Count|Actual)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
+        return regex.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull()
     }
 
     fun extractActualCashFromNotes(notes: String): Double? {
@@ -565,8 +577,8 @@ object PdfReportGenerator {
         val vatNo = businessProfile?.vatNumber ?: "310123456700003"
         val pStr = getPdfStrings(context, language)
 
-        val startingCash = extractStartingCashFromNotes(report.notes) ?: 0.0
-        val actualCashCount = extractActualCashFromNotes(report.notes)
+        val startingCash = extractStartingCashFromNotes(report)
+        val actualCashCount = extractActualCashFromNotes(report)
         val cashIn = report.totalDueCollectedCash
         val cashOut = report.totalCashOut
         val expectedCashInDrawer = startingCash + report.grossCash + cashIn - cashOut
@@ -881,8 +893,8 @@ object PdfReportGenerator {
         val currency = MoneyFormat.resolveCurrency(businessProfile?.currency)
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
-        val startingCash = extractStartingCashFromNotes(report.notes) ?: 0.0
-        val actualCashCount = extractActualCashFromNotes(report.notes)
+        val startingCash = extractStartingCashFromNotes(report)
+        val actualCashCount = extractActualCashFromNotes(report)
         val cashIn = report.totalDueCollectedCash
         val cashOut = report.totalCashOut
         val expectedCashInDrawer = startingCash + report.grossCash + cashIn - cashOut
@@ -1201,13 +1213,28 @@ object PdfReportGenerator {
         val vatStr = context.getString(R.string.pdf_vat_amount_label)
         val grossTaxStr = context.getString(R.string.pdf_gross_total_sales_label)
 
-        val netTaxableVal = report.totalSales / 1.15
-        val vatVal = report.totalSales - netTaxableVal
+        val isTax = businessProfile?.isTaxEnabled ?: false
+        val isTaxIncluded = businessProfile?.isTaxIncluded ?: true
+        val vatRate = if (isTax) (businessProfile?.vatRate ?: 15.0) else 0.0
+        val (netTaxableVal, vatVal, grossTaxVal) = if (isTax && vatRate > 0.0) {
+            if (isTaxIncluded) {
+                val divisor = 1.0 + (vatRate / 100.0)
+                val net = report.totalSales / divisor
+                val vat = report.totalSales - net
+                Triple(net, vat, report.totalSales)
+            } else {
+                val net = report.totalSales
+                val vat = net * (vatRate / 100.0)
+                Triple(net, vat, net + vat)
+            }
+        } else {
+            Triple(report.totalSales, 0.0, report.totalSales)
+        }
 
         drawSectionHeader("3", taxTitle)
         drawDataRow(netTaxableStr, MoneyFormat.format(netTaxableVal, currency))
         drawDataRow(vatStr, MoneyFormat.format(vatVal, currency))
-        drawDataRow(grossTaxStr, MoneyFormat.format(report.totalSales, currency), isBold = true, isHighlight = true)
+        drawDataRow(grossTaxStr, MoneyFormat.format(grossTaxVal, currency), isBold = true, isHighlight = true)
 
         currentY += 12f
 

@@ -49,115 +49,123 @@ fun MainAppDrawer(
     val headerBgColor = PrimaryIndigoDark
 
     ModalDrawerSheet(
-        drawerContainerColor = PureWhite,
+        drawerContainerColor = SurfaceLight,
         modifier = Modifier
             .widthIn(min = 240.dp, max = 300.dp)
             .fillMaxHeight()
             .testTag("main_navigation_drawer")
     ) {
-        // Top Header Banner
+        // Top Header Banner (Locked 180.dp exact height, 24.dp bottomEnd radius, solid PrimaryIndigoDark)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(LojiaDimens.DrawerHeaderHeight)
+                .clip(RoundedCornerShape(bottomEnd = LojiaDimens.DrawerHeaderRadius))
                 .background(headerBgColor)
                 .statusBarsPadding()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.Bottom
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            // 1. Logo circle 48.dp
+            Box(
+                modifier = Modifier
+                    .size(LojiaDimens.AvatarSmall)
+                    .clip(CircleShape)
+                    .background(PureWhite.copy(alpha = 0.2f))
+                    .border(1.5.dp, PureWhite.copy(alpha = 0.5f), CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(PureWhite.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Assessment,
-                        contentDescription = null,
-                        tint = PureWhite,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                Column(modifier = Modifier.weight(1f, fill = false)) {
-                    AutoText(
-                        text = "LojiaShiftReport",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = PureWhite
-                        ),
-                        maxLines = 1
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = userProfile?.fullName?.ifBlank { "Shift Manager" } ?: "Shift Manager",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = PureWhite.copy(alpha = 0.85f),
-                            fontSize = 11.sp
-                        ),
-                        maxLines = 1
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Assessment,
+                    contentDescription = null,
+                    tint = PureWhite,
+                    modifier = Modifier.size(LojiaDimens.IconSize)
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // 2. Spacer 12.dp
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Role and Active Module Badges
+            // 3. Text "Lojia Shift Report" — 18.sp, FontWeight.Bold, PureWhite
+            AutoText(
+                text = "Lojia Shift Report",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = PureWhite
+                ),
+                maxLines = 1
+            )
+
+            // 4. Spacer 4.dp
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // 5. Text (userProfile?.fullName ?: "Shift Manager") — 13.sp, PureWhite.copy(alpha = 0.85f)
+            Text(
+                text = userProfile?.fullName?.ifBlank { "Shift Manager" } ?: "Shift Manager",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = PureWhite.copy(alpha = 0.85f),
+                    fontSize = 13.sp
+                ),
+                maxLines = 1
+            )
+
+            // 6. Spacer 12.dp
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 7. Row (spacing 8.dp)
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = PureWhite.copy(alpha = 0.22f)
+                    shape = RoundedCornerShape(999.dp),
+                    color = PureWhite.copy(alpha = 0.20f)
                 ) {
                     AutoText(
                         text = "Shift Report",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = PureWhite,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         ),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = PureWhite.copy(alpha = 0.15f)
+                    shape = RoundedCornerShape(999.dp),
+                    color = SuccessGreen
                 ) {
                     Text(
                         text = userProfile?.currentRole ?: "ADMIN",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = PureWhite,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 10.sp
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         ),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
             }
         }
 
-        // Scrollable Drawer Menu List: Clean Loyverse-style navigation items
+        // Scrollable Drawer Menu List
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(vertical = 6.dp, horizontal = 8.dp),
+                .padding(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             // ===============================================
-            // 📊 SHIFT REPORT MODULE - PRIMARY SCREENS
+            // Group A — NO header
             // ===============================================
             // 1. Analytics
             DrawerMenuItem(
                 title = "Analytics",
                 icon = Icons.Outlined.Insights,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.Analytics,
                 onClick = {
                     onNavigate(AppNavState.ShiftReportState.Analytics)
@@ -169,7 +177,7 @@ fun MainAppDrawer(
             DrawerMenuItem(
                 title = "Shift Report",
                 icon = Icons.Outlined.Assessment,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.Reports,
                 onClick = {
                     onNavigate(AppNavState.ShiftReportState.Reports)
@@ -181,7 +189,7 @@ fun MainAppDrawer(
             DrawerMenuItem(
                 title = stringResource(R.string.document_scanner),
                 icon = Icons.Outlined.DocumentScanner,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.DocumentScanner,
                 onClick = {
                     onNavigate(AppNavState.ShiftReportState.DocumentScanner)
@@ -189,11 +197,16 @@ fun MainAppDrawer(
                 }
             )
 
+            // ===============================================
+            // Group B — header "MANAGEMENT"
+            // ===============================================
+            DrawerSectionHeader("Management")
+
             // 3. Cashier
             DrawerMenuItem(
                 title = "Cashier",
                 icon = Icons.Outlined.Badge,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "cashiers",
                 onClick = {
                     onOpenReportMenu("cashiers")
@@ -202,11 +215,16 @@ fun MainAppDrawer(
                 }
             )
 
+            // ===============================================
+            // Group C — header "ACCOUNT"
+            // ===============================================
+            DrawerSectionHeader("Account")
+
             // 4. Profile
             DrawerMenuItem(
                 title = "Profile",
                 icon = Icons.Outlined.Person,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "profile",
                 onClick = {
                     onOpenReportMenu("profile")
@@ -219,7 +237,7 @@ fun MainAppDrawer(
             DrawerMenuItem(
                 title = "Security",
                 icon = Icons.Outlined.Shield,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "security",
                 onClick = {
                     onOpenReportMenu("security")
@@ -232,7 +250,7 @@ fun MainAppDrawer(
             DrawerMenuItem(
                 title = "Language",
                 icon = Icons.Outlined.Language,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "language",
                 onClick = {
                     onOpenReportMenu("language")
@@ -245,7 +263,7 @@ fun MainAppDrawer(
             DrawerMenuItem(
                 title = "Backup",
                 icon = Icons.Outlined.CloudUpload,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "backup",
                 onClick = {
                     onOpenReportMenu("backup")
@@ -254,11 +272,16 @@ fun MainAppDrawer(
                 }
             )
 
+            // ===============================================
+            // Group D — header "SYSTEM"
+            // ===============================================
+            DrawerSectionHeader("System")
+
             // 8. Support
             DrawerMenuItem(
                 title = "Support",
                 icon = Icons.Outlined.HeadsetMic,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "support",
                 onClick = {
                     onOpenReportMenu("support")
@@ -271,7 +294,7 @@ fun MainAppDrawer(
             DrawerMenuItem(
                 title = "About",
                 icon = Icons.Outlined.Info,
-                activeColor = PrimaryIndigo,
+                activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "about",
                 onClick = {
                     onOpenReportMenu("about")
@@ -280,12 +303,19 @@ fun MainAppDrawer(
                 }
             )
 
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                thickness = 1.dp,
+                color = OutlineVariantLight
+            )
+
             // 10. Log Out
             DrawerMenuItem(
                 title = "Log Out",
-                icon = Icons.AutoMirrored.Filled.ExitToApp,
-                activeColor = Color(0xFFDC2626),
+                icon = Icons.AutoMirrored.Filled.Logout,
+                activeColor = ErrorRedLight,
                 isSelected = false,
+                isDanger = true,
                 onClick = {
                     onCloseDrawer()
                     onLockApp()
@@ -293,6 +323,20 @@ fun MainAppDrawer(
             )
         }
     }
+}
+
+@Composable
+private fun DrawerSectionHeader(text: String) {
+    Text(
+        text = text.uppercase(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.15.sp,
+        color = TextHintColor
+    )
 }
 
 /**
@@ -305,40 +349,49 @@ private fun DrawerMenuItem(
     icon: ImageVector,
     activeColor: Color,
     isSelected: Boolean = false,
+    isDanger: Boolean = false,
     onClick: () -> Unit
 ) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) activeColor.copy(alpha = 0.12f) else Color.Transparent,
+    val backgroundColor = if (isSelected) PrimaryContainerLight else Color.Transparent
+    val iconTint = when {
+        isDanger -> ErrorRedLight
+        isSelected -> PrimaryIndigoLight
+        else -> OnSurfaceVariantLight
+    }
+    val textColor = when {
+        isDanger -> ErrorRedLight
+        isSelected -> PrimaryIndigoLight
+        else -> OnSurfaceLight
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 44.dp)
+            .padding(horizontal = 8.dp)
+            .height(52.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
             .clickable { onClick() }
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = if (isSelected) activeColor else Color(0xFF555555),
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            AutoText(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 14.sp,
-                    color = if (isSelected) activeColor else Color(0xFF212121)
-                ),
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = iconTint,
+            modifier = Modifier.size(LojiaDimens.IconSize)
+        )
+        Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
+        AutoText(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 14.sp,
+                color = textColor
+            ),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

@@ -30,7 +30,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 
 
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 
 import androidx.compose.foundation.shape.CircleShape
@@ -124,29 +125,26 @@ fun SettingsScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(BackgroundLight)
     ) {
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .testTag("settings_scrollable_list"),
             verticalArrangement = Arrangement.Top
         ) {
-            item {
-                SettingsReportSection(
-                    reportViewModel = reportViewModel,
-                    language = currentLanguage,
-                    isAdmin = isAdmin,
-                    onRestrictedClick = handleRestrictedClick,
-                    onSwitchModule = onSwitchModule,
-                    onConfigurePrinterClick = { showTestPrintDialog = true }
-                )
-            }
+            SettingsReportSection(
+                reportViewModel = reportViewModel,
+                language = currentLanguage,
+                isAdmin = isAdmin,
+                onRestrictedClick = handleRestrictedClick,
+                onSwitchModule = onSwitchModule,
+                onConfigurePrinterClick = { showTestPrintDialog = true }
+            )
 
             // Bottom Spacing
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -158,6 +156,7 @@ fun SettingsScreen(
 
         AlertDialog(
             onDismissRequest = { showRoleSwitchDialog = false },
+            containerColor = SurfaceLight,
             title = { Text(stringResource(R.string.switch_role), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

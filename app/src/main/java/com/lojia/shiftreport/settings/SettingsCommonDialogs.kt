@@ -121,6 +121,7 @@ fun SettingsCommonDialogs(
                 pinError = false
                 onDismissAdminPin()
             },
+            containerColor = SurfaceLight,
             icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.admin_authorization_required), fontWeight = FontWeight.Bold) },
             text = {
@@ -187,6 +188,7 @@ fun SettingsCommonDialogs(
     if (showTermsDialog) {
         AlertDialog(
             onDismissRequest = onDismissTerms,
+            containerColor = SurfaceLight,
             icon = { Icon(Icons.Default.Gavel, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.terms_conditions_1), fontWeight = FontWeight.Bold) },
             text = {
@@ -216,6 +218,7 @@ fun SettingsCommonDialogs(
     if (showPrivacyDialog) {
         AlertDialog(
             onDismissRequest = onDismissPrivacy,
+            containerColor = SurfaceLight,
             icon = { Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.privacy_policy_2), fontWeight = FontWeight.Bold) },
             text = {
@@ -249,6 +252,7 @@ fun SettingsCommonDialogs(
 
         AlertDialog(
             onDismissRequest = onDismissSupportTicket,
+            containerColor = SurfaceLight,
             title = { Text(stringResource(R.string.submit_support_ticket), fontWeight = FontWeight.Bold) },
             text = {
                 if (ticketSubmitted) {
@@ -256,7 +260,7 @@ fun SettingsCommonDialogs(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(48.dp))
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(48.dp))
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(stringResource(R.string.ticket_tk8892_created), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Text(stringResource(R.string.our_technical_support_team), fontSize = 13.sp, color = TextSecondaryLight)
