@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
 import com.lojia.shiftreport.data.*
+import com.lojia.shiftreport.util.MoneyFormat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -64,6 +65,7 @@ object FirebaseCloudSyncManager {
     private const val KEY_LAST_SYNC_SUMMARY = "firebase_last_sync_summary"
     private const val KEY_CUSTOM_FIREBASE_URL = "firebase_custom_url"
     private const val KEY_PROJECT_ID = "firebase_project_id"
+    private const val KEY_AUTH_SECRET = "firebase_auth_secret"
 
     const val DEFAULT_PROJECT_ID = "gen-lang-client-0290392339"
 
@@ -130,6 +132,16 @@ object FirebaseCloudSyncManager {
         prefs.edit().putString(KEY_CUSTOM_FIREBASE_URL, url.trim()).apply()
     }
 
+    fun getFirebaseAuthSecret(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_AUTH_SECRET, "") ?: ""
+    }
+
+    fun setFirebaseAuthSecret(context: Context, secret: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_AUTH_SECRET, secret.trim()).apply()
+    }
+
     private fun isNetworkAvailable(context: Context): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return false
         val activeNet = cm.activeNetwork ?: return false
@@ -194,6 +206,18 @@ object FirebaseCloudSyncManager {
             val remoteReports = remoteJson?.optJSONArray("shiftReports") ?: JSONArray()
             val remoteProfileObj = remoteJson?.optJSONObject("businessProfile")
 
+            val schemaVersion = remoteJson?.optInt("schemaVersion", 1) ?: 1
+            val isLegacy = schemaVersion < 15
+
+            fun getMoneyVal(obj: JSONObject, key: String, defaultVal: Double = 0.0): Long {
+                val value = obj.optDouble(key, defaultVal)
+                return if (isLegacy) {
+                    MoneyFormat.toMinorUnits(value)
+                } else {
+                    value.toLong()
+                }
+            }
+
             val reportsToUpdateInRoom = mutableListOf<ShiftReport>()
             val remoteReportIdsSeen = mutableSetOf<Int>()
 
@@ -211,11 +235,11 @@ object FirebaseCloudSyncManager {
                         cashierName = repObj.optString("cashierName", "Staff"),
                         shift = repObj.optString("shift", "Day"),
                         dateInMillis = rDate,
-                        grossCash = repObj.optDouble("grossCash", 0.0),
-                        madaPayments = repObj.optDouble("madaPayments", 0.0),
-                        digitalWallet = repObj.optDouble("digitalWallet", 0.0),
+                        grossCash = getMoneyVal(repObj, "grossCash"),
+                        madaPayments = getMoneyVal(repObj, "madaPayments"),
+                        digitalWallet = getMoneyVal(repObj, "digitalWallet", 0.0),
                         staffMealsCount = repObj.optInt("staffMealsCount", 0),
-                        totalExpenses = repObj.optDouble("totalExpenses", 0.0),
+                        totalExpenses = getMoneyVal(repObj, "totalExpenses", 0.0),
                         muasselQty = repObj.optDouble("muasselQty", 0.0),
                         outdoorShishaQty = repObj.optDouble("outdoorShishaQty", 0.0),
                         dueCreditEntriesJson = repObj.optString("dueCreditEntriesJson", "[]"),
@@ -229,10 +253,10 @@ object FirebaseCloudSyncManager {
                     downloadedReports++
                 } else if (rDate > local.dateInMillis) {
                     val updatedReport = local.copy(
-                        grossCash = repObj.optDouble("grossCash", local.grossCash),
-                        madaPayments = repObj.optDouble("madaPayments", local.madaPayments),
-                        digitalWallet = repObj.optDouble("digitalWallet", local.digitalWallet),
-                        totalExpenses = repObj.optDouble("totalExpenses", local.totalExpenses),
+                        grossCash = getMoneyVal(repObj, "grossCash", MoneyFormat.toMajorUnits(local.grossCash)),
+                        madaPayments = getMoneyVal(repObj, "madaPayments", MoneyFormat.toMajorUnits(local.madaPayments)),
+                        digitalWallet = getMoneyVal(repObj, "digitalWallet", MoneyFormat.toMajorUnits(local.digitalWallet)),
+                        totalExpenses = getMoneyVal(repObj, "totalExpenses", MoneyFormat.toMajorUnits(local.totalExpenses)),
                         notes = repObj.optString("notes", local.notes)
                     )
                     reportsToUpdateInRoom.add(updatedReport)
@@ -305,6 +329,7 @@ object FirebaseCloudSyncManager {
                 })
             }
             uploadPayload.put("shiftReports", repArr)
+            uploadPayload.put("schemaVersion", 15)
 
             val bpTs = getEntityTimestamp(context, "business_profile", 1, System.currentTimeMillis())
             val bpObj = JSONObject().apply {
@@ -389,11 +414,18 @@ object FirebaseCloudSyncManager {
     private fun fetchRemoteData(context: Context): Pair<JSONObject?, Boolean> {
         val customUrl = getCustomFirebaseUrl(context)
         val projectId = getFirebaseProjectId(context)
+        val authSecret = getFirebaseAuthSecret(context)
 
-        val targetUrl = if (customUrl.isNotEmpty()) {
+        val baseUrl = if (customUrl.isNotEmpty()) {
             if (!customUrl.endsWith(".json")) "$customUrl/shift_report_cloud_data.json" else customUrl
         } else {
             "https://$projectId-default-rtdb.firebaseio.com/shift_report_cloud_data.json"
+        }
+        val targetUrl = if (authSecret.isNotEmpty()) {
+            val delimiter = if (baseUrl.contains("?")) "&" else "?"
+            "$baseUrl${delimiter}auth=$authSecret"
+        } else {
+            baseUrl
         }
 
         try {
@@ -434,11 +466,18 @@ object FirebaseCloudSyncManager {
 
         val customUrl = getCustomFirebaseUrl(context)
         val projectId = getFirebaseProjectId(context)
+        val authSecret = getFirebaseAuthSecret(context)
 
-        val targetUrl = if (customUrl.isNotEmpty()) {
+        val baseUrl = if (customUrl.isNotEmpty()) {
             if (!customUrl.endsWith(".json")) "$customUrl/shift_report_cloud_data.json" else customUrl
         } else {
             "https://$projectId-default-rtdb.firebaseio.com/shift_report_cloud_data.json"
+        }
+        val targetUrl = if (authSecret.isNotEmpty()) {
+            val delimiter = if (baseUrl.contains("?")) "&" else "?"
+            "$baseUrl${delimiter}auth=$authSecret"
+        } else {
+            baseUrl
         }
 
         return try {

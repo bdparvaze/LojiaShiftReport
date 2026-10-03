@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -104,8 +105,16 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                 mutableStateOf<AppNavState>(AppNavState.ShiftReportState.Reports)
             }
 
+            LaunchedEffect(navState) {
+                if (navState !is AppNavState.ShiftReportState.SettingsDetail) {
+                    reportViewModel.selectReportSettingsMenu("")
+                }
+            }
+
             var previewReport by remember { mutableStateOf<ShiftReport?>(null) }
-            var isAuthenticated by remember { mutableStateOf(false) }
+            var isAuthenticated by rememberSaveable { 
+                mutableStateOf(reportViewModel.preferencesRepository.isLoggedIn()) 
+            }
             val lastInteractionTime by userInteractionTime.collectAsState()
 
             LaunchedEffect(isAuthenticated, lastInteractionTime, userProfile?.autoLockMinutes) {
@@ -137,13 +146,12 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             onAuthenticated = {
                                 isAuthenticated = true
                                 userInteractionTime.value = System.currentTimeMillis()
-                                userProfile?.let {
-                                    reportViewModel.preferencesRepository.saveUserSession(
-                                        username = it.username,
-                                        fullName = it.fullName,
-                                        email = it.email
-                                    )
-                                }
+                                val uName = userProfile?.username?.ifBlank { "owner" } ?: "owner"
+                                reportViewModel.preferencesRepository.saveUserSession(
+                                    username = uName,
+                                    fullName = userProfile?.fullName,
+                                    email = userProfile?.email
+                                )
                             },
                             onSaveUserProfile = { updatedProfile ->
                                 reportViewModel.saveUserProfile(updatedProfile)
@@ -158,9 +166,10 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                         ) {
                             val focusManager = LocalFocusManager.current
                             val isRootScreen = navState is AppNavState.ShiftReportState.Reports
+                            val isScannerActive = navState is AppNavState.ShiftReportState.DocumentScanner
 
                             // Handle back button smoothly to close drawer or return from sub-screens to main view
-                            BackHandler(enabled = drawerState.isOpen || !isRootScreen) {
+                            BackHandler(enabled = !isScannerActive && (drawerState.isOpen || !isRootScreen)) {
                                 if (drawerState.isOpen) {
                                     scope.launch { drawerState.close() }
                                 } else if (!isRootScreen) {
@@ -190,70 +199,76 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             ) {
                                 Scaffold(
                                     topBar = {
-                                        val topBarBg = PrimaryIndigo
+                                        val selectedSettingsMenu by reportViewModel.selectedReportSettingsMenu.collectAsState()
+                                        val isFullScreenAddressRoute = navState is AppNavState.ShiftReportState.SettingsDetail &&
+                                                selectedSettingsMenu?.startsWith("settings/profile/addresses") == true
 
-                                        val screenTitle = when (val state = navState) {
-                                            is AppNavState.ShiftReportState.Reports -> "Shift Report"
-                                            is AppNavState.ShiftReportState.Analytics -> "Analytics"
-                                            is AppNavState.ShiftReportState.DocumentScanner -> stringResource(R.string.document_scanner)
-                                            is AppNavState.ShiftReportState.SettingsDetail -> {
-                                                when (state.section) {
-                                                    "root", "all", "overview" -> "Settings"
-                                                    "cashiers" -> "Cashier"
-                                                    "profile" -> "Profile"
-                                                    "security" -> "Security"
-                                                    "backup" -> "Backup"
-                                                    "country", "countries", "currency" -> "Country"
-                                                    "language" -> "Language"
-                                                    "about" -> "About"
-                                                    "support" -> "Support"
-                                                    else -> state.section.replace('_', ' ').replaceFirstChar { it.uppercase() }
+                                        if (!isFullScreenAddressRoute) {
+                                            val topBarBg = PrimaryIndigo
+
+                                            val screenTitle = when (val state = navState) {
+                                                is AppNavState.ShiftReportState.Reports -> stringResource(R.string.nav_reports)
+                                                is AppNavState.ShiftReportState.Analytics -> stringResource(R.string.nav_analytics)
+                                                is AppNavState.ShiftReportState.DocumentScanner -> stringResource(R.string.document_scanner)
+                                                is AppNavState.ShiftReportState.SettingsDetail -> {
+                                                    when (state.section) {
+                                                        "root", "all", "overview" -> stringResource(R.string.nav_settings)
+                                                        "cashiers" -> stringResource(R.string.cashier_management)
+                                                        "profile" -> stringResource(R.string.profile)
+                                                        "security" -> stringResource(R.string.security)
+                                                        "backup" -> stringResource(R.string.backup)
+                                                        "country", "countries", "currency" -> stringResource(R.string.country)
+                                                        "language" -> stringResource(R.string.language)
+                                                        "about" -> stringResource(R.string.about)
+                                                        "support" -> stringResource(R.string.support)
+                                                        else -> state.section.replace('_', ' ').replaceFirstChar { it.uppercase() }
+                                                    }
                                                 }
                                             }
-                                        }
 
-                                        Surface(
-                                            color = topBarBg,
-                                            shadowElevation = 4.dp
-                                        ) {
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .statusBarsPadding()
+                                            Surface(
+                                                color = topBarBg,
+                                                shadowElevation = 4.dp
                                             ) {
-                                                // Top Header Row with Back / Drawer Toggle and Screen Title
-                                                Row(
+                                                Column(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .defaultMinSize(minHeight = 56.dp)
-                                                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                        .statusBarsPadding()
                                                 ) {
-                                                    // Left Navigation Icon: Drawer Hamburger menu icon
+                                                    // Top Header Row with Back / Drawer Toggle and Screen Title
                                                     Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .defaultMinSize(minHeight = 56.dp)
+                                                            .padding(horizontal = 8.dp, vertical = 4.dp),
                                                         verticalAlignment = Alignment.CenterVertically,
-                                                        modifier = Modifier.weight(1f)
+                                                        horizontalArrangement = Arrangement.SpaceBetween
                                                     ) {
-                                                        IconButton(
-                                                            onClick = { scope.launch { drawerState.open() } },
-                                                            modifier = Modifier.testTag("drawer_menu_btn")
+                                                        // Left Navigation Icon: Drawer Hamburger menu icon
+                                                        Row(
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            modifier = Modifier.weight(1f)
                                                         ) {
-                                                            Icon(
-                                                                imageVector = Icons.Default.Menu,
-                                                                contentDescription = rememberTranslatedString(stringResource(R.string.title_drawer_menu)),
-                                                                tint = PureWhite
+                                                            IconButton(
+                                                                onClick = { scope.launch { drawerState.open() } },
+                                                                modifier = Modifier.testTag("drawer_menu_btn")
+                                                            ) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Menu,
+                                                                    contentDescription = rememberTranslatedString(stringResource(R.string.title_drawer_menu)),
+                                                                    tint = PureWhite
+                                                                )
+                                                            }
+                                                            Spacer(modifier = Modifier.width(4.dp))
+                                                            DynamicText(
+                                                                text = screenTitle,
+                                                                color = PureWhite,
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 18.sp,
+                                                                maxLines = 1,
+                                                                modifier = Modifier.weight(1f, fill = false)
                                                             )
                                                         }
-                                                        Spacer(modifier = Modifier.width(4.dp))
-                                                        DynamicText(
-                                                            text = screenTitle,
-                                                            color = PureWhite,
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 18.sp,
-                                                            maxLines = 1,
-                                                            modifier = Modifier.weight(1f, fill = false)
-                                                        )
                                                     }
                                                 }
                                             }
@@ -374,10 +389,40 @@ private fun ShiftReportModuleNavHost(
             LaunchedEffect(destination.section) {
                 reportViewModel.selectReportSettingsMenu(destination.section)
             }
-            SettingsScreen(
-                reportViewModel = reportViewModel,
-                activeModule = AppModule.SHIFT_REPORT
-            )
+            val currentRoute = reportViewModel.selectedReportSettingsMenu.collectAsState().value.orEmpty()
+            when {
+                currentRoute == "settings/profile/addresses" -> {
+                    SavedAddressesScreen(
+                        viewModel = reportViewModel,
+                        onBack = { reportViewModel.selectReportSettingsMenu("profile") },
+                        onAddNew = { reportViewModel.selectReportSettingsMenu("settings/profile/addresses/new") },
+                        onEdit = { id -> reportViewModel.selectReportSettingsMenu("settings/profile/addresses/edit/$id") }
+                    )
+                }
+                currentRoute == "settings/profile/addresses/new" -> {
+                    AddEditAddressScreen(
+                        viewModel = reportViewModel,
+                        addressId = null,
+                        onBack = { reportViewModel.selectReportSettingsMenu("settings/profile/addresses") },
+                        onSaved = { reportViewModel.selectReportSettingsMenu("settings/profile/addresses") }
+                    )
+                }
+                currentRoute.startsWith("settings/profile/addresses/edit/") -> {
+                    val id = currentRoute.removePrefix("settings/profile/addresses/edit/")
+                    AddEditAddressScreen(
+                        viewModel = reportViewModel,
+                        addressId = id,
+                        onBack = { reportViewModel.selectReportSettingsMenu("settings/profile/addresses") },
+                        onSaved = { reportViewModel.selectReportSettingsMenu("settings/profile/addresses") }
+                    )
+                }
+                else -> {
+                    SettingsScreen(
+                        reportViewModel = reportViewModel,
+                        activeModule = AppModule.SHIFT_REPORT
+                    )
+                }
+            }
         }
     }
 }

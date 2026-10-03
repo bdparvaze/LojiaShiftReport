@@ -11,6 +11,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import kotlin.coroutines.resume
 
@@ -19,62 +20,78 @@ object OcrTextExtractor {
     private const val TAG = "OcrTextExtractor"
 
     /**
-     * Extracts text from a list of scanned page image files.
+     * Extracts text from a list of scanned page image files with a 15-second timeout.
      * Uses [OcrImagePreprocessor] to enhance contrast for delicate scripts (such as Bengali/Bangla)
      * and structures output cleanly across multi-page scans.
      */
-    suspend fun extractTextFromImages(context: Context, imagePaths: List<String>): String = withContext(Dispatchers.IO) {
-        if (imagePaths.isEmpty()) return@withContext ""
-
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-        val sb = StringBuilder()
-
-        for ((index, path) in imagePaths.withIndex()) {
+    suspend fun extractTextFromImages(context: Context, imagePaths: List<String>): String {
+        if (imagePaths.isEmpty()) return ""
+        return withTimeoutOrNull(15_000L) {
             try {
-                val file = File(path)
-                if (!file.exists()) continue
-
-                // 1. First try with contrast-enhanced Bitmap for maximum character edge clarity
-                var processedBitmap: Bitmap? = null
-                var visionText: Text? = null
-
-                try {
-                    processedBitmap = OcrImagePreprocessor.loadOptimizedBitmapForOcr(file)
-                    if (processedBitmap != null) {
-                        val inputImage = InputImage.fromBitmap(processedBitmap, 0)
-                        visionText = processImage(recognizer, inputImage)
+                withContext(Dispatchers.IO) {
+                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                    try {
+                        imagePaths.mapIndexedNotNull { index, path ->
+                            val text = extractTextFromImage(context, recognizer, path)
+                            if (text.isNotBlank()) {
+                                if (imagePaths.size > 1) "--- Page ${index + 1} ---\n\n$text" else text
+                            } else {
+                                null
+                            }
+                        }.joinToString("\n\n").trim()
+                    } finally {
+                        try {
+                            recognizer.close()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error closing recognizer", e)
+                        }
                     }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Preprocessed recognition attempt failed for $path, falling back to raw file", e)
-                } finally {
-                    processedBitmap?.recycle()
-                }
-
-                // 2. Fallback to raw file InputImage if bitmap processing yielded empty result
-                if (visionText == null || visionText.text.isBlank()) {
-                    val rawImage = InputImage.fromFilePath(context, Uri.fromFile(file))
-                    visionText = processImage(recognizer, rawImage)
-                }
-
-                if (visionText != null && visionText.text.isNotBlank()) {
-                    if (imagePaths.size > 1) {
-                        sb.append("--- Page ${index + 1} ---\n\n")
-                    }
-                    val formattedPageText = formatRecognizedText(visionText)
-                    sb.append(formattedPageText).append("\n\n")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error extracting text from image $path", e)
+                Log.e(TAG, "OCR failed", e)
+                ""
             }
-        }
+        } ?: ""
+    }
 
-        try {
-            recognizer.close()
+    private suspend fun extractTextFromImage(
+        context: Context,
+        recognizer: com.google.mlkit.vision.text.TextRecognizer,
+        path: String
+    ): String {
+        return try {
+            val file = File(path)
+            if (!file.exists()) return ""
+
+            var processedBitmap: Bitmap? = null
+            var visionText: Text? = null
+
+            try {
+                processedBitmap = OcrImagePreprocessor.loadOptimizedBitmapForOcr(file)
+                if (processedBitmap != null) {
+                    val inputImage = InputImage.fromBitmap(processedBitmap, 0)
+                    visionText = processImage(recognizer, inputImage)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Preprocessed recognition attempt failed for $path, falling back to raw file", e)
+            } finally {
+                processedBitmap?.recycle()
+            }
+
+            if (visionText == null || visionText.text.isBlank()) {
+                val rawImage = InputImage.fromFilePath(context, Uri.fromFile(file))
+                visionText = processImage(recognizer, rawImage)
+            }
+
+            if (visionText != null && visionText.text.isNotBlank()) {
+                formatRecognizedText(visionText)
+            } else {
+                ""
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error closing recognizer", e)
+            Log.e(TAG, "Error extracting text from image $path", e)
+            ""
         }
-
-        return@withContext sb.toString().trim()
     }
 
     /**

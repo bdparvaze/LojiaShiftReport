@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,22 +33,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
-import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
-import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.permission.AppFeaturePermission
 import com.lojia.shiftreport.permission.rememberPermissionRequester
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.PrimaryIndigo
 import com.lojia.shiftreport.ui.theme.PureWhite
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun DocumentScannerScreen(
@@ -61,16 +54,12 @@ fun DocumentScannerScreen(
     val documents by viewModel.documents.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
-    var showSaveTitleDialog by remember { mutableStateOf(false) }
-    var showScannerFallbackPrompt by remember { mutableStateOf(false) }
-    var customDocumentTitle by remember { mutableStateOf("") }
-    var pendingScanResult by remember { mutableStateOf<GmsDocumentScanningResult?>(null) }
-    var pendingPhotoUri by remember { mutableStateOf<Uri?>(null) }
-    var tempCameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // CamScanner Advanced Flow State
-    var isCameraXScannerOpen by remember { mutableStateOf(false) }
+    var isCameraXScannerOpen by rememberSaveable { mutableStateOf(false) }
     var activeCamScannerBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var activeCamScannerCorners by remember { mutableStateOf<DocumentCorners?>(null) }
+    var autoCropOnStart by remember { mutableStateOf(false) }
 
     // Selection mode state
     var isSelectionMode by remember { mutableStateOf(false) }
@@ -102,24 +91,7 @@ fun DocumentScannerScreen(
             if (bitmap != null) {
                 activeCamScannerBitmap = bitmap
             } else {
-                Toast.makeText(context, "Could not load selected image", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    val cameraFallbackLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && tempCameraImageUri != null) {
-            val bitmap = decodeUriToBitmap(context, tempCameraImageUri!!)
-            if (bitmap != null) {
-                activeCamScannerBitmap = bitmap
-            } else {
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                customDocumentTitle = "Doc_$timeStamp"
-                pendingScanResult = null
-                pendingPhotoUri = tempCameraImageUri
-                showSaveTitleDialog = true
+                Toast.makeText(context, context.getString(R.string.doc_toast_cannot_load_image), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -134,49 +106,14 @@ fun DocumentScannerScreen(
         }
     )
 
-    val startCameraCapture: () -> Unit = {
-        cameraPermissionRequester.launch {
-            isCameraXScannerOpen = true
-        }
-    }
-
     val launchFallbackCapture = {
         cameraPermissionRequester.launch {
             isCameraXScannerOpen = true
         }
     }
 
-    val scannerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        try {
-            if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-                val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
-                if (scanResult != null && (scanResult.pdf != null || !scanResult.pages.isNullOrEmpty())) {
-                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                    customDocumentTitle = "Scan_$timeStamp"
-                    pendingScanResult = scanResult
-                    pendingPhotoUri = null
-                    showSaveTitleDialog = true
-                } else {
-                    Log.w("DocScanner", "Scan returned RESULT_OK but scanResult content is null/empty")
-                    showScannerFallbackPrompt = true
-                }
-            } else if (result.resultCode == Activity.RESULT_CANCELED) {
-                Log.d("DocScanner", "Scan was cancelled by user")
-            } else {
-                Log.w("DocScanner", "Scan returned resultCode: ${result.resultCode}")
-                showScannerFallbackPrompt = true
-            }
-        } catch (e: Throwable) {
-            Log.e("DocScanner", "Error handling scanner result", e)
-            showScannerFallbackPrompt = true
-        }
-    }
-
     val startScannerFlow: () -> Unit = {
         // Launch our fully-integrated native CamScanner studio (CameraX + A4 reticle + 4-corner perspective crop + filters + OCR).
-        // This avoids known Google Play Services GmsDocScanDelAct crashes (IllegalStateException) on emulators and Android 15/16.
         launchFallbackCapture()
     }
 
@@ -185,8 +122,18 @@ fun DocumentScannerScreen(
         CamScannerEditorScreen(
             initialBitmap = activeCamScannerBitmap!!,
             viewModel = viewModel,
-            onFinish = { activeCamScannerBitmap = null },
-            onCancel = { activeCamScannerBitmap = null }
+            onFinish = {
+                activeCamScannerBitmap = null
+                activeCamScannerCorners = null
+                autoCropOnStart = false
+            },
+            onCancel = {
+                activeCamScannerBitmap = null
+                activeCamScannerCorners = null
+                autoCropOnStart = false
+            },
+            initialDetectedCorners = activeCamScannerCorners,
+            autoCropImmediately = autoCropOnStart
         )
         return
     }
@@ -196,6 +143,14 @@ fun DocumentScannerScreen(
         CameraXScannerView(
             onImageCaptured = { capturedBitmap ->
                 isCameraXScannerOpen = false
+                activeCamScannerCorners = null
+                autoCropOnStart = false
+                activeCamScannerBitmap = capturedBitmap
+            },
+            onImageCapturedWithCorners = { capturedBitmap, detectedCorners ->
+                isCameraXScannerOpen = false
+                activeCamScannerCorners = detectedCorners
+                autoCropOnStart = detectedCorners != null
                 activeCamScannerBitmap = capturedBitmap
             },
             onGalleryPick = {
@@ -283,7 +238,7 @@ fun DocumentScannerScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "${selectedDocs.size} selected",
+                            text = stringResource(R.string.doc_selected_count, selectedDocs.size),
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                             color = PrimaryIndigo
@@ -301,7 +256,7 @@ fun DocumentScannerScreen(
                                 }
                             ) {
                                 Text(
-                                    text = if (selectedDocs.size == filteredDocs.size) "Deselect All" else "Select All",
+                                    text = if (selectedDocs.size == filteredDocs.size) stringResource(R.string.doc_deselect_all) else stringResource(R.string.doc_select_all),
                                     fontSize = 12.sp,
                                     color = PrimaryIndigo
                                 )
@@ -315,7 +270,7 @@ fun DocumentScannerScreen(
                             ) {
                                 Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Delete", fontSize = 12.sp)
+                                Text(stringResource(R.string.delete), fontSize = 12.sp)
                             }
                         }
                     }
@@ -370,39 +325,6 @@ fun DocumentScannerScreen(
     }
 
     // Dialogs
-    if (showSaveTitleDialog) {
-        SaveDocumentTitleDialog(
-            title = customDocumentTitle,
-            onTitleChange = { customDocumentTitle = it },
-            onConfirm = {
-                showSaveTitleDialog = false
-                val scanRes = pendingScanResult
-                val photoUri = pendingPhotoUri
-                if (scanRes != null) {
-                    viewModel.saveScannedResult(scanRes, customDocumentTitle)
-                } else if (photoUri != null) {
-                    viewModel.saveImageAsScannedDocument(photoUri, customDocumentTitle)
-                }
-                pendingScanResult = null
-                pendingPhotoUri = null
-                Toast.makeText(context, "Document saved successfully", Toast.LENGTH_SHORT).show()
-            },
-            onDismiss = {
-                showSaveTitleDialog = false
-                pendingScanResult = null
-                pendingPhotoUri = null
-            }
-        )
-    }
-
-    if (showScannerFallbackPrompt) {
-        ScannerFallbackPromptDialog(
-            onCameraCapture = launchFallbackCapture,
-            onGalleryPick = { galleryFallbackLauncher.launch("image/*") },
-            onDismiss = { showScannerFallbackPrompt = false }
-        )
-    }
-
     if (documentToRename != null) {
         val doc = documentToRename!!
         RenameDocumentDialog(
@@ -410,7 +332,7 @@ fun DocumentScannerScreen(
             onRename = { newTitle ->
                 viewModel.renameDocument(doc, newTitle)
                 documentToRename = null
-                Toast.makeText(context, "Document renamed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_renamed_success), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { documentToRename = null }
         )
@@ -423,7 +345,7 @@ fun DocumentScannerScreen(
             onConfirmDelete = {
                 viewModel.deleteDocument(doc)
                 documentToDelete = null
-                Toast.makeText(context, "Document deleted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_deleted_success), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { documentToDelete = null }
         )
@@ -438,7 +360,7 @@ fun DocumentScannerScreen(
                 selectedDocs.clear()
                 isSelectionMode = false
                 showBatchDeleteConfirm = false
-                Toast.makeText(context, "$count documents deleted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_deleted_success), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showBatchDeleteConfirm = false }
         )
@@ -452,7 +374,7 @@ fun DocumentScannerScreen(
             isLoading = ocrLoading,
             onCopyText = { text ->
                 clipboardManager.setText(AnnotatedString(text))
-                Toast.makeText(context, "Text copied to clipboard", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_text_copied), Toast.LENGTH_SHORT).show()
             },
             onShareWord = {
                 viewModel.shareDocx(context, doc)

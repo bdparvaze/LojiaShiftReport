@@ -67,14 +67,18 @@ fun CamScannerEditorScreen(
     viewModel: DocumentScannerViewModel,
     onFinish: () -> Unit,
     onCancel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialDetectedCorners: DocumentCorners? = null,
+    autoCropImmediately: Boolean = false
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
+    androidx.activity.compose.BackHandler(enabled = true) { onCancel() }
+
     var currentStep by remember { mutableStateOf(EditorStep.CROP_BOUNDARIES) }
     var workingBitmap by remember { mutableStateOf(initialBitmap) }
-    var initialCorners by remember { mutableStateOf<DocumentCorners?>(null) }
+    var initialCorners by remember { mutableStateOf(initialDetectedCorners) }
     var croppedBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // Filter & Adjustments State
@@ -100,12 +104,6 @@ fun CamScannerEditorScreen(
     var isOcrRunning by remember { mutableStateOf(false) }
     var ocrExtractedText by remember { mutableStateOf("") }
 
-    // Auto-detect corners on initial load
-    LaunchedEffect(workingBitmap) {
-        val detected = PerspectiveTransformHelper.detectDocumentCorners(workingBitmap)
-        initialCorners = detected
-    }
-
     // Function to re-apply filter and adjustments
     fun updatePreview(base: Bitmap, filter: ScannerFilterType, adj: FilterAdjustments) {
         coroutineScope.launch {
@@ -113,6 +111,51 @@ fun CamScannerEditorScreen(
             val result = DocumentImageFilter.applyFilter(base, filter, adj)
             displayBitmap = result
             isFilterProcessing = false
+        }
+    }
+
+    suspend fun performCropAndOpenFilterStep(cornersToCrop: DocumentCorners) {
+        val cropped = PerspectiveTransformHelper.cropAndStraighten(
+            workingBitmap,
+            cornersToCrop
+        )
+        croppedBitmap = cropped
+
+        // Generate small mini-thumbnails for filter preview bar
+        val miniW = 120
+        val miniH = (miniW * (cropped.height.toFloat() / cropped.width.toFloat())).toInt().coerceIn(80, 160)
+        val miniBase = Bitmap.createScaledBitmap(cropped, miniW, miniH, true)
+
+        ScannerFilterType.entries.forEach { f ->
+            val thumb = DocumentImageFilter.applyFilter(miniBase, f)
+            miniThumbnails[f] = thumb
+        }
+
+        // Apply default Magic Color filter
+        updatePreview(cropped, selectedFilter, adjustments)
+        currentStep = EditorStep.FILTER_AND_ADJUST
+    }
+
+    // Auto-crop immediately if last detected corners exist from camera preview;
+    // otherwise detect/pre-position corners and show manual crop screen
+    LaunchedEffect(workingBitmap) {
+        if (autoCropImmediately && initialDetectedCorners != null && workingBitmap === initialBitmap) {
+            initialCorners = initialDetectedCorners
+            performCropAndOpenFilterStep(initialDetectedCorners)
+        } else {
+            val openCvPoints = withContext(Dispatchers.Default) {
+                EdgeDetector.detectDocumentCorners(workingBitmap)
+            }
+            val detected = if (openCvPoints != null) {
+                EdgeDetector.toDocumentCorners(
+                    points = openCvPoints,
+                    srcWidth = workingBitmap.width,
+                    srcHeight = workingBitmap.height
+                )
+            } else {
+                null
+            } ?: PerspectiveTransformHelper.detectDocumentCorners(workingBitmap)
+            initialCorners = detected
         }
     }
 
@@ -131,30 +174,23 @@ fun CamScannerEditorScreen(
                 initialCorners = corners,
                 onConfirmCrop = { confirmedCorners ->
                     coroutineScope.launch {
-                        val cropped = PerspectiveTransformHelper.cropAndStraighten(
-                            workingBitmap,
-                            confirmedCorners
-                        )
-                        croppedBitmap = cropped
-
-                        // Generate small mini-thumbnails for filter preview bar
-                        val miniW = 120
-                        val miniH = (miniW * (cropped.height.toFloat() / cropped.width.toFloat())).toInt().coerceIn(80, 160)
-                        val miniBase = Bitmap.createScaledBitmap(cropped, miniW, miniH, true)
-
-                        ScannerFilterType.entries.forEach { f ->
-                            val thumb = DocumentImageFilter.applyFilter(miniBase, f)
-                            miniThumbnails[f] = thumb
-                        }
-
-                        // Apply default Magic Color filter
-                        updatePreview(cropped, selectedFilter, adjustments)
-                        currentStep = EditorStep.FILTER_AND_ADJUST
+                        performCropAndOpenFilterStep(confirmedCorners)
                     }
                 },
                 onAutoDetect = {
                     coroutineScope.launch {
-                        val detected = PerspectiveTransformHelper.detectDocumentCorners(workingBitmap)
+                        val openCvPoints = withContext(Dispatchers.Default) {
+                            EdgeDetector.detectDocumentCorners(workingBitmap)
+                        }
+                        val detected = if (openCvPoints != null) {
+                            EdgeDetector.toDocumentCorners(
+                                points = openCvPoints,
+                                srcWidth = workingBitmap.width,
+                                srcHeight = workingBitmap.height
+                            )
+                        } else {
+                            null
+                        } ?: PerspectiveTransformHelper.detectDocumentCorners(workingBitmap)
                         initialCorners = detected
                     }
                 },

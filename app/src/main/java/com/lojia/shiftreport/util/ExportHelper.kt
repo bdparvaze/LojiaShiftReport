@@ -4,8 +4,9 @@ import com.lojia.shiftreport.R
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.widget.Toast
@@ -19,10 +20,14 @@ import java.util.*
 
 object ExportHelper {
 
+    private const val PAGE_WIDTH = 595
+    private const val PAGE_HEIGHT = 842
+    private const val MARGIN = 36f
+
     fun exportShiftReportsToCsv(
         context: Context,
         reports: List<ShiftReport>,
-        currency: String = "SAR"
+        currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
     ): File {
         val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -42,7 +47,7 @@ object ExportHelper {
         return csvFile
     }
 
-    fun exportReportsAsCsv(context: Context, reports: List<ShiftReport>, currency: String = "SAR") {
+    fun exportReportsAsCsv(context: Context, reports: List<ShiftReport>, currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE) {
         try {
             val file = exportShiftReportsToCsv(context, reports, currency)
             shareExportedFile(context, file, "text/csv", "Export Shift Reports CSV")
@@ -51,67 +56,219 @@ object ExportHelper {
         }
     }
 
-    fun exportReportsAsPdf(context: Context, reports: List<ShiftReport>, currency: String = "SAR") {
+    fun exportReportsAsPdf(context: Context, reports: List<ShiftReport>, currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE) {
         try {
             val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val pdfFile = File(exportDir, "Shift_Reports_$timeStamp.pdf")
 
             val document = PdfDocument()
-            val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // A4
-            val page = document.startPage(pageInfo)
-            val canvas: Canvas = page.canvas
+            var pageNum = 1
+            var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNum).create()
+            var page = document.startPage(pageInfo)
+            var canvas: Canvas = page.canvas
 
-            val paint = Paint().apply {
-                color = Color.BLACK
-                textSize = 14f
-                isAntiAlias = true
+            val primaryDarkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.PRIMARY_DARK
+                style = Paint.Style.FILL
+            }
+            val headerTitlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.ON_PRIMARY
+                textSize = 15f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            }
+            val headerSubPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.PRIMARY_CONTAINER
+                textSize = 9.5f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            }
+            val tableHeaderBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.SURFACE_VARIANT
+                style = Paint.Style.FILL
+            }
+            val zebraPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.BACKGROUND
+                style = Paint.Style.FILL
+            }
+            val totalBoxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.PRIMARY_CONTAINER
+                style = Paint.Style.FILL
+            }
+            val dividerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.DIVIDER
+                strokeWidth = 1f
+            }
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.BORDER
+                strokeWidth = 1f
+            }
+            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.TEXT_PRIMARY
+                textSize = 9.5f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            }
+            val textSecondaryPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.TEXT_SECONDARY
+                textSize = 9.5f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            }
+            val textBoldPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.TEXT_PRIMARY
+                textSize = 9.5f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            }
+            val successBoldPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.SUCCESS
+                textSize = 10f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            }
+            val footerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = PdfPalette.TEXT_HINT
+                textSize = 8.5f
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             }
 
-            val titlePaint = Paint().apply {
-                color = Color.rgb(37, 99, 235)
-                textSize = 18f
-                isFakeBoldText = true
-                isAntiAlias = true
+            val colId = MARGIN + 8f
+            val colCashier = MARGIN + 52f
+            val colShift = MARGIN + 175f
+            val colDate = MARGIN + 250f
+            val colNetRight = PAGE_WIDTH - MARGIN - 115f
+            val colSalesRight = PAGE_WIDTH - MARGIN - 8f
+
+            val generatedStr = context.getString(
+                R.string.pdf_generated_at,
+                SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+            )
+
+            fun drawFooter() {
+                val footerY = PAGE_HEIGHT - 22f
+                canvas.drawLine(MARGIN, footerY - 8f, PAGE_WIDTH - MARGIN, footerY - 8f, dividerPaint)
+                canvas.drawText(context.getString(R.string.lojia_pos_system_v10), MARGIN, footerY + 2f, footerPaint)
+                val pageStr = "${context.getString(R.string.pdf_page)} $pageNum"
+                val pageW = footerPaint.measureText(pageStr)
+                canvas.drawText(pageStr, PAGE_WIDTH - MARGIN - pageW, footerY + 2f, footerPaint)
             }
 
-            canvas.drawText(context.getString(R.string.lojia_system_shift_reports), 40f, 50f, titlePaint)
-            paint.textSize = 11f
-            paint.color = Color.DKGRAY
-            canvas.drawText(context.getString(R.string.pdf_generated_at, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())), 40f, 72f, paint)
+            fun drawTableHeader(topY: Float): Float {
+                val headerRect = RectF(MARGIN, topY, PAGE_WIDTH - MARGIN, topY + 22f)
+                canvas.drawRect(headerRect, tableHeaderBgPaint)
+                canvas.drawLine(MARGIN, topY + 22f, PAGE_WIDTH - MARGIN, topY + 22f, borderPaint)
 
-            paint.color = Color.LTGRAY
-            canvas.drawLine(40f, 85f, 555f, 85f, paint)
+                val baselineY = topY + 14.5f
+                canvas.drawText(context.getString(R.string.id_upper), colId, baselineY, textBoldPaint)
+                canvas.drawText(context.getString(R.string.cashier_6), colCashier, baselineY, textBoldPaint)
+                canvas.drawText(context.getString(R.string.shift_2), colShift, baselineY, textBoldPaint)
+                canvas.drawText(context.getString(R.string.date_2), colDate, baselineY, textBoldPaint)
 
-            var y = 110f
-            paint.color = Color.BLACK
-            paint.textSize = 11f
-            paint.isFakeBoldText = true
+                val netHeader = context.getString(R.string.net_cash_1)
+                val netW = textBoldPaint.measureText(netHeader)
+                canvas.drawText(netHeader, colNetRight - netW, baselineY, textBoldPaint)
 
-            // Table Header
-            canvas.drawText(context.getString(R.string.id_upper), 40f, y, paint)
-            canvas.drawText(context.getString(R.string.cashier_6), 70f, y, paint)
-            canvas.drawText(context.getString(R.string.shift_2), 180f, y, paint)
-            canvas.drawText(context.getString(R.string.total_sales), 270f, y, paint)
-            canvas.drawText(context.getString(R.string.net_cash_1), 370f, y, paint)
-            canvas.drawText(context.getString(R.string.date_2), 470f, y, paint)
+                val salesHeader = context.getString(R.string.total_sales)
+                val salesW = textBoldPaint.measureText(salesHeader)
+                canvas.drawText(salesHeader, colSalesRight - salesW, baselineY, textBoldPaint)
 
-            paint.isFakeBoldText = false
-            y += 8f
-            canvas.drawLine(40f, y, 555f, y, paint)
-            y += 18f
+                return topY + 22f
+            }
+
+            var y = MARGIN
+
+            // Page 1 Header Banner
+            val bannerHeight = 58f
+            val bannerRect = RectF(MARGIN, y, PAGE_WIDTH - MARGIN, y + bannerHeight)
+            canvas.drawRoundRect(bannerRect, 8f, 8f, primaryDarkPaint)
+
+            canvas.drawText(context.getString(R.string.lojia_system_shift_reports), MARGIN + 14f, y + 24f, headerTitlePaint)
+            canvas.drawText(generatedStr, MARGIN + 14f, y + 42f, headerSubPaint)
+
+            val recordsCountStr = context.getString(R.string.pdf_total_records, reports.size)
+            val recordsW = headerSubPaint.measureText(recordsCountStr)
+            canvas.drawText(recordsCountStr, PAGE_WIDTH - MARGIN - recordsW - 14f, y + 24f, headerSubPaint)
+
+            y += bannerHeight + 16f
+            y = drawTableHeader(y)
 
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            for (r in reports.take(25)) {
-                canvas.drawText("#${r.id}", 40f, y, paint)
-                canvas.drawText(r.cashierName.take(16), 70f, y, paint)
-                canvas.drawText(r.shift, 180f, y, paint)
-                canvas.drawText(context.getString(R.string.msg_2f_s_21).format(r.totalSales, currency), 270f, y, paint)
-                canvas.drawText(context.getString(R.string.msg_2f_s_21).format(r.netCash, currency), 370f, y, paint)
-                canvas.drawText(dateFormat.format(Date(r.dateInMillis)), 470f, y, paint)
-                y += 22f
+            val rowHeight = 20f
+
+            reports.forEachIndexed { index, r ->
+                if (y + rowHeight > PAGE_HEIGHT - 65f) {
+                    drawFooter()
+                    document.finishPage(page)
+
+                    pageNum++
+                    pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNum).create()
+                    page = document.startPage(pageInfo)
+                    canvas = page.canvas
+                    y = MARGIN
+
+                    val miniRect = RectF(MARGIN, y, PAGE_WIDTH - MARGIN, y + 24f)
+                    canvas.drawRoundRect(miniRect, 4f, 4f, primaryDarkPaint)
+                    val miniPaint = Paint(headerTitlePaint).apply { textSize = 10.5f }
+                    canvas.drawText(
+                        "${context.getString(R.string.lojia_system_shift_reports)} (${context.getString(R.string.pdf_page)} $pageNum)",
+                        MARGIN + 10f,
+                        y + 16f,
+                        miniPaint
+                    )
+                    y += 32f
+                    y = drawTableHeader(y)
+                }
+
+                if (index % 2 == 1) {
+                    canvas.drawRect(RectF(MARGIN, y, PAGE_WIDTH - MARGIN, y + rowHeight), zebraPaint)
+                }
+
+                val textY = y + 14f
+                canvas.drawText("#${r.id}", colId, textY, textSecondaryPaint)
+                val cashierStr = if (r.cashierName.length > 18) r.cashierName.take(16) + ".." else r.cashierName
+                canvas.drawText(cashierStr, colCashier, textY, textPaint)
+                canvas.drawText(r.shift, colShift, textY, textPaint)
+                canvas.drawText(dateFormat.format(Date(r.dateInMillis)), colDate, textY, textSecondaryPaint)
+
+                val netStr = context.getString(R.string.msg_2f_s_21).format(r.netCash, currency)
+                val netW = textPaint.measureText(netStr)
+                canvas.drawText(netStr, colNetRight - netW, textY, textPaint)
+
+                val salesStr = context.getString(R.string.msg_2f_s_21).format(r.totalSales, currency)
+                val salesW = textBoldPaint.measureText(salesStr)
+                canvas.drawText(salesStr, colSalesRight - salesW, textY, textBoldPaint)
+
+                canvas.drawLine(MARGIN, y + rowHeight, PAGE_WIDTH - MARGIN, y + rowHeight, dividerPaint)
+                y += rowHeight
             }
 
+            // Grand Totals Row
+            if (y + 30f > PAGE_HEIGHT - 45f) {
+                drawFooter()
+                document.finishPage(page)
+
+                pageNum++
+                pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNum).create()
+                page = document.startPage(pageInfo)
+                canvas = page.canvas
+                y = MARGIN
+            }
+
+            val totalBoxTop = y + 6f
+            val totalRect = RectF(MARGIN, totalBoxTop, PAGE_WIDTH - MARGIN, totalBoxTop + 24f)
+            canvas.drawRoundRect(totalRect, 4f, 4f, totalBoxPaint)
+
+            val totalBaseline = totalBoxTop + 16f
+            canvas.drawText(context.getString(R.string.grand_totals), colId, totalBaseline, textBoldPaint)
+
+            val totalNet = reports.sumOf { it.netCash }
+            val totalSales = reports.sumOf { it.totalSales }
+
+            val totalNetStr = context.getString(R.string.msg_2f_s_21).format(totalNet, currency)
+            val totalNetW = textBoldPaint.measureText(totalNetStr)
+            canvas.drawText(totalNetStr, colNetRight - totalNetW, totalBaseline, textBoldPaint)
+
+            val totalSalesStr = context.getString(R.string.msg_2f_s_21).format(totalSales, currency)
+            val totalSalesW = successBoldPaint.measureText(totalSalesStr)
+            canvas.drawText(totalSalesStr, colSalesRight - totalSalesW, totalBaseline, successBoldPaint)
+
+            drawFooter()
             document.finishPage(page)
             FileOutputStream(pdfFile).use { out ->
                 document.writeTo(out)

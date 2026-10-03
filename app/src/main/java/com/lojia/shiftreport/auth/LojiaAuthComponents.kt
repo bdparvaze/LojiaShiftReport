@@ -111,7 +111,7 @@ fun LojiaHeader(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = if (isBn) "স্মার্ট শিফট ও বিজনেস লেজার" else "SMART SHIFT & BUSINESS LEDGER",
+                text = stringResource(R.string.auth_tagline),
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -408,7 +408,7 @@ fun LojiaGradientButton(
     isLoading: Boolean = false,
     testTag: String = ""
 ) {
-    val primaryBlue = LojiaColors.P500
+    val primaryBlue = PrimaryIndigo
     val buttonBrush = if (enabled) {
         SolidColor(primaryBlue)
     } else {
@@ -503,10 +503,10 @@ fun LojiaPasswordStrengthMeter(
     score = score.coerceIn(1, 4)
 
     val (badgeText, badgeColor, badgeBg) = when (score) {
-        1 -> Triple(stringResource(R.string.auth_weak), LojiaColors.R500, LojiaColors.R100)
-        2 -> Triple(stringResource(R.string.auth_fair), Color(0xFFF59E0B), Color(0xFFFEF3C7))
-        3 -> Triple(stringResource(R.string.auth_good), Color(0xFF3B82F6), Color(0xFFDBEAFE))
-        else -> Triple(stringResource(R.string.auth_strong), LojiaColors.G500, LojiaColors.G100)
+        1 -> Triple(stringResource(R.string.auth_weak), ErrorRedLight, ErrorContainerLight)
+        2 -> Triple(stringResource(R.string.auth_fair), WarningOrange, WarningContainer)
+        3 -> Triple(stringResource(R.string.auth_good), PrimaryIndigoLight, PrimaryContainerLight)
+        else -> Triple(stringResource(R.string.auth_strong), SuccessGreen, SuccessContainer)
     }
 
     Column(
@@ -680,14 +680,21 @@ fun LojiaCountryPickerDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
             color = LojiaColors.White,
-            shadowElevation = 16.dp,
+            shadowElevation = Dimens.DialogElevation,
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.75f)
+                .padding(horizontal = Dimens.SpacingLg)
+                .widthIn(max = Dimens.DialogMaxWidth)
+                .fillMaxWidth()
+                .heightIn(max = Dimens.DialogMaxHeight)
+                .wrapContentHeight()
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+            ) {
                 // Header & Search
                 Row(
                     modifier = Modifier
@@ -748,7 +755,7 @@ fun LojiaCountryPickerDialog(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
+                        .heightIn(max = 360.dp)
                 ) {
                     items(filtered, key = { it.code + it.dial }) { country ->
                         val isSelected = country.dial == selectedDial

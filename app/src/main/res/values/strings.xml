@@ -1,14 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_title">Lojia Shift Report</string>
-    <string name="shop_module">Shop Module</string>
     <string name="shift_report_module">Shift Report Module</string>
     <string name="switch_module">Switch Module</string>
     <string name="active_module">Active Mode</string>
-    <string name="nav_pos">Shop</string>
     <string name="nav_reports">Shift Report</string>
-    <string name="nav_cash_management">Cash Management</string>
-    <string name="nav_inventory">Inventory</string>
     <string name="nav_analytics">Analytics</string>
     <string name="nav_settings">Settings</string>
     <string name="all_settings">All Settings</string>
@@ -17,9 +13,6 @@
     <string name="back">Back</string>
     <string name="back_to_main">Back to Register / Main View</string>
     <string name="back_to_reports">Back to Shift Reports</string>
-    <string name="role_admin">Administrator</string>
-    <string name="role_cashier">Cashier</string>
-    <string name="role_staff">Staff</string>
     <string name="switch_role">Switch Role</string>
     <string name="restricted_access">Security Verification</string>
     <string name="restricted_desc">Please enter your Security PIN or Password to switch module or access restricted area.</string>
@@ -81,7 +74,6 @@
     <string name="sales_history">Sales History &amp; Logs</string>
     <string name="receipts">Receipts</string>
     <string name="receipt_customization">Receipt Customization</string>
-    <string name="shop_logo">Shop Logo</string>
     <string name="custom_footer_text">Custom Footer Text</string>
     <string name="customer_memos">Customer Memos</string>
     <string name="receipt_preview">Receipt Live Preview</string>
@@ -91,8 +83,6 @@
     <string name="report_entry">Report Entry</string>
     <string name="live_cashflow_audit">Live Cashflow &amp; Audit</string>
     <string name="archives_tab">Archives</string>
-    <string name="cash_management">Cash Management</string>
-    <string name="cash_management_title">Cash Drawer Management</string>
     <string name="pay_in_desc">Add petty cash or float into drawer</string>
     <string name="pay_out_desc">Withdraw cash for operational expenses or vendor payout</string>
     <string name="drawer_history">Cash Movement History</string>
@@ -120,7 +110,6 @@
     <string name="add_category">Add Category</string>
     <string name="add_modifier">Add Modifier</string>
     <string name="add_discount">Add Discount</string>
-    <string name="inventory_title">Inventory Management</string>
     <string name="low_stock_warning">Low Stock Warning</string>
     <string name="product_name">Product Name</string>
     <string name="price">Price</string>
@@ -151,10 +140,8 @@
     <string name="live_cashflow">Live Cashflow &amp; Audit</string>
     <string name="archives">Archives</string>
     <string name="drawer_menu">Main Navigation</string>
-    <string name="mode_shop">Mode: Shop &amp; POS</string>
     <string name="mode_shift">Mode: Shift Reports</string>
     <string name="switch_to_shift_module">Switch to Shift Report Module</string>
-    <string name="switch_to_shop_module">Switch to Shop POS Module</string>
     <string name="sync_now">Sync Configuration Now</string>
     <string name="centralized_sync">Centralized Configuration Sync</string>
     <string name="centralized_sync_desc">Changes to Country, Language, and Cashiers apply across all screens &amp; modules in real time.</string>
@@ -424,9 +411,6 @@
     <string name="cash_bank_label">Cash / Bank</string>
     <string name="employer_advances_count">Employer Advance Transactions (%d)</string>
     <string name="no_employer_advance_records">No employer advance records found</string>
-    <string name="total_shopping_expense">Total Shopping Paid Out Expense</string>
-    <string name="outdoor_shopping_expenses_count">Outdoor Shopping Expenses (%d)</string>
-    <string name="no_shopping_records">No shopping expense records found</string>
     <string name="total_walkout_loss">Total Walk-out Loss</string>
     <string name="walkout_unpaid_bills_count">Walk-out Unpaid Bills (%d)</string>
     <string name="no_walkout_records">No walk-out records found</string>
@@ -476,7 +460,6 @@
     <string name="peak_sales_day">Peak Sales Day</string>
     <string name="projected_monthly">Projected Monthly</string>
     <string name="monthly_revenue_trend">Monthly Revenue Trend</string>
-    <string name="pos_direct_sales">Pos Direct Sales</string>
     <string name="shift_cashier_sales">Shift Cashier Sales</string>
     <string name="weekly_breakdown">Weekly Breakdown</string>
     <string name="top_revenue_days">Top Revenue Days</string>
@@ -505,7 +488,6 @@
     <string name="full_name_1">Full Name *</string>
     <string name="eg_john_doe_sarah">e.g. John Doe / Sarah</string>
     <string name="msg_6digit_security_pin">6-Digit Security PIN</string>
-    <string name="select_role_position">Select Role / Position:</string>
     <string name="cashier_1">CASHIER</string>
     <string name="employee">EMPLOYEE</string>
     <string name="manager">MANAGER</string>
@@ -516,7 +498,7 @@
     <string name="cancel_3">Cancel</string>
     <string name="admin_authorization_required">Admin Authorization Required</string>
     <string name="this_setting_is_protected">This setting is protected. Please enter the 6-digit Admin PIN to modify restricted configurations.</string>
-    <string name="admin_pin_default_123456">Admin PIN (Default: 123456)</string>
+    <string name="admin_pin_default_123456">Admin PIN</string>
     <string name="incorrect_pin_try_again">Incorrect PIN. Try again.</string>
     <string name="unlock">Unlock</string>
     <string name="cancel_4">Cancel</string>
@@ -568,7 +550,6 @@
     <string name="msg_2f_s_11" formatted="false">%.2f %s</string>
     <string name="msg_2f_s_12" formatted="false">%.2f %s</string>
     <string name="interactive_curve_with_tooltips">Interactive curve with tooltips and daily revenue trajectory</string>
-    <string name="pos_2f">POS: %.2f</string>
     <string name="shift_2f">Shift: %.2f</string>
     <string name="total_revenue_1">Total Revenue</string>
     <string name="msg_2f_s_13" formatted="false">%.2f %s</string>
@@ -579,7 +560,7 @@
     <string name="select_target_role_to">Select target role to simulate staff privileges:</string>
     <string name="administrator">Administrator</string>
     <string name="cashier_2">Cashier</string>
-    <string name="admin_pin_123456">Admin PIN (123456)</string>
+    <string name="admin_pin_123456">Admin PIN</string>
     <string name="incorrect_pin">Incorrect PIN</string>
     <string name="apply">Apply</string>
     <string name="cancel_8">Cancel</string>
@@ -624,7 +605,6 @@
     <string name="hardware_localization">HARDWARE &amp; LOCALIZATION</string>
     <string name="open_2">Open</string>
     <string name="cashier_management_3">Cashier</string>
-    <string name="manage_pos_cashiers_and">Manage POS cashiers and shift report staff members</string>
     <string name="add_cashier_3">Add Cashier</string>
     <string name="no_cashiers_found_2">No Cashiers Found</string>
     <string name="add_staff_members_here">Add staff members here so cashiers can be chosen in POS and Shift Reports.</string>
@@ -637,7 +617,6 @@
     <string name="msg_2f_s_18" formatted="false">+%.2f %s</string>
     <string name="close_6">Close</string>
     <string name="close_7">Close</string>
-    <string name="cash_management_1">Cash Management</string>
     <string name="pay_in_add_cash">Pay In (Add Cash)</string>
     <string name="pay_out_remove_cash">Pay Out (Remove Cash)</string>
     <string name="reason_note">Reason / Note</string>
@@ -692,7 +671,6 @@
     <string name="full_name_2">Full Name *</string>
     <string name="eg_john_doe_sarah_1">e.g. John Doe / Sarah</string>
     <string name="msg_6digit_security_pin_1">6-Digit Security PIN</string>
-    <string name="select_role_position_1">Select Role / Position:</string>
     <string name="cashier_3">CASHIER</string>
     <string name="employee_1">EMPLOYEE</string>
     <string name="manager_1">MANAGER</string>
@@ -705,14 +683,12 @@
     <string name="cashier_4">Cashier</string>
     <string name="mpin_security">MPIN Security</string>
     <string name="quick_login_with_mpin">Quick Login With MPIN</string>
-    <string name="unlock_pos_and_approve">Unlock POS and approve transactions with 6-digit MPIN</string>
     <string name="reset_mpin_1">Reset MPIN</string>
     <string name="tap_to_setup_or">Tap to setup or update your 6-digit security MPIN</string>
     <string name="reset_mpin_2">Reset MPIN</string>
     <string name="shouldnt_be_simple_number">Shouldn’t be simple number sequences or repetitive numbers, for example: 123456 or 111111</string>
     <string name="mpin_security_1">MPIN Security</string>
     <string name="quick_login_with_mpin_1">Quick Login With MPIN</string>
-    <string name="unlock_pos_and_approve_1">Unlock POS and approve transactions with 6-digit MPIN</string>
     <string name="reset_mpin_3">Reset MPIN</string>
     <string name="tap_to_setup_or_1">Tap to setup or update your 6-digit security MPIN</string>
     <string name="reset_mpin_4">Reset MPIN</string>
@@ -753,7 +729,6 @@
     <string name="authenticated_as_administrator">Authenticated as Administrator</string>
     <string name="invalid_admin_pin">Invalid Admin PIN</string>
     <string name="background_sync_task_enqueued">Background sync task enqueued via WorkManager.</string>
-    <string name="no_pos_sales_available">No POS sales available for auto-fill</string>
     <string name="please_fix_invalid_numeric">Please fix invalid numeric values before saving</string>
     <string name="draft_saved_successfully">Draft saved successfully</string>
     <string name="please_fix_invalid_numeric_1">Please fix invalid numeric values before saving</string>
@@ -785,7 +760,7 @@
     <string name="notif_low_stock">Remaining stock is only %1$d %2$s (Threshold: %3$d %4$s). Please reorder.</string>
     <string name="notif_drawer_closed">Drawer closed. Cash variance: %1$s</string>
     <string name="export_generated_on">Generated on: %1$s</string>
-    <string name="currency_unit">SAR</string>
+    <string name="currency_unit">USD</string>
     <string name="shifts_count">%1$d shifts</string>
     <string name="staff_label">Staff</string>
     <string name="day">Day</string>
@@ -862,7 +837,6 @@
     <string name="net_cash_in_drawer_label">NET CASH IN DRAWER</string>
     <string name="scan_data_label">SCAN DATA</string>
     <string name="default_business_name">Lojia Superstore &amp; Cafe</string>
-    <string name="shopping_pos_module">Shop POS Module</string>
     <string name="shift_closing_revenue_cert">SHIFT CLOSING &amp; REVENUE CERTIFICATE</string>
     <string name="gross_cash_received">Gross Cash Received</string>
     <string name="mada_bank_cards">Mada &amp; Bank Cards</string>
@@ -904,7 +878,6 @@
     <string name="toast_role_switched">Role switched to %s</string>
     <string name="toast_sync_interval_set">WorkManager periodic sync set to every %d mins</string>
     <string name="toast_cloud_backup_success">Cloud backup completed successfully to %s</string>
-    <string name="toast_autofill_pos_sales">Auto-filled from %1$d POS register sales (Cash: %2$s, Card: %3$s)</string>
     <string name="toast_shift_opened_cash">Shift opened with starting cash: %1$s %2$s</string>
     <string name="toast_shift_closed_variance">Shift closed. Variance: %1$s %2$s</string>
     <string name="toast_movement_recorded">%1$s of %2$s recorded</string>
@@ -1022,7 +995,6 @@
     <string name="desc_app_version_production">v2.5.0 • All Modules Ready (Build 2026.08.28 - Production)</string>
     <string name="desc_create_shift_handover">Create shift handover, reconcile drawer cash &amp; print PDF</string>
     <string name="desc_currently_active_shift_report">Currently Active (Reports, Analytics &amp; Cash Audit)</string>
-    <string name="desc_currently_active_shop">Currently Active (POS Register, Items &amp; Sales)</string>
     <string name="desc_customer_display_system">Display order details &amp; payments to customers</string>
     <string name="desc_gdpr_cloud_security">Local data privacy and on-device storage policy</string>
     <string name="desc_kitchen_display_system">Send kitchen orders automatically</string>
@@ -1031,22 +1003,12 @@
     <string name="desc_review_eula_terms">Review end user license agreement and store terms</string>
     <string name="desc_search_shift_reports">Search historical cashier shift reports &amp; export PDF</string>
     <string name="desc_switch_to_shift_report">Tap to switch to Shift Report &amp; Analytics Module</string>
-    <string name="desc_switch_to_shop">Tap to switch to Shop POS Register Module</string>
     <string name="desc_sync_data_back_office">Local database synced • All store data up to date</string>
     <string name="desc_system_architecture">On-Device Local Database • Offline-First Architecture</string>
     <string name="desc_view_complete_sales">View complete list of transactions and sales receipts</string>
     <string name="desc_whatsapp_support">Instant live chat with customer service</string>
     <string name="label_total_combined">Total Combined</string>
-    <string name="nav_configuration">Configuration</string>
-    <string name="nav_daily_shift_report">Shift Report</string>
-    <string name="nav_data_backup_restore">Backup</string>
-    <string name="nav_items_modifiers">Items &amp; Modifiers</string>
-    <string name="nav_performance_analytics">Analytics</string>
-    <string name="nav_pos_register">POS Register</string>
-    <string name="nav_sales_analytics">Sales Analytics</string>
-    <string name="nav_sales_and_pos">Sales &amp; POS</string>
     <string name="nav_support">Support</string>
-    <string name="placeholder_cash_management_reason">e.g., Supplier payment, change fund...</string>
     <string name="subtitle_estimated_30_day_run">Estimated 30-day run</string>
     <string name="finalized_month_revenue">Finalized Month Total</string>
     <string name="title_24_7_helpline">24/7 Helpline</string>
@@ -1062,7 +1024,6 @@
     <string name="title_security_question">Security Question</string>
     <string name="title_shift_report_module">Shift report</string>
     <string name="title_shift_reports_pdf_archives">Shift Reports &amp; PDF Archives</string>
-    <string name="title_shop_module">Shop</string>
     <string name="title_show_cashier_name">Show Cashier Name</string>
     <string name="title_show_tax_number">Show Tax Number</string>
     <string name="title_sync_data_back_office">Local Store Data Archive</string>
@@ -1200,6 +1161,8 @@
     <string name="auth_ph_password">Enter password</string>
     <string name="auth_remember_me">Remember me</string>
     <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_sign_in_title">Sign In</string>
+    <string name="auth_sign_in_subtitle">Enter credentials to continue</string>
     <string name="auth_sign_in_btn">Sign In</string>
     <string name="auth_signing_in">Signing in…</string>
     <string name="auth_ssl_text">Local secure storage · On-device database</string>
@@ -1307,7 +1270,7 @@
     <string name="auth_terms_suffix">, and certify I will use Lojia in compliance with business policies.</string>
     <string name="auth_select_country_code">Select Country &amp; Dial Code</string>
     <string name="default_security_question">What is your store location?</string>
-    <string name="admin_pin_default_hint">Default Admin PIN (1234 or 1111)</string>
+    <string name="admin_pin_default_hint">Enter Admin PIN</string>
     <string name="toast_biometrics_verified">Biometrics verified successfully</string>
     <string name="toast_admin_authenticated">Admin authenticated. Audit log generated.</string>
     <string name="pdf_sales_summary_title">Sales Summary</string>
@@ -1336,6 +1299,11 @@
     <string name="doc_btn_open_camera">Open Camera</string>
     <string name="doc_btn_from_gallery">From Gallery</string>
     <string name="doc_dialog_document_title">Document Title</string>
+    <string name="doc_select_all">Select All</string>
+    <string name="doc_deselect_all">Deselect All</string>
+    <string name="doc_selected_count">%d selected</string>
+    <string name="doc_toast_text_copied">Text copied to clipboard</string>
+    <string name="doc_toast_cannot_load_image">Could not load selected image</string>
     <string name="doc_toast_camera_error">Camera launch error: %s</string>
     <string name="doc_toast_camera_permission_required">Camera permission is required to capture documents</string>
     <string name="doc_toast_saved_success">Document saved successfully</string>
@@ -1363,7 +1331,13 @@
     <string name="nav_language">Language</string>
     <string name="nav_backup">Backup</string>
     <string name="nav_about">About</string>
+    <string name="drawer_section_management">Management</string>
+    <string name="drawer_section_account">Account</string>
+    <string name="drawer_section_system">System</string>
     <string name="nav_logout">Log Out</string>
+    <string name="doc_save_title_dialog">Save Document</string>
+    <string name="doc_enter_title_desc">Enter a title for this scanned document:</string>
+    <string name="doc_title_placeholder">e.g. Receipt_Invoice_01</string>
     <string name="doc_btn_rename">Rename</string>
     <string name="doc_btn_delete">Delete</string>
     <string name="doc_btn_delete_all_selected">Delete All Selected</string>
@@ -1372,6 +1346,20 @@
     <string name="doc_dialog_password">Password</string>
     <string name="doc_dialog_confirm_password">Confirm Password</string>
     <string name="doc_btn_protect_pdf_title">Protect PDF</string>
+    <string name="printer_setup_title">Thermal Printer Setup</string>
+    <string name="printer_setup_subtitle">ESC/POS Receipt &amp; Z-Report</string>
+    <string name="printer_conn_bluetooth">Bluetooth</string>
+    <string name="printer_conn_network">Wi-Fi / LAN (TCP)</string>
+    <string name="printer_paired_devices">Paired Bluetooth Printers</string>
+    <string name="printer_searching">Searching...</string>
+    <string name="printer_refresh">Refresh</string>
+    <string name="printer_ip_label">Printer IP Address</string>
+    <string name="printer_port_label">Port (Default: 9100)</string>
+    <string name="printer_paper_width_label">Paper Roll Width</string>
+    <string name="printer_width_58mm">58 mm (Standard Receipt)</string>
+    <string name="printer_width_80mm">80 mm (Wide Receipt)</string>
+    <string name="printer_btn_test">Test</string>
+    <string name="printer_config_saved">Printer configuration saved!</string>
     <string name="open_printer_settings">Open Printer Settings</string>
     <string name="printing_z_report">Printing Z-Report...</string>
     <string name="print_z_report_btn">Print Z-Report (Shift Close)</string>
@@ -1379,7 +1367,7 @@
     <string name="save_pin">Save PIN</string>
     <string name="restore_now">Restore Now</string>
     <string name="reading_backup_details">Reading backup details...</string>
-    <string name="default_admin_pin_hint">Default Admin PIN (1234 or 1111)</string>
+    <string name="default_admin_pin_hint">Admin PIN</string>
     <string name="complimentary_non_revenue">Complimentary • Non-revenue metric</string>
     <string name="doc_capture_doc">Capture Document</string>
     <string name="doc_capture_desc">Capture with your device camera or select a photo from gallery to save as PDF.</string>
@@ -1440,4 +1428,72 @@
     <string name="confirm_logout_title">Confirm Log Out</string>
     <string name="confirm_logout_desc">Are you sure you want to log out of your session? All active unsaved shifts will remain securely in the local register.</string>
     <string name="confirm_logout_btn">Log Out</string>
+
+    <!-- Receipt & Z-Report Thermal Printing Strings -->
+    <string name="receipt_label_no">Receipt #:</string>
+    <string name="receipt_label_date">Date:</string>
+    <string name="receipt_label_cashier">Cashier:</string>
+    <string name="receipt_label_customer">Customer:</string>
+    <string name="receipt_label_item">Item</string>
+    <string name="receipt_label_item_desc">Item Description</string>
+    <string name="receipt_label_qty">Qty</string>
+    <string name="receipt_label_qty_x_price">Qty x Price</string>
+    <string name="receipt_label_subtotal">Subtotal:</string>
+    <string name="receipt_label_discount">Discount:</string>
+    <string name="receipt_label_tax_vat">Tax/VAT:</string>
+    <string name="receipt_label_total">TOTAL:</string>
+    <string name="receipt_label_payment_method">Payment Method:</string>
+    <string name="receipt_footer_default">Thank you for your business!\nPlease come again</string>
+    <string name="zreport_title">Z-REPORT / SHIFT CLOSE</string>
+    <string name="zreport_shift_date">Shift Date:</string>
+    <string name="zreport_shift">Shift:</string>
+    <string name="zreport_cashier">Cashier:</string>
+    <string name="zreport_sec_sales">1. SALES BY PAYMENT METHOD</string>
+    <string name="zreport_cash_sales">Cash Sales:</string>
+    <string name="zreport_card_mada">Card / Mada:</string>
+    <string name="zreport_digital_wallet">Digital Wallet:</string>
+    <string name="zreport_total_revenue">TOTAL REVENUE:</string>
+    <string name="zreport_sec_cash_recon">2. CASH RECONCILIATION</string>
+    <string name="zreport_starting_float">Starting Float:</string>
+    <string name="zreport_cash_in_dues">(+) Cash In (Dues):</string>
+    <string name="zreport_cash_out">(-) Cash Out:</string>
+    <string name="zreport_expected_cash">EXPECTED CASH:</string>
+    <string name="zreport_actual_cash">ACTUAL CASH COUNT:</string>
+    <string name="zreport_variance">VARIANCE:</string>
+    <string name="zreport_balanced">Balanced</string>
+    <string name="zreport_over">OVER</string>
+    <string name="zreport_short">SHORT</string>
+    <string name="zreport_sec_tax_summary">3. TAX &amp; VAT SUMMARY</string>
+    <string name="zreport_net_taxable">Net Taxable Sales:</string>
+    <string name="zreport_vat_label">VAT (%s%%):</string>
+    <string name="zreport_gross_total">Gross Total (%s):</string>
+    <string name="zreport_inc_vat">Inc VAT</string>
+    <string name="zreport_exc_vat">Exc VAT</string>
+    <string name="zreport_tax_status">Tax Status:</string>
+    <string name="zreport_non_taxable">Non-Taxable</string>
+    <string name="zreport_net_total">Net Total Sales:</string>
+    <string name="zreport_sec_other">4. OTHER TRACKING</string>
+    <string name="zreport_credit_sales">Credit Sales:</string>
+    <string name="zreport_staff_meals">Staff Meals Count:</string>
+    <string name="zreport_notes">Notes:</string>
+    <string name="zreport_footer_generated">Computer Generated Z-Report</string>
+    <string name="zreport_footer_brand">Lojia POS System</string>
+
+    <!-- Printer Setup & Preview UI Strings -->
+    <string name="printer_no_paired_found">No paired Bluetooth printers found. Pair in Android Settings first.</string>
+    <string name="printer_permission_required">Bluetooth permission is required to discover thermal printers.</string>
+    <string name="printer_no_devices_hint">No paired Bluetooth printers.\nPair your thermal printer in Android Bluetooth Settings first.</string>
+    <string name="printer_test_success">Test connection successful!</string>
+    <string name="printer_test_failed">Test failed: %s</string>
+    <string name="printer_not_configured">No thermal printer selected or connected. Please configure a printer in Settings.</string>
+    <string name="printer_zreport_sent">Z-Report sent to printer!</string>
+    <string name="printer_error_prefix">Printer error: %s</string>
+    <string name="printer_could_not_connect">Could not connect to printer.</string>
+    <string name="printer_invalid_ip">Please enter a valid IP address</string>
+    <string name="printer_invalid_port">Please enter a valid port (1-65535)</string>
+    <string name="printer_test_receipt_title">LOJIA POS</string>
+    <string name="printer_test_receipt_subtitle">Shift Report System</string>
+    <string name="printer_test_receipt_msg">TEST PRINT SUCCESSFUL</string>
+    <string name="printer_test_receipt_operational">Printer connection operational!</string>
+    <string name="print_btn">Print</string>
 </resources>

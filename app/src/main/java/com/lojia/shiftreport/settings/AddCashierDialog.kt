@@ -51,25 +51,20 @@ fun AddCashierDialog(
     var nameInput by remember { mutableStateOf("") }
     var pinInput by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+    var pinError by remember { mutableStateOf<String?>(null) }
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        maxWidth = Dimens.DialogMaxWidth,
+        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
+        containerColor = SurfaceLight,
+        border = BorderStroke(1.dp, OutlineLight)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = SurfaceLight,
-            border = BorderStroke(1.dp, OutlineLight),
-            shadowElevation = 8.dp,
+        Column(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .wrapContentHeight()
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
                 // =============================================================
                 // 1. HEADER (Solid PrimaryIndigoDark — no gradient)
                 // =============================================================
@@ -225,22 +220,20 @@ fun AddCashierDialog(
 
                             OtpInputField(
                                 pin = pinInput,
-                                onPinChange = { pinInput = it },
+                                onPinChange = {
+                                    pinInput = it
+                                    if (pinError != null) pinError = null
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             )
 
-                            Surface(
-                                color = PrimaryContainerLight,
-                                shape = RoundedCornerShape(6.dp),
-                                border = BorderStroke(1.dp, OutlineLight),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
+                            if (pinError != null) {
                                 Text(
-                                    text = "Default PIN is 111111 if left blank.",
+                                    text = pinError ?: "",
                                     fontSize = 11.sp,
-                                    color = OnSurfaceVariantLight,
+                                    color = ErrorRedLight,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                                 )
                             }
                         }
@@ -266,7 +259,7 @@ fun AddCashierDialog(
                             ),
                             modifier = Modifier
                                 .weight(1f)
-                                .defaultMinSize(minHeight = 42.dp)
+                                .height(Dimens.ButtonHeightStandard)
                         ) {
                             Text(
                                 text = stringResource(R.string.cancel_18),
@@ -279,10 +272,19 @@ fun AddCashierDialog(
 
                         Button(
                             onClick = {
-                                if (nameInput.isBlank()) {
+                                val cleanName = nameInput.trim()
+                                val cleanPin = pinInput.trim()
+                                var hasError = false
+                                if (cleanName.isBlank()) {
                                     isError = true
-                                } else {
-                                    onConfirmAdd(nameInput.trim(), pinInput.ifBlank { "111111" })
+                                    hasError = true
+                                }
+                                if (cleanPin.length < 4) {
+                                    pinError = "PIN is required (at least 4 digits)"
+                                    hasError = true
+                                }
+                                if (!hasError) {
+                                    onConfirmAdd(cleanName, cleanPin)
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -292,7 +294,7 @@ fun AddCashierDialog(
                             ),
                             modifier = Modifier
                                 .weight(1.2f)
-                                .defaultMinSize(minHeight = 42.dp)
+                                .height(Dimens.ButtonHeightStandard)
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -315,4 +317,3 @@ fun AddCashierDialog(
             }
         }
     }
-}

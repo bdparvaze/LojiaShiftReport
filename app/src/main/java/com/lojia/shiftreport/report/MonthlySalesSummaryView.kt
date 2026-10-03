@@ -207,13 +207,13 @@ fun MonthlySalesSummaryView(
                     dayNumber = day,
                     dateString = dateFmt.format(cal.time),
                     dayName = dayNameFmt.format(cal.time),
-                    shiftSales = shiftTotal,
+                    shiftSales = MoneyFormat.toMajorUnits(shiftTotal),
                     posSales = 0.0,
-                    totalRevenue = combined,
+                    totalRevenue = MoneyFormat.toMajorUnits(combined),
                     transactionsCount = shiftsOnDay.size,
-                    cashAmount = cash,
-                    madaAmount = mada,
-                    walletAmount = wallet
+                    cashAmount = MoneyFormat.toMajorUnits(cash),
+                    madaAmount = MoneyFormat.toMajorUnits(mada),
+                    walletAmount = MoneyFormat.toMajorUnits(wallet)
                 )
             )
         }
@@ -565,13 +565,13 @@ fun MonthlySalesSummaryView(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFF0FDF4),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBBF7D0)),
+                        color = SuccessContainer,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PosCashGreen.copy(alpha = 0.4f)),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.total_cash_in), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF166534))
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalCashIn, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF15803D))
+                            Text(stringResource(R.string.total_cash_in), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PosCashGreen)
+                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalCashIn, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = PosCashGreen)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(stringResource(R.string.bank_mada_fmt, "%.2f".format(monthTotalBankIn), currency), fontSize = 10.sp, color = TextSecondaryLight)
                         }
@@ -579,15 +579,15 @@ fun MonthlySalesSummaryView(
 
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFFEF2F2),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA)),
+                        color = ErrorContainerLight,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PosExpenseRed.copy(alpha = 0.4f)),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.total_issued_due), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF991B1B))
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalIssuedDue, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFDC2626))
+                            Text(stringResource(R.string.total_issued_due), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PosExpenseRed)
+                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalIssuedDue, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = PosExpenseRed)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.due_collected_fmt, "%.2f".format(monthTotalCollectedDue), currency), fontSize = 10.sp, color = Color(0xFF166534))
+                            Text(stringResource(R.string.due_collected_fmt, "%.2f".format(monthTotalCollectedDue), currency), fontSize = 10.sp, color = PosCashGreen)
                         }
                     }
                 }
@@ -598,13 +598,13 @@ fun MonthlySalesSummaryView(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFFFFBEB),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+                        color = WarningContainer,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, WarningOrange.copy(alpha = 0.4f)),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.total_expenses), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD97706))
+                            Text(stringResource(R.string.total_expenses), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = WarningOrange)
+                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = WarningOrange)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(stringResource(R.string.staff_advances_fmt, "%.2f".format(monthTotalStaffAdvances), currency), fontSize = 10.sp, color = TextSecondaryLight)
                         }
@@ -612,13 +612,13 @@ fun MonthlySalesSummaryView(
 
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFF5F3FF),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDDD6FE)),
+                        color = TertiaryContainerLight,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, TertiaryCyanLight.copy(alpha = 0.4f)),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.product_purchases), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5B21B6))
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF7C3AED))
+                            Text(stringResource(R.string.product_purchases), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TertiaryCyanLight)
+                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = TertiaryCyanLight)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(stringResource(R.string.inventory_investment), fontSize = 10.sp, color = TextSecondaryLight)
                         }
@@ -630,8 +630,8 @@ fun MonthlySalesSummaryView(
                 // Net Monthly Cashflow Card
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (monthNetCashflow >= 0) Color(0xFFECFDF5) else Color(0xFFFEF2F2),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, if (monthNetCashflow >= 0) Color(0xFFA7F3D0) else Color(0xFFFECACA)),
+                    color = if (monthNetCashflow >= 0) SuccessContainer else ErrorContainerLight,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (monthNetCashflow >= 0) PosCashGreen.copy(alpha = 0.4f) else PosExpenseRed.copy(alpha = 0.4f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -644,7 +644,7 @@ fun MonthlySalesSummaryView(
                                 stringResource(R.string.net_monthly_financial_cashflow),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (monthNetCashflow >= 0) Color(0xFF065F46) else Color(0xFF991B1B)
+                                color = if (monthNetCashflow >= 0) PosCashGreen else PosExpenseRed
                             )
                             Text(
                                 stringResource(R.string.net_cashflow_formula),
@@ -656,7 +656,7 @@ fun MonthlySalesSummaryView(
                             stringResource(R.string.msg_2f_s_21).format(monthNetCashflow, currency),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (monthNetCashflow >= 0) Color(0xFF059669) else Color(0xFFDC2626)
+                            color = if (monthNetCashflow >= 0) PosCashGreen else PosExpenseRed
                         )
                     }
                 }

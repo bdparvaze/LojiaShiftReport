@@ -8,9 +8,9 @@ data class ScannedDocument(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val title: String,
-    val pdfUriPath: String,
-    val pageCount: Int,
-    val fileSizeBytes: Long,
+    val pdfUriPath: String = "",
+    val pageCount: Int = 0,
+    val fileSizeBytes: Long = 0L,
     val createdAtMillis: Long = System.currentTimeMillis(),
     val notes: String = "",
     val thumbnailPath: String = "",
@@ -32,8 +32,8 @@ interface DocumentScannerDao {
     @Query("UPDATE scanned_documents SET title = :newTitle WHERE id = :id")
     suspend fun updateDocumentTitle(id: Int, newTitle: String)
 
-    @Query("UPDATE scanned_documents SET ocrText = :ocrText, docxUriPath = :docxUriPath WHERE id = :id")
-    suspend fun updateOcrAndDocx(id: Int, ocrText: String, docxUriPath: String)
+    @Query("UPDATE scanned_documents SET ocrText = :ocr, docxUriPath = :docx WHERE id = :id")
+    suspend fun updateOcrAndDocx(id: Int, ocr: String, docx: String)
 
     @Delete
     suspend fun deleteDocument(document: ScannedDocument)

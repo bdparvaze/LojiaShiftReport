@@ -88,8 +88,7 @@ fun DashboardScreen(
 
     var dashboardViewMode by remember { mutableIntStateOf(0) } // 0: Monthly Trends (Recharts), 1: Shift & Payment Breakdown
 
-    val rawCurrency = businessProfile?.currency ?: "SAR"
-    val currency = if (rawCurrency == "SAR") stringResource(R.string.currency_unit) else rawCurrency
+    val currency = businessProfile?.currency ?: MoneyFormat.DEFAULT_CURRENCY_CODE
 
     val totalShiftSales = shiftReports.sumOf { it.totalSales }
     val combinedGrossSales = totalShiftSales
@@ -99,7 +98,7 @@ fun DashboardScreen(
     val totalWallet = shiftReports.sumOf { it.digitalWallet }
 
     val totalExpenses = shiftReports.sumOf { it.totalExpenses }
-    val avgSalesPerShift = if (shiftReports.isNotEmpty()) totalShiftSales / shiftReports.size else 0.0
+    val avgSalesPerShift = if (shiftReports.isNotEmpty()) totalShiftSales / shiftReports.size else 0L
 
     LazyColumn(
         modifier = Modifier
@@ -257,7 +256,7 @@ fun DashboardScreen(
                 ) {
                     MetricStatCard(
                         title = stringResource(R.string.total_revenue),
-                        value = "%.2f %s".format(combinedGrossSales, currency),
+                        value = "%.2f %s".format(MoneyFormat.toMajorUnits(combinedGrossSales), currency),
                         subtitle = stringResource(R.string.shifts_recorded_fmt, shiftReports.size),
                         icon = Icons.Default.MonetizationOn,
                         iconColor = AccentEmerald,
@@ -266,7 +265,7 @@ fun DashboardScreen(
                     )
                     MetricStatCard(
                         title = stringResource(R.string.average_shift_sales),
-                        value = "%.2f %s".format(avgSalesPerShift, currency),
+                        value = "%.2f %s".format(MoneyFormat.toMajorUnits(avgSalesPerShift), currency),
                         subtitle = stringResource(R.string.per_shift_average),
                         icon = Icons.Default.ShowChart,
                         iconColor = PrimaryIndigo,
@@ -284,7 +283,7 @@ fun DashboardScreen(
                 ) {
                     MetricStatCard(
                         title = stringResource(R.string.total_expenses),
-                        value = "%.2f %s".format(totalExpenses, currency),
+                        value = "%.2f %s".format(MoneyFormat.toMajorUnits(totalExpenses), currency),
                         subtitle = stringResource(R.string.operational_costs),
                         icon = Icons.Default.MoneyOff,
                         iconColor = AccentRose,
@@ -312,15 +311,15 @@ fun DashboardScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val sumPayments = (totalCash + totalMada + totalWallet).coerceAtLeast(1.0)
-                    val cashPct = (totalCash / sumPayments * 100).toInt()
-                    val madaPct = (totalMada / sumPayments * 100).toInt()
-                    val walletPct = (totalWallet / sumPayments * 100).toInt()
+                    val sumPayments = (totalCash + totalMada + totalWallet).coerceAtLeast(1L)
+                    val cashPct = ((totalCash.toDouble() / sumPayments.toDouble()) * 100).toInt()
+                    val madaPct = ((totalMada.toDouble() / sumPayments.toDouble()) * 100).toInt()
+                    val walletPct = ((totalWallet.toDouble() / sumPayments.toDouble()) * 100).toInt()
 
                     // Cash Bar
                     PaymentProgressBar(
                         label = stringResource(R.string.gross_cash),
-                        amount = totalCash,
+                        amount = MoneyFormat.toMajorUnits(totalCash),
                         percent = cashPct,
                         currency = currency,
                         color = AccentEmerald
@@ -330,7 +329,7 @@ fun DashboardScreen(
                     // Mada Bar
                     PaymentProgressBar(
                         label = stringResource(R.string.mada_payments),
-                        amount = totalMada,
+                        amount = MoneyFormat.toMajorUnits(totalMada),
                         percent = madaPct,
                         currency = currency,
                         color = PrimaryIndigo
@@ -340,7 +339,7 @@ fun DashboardScreen(
                     // Digital Wallet Bar
                     PaymentProgressBar(
                         label = stringResource(R.string.digital_wallet),
-                        amount = totalWallet,
+                        amount = MoneyFormat.toMajorUnits(totalWallet),
                         percent = walletPct,
                         currency = currency,
                         color = AccentGold
@@ -371,14 +370,14 @@ fun DashboardScreen(
                             Text(stringResource(R.string.shift_morning), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(stringResource(R.string.shifts_count, morningShifts.size), style = MaterialTheme.typography.labelSmall, color = TextSecondaryLight)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.msg_2f_s_21).format(morningTotal, currency), fontWeight = FontWeight.Bold, color = PrimaryIndigo)
+                            Text(stringResource(R.string.msg_2f_s_21).format(MoneyFormat.toMajorUnits(morningTotal), currency), fontWeight = FontWeight.Bold, color = PrimaryIndigo)
                         }
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(stringResource(R.string.shift_evening), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text(stringResource(R.string.shifts_count, eveningShifts.size), style = MaterialTheme.typography.labelSmall, color = TextSecondaryLight)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.msg_2f_s_21).format(eveningTotal, currency), fontWeight = FontWeight.Bold, color = AccentGold)
+                            Text(stringResource(R.string.msg_2f_s_21).format(MoneyFormat.toMajorUnits(eveningTotal), currency), fontWeight = FontWeight.Bold, color = AccentGold)
                         }
                     }
                 }

@@ -1,14 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_title">تقارير ورديات لوجيا</string>
-    <string name="shop_module">وحدة المتجر ونقاط البيع</string>
     <string name="shift_report_module">وحدة تقارير الورديات</string>
     <string name="switch_module">تبديل وضع النظام</string>
     <string name="active_module">الوضع النشط</string>
-    <string name="nav_pos">المتجر</string>
     <string name="nav_reports">تقرير الوردية</string>
-    <string name="nav_cash_management">إدارة النقد</string>
-    <string name="nav_inventory">المخزون والأصناف</string>
     <string name="nav_analytics">التحليلات</string>
     <string name="nav_settings">الإعدادات</string>
     <string name="all_settings">جميع الإعدادات</string>
@@ -17,9 +13,6 @@
     <string name="back">رجوع</string>
     <string name="back_to_main">العودة إلى نقطة البيع / الشاشة الرئيسية</string>
     <string name="back_to_reports">العودة إلى تقارير الوردية</string>
-    <string name="role_admin">مدير النظام</string>
-    <string name="role_cashier">كاشير</string>
-    <string name="role_staff">موظف</string>
     <string name="switch_role">تبديل الصلاحية</string>
     <string name="restricted_access">التحقق الأمني</string>
     <string name="restricted_desc">يرجى إدخال رمز PIN أو كلمة المرور للمتابعة وتبديل الوحدة.</string>
@@ -81,7 +74,6 @@
     <string name="sales_history">سجل وحركات المبيعات</string>
     <string name="receipts">الإيصالات</string>
     <string name="receipt_customization">تخصيص الفاتورة والإيصال</string>
-    <string name="shop_logo">شعار المتجر</string>
     <string name="custom_footer_text">النص السفلي للفاتورة</string>
     <string name="customer_memos">ملاحظات العملاء</string>
     <string name="receipt_preview">معاينة الإيصال المباشرة</string>
@@ -91,8 +83,6 @@
     <string name="report_entry">إدخال التقرير</string>
     <string name="live_cashflow_audit">التدفق النقدي والتدقيق</string>
     <string name="archives_tab">الأرشيف</string>
-    <string name="cash_management">إدارة النقد (إيداع / سحب)</string>
-    <string name="cash_management_title">إدارة صندوق ونقد الدرج</string>
     <string name="pay_in_desc">إيداع مبلغ نقدي إضافي في الدرج</string>
     <string name="pay_out_desc">سحب نقد للمصروفات أو مدفوعات الموردين</string>
     <string name="drawer_history">سجل حركات النقد في الصندوق</string>
@@ -120,7 +110,6 @@
     <string name="add_category">إضافة قسم</string>
     <string name="add_modifier">إضافة خيار إضافي</string>
     <string name="add_discount">إضافة خصم</string>
-    <string name="inventory_title">إدارة المخزون</string>
     <string name="low_stock_warning">تنبيه انخفاض المخزون</string>
     <string name="product_name">اسم الصنف</string>
     <string name="price">السعر</string>
@@ -151,10 +140,8 @@
     <string name="live_cashflow">التدفق النقدي والتدقيق</string>
     <string name="archives">الأرشيف والسجلات</string>
     <string name="drawer_menu">القائمة الرئيسية</string>
-    <string name="mode_shop">الوضع: المتجر ونقاط البيع</string>
     <string name="mode_shift">الوضع: تقارير الوردية</string>
     <string name="switch_to_shift_module">التبديل إلى وحدة تقرير الوردية</string>
-    <string name="switch_to_shop_module">التبديل إلى وحدة المتجر</string>
     <string name="sync_now">مزامنة الإعدادات الآن</string>
     <string name="centralized_sync">المزامنة المركزية للإعدادات</string>
     <string name="centralized_sync_desc">أي تغيير في الدولة أو اللغة أو الكاشير يُطبق فوراً في جميع الشاشات.</string>
@@ -424,9 +411,6 @@
     <string name="cash_bank_label">نقدي / بنك</string>
     <string name="employer_advances_count">سجل سلفيات الموظفين (%d)</string>
     <string name="no_employer_advance_records">لا توجد سجلات سلفيات</string>
-    <string name="total_shopping_expense">إجمالي مشتريات الصندوق</string>
-    <string name="outdoor_shopping_expenses_count">سجل المصروفات والمشتريات (%d)</string>
-    <string name="no_shopping_records">لا توجد سجلات مشتريات</string>
     <string name="total_walkout_loss">إجمالي خسائر الفواتير غير المدفوعة</string>
     <string name="walkout_unpaid_bills_count">الفواتير غير المدفوعة (%d)</string>
     <string name="no_walkout_records">لا توجد فواتير غير مدفوعة</string>
@@ -476,7 +460,6 @@
     <string name="peak_sales_day">يوم ذروة المبيعات</string>
     <string name="projected_monthly">المبيعات الشهرية المتوقعة</string>
     <string name="monthly_revenue_trend">اتجاه الإيرادات الشهرية</string>
-    <string name="pos_direct_sales">مبيعات نقطة البيع المباشرة</string>
     <string name="shift_cashier_sales">مبيعات ورديات الكاشير</string>
     <string name="weekly_breakdown">التفصيل الأسبوعي</string>
     <string name="top_revenue_days">أعلى أيام الإيرادات</string>
@@ -505,7 +488,6 @@
     <string name="full_name_1">الاسم الكامل *</string>
     <string name="eg_john_doe_sarah">مثال: أحمد / سارة</string>
     <string name="msg_6digit_security_pin">رمز أمان PIN المكون من 6 أرقام</string>
-    <string name="select_role_position">تحديد الدور / الوظيفة:</string>
     <string name="cashier_1">كاشير</string>
     <string name="employee">موظف</string>
     <string name="manager">مدير</string>
@@ -516,7 +498,7 @@
     <string name="cancel_3">إلغاء</string>
     <string name="admin_authorization_required">مطلوب تفويض مدير النظام</string>
     <string name="this_setting_is_protected">هذا الإعداد محمي. يرجى إدخال رمز PIN المكون من 6 أرقام لتعديل الإعدادات.</string>
-    <string name="admin_pin_default_123456">رمز مدير النظام (افتراضي: 123456)</string>
+    <string name="admin_pin_default_123456">رمز مدير النظام</string>
     <string name="incorrect_pin_try_again">رمز PIN غير صحيح. حاول مجدداً.</string>
     <string name="unlock">إلغاء القفل</string>
     <string name="cancel_4">إلغاء</string>
@@ -568,7 +550,6 @@
     <string name="msg_2f_s_11" formatted="false">%.2f %s</string>
     <string name="msg_2f_s_12" formatted="false">%.2f %s</string>
     <string name="interactive_curve_with_tooltips">رسم بياني تفاعلي مع الإيرادات اليومية</string>
-    <string name="pos_2f">نقطة البيع: %.2f</string>
     <string name="shift_2f">وردية: %.2f</string>
     <string name="total_revenue_1">إجمالي الإيرادات</string>
     <string name="msg_2f_s_13" formatted="false">%.2f %s</string>
@@ -579,7 +560,7 @@
     <string name="select_target_role_to">حدد الدور لمحاكاة صلاحيات الموظفين:</string>
     <string name="administrator">مسؤول النظام</string>
     <string name="cashier_2">كاشير</string>
-    <string name="admin_pin_123456">رمز مدير النظام (123456)</string>
+    <string name="admin_pin_123456">رمز مدير النظام</string>
     <string name="incorrect_pin">رمز PIN غير صحيح</string>
     <string name="apply">تطبيق</string>
     <string name="cancel_8">إلغاء</string>
@@ -624,7 +605,6 @@
     <string name="hardware_localization">الأجهزة واللغة</string>
     <string name="open_2">فتح</string>
     <string name="cashier_management_3">الكاشير</string>
-    <string name="manage_pos_cashiers_and">إدارة كاشيرات نقاط البيع وموظفي تقارير الورديات</string>
     <string name="add_cashier_3">إضافة كاشير</string>
     <string name="no_cashiers_found_2">لا يوجد كاشير مسجل</string>
     <string name="add_staff_members_here">أضف موظفين هنا ليتمكن الكاشير من الاختيار في نقاط البيع والورديات اليومية.</string>
@@ -637,7 +617,6 @@
     <string name="msg_2f_s_18" formatted="false">+%.2f %s</string>
     <string name="close_6">إغلاق</string>
     <string name="close_7">إغلاق</string>
-    <string name="cash_management_1">إدارة النقدية</string>
     <string name="pay_in_add_cash">إيداع نقدية (إضافة)</string>
     <string name="pay_out_remove_cash">صرف نقدية (سحب)</string>
     <string name="reason_note">السبب / ملاحظة</string>
@@ -692,7 +671,6 @@
     <string name="full_name_2">الاسم الكامل *</string>
     <string name="eg_john_doe_sarah_1">مثال: أحمد / سارة</string>
     <string name="msg_6digit_security_pin_1">رمز أمان PIN المكون من 6 أرقام</string>
-    <string name="select_role_position_1">تحديد الدور / الوظيفة:</string>
     <string name="cashier_3">كاشير</string>
     <string name="employee_1">موظف</string>
     <string name="manager_1">مدير</string>
@@ -705,14 +683,12 @@
     <string name="cashier_4">كاشير</string>
     <string name="mpin_security">أمان MPIN</string>
     <string name="quick_login_with_mpin">تسجيل دخول سريع بواسطة MPIN</string>
-    <string name="unlock_pos_and_approve">فتح نقطة البيع واعتماد العمليات برمز MPIN من 6 أرقام</string>
     <string name="reset_mpin_1">إعادة تعيين MPIN</string>
     <string name="tap_to_setup_or">اضغط لتعيين أو تحديث رمز MPIN المكون من 6 أرقام</string>
     <string name="reset_mpin_2">إعادة تعيين MPIN</string>
     <string name="shouldnt_be_simple_number">يجب ألا يكون تسلسلاً بسيطاً أو أرقاماً مكررة (مثال: 123456 أو 111111)</string>
     <string name="mpin_security_1">أمان MPIN</string>
     <string name="quick_login_with_mpin_1">تسجيل دخول سريع بواسطة MPIN</string>
-    <string name="unlock_pos_and_approve_1">فتح نقطة البيع واعتماد العمليات برمز MPIN من 6 أرقام</string>
     <string name="reset_mpin_3">إعادة تعيين MPIN</string>
     <string name="tap_to_setup_or_1">اضغط لتعيين أو تحديث رمز MPIN المكون من 6 أرقام</string>
     <string name="reset_mpin_4">إعادة تعيين MPIN</string>
@@ -753,7 +729,6 @@
     <string name="authenticated_as_administrator">تمت المصادقة كمسؤول النظام</string>
     <string name="invalid_admin_pin">رمز PIN للمدير غير صالح</string>
     <string name="background_sync_task_enqueued">تم بدء المزامنة في الخلفية.</string>
-    <string name="no_pos_sales_available">لا توجد مبيعات في نقطة البيع للتعبئة التلقائية</string>
     <string name="please_fix_invalid_numeric">يرجى تصحيح القيم الرقمية غير الصالحة قبل الحفظ</string>
     <string name="draft_saved_successfully">تم حفظ المسودة بنجاح</string>
     <string name="please_fix_invalid_numeric_1">يرجى تصحيح القيم الرقمية غير الصالحة قبل الحفظ</string>
@@ -785,7 +760,7 @@
     <string name="notif_low_stock">المخزون المتبقي %1$d %2$s (الحد: %3$d %4$s). يرجى إعادة الطلب.</string>
     <string name="notif_drawer_closed">تم إغلاق الدرج. فرق النقد: %1$s</string>
     <string name="export_generated_on">تم الإنشاء في: %1$s</string>
-    <string name="currency_unit">ر.س</string>
+    <string name="currency_unit">USD</string>
     <string name="shifts_count">%1$d نوبات</string>
     <string name="staff_label">طاقم</string>
     <string name="day">يوم</string>
@@ -862,7 +837,6 @@
     <string name="net_cash_in_drawer_label">صافي النقد في الدرج</string>
     <string name="scan_data_label">مسح البيانات</string>
     <string name="default_business_name">متجر ومقهى لوجيا</string>
-    <string name="shopping_pos_module">وحدة متجر البيع</string>
     <string name="shift_closing_revenue_cert">تقرير إغلاق الوردية والإيرادات</string>
     <string name="gross_cash_received">إجمالي النقد المقبوض</string>
     <string name="mada_bank_cards">مدى وبطاقات البنك</string>
@@ -904,7 +878,6 @@
     <string name="toast_role_switched">تم تغيير الدور إلى %s</string>
     <string name="toast_sync_interval_set">تم ضبط المزامنة الدورية إلى كل %d دقيقة</string>
     <string name="toast_cloud_backup_success">تم النسخ الاحتياطي بنجاح إلى %s</string>
-    <string name="toast_autofill_pos_sales">تم التعبئة التلقائية من %1$d مبيعات (نقدي: %2$s، بطاقة: %3$s)</string>
     <string name="toast_shift_opened_cash">تم فتح الوردية بنقد ابتدائي: %1$s %2$s</string>
     <string name="toast_shift_closed_variance">تم إغلاق الوردية. الفارق: %1$s %2$s</string>
     <string name="toast_movement_recorded">تم تسجيل %1$s بمبلغ %2$s</string>
@@ -1022,7 +995,6 @@
     <string name="desc_app_version_production">v2.5.0 • جميع الوحدات جاهزة (إصدار الإنتاج 2026.08.28)</string>
     <string name="desc_create_shift_handover">إنشاء تسليم الوردية ومطابقة النقد وطباعة ملف PDF</string>
     <string name="desc_currently_active_shift_report">نشط حالياً (التقارير، التحليلات وتدقيق النقد)</string>
-    <string name="desc_currently_active_shop">نشط حالياً (نقطة البيع، العناصر والمبيعات)</string>
     <string name="desc_customer_display_system">عرض تفاصيل الطلب والمدفوعات للعملاء</string>
     <string name="desc_gdpr_cloud_security">الامتثال للائحة العامة لحماية البيانات (GDPR) وأمان السحابة</string>
     <string name="desc_kitchen_display_system">إرسال طلبات المطبخ تلقائياً</string>
@@ -1031,22 +1003,12 @@
     <string name="desc_review_eula_terms">مراجعة اتفاقية ترخيص المستخدم النهائي وشروط المتجر</string>
     <string name="desc_search_shift_reports">البحث في تقارير ورديات أمين الصندوق التاريخية وتصدير PDF</string>
     <string name="desc_switch_to_shift_report">انقر للتبديل إلى وحدة تقارير الورديات والتحليلات</string>
-    <string name="desc_switch_to_shop">انقر للتبديل إلى وحدة تسجيل نقاط البيع للمتجر</string>
     <string name="desc_sync_data_back_office">آخر مزامنة: الآن • جميع بيانات المتجر محدثة</string>
     <string name="desc_system_architecture">تخزين محلي مشفر • محرك مزامنة نقاط البيع متعدد المتاجر</string>
     <string name="desc_view_complete_sales">عرض القائمة الكاملة للمعاملات وإيصالات المبيعات</string>
     <string name="desc_whatsapp_support">دردشة مباشرة فورية مع خدمة العملاء</string>
     <string name="label_total_combined">المجموع الكلي المشترك</string>
-    <string name="nav_configuration">التهيئة</string>
-    <string name="nav_daily_shift_report">تقرير الوردية</string>
-    <string name="nav_data_backup_restore">نسخ احتياطي</string>
-    <string name="nav_items_modifiers">العناصر والمعدلات</string>
-    <string name="nav_performance_analytics">التحليلات</string>
-    <string name="nav_pos_register">تسجيل نقاط البيع</string>
-    <string name="nav_sales_analytics">تحليلات المبيعات</string>
-    <string name="nav_sales_and_pos">المبيعات ونقاط البيع</string>
     <string name="nav_support">الدعم الفني</string>
-    <string name="placeholder_cash_management_reason">مثال: دفع للموردين، صندوق الصرف...</string>
     <string name="subtitle_estimated_30_day_run">تقدير تشغيل 30 يوماً</string>
     <string name="finalized_month_revenue">إجمالي الشهر النهائي</string>
     <string name="title_24_7_helpline">خط المساعدة على مدار الساعة</string>
@@ -1062,7 +1024,6 @@
     <string name="title_security_question">سؤال الأمان</string>
     <string name="title_shift_report_module">تقرير الوردية</string>
     <string name="title_shift_reports_pdf_archives">تقارير الورديات وأرشيفات PDF</string>
-    <string name="title_shop_module">المتجر</string>
     <string name="title_show_cashier_name">إظهار اسم أمين الصندوق</string>
     <string name="title_show_tax_number">إظهار الرقم الضريبي</string>
     <string name="title_sync_data_back_office">مزامنة البيانات مع المكتب الخلفي</string>
@@ -1200,6 +1161,8 @@
     <string name="auth_ph_password">أدخل كلمة المرور</string>
     <string name="auth_remember_me">تذكرني</string>
     <string name="auth_forgot_password">هل نسيت كلمة المرور؟</string>
+    <string name="auth_sign_in_title">تسجيل الدخول</string>
+    <string name="auth_sign_in_subtitle">أدخل بيانات الاعتماد للمتابعة</string>
     <string name="auth_sign_in_btn">تسجيل الدخول</string>
     <string name="auth_signing_in">جارٍ تسجيل الدخول…</string>
     <string name="auth_ssl_text">تخزين آمن محلي · قاعدة بيانات مشفرة</string>
@@ -1336,6 +1299,11 @@
     <string name="doc_btn_open_camera">فتح الكاميرا</string>
     <string name="doc_btn_from_gallery">من المعرض</string>
     <string name="doc_dialog_document_title">عنوان المستند</string>
+    <string name="doc_select_all">تحديد الكل</string>
+    <string name="doc_deselect_all">إلغاء تحديد الكل</string>
+    <string name="doc_selected_count">تم تحديد %d</string>
+    <string name="doc_toast_text_copied">تم نسخ النص إلى الحافظة</string>
+    <string name="doc_toast_cannot_load_image">تعذر تحميل الصورة المحددة</string>
     <string name="doc_toast_camera_error">خطأ في تشغيل الكاميرا: %s</string>
     <string name="doc_toast_camera_permission_required">إذن الكاميرا مطلوب لالتقاط المستندات</string>
     <string name="doc_toast_saved_success">تم حفظ المستند بنجاح</string>
@@ -1363,7 +1331,13 @@
     <string name="nav_language">اللغة</string>
     <string name="nav_backup">النسخ الاحتياطي</string>
     <string name="nav_about">حول التطبيق</string>
+    <string name="drawer_section_management">الإدارة</string>
+    <string name="drawer_section_account">الحساب</string>
+    <string name="drawer_section_system">النظام</string>
     <string name="nav_logout">تسجيل الخروج</string>
+    <string name="doc_save_title_dialog">حفظ المستند</string>
+    <string name="doc_enter_title_desc">أدخل عنوانًا لهذا المستند الممسوح ضوئيًا:</string>
+    <string name="doc_title_placeholder">مثال: فاتورة_إيصال_01</string>
     <string name="doc_btn_rename">إعادة تسمية</string>
     <string name="doc_btn_delete">حذف</string>
     <string name="doc_btn_delete_all_selected">حذف كل المحدد</string>
@@ -1372,6 +1346,20 @@
     <string name="doc_dialog_password">كلمة المرور</string>
     <string name="doc_dialog_confirm_password">تأكيد كلمة المرور</string>
     <string name="doc_btn_protect_pdf_title">حماية ملف PDF</string>
+    <string name="printer_setup_title">إعداد الطابعة الحرارية</string>
+    <string name="printer_setup_subtitle">إيصالات وتقرير Z لـ ESC/POS</string>
+    <string name="printer_conn_bluetooth">بلوتوث</string>
+    <string name="printer_conn_network">واي فاي / شبكة LAN (TCP)</string>
+    <string name="printer_paired_devices">طابعات البلوتوث المقترنة</string>
+    <string name="printer_searching">جارٍ البحث...</string>
+    <string name="printer_refresh">تحديث</string>
+    <string name="printer_ip_label">عنوان IP للطابعة</string>
+    <string name="printer_port_label">المنفذ (الافتراضي: 9100)</string>
+    <string name="printer_paper_width_label">عرض لفة الورق</string>
+    <string name="printer_width_58mm">58 مم (إيصال قياسي)</string>
+    <string name="printer_width_80mm">80 مم (إيصال عريض)</string>
+    <string name="printer_btn_test">اختبار</string>
+    <string name="printer_config_saved">تم حفظ إعدادات الطابعة بنجاح!</string>
     <string name="open_printer_settings">فتح إعدادات الطابعة</string>
     <string name="printing_z_report">جاري طباعة تقرير Z...</string>
     <string name="print_z_report_btn">طباعة تقرير Z (إغلاق الورديّة)</string>
@@ -1379,7 +1367,7 @@
     <string name="save_pin">حفظ PIN</string>
     <string name="restore_now">استعادة الآن</string>
     <string name="reading_backup_details">جاري قراءة تفاصيل النسخة الاحتياطية...</string>
-    <string name="default_admin_pin_hint">رمز PIN الإفتراضي للمسؤول (1234 أو 1111)</string>
+    <string name="default_admin_pin_hint">رمز PIN للمسؤول</string>
     <string name="complimentary_non_revenue">مجاني • مقياس غير إيرادي</string>
     <string name="doc_capture_doc">التقاط مستند</string>
     <string name="doc_capture_desc">التقط بالكاميرا أو اختر صورة من المعرض لحفظها كـ PDF.</string>
@@ -1440,4 +1428,72 @@
     <string name="confirm_logout_title">تأكيد تسجيل الخروج</string>
     <string name="confirm_logout_desc">هل أنت متأكد من رغبتك في تسجيل الخروج من الجلسة؟ ستبقى جميع الورديات غير المحفوظة آمنة في السجل المحلي.</string>
     <string name="confirm_logout_btn">تسجيل الخروج</string>
+
+    <!-- Receipt & Z-Report Thermal Printing Strings -->
+    <string name="receipt_label_no">رقم الإيصال:</string>
+    <string name="receipt_label_date">التاريخ:</string>
+    <string name="receipt_label_cashier">الكاشير:</string>
+    <string name="receipt_label_customer">العميل:</string>
+    <string name="receipt_label_item">الصنف</string>
+    <string name="receipt_label_item_desc">وصف الصنف</string>
+    <string name="receipt_label_qty">الكمية</string>
+    <string name="receipt_label_qty_x_price">الكمية × السعر</string>
+    <string name="receipt_label_subtotal">المجموع الفرعي:</string>
+    <string name="receipt_label_discount">الخصم:</string>
+    <string name="receipt_label_tax_vat">الضريبة/القيمة المضافة:</string>
+    <string name="receipt_label_total">الإجمالي:</string>
+    <string name="receipt_label_payment_method">طريقة الدفع:</string>
+    <string name="receipt_footer_default">شكراً لتعاملكم معنا!\nنسعد بزيارتكم مرة أخرى</string>
+    <string name="zreport_title">تقرير Z / إغلاق الوردية</string>
+    <string name="zreport_shift_date">تاريخ الوردية:</string>
+    <string name="zreport_shift">الوردية:</string>
+    <string name="zreport_cashier">الكاشير:</string>
+    <string name="zreport_sec_sales">١. المبيعات حسب طريقة الدفع</string>
+    <string name="zreport_cash_sales">مبيعات نقدية:</string>
+    <string name="zreport_card_mada">بطاقة / مدى:</string>
+    <string name="zreport_digital_wallet">محفظة إلكترونية:</string>
+    <string name="zreport_total_revenue">إجمالي الإيرادات:</string>
+    <string name="zreport_sec_cash_recon">٢. مطابقة النقدية</string>
+    <string name="zreport_starting_float">رصيد البداية النقدي:</string>
+    <string name="zreport_cash_in_dues">(+) وارد نقدي (مستحقات):</string>
+    <string name="zreport_cash_out">(-) منصرف نقدي:</string>
+    <string name="zreport_expected_cash">النقد المتوقع:</string>
+    <string name="zreport_actual_cash">العد الفعلي للنقد:</string>
+    <string name="zreport_variance">الفارق:</string>
+    <string name="zreport_balanced">متطابق</string>
+    <string name="zreport_over">فائض (OVER)</string>
+    <string name="zreport_short">عجز (SHORT)</string>
+    <string name="zreport_sec_tax_summary">٣. ملخص الضريبة والقيمة المضافة</string>
+    <string name="zreport_net_taxable">صافي المبيعات الخاضعة للضريبة:</string>
+    <string name="zreport_vat_label">ضريبة القيمة المضافة (%s%%):</string>
+    <string name="zreport_gross_total">الإجمالي الكلي (%s):</string>
+    <string name="zreport_inc_vat">شامل الضريبة</string>
+    <string name="zreport_exc_vat">غير شامل الضريبة</string>
+    <string name="zreport_tax_status">حالة الضريبة:</string>
+    <string name="zreport_non_taxable">غير خاضع للضريبة</string>
+    <string name="zreport_net_total">صافي إجمالي المبيعات:</string>
+    <string name="zreport_sec_other">٤. تتبعات أخرى</string>
+    <string name="zreport_credit_sales">مبيعات آجلة:</string>
+    <string name="zreport_staff_meals">وجبات الموظفين:</string>
+    <string name="zreport_notes">ملاحظات:</string>
+    <string name="zreport_footer_generated">تقرير Z تم إنشاؤه آلياً</string>
+    <string name="zreport_footer_brand">نظام لودجيا لنقاط البيع</string>
+
+    <!-- Printer Setup & Preview UI Strings -->
+    <string name="printer_no_paired_found">لم يتم العثور على طابعات بلوتوث مقترنة. يرجى الاقتران في إعدادات أندرويد أولاً.</string>
+    <string name="printer_permission_required">إذن البلوتوث مطلوب للبحث عن الطابعات الحرارية.</string>
+    <string name="printer_no_devices_hint">لا توجد طابعات بلوتوث مقترنة.\nيرجى إقران طابعتك الحرارية في إعدادات بلوتوث أندرويد أولاً.</string>
+    <string name="printer_test_success">نجح اختبار الاتصال!</string>
+    <string name="printer_test_failed">فشل الاختبار: %s</string>
+    <string name="printer_not_configured">لم يتم تهيئة طابعة حرارية. يرجى تهيئة الطابعة في الإعدادات.</string>
+    <string name="printer_zreport_sent">تم إرسال تقرير Z إلى الطابعة!</string>
+    <string name="printer_error_prefix">خطأ الطابعة: %s</string>
+    <string name="printer_could_not_connect">تعذر الاتصال بالطابعة.</string>
+    <string name="printer_invalid_ip">يرجى إدخال عنوان IP صحيح</string>
+    <string name="printer_invalid_port">يرجى إدخال منفذ صحيح (1-65535)</string>
+    <string name="printer_test_receipt_title">لودجيا لنقاط البيع</string>
+    <string name="printer_test_receipt_subtitle">نظام تقرير الوردية</string>
+    <string name="printer_test_receipt_msg">نجحت طباعة الاختبار</string>
+    <string name="printer_test_receipt_operational">اتصال الطابعة يعمل بنجاح!</string>
+    <string name="print_btn">طباعة</string>
 </resources>

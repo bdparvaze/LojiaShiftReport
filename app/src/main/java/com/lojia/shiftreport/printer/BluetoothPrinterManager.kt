@@ -4,13 +4,22 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Build
 import android.util.Log
 import com.dantsu.escposprinter.EscPosPrinter
 import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
 import com.dantsu.escposprinter.connection.bluetooth.BluetoothPrintersConnections
 import com.dantsu.escposprinter.connection.tcp.TcpConnection
+import com.dantsu.escposprinter.textparser.PrinterTextParserImg
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
+import com.lojia.shiftreport.util.DateTimeFormatUtils
+import com.lojia.shiftreport.util.MoneyFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
@@ -41,6 +50,8 @@ enum class PrinterPaperWidth(val widthMm: Int, val dpi: Int, val charsPerLine: I
         }
     }
 }
+
+
 
 /**
  * BluetoothPrinterManager handles:
@@ -223,6 +234,55 @@ class BluetoothPrinterManager(private val context: Context) {
     }
 
     /**
+     * Prepares raw receipt text for the ESC/POS thermal printer.
+     * If the text contains Bengali, Arabic, or other non-Latin characters, those specific lines
+     * are rendered into high-contrast monochrome bitmaps and embedded via DantSu <img> tags,
+     * ensuring 100% correct glyph and RTL rendering without '????' question mark artifacts.
+     */
+    fun prepareTextForPrinter(
+        formattedText: String,
+        printer: EscPosPrinter,
+        paperWidth: PrinterPaperWidth
+    ): String {
+        if (!ThermalBitmapRenderer.containsNonLatin(formattedText)) {
+            return formattedText
+        }
+
+        val widthPx = if (paperWidth == PrinterPaperWidth.MM_80) 576 else 384
+        val lines = formattedText.split("\n")
+        val resultSb = StringBuilder()
+
+        for (line in lines) {
+            if (line.isBlank()) {
+                resultSb.append("\n")
+                continue
+            }
+
+            // Keep separators and existing images as-is
+            if (line.startsWith("[C]---") || line.startsWith("[C]===") || line.startsWith("---") || line.startsWith("===") || line.contains("<img>")) {
+                resultSb.append(line).append("\n")
+                continue
+            }
+
+            // If this line contains non-Latin text, render it cleanly to a bitmap
+            if (ThermalBitmapRenderer.containsNonLatin(line)) {
+                try {
+                    val bitmap = ThermalBitmapRenderer.renderLineToBitmap(line, widthPx = widthPx)
+                    val hexImg = PrinterTextParserImg.bitmapToHexadecimalString(printer, bitmap)
+                    resultSb.append("[C]<img>$hexImg</img>\n")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Bitmap render fallback for non-Latin line: $line", e)
+                    resultSb.append(line).append("\n")
+                }
+            } else {
+                resultSb.append(line).append("\n")
+            }
+        }
+
+        return resultSb.toString()
+    }
+
+    /**
      * Prints formatted ESC/POS text asynchronously over Bluetooth or Network TCP.
      * Guaranteed NOT to block POS sales if printing fails or printer is disconnected.
      *
@@ -249,7 +309,8 @@ class BluetoothPrinterManager(private val context: Context) {
                     paperWidth.charsPerLine
                 )
 
-                printer.printFormattedText(formattedText)
+                val processedText = prepareTextForPrinter(formattedText, printer, paperWidth)
+                printer.printFormattedText(processedText)
                 printer.disconnectPrinter()
                 Log.d(TAG, "Receipt successfully printed over TCP to $ip:$port")
                 Result.success(Unit)
@@ -295,7 +356,8 @@ class BluetoothPrinterManager(private val context: Context) {
                 paperWidth.charsPerLine
             )
 
-            printer.printFormattedText(formattedText)
+            val processedText = prepareTextForPrinter(formattedText, printer, paperWidth)
+            printer.printFormattedText(processedText)
             printer.disconnectPrinter()
             Log.d(TAG, "Receipt successfully printed to $printerAddress")
             Result.success(Unit)
@@ -306,7 +368,7 @@ class BluetoothPrinterManager(private val context: Context) {
     }
 
     /**
-     * Builds standard ESC/POS formatted string for a sale receipt.
+     * Builds standard ESC/POS formatted string for a sale receipt with localized strings.
      */
     fun buildReceiptText(
         businessName: String,
@@ -333,6 +395,17 @@ class BluetoothPrinterManager(private val context: Context) {
         val is58 = paperWidth == PrinterPaperWidth.MM_58
         val lineSeparator = if (is58) "--------------------------------" else "------------------------------------------------"
 
+        val labelReceiptNo = context.getString(R.string.receipt_label_no)
+        val labelDate = context.getString(R.string.receipt_label_date)
+        val labelCashier = context.getString(R.string.receipt_label_cashier)
+        val labelCustomer = context.getString(R.string.receipt_label_customer)
+        val labelSubtotal = context.getString(R.string.receipt_label_subtotal)
+        val labelDiscount = context.getString(R.string.receipt_label_discount)
+        val labelTaxVat = context.getString(R.string.receipt_label_tax_vat)
+        val labelTotal = context.getString(R.string.receipt_label_total)
+        val labelPaymentMethod = context.getString(R.string.receipt_label_payment_method)
+        val defaultFooter = context.getString(R.string.receipt_footer_default)
+
         val sb = StringBuilder()
 
         // Header
@@ -352,30 +425,35 @@ class BluetoothPrinterManager(private val context: Context) {
         sb.append("[C]$lineSeparator\n")
 
         // Receipt Meta
-        sb.append("[L]Receipt #: [R]$receiptId\n")
-        sb.append("[L]Date: [R]$dateTimeStr\n")
+        sb.append("[L]$labelReceiptNo [R]$receiptId\n")
+        sb.append("[L]$labelDate [R]$dateTimeStr\n")
         if (showCashierName && cashierName.isNotBlank()) {
-            sb.append("[L]Cashier: [R]$cashierName\n")
+            sb.append("[L]$labelCashier [R]$cashierName\n")
         }
         if (customerName.isNotBlank() && customerName != "Walk-in Customer") {
-            sb.append("[L]Customer: [R]$customerName\n")
+            sb.append("[L]$labelCustomer [R]$customerName\n")
         }
         sb.append("[C]$lineSeparator\n")
 
         // Column Headers
         if (is58) {
-            sb.append("[L]<b>Item</b>[R]<b>Qty x Price</b>\n")
+            val itemHead = context.getString(R.string.receipt_label_item)
+            val qtyPriceHead = context.getString(R.string.receipt_label_qty_x_price)
+            sb.append("[L]<b>$itemHead</b>[R]<b>$qtyPriceHead</b>\n")
         } else {
-            sb.append("[L]<b>Item Description</b>[C]<b>Qty</b>[R]<b>Total</b>\n")
+            val itemDescHead = context.getString(R.string.receipt_label_item_desc)
+            val qtyHead = context.getString(R.string.receipt_label_qty)
+            val totalHead = context.getString(R.string.receipt_label_total).replace(":", "")
+            sb.append("[L]<b>$itemDescHead</b>[C]<b>$qtyHead</b>[R]<b>$totalHead</b>\n")
         }
         sb.append("[C]$lineSeparator\n")
 
         // Items
         items.forEach { (name, qtyAndTotal) ->
             val qtyDouble = qtyAndTotal.first
-            val qtyStr = if (qtyDouble % 1.0 == 0.0) qtyDouble.toInt().toString() else qtyDouble.toString()
+            val qtyStr = if (qtyDouble % 1.0 == 0.0) qtyDouble.toInt().toString() else String.format(Locale.US, "%.1f", qtyDouble)
             val lineTotal = qtyAndTotal.second
-            val formattedTotal = String.format("%.2f", lineTotal)
+            val formattedTotal = String.format(Locale.US, "%.2f", lineTotal)
 
             if (is58) {
                 sb.append("[L]$name\n")
@@ -386,20 +464,20 @@ class BluetoothPrinterManager(private val context: Context) {
         }
         sb.append("[C]$lineSeparator\n")
 
-        // Totals
-        sb.append("[L]Subtotal:[R]$currencySymbol${String.format("%.2f", subtotal)}\n")
+        // Totals (Formatted with Locale.US for column alignment)
+        sb.append("[L]$labelSubtotal[R]$currencySymbol${String.format(Locale.US, "%.2f", subtotal)}\n")
         if (discount > 0) {
-            sb.append("[L]Discount:[R]-$currencySymbol${String.format("%.2f", discount)}\n")
+            sb.append("[L]$labelDiscount[R]-$currencySymbol${String.format(Locale.US, "%.2f", discount)}\n")
         }
         if (tax > 0) {
-            sb.append("[L]Tax/VAT:[R]$currencySymbol${String.format("%.2f", tax)}\n")
+            sb.append("[L]$labelTaxVat[R]$currencySymbol${String.format(Locale.US, "%.2f", tax)}\n")
         }
-        sb.append("[L]<b>TOTAL:</b>[R]<b>$currencySymbol${String.format("%.2f", grandTotal)}</b>\n")
-        sb.append("[L]Payment Method:[R]$paymentMethod\n")
+        sb.append("[L]<b>$labelTotal</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", grandTotal)}</b>\n")
+        sb.append("[L]$labelPaymentMethod[R]$paymentMethod\n")
         sb.append("[C]$lineSeparator\n")
 
         // Footer
-        val footerText = customFooterText.ifBlank { "Thank you for your business!\nPlease come again" }
+        val footerText = customFooterText.ifBlank { defaultFooter }
         footerText.split("\n").forEach { line ->
             if (line.isNotBlank()) {
                 sb.append("[C]$line\n")
@@ -411,7 +489,7 @@ class BluetoothPrinterManager(private val context: Context) {
     }
 
     /**
-     * Builds international Z-Report / Shift Close thermal receipt string.
+     * Builds international Z-Report / Shift Close thermal receipt string with localized labels.
      */
     fun buildZReportText(
         businessName: String,
@@ -427,7 +505,7 @@ class BluetoothPrinterManager(private val context: Context) {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
         val is58 = paperWidth == PrinterPaperWidth.MM_58
         val lineSeparator = if (is58) "--------------------------------" else "------------------------------------------------"
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        val formattedDate = DateTimeFormatUtils.formatDateTime(report.dateInMillis)
 
         val startingCash = com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashFromNotes(report)
         val actualCashCount = com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashFromNotes(report)
@@ -450,48 +528,48 @@ class BluetoothPrinterManager(private val context: Context) {
             sb.append("[C]VAT ID: $vatNumber\n")
         }
         sb.append("[C]$lineSeparator\n")
-        sb.append("[C]<b><font size='big'>Z-REPORT / SHIFT CLOSE</font></b>\n")
+        sb.append("[C]<b><font size='big'>${context.getString(R.string.zreport_title)}</font></b>\n")
         sb.append("[C]$lineSeparator\n")
 
         // Shift Metadata
-        sb.append("[L]Shift Date:[R]${dateFormatter.format(Date(report.dateInMillis))}\n")
-        sb.append("[L]Shift:[R]${report.shift}\n")
-        sb.append("[L]Cashier:[R]${report.cashierName}\n")
+        sb.append("[L]${context.getString(R.string.zreport_shift_date)}[R]$formattedDate\n")
+        sb.append("[L]${context.getString(R.string.zreport_shift)}[R]${report.shift}\n")
+        sb.append("[L]${context.getString(R.string.zreport_cashier)}[R]${report.cashierName}\n")
         sb.append("[C]$lineSeparator\n")
 
         // 1. SALES BY PAYMENT METHOD
-        sb.append("[L]<b>1. SALES BY PAYMENT METHOD</b>\n")
-        sb.append("[L]Cash Sales:[R]$currencySymbol${String.format("%.2f", report.grossCash)}\n")
-        sb.append("[L]Card / Mada:[R]$currencySymbol${String.format("%.2f", report.madaPayments)}\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_sec_sales)}</b>\n")
+        sb.append("[L]${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.grossCash)}\n")
+        sb.append("[L]${context.getString(R.string.zreport_card_mada)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.madaPayments)}\n")
         if (report.digitalWallet > 0) {
-            sb.append("[L]Digital Wallet:[R]$currencySymbol${String.format("%.2f", report.digitalWallet)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_digital_wallet)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.digitalWallet)}\n")
         }
-        sb.append("[L]<b>TOTAL REVENUE:</b>[R]<b>$currencySymbol${String.format("%.2f", report.totalSales)}</b>\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_total_revenue)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", report.totalSales)}</b>\n")
         sb.append("[C]$lineSeparator\n")
 
         // 2. CASH DRAWER RECONCILIATION
-        sb.append("[L]<b>2. CASH RECONCILIATION</b>\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_sec_cash_recon)}</b>\n")
         if (startingCash > 0) {
-            sb.append("[L]Starting Float:[R]$currencySymbol${String.format("%.2f", startingCash)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_starting_float)}[R]$currencySymbol${String.format(Locale.US, "%.2f", startingCash)}\n")
         }
-        sb.append("[L](+) Cash Sales:[R]$currencySymbol${String.format("%.2f", report.grossCash)}\n")
+        sb.append("[L](+) ${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.grossCash)}\n")
         if (cashIn > 0) {
-            sb.append("[L](+) Cash In (Dues):[R]$currencySymbol${String.format("%.2f", cashIn)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_cash_in_dues)}[R]$currencySymbol${String.format(Locale.US, "%.2f", cashIn)}\n")
         }
         if (cashOut > 0) {
-            sb.append("[L](-) Cash Out:[R]$currencySymbol${String.format("%.2f", cashOut)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_cash_out)}[R]$currencySymbol${String.format(Locale.US, "%.2f", cashOut)}\n")
         }
-        sb.append("[L]<b>EXPECTED CASH:</b>[R]<b>$currencySymbol${String.format("%.2f", expectedCash)}</b>\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_expected_cash)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", expectedCash)}</b>\n")
 
         if (actualCashCount != null) {
-            sb.append("[L]<b>ACTUAL CASH COUNT:</b>[R]<b>$currencySymbol${String.format("%.2f", actualCashCount)}</b>\n")
+            sb.append("[L]<b>${context.getString(R.string.zreport_actual_cash)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", actualCashCount)}</b>\n")
             val varFormatted = when {
                 variance == null -> "N/A"
-                Math.abs(variance) < 0.01 -> "${currencySymbol}0.00 (Balanced)"
-                variance > 0 -> "+$currencySymbol${String.format("%.2f", variance)} (OVER)"
-                else -> "-$currencySymbol${String.format("%.2f", Math.abs(variance))} (SHORT)"
+                Math.abs(variance) < 0.01 -> "${currencySymbol}0.00 (${context.getString(R.string.zreport_balanced)})"
+                variance > 0 -> "+$currencySymbol${String.format(Locale.US, "%.2f", variance)} (${context.getString(R.string.zreport_over)})"
+                else -> "-$currencySymbol${String.format(Locale.US, "%.2f", Math.abs(variance))} (${context.getString(R.string.zreport_short)})"
             }
-            sb.append("[L]<b>VARIANCE:</b>[R]<b>$varFormatted</b>\n")
+            sb.append("[L]<b>${context.getString(R.string.zreport_variance)}</b>[R]<b>$varFormatted</b>\n")
         }
         sb.append("[C]$lineSeparator\n")
 
@@ -510,22 +588,30 @@ class BluetoothPrinterManager(private val context: Context) {
         } else {
             Triple(report.totalSales, 0.0, report.totalSales)
         }
-        sb.append("[L]<b>3. TAX & VAT SUMMARY</b>\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_sec_tax_summary)}</b>\n")
         if (isTaxEnabled && vatRate > 0.0) {
-            sb.append("[L]Net Taxable Sales:[R]$currencySymbol${String.format("%.2f", netTaxable)}\n")
-            sb.append("[L]VAT (${String.format(Locale.US, "%.1f", vatRate)}%):[R]$currencySymbol${String.format("%.2f", vatAmount)}\n")
-            sb.append("[L]Gross Total (${if (isTaxIncluded) "Inc VAT" else "Exc VAT"}):[R]$currencySymbol${String.format("%.2f", grossTotal)}\n")
+            val vatRateStr = String.format(Locale.US, "%.1f", vatRate)
+            val vatLabel = context.getString(R.string.zreport_vat_label, vatRateStr)
+            val incExcStr = if (isTaxIncluded) context.getString(R.string.zreport_inc_vat) else context.getString(R.string.zreport_exc_vat)
+            val grossLabel = context.getString(R.string.zreport_gross_total, incExcStr)
+
+            sb.append("[L]${context.getString(R.string.zreport_net_taxable)}[R]$currencySymbol${String.format(Locale.US, "%.2f", netTaxable)}\n")
+            sb.append("[L]$vatLabel[R]$currencySymbol${String.format(Locale.US, "%.2f", vatAmount)}\n")
+            sb.append("[L]$grossLabel[R]$currencySymbol${String.format(Locale.US, "%.2f", grossTotal)}\n")
         } else {
-            sb.append("[L]Tax Status:[R]Non-Taxable\n")
-            sb.append("[L]Net Total Sales:[R]$currencySymbol${String.format("%.2f", report.totalSales)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_tax_status)}[R]${context.getString(R.string.zreport_non_taxable)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_net_total)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.totalSales)}\n")
         }
         sb.append("[C]$lineSeparator\n")
 
         // 4. OTHER TRACKING
         if (report.totalDueCredit > 0 || report.staffMealsCount > 0) {
-            sb.append("[L]Credit Sales:[R]$currencySymbol${String.format("%.2f", report.totalDueCredit)}\n")
+            sb.append("[L]<b>${context.getString(R.string.zreport_sec_other)}</b>\n")
+            if (report.totalDueCredit > 0) {
+                sb.append("[L]${context.getString(R.string.zreport_credit_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.totalDueCredit)}\n")
+            }
             if (report.staffMealsCount > 0) {
-                sb.append("[L]Staff Meals Count:[R]${report.staffMealsCount}\n")
+                sb.append("[L]${context.getString(R.string.zreport_staff_meals)}[R]${report.staffMealsCount}\n")
             }
             sb.append("[C]$lineSeparator\n")
         }
@@ -533,7 +619,7 @@ class BluetoothPrinterManager(private val context: Context) {
         // Clean Notes
         val cleanNotes = com.lojia.shiftreport.util.PdfReportGenerator.cleanDisplayNotes(report.notes)
         if (cleanNotes.isNotBlank()) {
-            sb.append("[L]Notes:\n")
+            sb.append("[L]${context.getString(R.string.zreport_notes)}\n")
             cleanNotes.split("\n").forEach { line ->
                 if (line.isNotBlank()) {
                     sb.append("[L]  $line\n")
@@ -543,8 +629,8 @@ class BluetoothPrinterManager(private val context: Context) {
         }
 
         // Footer
-        sb.append("[C]Computer Generated Z-Report\n")
-        sb.append("[C]Lojia POS System\n")
+        sb.append("[C]${context.getString(R.string.zreport_footer_generated)}\n")
+        sb.append("[C]${context.getString(R.string.zreport_footer_brand)}\n")
         sb.append("\n\n\n")
 
         return sb.toString()

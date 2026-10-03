@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.SecurityUtils
 
 @Entity(tableName = "users")
@@ -66,17 +67,17 @@ data class ShiftSession(
     val status: String = "OPEN", // OPEN, CLOSED, LOCKED
     val openedAt: Long = System.currentTimeMillis(),
     val closedAt: Long? = null,
-    val startingCash: Double = 500.0,
-    val cashSales: Double = 0.0,
-    val cardSales: Double = 0.0,
-    val digitalSales: Double = 0.0,
-    val totalDiscounts: Double = 0.0,
-    val salesReturns: Double = 0.0,
-    val totalPayIn: Double = 0.0,
-    val totalPayOut: Double = 0.0,
-    val expectedCash: Double = 500.0,
-    val actualCashCount: Double = 0.0,
-    val variance: Double = 0.0,
+    val startingCash: Long = 50000L,
+    val cashSales: Long = 0L,
+    val cardSales: Long = 0L,
+    val digitalSales: Long = 0L,
+    val totalDiscounts: Long = 0L,
+    val salesReturns: Long = 0L,
+    val totalPayIn: Long = 0L,
+    val totalPayOut: Long = 0L,
+    val expectedCash: Long = 50000L,
+    val actualCashCount: Long = 0L,
+    val variance: Long = 0L,
     val notes: String = "",
     val isLocked: Boolean = false,
     val managerSignedBy: String? = null,
@@ -88,7 +89,7 @@ data class CashMovement(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val shiftSessionId: Int = 0,
     val type: String, // PAY_IN, PAY_OUT
-    val amount: Double,
+    val amount: Long,
     val reason: String,
     val cashierName: String,
     val timestamp: Long = System.currentTimeMillis()
@@ -98,7 +99,7 @@ data class CashMovement(
 data class Cashier(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
-    val pin: String = SecurityUtils.hashSecret("1111"),
+    val pin: String = "",
     val role: String = "CASHIER", // ADMIN, CASHIER
     val active: Boolean = true
 )
@@ -109,15 +110,15 @@ data class ShiftReport(
     val cashierName: String,
     val shift: String = "Day", // "Day", "Night", "Morning", "Evening"
     val dateInMillis: Long = System.currentTimeMillis(),
-    val openingCash: Double = 0.0,
-    val closingCash: Double = 0.0,
-    val grossCash: Double = 0.0,
-    val madaPayments: Double = 0.0,
-    val digitalWallet: Double = 0.0,
-    val totalDiscounts: Double = 0.0,
-    val salesReturns: Double = 0.0,
+    val openingCash: Long = 0L,
+    val closingCash: Long = 0L,
+    val grossCash: Long = 0L,
+    val madaPayments: Long = 0L,
+    val digitalWallet: Long = 0L,
+    val totalDiscounts: Long = 0L,
+    val salesReturns: Long = 0L,
     val staffMealsCount: Int = 0,
-    val totalExpenses: Double = 0.0,
+    val totalExpenses: Long = 0L,
     val muasselQty: Double = 0.0,
     val outdoorShishaQty: Double = 0.0,
     val dueCreditEntriesJson: String = "[]",
@@ -131,16 +132,16 @@ data class ShiftReport(
     val managerSignTime: Long? = null
 ) {
     // 1. Gross Sales (by payment method only - cash + card/mada + digital wallet)
-    val grossSales: Double
-        get() = grossCash + madaPayments + digitalWallet
+    val grossSales: Long
+        get() = MoneyFormat.addMinor(grossCash, madaPayments, digitalWallet)
 
     // Total Sales (Gross Sales)
-    val totalSales: Double
+    val totalSales: Long
         get() = grossSales
 
     // Net Sales (Gross Sales minus Discounts and Returns)
-    val netSales: Double
-        get() = (grossSales - totalDiscounts - salesReturns).coerceAtLeast(0.0)
+    val netSales: Long
+        get() = MoneyFormat.subtractMinor(MoneyFormat.subtractMinor(grossSales, totalDiscounts), salesReturns).coerceAtLeast(0L)
 
     // Parsed JSON Collection Lists
     val previousDueCollectionsList: List<PreviousDueCollectionItem>
@@ -153,7 +154,7 @@ data class ShiftReport(
                     PreviousDueCollectionItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         customerName = obj.optString("customerName", obj.optString("receiptNo", "")),
-                        amount = obj.optDouble("amount", 0.0),
+                        amount = obj.optLong("amount", 0L),
                         paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH")),
                         note = obj.optString("note", "")
                     )
@@ -172,7 +173,7 @@ data class ShiftReport(
                     DueCreditItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         customerName = obj.optString("customerName", obj.optString("receiptNo", "")),
-                        amount = obj.optDouble("amount", 0.0),
+                        amount = obj.optLong("amount", 0L),
                         note = obj.optString("note", ""),
                         phone = obj.optString("phone", "")
                     )
@@ -191,7 +192,7 @@ data class ShiftReport(
                     StaffAdvanceItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         staffName = obj.optString("staffName", obj.optString("name", "")),
-                        amount = obj.optDouble("amount", 0.0),
+                        amount = obj.optLong("amount", 0L),
                         reason = obj.optString("reason", obj.optString("type", "CASH"))
                     )
                 )
@@ -205,9 +206,9 @@ data class ShiftReport(
             val list = mutableListOf<PurchasedInventoryItem>()
             for (i in 0 until arr.length()) {
                 val obj = arr.getJSONObject(i)
-                val qty = obj.optDouble("quantity", obj.optDouble("qty", 1.0))
-                val unitPrice = obj.optDouble("unitPrice", obj.optDouble("price", 0.0))
-                val total = obj.optDouble("totalAmount", obj.optDouble("total", qty * unitPrice))
+                val qty = obj.optDouble("quantity", obj.optDouble("qty", 0.0))
+                val unitPrice = obj.optLong("unitPrice", obj.optLong("price", 0L))
+                val total = obj.optLong("totalAmount", obj.optLong("total", 0L))
                 list.add(
                     PurchasedInventoryItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
@@ -233,7 +234,7 @@ data class ShiftReport(
                     UnpaidBillItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         tableOrOrderRef = obj.optString("tableOrOrderRef", obj.optString("description", "")),
-                        amount = obj.optDouble("amount", 0.0),
+                        amount = obj.optLong("amount", 0L),
                         reason = obj.optString("reason", "")
                     )
                 )
@@ -242,78 +243,78 @@ data class ShiftReport(
         } catch (e: Exception) { emptyList() }
 
     // Due / Receivables Tracking
-    val totalDueCredit: Double
-        get() = dueCreditEntriesList.sumOf { it.amount }
+    val totalDueCredit: Long
+        get() = MoneyFormat.sumOfMinor(dueCreditEntriesList.map { it.amount })
 
-    val totalDueIssued: Double
+    val totalDueIssued: Long
         get() = totalDueCredit
 
-    val totalPreviousDueCash: Double
-        get() = previousDueCollectionsList.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amount }
+    val totalPreviousDueCash: Long
+        get() = MoneyFormat.sumOfMinor(previousDueCollectionsList.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount })
 
-    val totalDueCollectedCash: Double
+    val totalDueCollectedCash: Long
         get() = totalPreviousDueCash
 
-    val totalPreviousDueBank: Double
-        get() = previousDueCollectionsList.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amount }
+    val totalPreviousDueBank: Long
+        get() = MoneyFormat.sumOfMinor(previousDueCollectionsList.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount })
 
-    val totalDueCollectedBank: Double
+    val totalDueCollectedBank: Long
         get() = totalPreviousDueBank
 
-    val totalDueCollected: Double
-        get() = previousDueCollectionsList.sumOf { it.amount }
+    val totalDueCollected: Long
+        get() = MoneyFormat.sumOfMinor(previousDueCollectionsList.map { it.amount })
 
     // Staff Advances
-    val totalStaffAdvances: Double
-        get() = staffAdvancesList.sumOf { it.amount }
+    val totalStaffAdvances: Long
+        get() = MoneyFormat.sumOfMinor(staffAdvancesList.map { it.amount })
 
-    val totalStaffAdvancesAmount: Double
+    val totalStaffAdvancesAmount: Long
         get() = totalStaffAdvances
 
     // Purchases
-    val totalCashPurchases: Double
-        get() = purchasedItemsList.filter { it.paidVia.equals("CASH", ignoreCase = true) }.sumOf { it.totalAmount }
+    val totalCashPurchases: Long
+        get() = MoneyFormat.sumOfMinor(purchasedItemsList.filter { it.paidVia.equals("CASH", ignoreCase = true) }.map { it.totalAmount })
 
-    val totalPurchasedCash: Double
+    val totalPurchasedCash: Long
         get() = totalCashPurchases
 
-    val totalPurchasedBank: Double
-        get() = purchasedItemsList.filter { !it.paidVia.equals("CASH", ignoreCase = true) }.sumOf { it.totalAmount }
+    val totalPurchasedBank: Long
+        get() = MoneyFormat.sumOfMinor(purchasedItemsList.filter { !it.paidVia.equals("CASH", ignoreCase = true) }.map { it.totalAmount })
 
-    val totalPurchasedAll: Double
-        get() = purchasedItemsList.sumOf { it.totalAmount }
+    val totalPurchasedAll: Long
+        get() = MoneyFormat.sumOfMinor(purchasedItemsList.map { it.totalAmount })
 
-    val totalUnpaidLoss: Double
-        get() = unpaidBillsList.sumOf { it.amount }
+    val totalUnpaidLoss: Long
+        get() = MoneyFormat.sumOfMinor(unpaidBillsList.map { it.amount })
 
     // 2. Cash Inflow & Outflow Formulas
-    val totalCashIn: Double
-        get() = openingCash + grossCash + totalPreviousDueCash
+    val totalCashIn: Long
+        get() = MoneyFormat.addMinor(openingCash, grossCash, totalPreviousDueCash)
 
-    val totalCashOut: Double
-        get() = totalExpenses + totalStaffAdvances + totalCashPurchases
+    val totalCashOut: Long
+        get() = MoneyFormat.addMinor(totalExpenses, totalStaffAdvances, totalCashPurchases)
 
     // 3. Expected Cash in Drawer
-    val expectedCashInDrawer: Double
-        get() = totalCashIn - totalCashOut
+    val expectedCashInDrawer: Long
+        get() = MoneyFormat.subtractMinor(totalCashIn, totalCashOut)
 
-    val netCash: Double
+    val netCash: Long
         get() = expectedCashInDrawer
 
     // Cash Shortage / Excess: Actual Closing Cash minus Expected Cash
-    fun variance(actualCashCount: Double): Double = actualCashCount - expectedCashInDrawer
+    fun variance(actualCashCount: Long): Long = MoneyFormat.calculateVarianceMinor(actualCashCount, expectedCashInDrawer)
 
-    val cashDiscrepancy: Double
-        get() = closingCash - expectedCashInDrawer
+    val cashDiscrepancy: Long
+        get() = MoneyFormat.subtractMinor(closingCash, expectedCashInDrawer)
 
     val isExcess: Boolean
-        get() = cashDiscrepancy > 0.001
+        get() = cashDiscrepancy > 0L
 
     val isShortage: Boolean
-        get() = cashDiscrepancy < -0.001
+        get() = cashDiscrepancy < 0L
 
-    val netCardAndDigital: Double
-        get() = madaPayments + digitalWallet + totalPreviousDueBank
+    val netCardAndDigital: Long
+        get() = MoneyFormat.addMinor(madaPayments, digitalWallet, totalPreviousDueBank)
 }
 
 @Entity(tableName = "draft_reports")
@@ -322,15 +323,15 @@ data class DraftReport(
     val cashierName: String = "",
     val shift: String = "Day",
     val dateInMillis: Long = System.currentTimeMillis(),
-    val openingCash: Double = 0.0,
-    val closingCash: Double = 0.0,
-    val grossCash: Double = 0.0,
-    val madaPayments: Double = 0.0,
-    val digitalWallet: Double = 0.0,
-    val totalDiscounts: Double = 0.0,
-    val salesReturns: Double = 0.0,
+    val openingCash: Long = 0L,
+    val closingCash: Long = 0L,
+    val grossCash: Long = 0L,
+    val madaPayments: Long = 0L,
+    val digitalWallet: Long = 0L,
+    val totalDiscounts: Long = 0L,
+    val salesReturns: Long = 0L,
     val staffMealsCount: Int = 0,
-    val totalExpenses: Double = 0.0,
+    val totalExpenses: Long = 0L,
     val muasselQty: Double = 0.0,
     val outdoorShishaQty: Double = 0.0,
     val dueCreditEntriesJson: String = "[]",
@@ -340,17 +341,17 @@ data class DraftReport(
     val purchasedItemsJson: String = "[]",
     val notes: String = ""
 ) {
-    val totalSales: Double
-        get() = grossCash + madaPayments + digitalWallet
+    val totalSales: Long
+        get() = MoneyFormat.addMinor(grossCash, madaPayments, digitalWallet)
 
-    val netSales: Double
-        get() = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0.0)
+    val netSales: Long
+        get() = MoneyFormat.subtractMinor(MoneyFormat.subtractMinor(totalSales, totalDiscounts), salesReturns).coerceAtLeast(0L)
 }
 
 data class DueCreditItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val customerName: String,
-    val amount: Double,
+    val amount: Long,
     val note: String = "",
     val phone: String = ""
 )
@@ -358,7 +359,7 @@ data class DueCreditItem(
 data class PreviousDueCollectionItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val customerName: String,
-    val amount: Double,
+    val amount: Long,
     val paymentMode: String = "CASH", // CASH, CARD
     val note: String = ""
 )
@@ -366,23 +367,23 @@ data class PreviousDueCollectionItem(
 data class StaffAdvanceItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val staffName: String,
-    val amount: Double,
+    val amount: Long,
     val reason: String = ""
 )
 
 data class UnpaidBillItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val tableOrOrderRef: String,
-    val amount: Double,
+    val amount: Long,
     val reason: String = ""
 )
 
 data class PurchasedInventoryItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val itemName: String,
-    val quantity: Double,
-    val unitPrice: Double,
-    val totalAmount: Double = quantity * unitPrice,
+    val quantity: Double = 0.0,
+    val unitPrice: Long = 0L,
+    val totalAmount: Long = 0L,
     val paidVia: String = "CASH", // CASH, BANK
     val supplier: String = ""
 )
@@ -435,6 +436,25 @@ data class UpdateBusinessRequest(
 data class AppSetting(
     @PrimaryKey val key: String,
     val value: String
+)
+
+@Entity(tableName = "saved_addresses")
+data class SavedAddress(
+    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    val firstName: String = "",
+    val lastName: String = "",
+    val phone: String = "",
+    val alternatePhone: String = "",
+    val countryCode: String = "SA",
+    val dialCode: String = "+966",
+    val addressLine: String = "",
+    val arabicAddressLine: String = "",
+    val aptSuite: String = "",
+    val addressLabel: String = "",
+    val mapLat: Double = 0.0,
+    val mapLng: Double = 0.0,
+    val isDefault: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 enum class AppModule(val key: String, @StringRes val titleRes: Int) {

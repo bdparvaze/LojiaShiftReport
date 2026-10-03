@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -49,7 +50,11 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
         searchQuery.value = query
     }
 
-    fun saveScannedResult(result: GmsDocumentScanningResult, customTitle: String? = null) {
+    fun saveScannedResult(
+        result: GmsDocumentScanningResult,
+        customTitle: String? = null,
+        onComplete: ((ScannedDocument) -> Unit)? = null
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val pdfUri = result.pdf?.uri ?: return@launch
@@ -61,7 +66,8 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
 
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val title = customTitle?.ifBlank { null } ?: "Scan_$timeStamp"
-                val destFile = File(docsDir, "${title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")}_$timeStamp.pdf")
+                val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+                val destFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
 
                 context.contentResolver.openInputStream(pdfUri)?.use { input ->
                     FileOutputStream(destFile).use { output ->
@@ -105,22 +111,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                     }
                 }
 
-                // Perform OCR immediately
-                val extractedText = if (pageImagePaths.isNotEmpty()) {
-                    OcrTextExtractor.extractTextFromImages(context, pageImagePaths)
-                } else ""
-
-                // Generate DOCX file if text extracted
-                var docxPath = ""
-                if (extractedText.isNotBlank()) {
-                    val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
-                    val docxFile = File(docxDir, "${title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")}_$timeStamp.docx")
-                    val success = DocxExporter.createDocxFile(docxFile, title, extractedText)
-                    if (success && docxFile.exists()) {
-                        docxPath = docxFile.absolutePath
-                    }
-                }
-
+                // Build doc with empty OCR
                 val doc = ScannedDocument(
                     title = title,
                     pdfUriPath = destFile.absolutePath,
@@ -128,22 +119,56 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                     fileSizeBytes = destFile.length(),
                     createdAtMillis = System.currentTimeMillis(),
                     thumbnailPath = thumbPath,
-                    ocrText = extractedText,
-                    docxUriPath = docxPath
+                    ocrText = "",
+                    docxUriPath = ""
                 )
 
-                dao.insertDocument(doc)
+                // Insert to Room FIRST
+                val newId = dao.insertDocument(doc)
+                val savedDoc = doc.copy(id = newId.toInt())
+
+                // Notify UI IMMEDIATELY
+                withContext(Dispatchers.Main) {
+                    onComplete?.invoke(savedDoc)
+                }
+
+                // THEN run OCR in background
+                try {
+                    val extractedText = if (pageImagePaths.isNotEmpty()) {
+                        withTimeoutOrNull(15_000L) {
+                            OcrTextExtractor.extractTextFromImages(context, pageImagePaths)
+                        } ?: ""
+                    } else ""
+
+                    if (extractedText.isNotBlank()) {
+                        val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
+                        val docxFile = File(docxDir, "${sanitizedTitle}_$timeStamp.docx")
+                        val docxSuccess = DocxExporter.createDocxFile(docxFile, title, extractedText)
+                        val docxPath = if (docxSuccess && docxFile.exists()) docxFile.absolutePath else ""
+
+                        dao.updateOcrAndDocx(newId.toInt(), extractedText, docxPath)
+                    }
+                } catch (e: Exception) {
+                    Log.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
+                }
             } catch (e: Exception) {
                 Log.e("DocumentScannerVM", "Error saving scanned document", e)
+                withContext(Dispatchers.Main) {
+                    onComplete?.invoke(ScannedDocument(title = "error"))
+                }
             }
         }
     }
 
     /**
      * Fallback document generator: Converts an image Uri (from Camera / Gallery) into a 1-page PDF,
-     * extracts OCR text, generates thumbnail and DOCX, and persists into Room.
+     * inserts into Room immediately, then extracts OCR text and DOCX in background.
      */
-    fun saveImageAsScannedDocument(imageUri: Uri, customTitle: String? = null) {
+    fun saveImageAsScannedDocument(
+        imageUri: Uri,
+        customTitle: String? = null,
+        onComplete: ((ScannedDocument) -> Unit)? = null
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val context = getApplication<Application>().applicationContext
@@ -152,7 +177,8 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
 
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val title = customTitle?.ifBlank { null } ?: "PhotoScan_$timeStamp"
-                val destPdfFile = File(docsDir, "${title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")}_$timeStamp.pdf")
+                val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+                val destPdfFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
 
                 // 1. Copy source image locally
                 val docPagesDir = File(docsDir, "pages_$timeStamp").apply { if (!exists()) mkdirs() }
@@ -165,6 +191,9 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
 
                 if (!pageFile.exists() || pageFile.length() == 0L) {
                     Log.e("DocumentScannerVM", "Failed to save captured photo")
+                    withContext(Dispatchers.Main) {
+                        onComplete?.invoke(ScannedDocument(title = "error"))
+                    }
                     return@launch
                 }
 
@@ -200,21 +229,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                     Log.e("DocumentScannerVM", "Failed to copy thumbnail", e)
                 }
 
-                // 4. Perform OCR text extraction
-                val pageImagePaths = listOf(pageFile.absolutePath)
-                val extractedText = OcrTextExtractor.extractTextFromImages(context, pageImagePaths)
-
-                // 5. Generate Word (.docx) if text extracted
-                var docxPath = ""
-                if (extractedText.isNotBlank()) {
-                    val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
-                    val docxFile = File(docxDir, "${title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")}_$timeStamp.docx")
-                    val success = DocxExporter.createDocxFile(docxFile, title, extractedText)
-                    if (success && docxFile.exists()) {
-                        docxPath = docxFile.absolutePath
-                    }
-                }
-
+                // Build doc with empty OCR
                 val doc = ScannedDocument(
                     title = title,
                     pdfUriPath = destPdfFile.absolutePath,
@@ -222,21 +237,49 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                     fileSizeBytes = destPdfFile.length(),
                     createdAtMillis = System.currentTimeMillis(),
                     thumbnailPath = thumbPath,
-                    ocrText = extractedText,
-                    docxUriPath = docxPath
+                    ocrText = "",
+                    docxUriPath = ""
                 )
 
-                dao.insertDocument(doc)
+                // Insert to Room FIRST
+                val newId = dao.insertDocument(doc)
+                val savedDoc = doc.copy(id = newId.toInt())
+
+                // Notify UI IMMEDIATELY
+                withContext(Dispatchers.Main) {
+                    onComplete?.invoke(savedDoc)
+                }
+
+                // THEN run OCR in background
+                try {
+                    val extractedText = withTimeoutOrNull(15_000L) {
+                        OcrTextExtractor.extractTextFromImages(context, listOf(pageFile.absolutePath))
+                    } ?: ""
+
+                    if (extractedText.isNotBlank()) {
+                        val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
+                        val docxFile = File(docxDir, "${sanitizedTitle}_$timeStamp.docx")
+                        val docxSuccess = DocxExporter.createDocxFile(docxFile, title, extractedText)
+                        val docxPath = if (docxSuccess && docxFile.exists()) docxFile.absolutePath else ""
+
+                        dao.updateOcrAndDocx(newId.toInt(), extractedText, docxPath)
+                    }
+                } catch (e: Exception) {
+                    Log.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
+                }
             } catch (e: Exception) {
                 Log.e("DocumentScannerVM", "Error saving photo as document", e)
+                withContext(Dispatchers.Main) {
+                    onComplete?.invoke(ScannedDocument(title = "error"))
+                }
             }
         }
     }
 
     /**
      * Saves a processed, filtered, and perspective-corrected bitmap as a document.
-     * Generates a 1-page PDF, thumbnail, executes OCR text recognition, creates Word .docx export,
-     * and persists the entry into Room.
+     * Generates a 1-page PDF, thumbnail, inserts into Room immediately, then executes
+     * OCR text recognition and Word .docx export in the background.
      */
     fun saveBitmapAsScannedDocument(
         bitmap: android.graphics.Bitmap,
@@ -297,20 +340,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                     Log.e("DocumentScannerVM", "Failed to create thumbnail", e)
                 }
 
-                // 4. OCR text
-                val extractedText = preExtractedOcr ?: OcrTextExtractor.extractTextFromImages(context, listOf(pageFile.absolutePath))
-
-                // 5. Generate Word (.docx) if text extracted
-                var docxPath = ""
-                if (extractedText.isNotBlank()) {
-                    val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
-                    val docxFile = File(docxDir, "${sanitizedTitle}_$timeStamp.docx")
-                    val success = DocxExporter.createDocxFile(docxFile, title, extractedText)
-                    if (success && docxFile.exists()) {
-                        docxPath = docxFile.absolutePath
-                    }
-                }
-
+                // Build doc with empty OCR
                 val doc = ScannedDocument(
                     title = title,
                     pdfUriPath = destPdfFile.absolutePath,
@@ -318,18 +348,45 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                     fileSizeBytes = destPdfFile.length(),
                     createdAtMillis = System.currentTimeMillis(),
                     thumbnailPath = thumbPath,
-                    ocrText = extractedText,
-                    docxUriPath = docxPath
+                    ocrText = "",          // empty initially
+                    docxUriPath = ""
                 )
 
+                // Insert to Room FIRST
                 val newId = dao.insertDocument(doc)
                 val savedDoc = doc.copy(id = newId.toInt())
 
+                // Notify UI IMMEDIATELY
                 withContext(Dispatchers.Main) {
                     onComplete?.invoke(savedDoc)
                 }
+
+                // THEN run OCR in background
+                try {
+                    val extractedText = preExtractedOcr ?: withTimeoutOrNull(15_000L) {
+                        OcrTextExtractor.extractTextFromImages(
+                            context, listOf(pageFile.absolutePath)
+                        )
+                    } ?: ""
+
+                    if (extractedText.isNotBlank()) {
+                        val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
+                        val docxFile = File(docxDir, "${sanitizedTitle}_$timeStamp.docx")
+                        val docxSuccess = DocxExporter.createDocxFile(docxFile, title, extractedText)
+                        val docxPath = if (docxSuccess && docxFile.exists())
+                            docxFile.absolutePath else ""
+
+                        // Update Room
+                        dao.updateOcrAndDocx(newId.toInt(), extractedText, docxPath)
+                    }
+                } catch (e: Exception) {
+                    Log.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
+                }
             } catch (e: Exception) {
-                Log.e("DocumentScannerVM", "Error saving bitmap as document", e)
+                Log.e("DocumentScannerVM", "Error", e)
+                withContext(Dispatchers.Main) {
+                    onComplete?.invoke(ScannedDocument(title = "error"))
+                }
             }
         }
     }

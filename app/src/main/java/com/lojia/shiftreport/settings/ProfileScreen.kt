@@ -45,12 +45,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -94,15 +96,19 @@ fun ProfileScreen(
 
     val userProfile by reportViewModel.userProfile.collectAsState()
     val businessProfile by reportViewModel.businessProfile.collectAsState()
+    val savedAddresses by reportViewModel.savedAddresses.collectAsState()
+    val addressCount = savedAddresses.size
+    val navTo: (String) -> Unit = { route -> reportViewModel.selectReportSettingsMenu(route) }
     val bProfile = businessProfile ?: BusinessProfile()
-
-    // Back navigation to return to root settings
-    BackHandler {
-        reportViewModel.selectReportSettingsMenu("root")
-    }
 
     // Active expanded inline section: "name", "store_name", "vat", "address", "phone", "email", "password", or null
     var expandedSection by remember { mutableStateOf<String?>(null) }
+
+    // Back handler: if any accordion is expanded, collapse it.
+    // Otherwise, do NOT intercept back — let MainActivity handle it.
+    BackHandler(enabled = expandedSection != null) {
+        expandedSection = null
+    }
     var showMapLocationPicker by remember { mutableStateOf(false) }
 
     var logoBitmap by remember(bProfile.logoUri) { mutableStateOf<Bitmap?>(null) }
@@ -156,16 +162,23 @@ fun ProfileScreen(
     val rawStorePhone = remember(bProfile.phone, userProfile?.phone) {
         bProfile.phone.ifBlank { userProfile?.phone.orEmpty() }
     }
+    val hasExplicitPhoneCountry = remember(rawStorePhone) {
+        val clean = rawStorePhone.trim()
+        clean.isNotBlank() && AppCountry.entries.any {
+            clean.startsWith(it.dialCode) ||
+                (clean.startsWith("+") && clean.removePrefix("+").startsWith(it.dialCode.removePrefix("+")))
+        }
+    }
     val (storePhoneCountry, storePhoneLocalDigits) = remember(rawStorePhone, currentAppCountry) {
         parsePhoneNumberWithCountry(rawStorePhone, currentAppCountry)
     }
-    val storePhoneDisplay = remember(storePhoneCountry, storePhoneLocalDigits, rawStorePhone) {
-        if (storePhoneLocalDigits.isNotBlank()) {
+    val storePhoneDisplay = remember(storePhoneCountry, storePhoneLocalDigits, rawStorePhone, hasExplicitPhoneCountry) {
+        if (hasExplicitPhoneCountry && storePhoneLocalDigits.isNotBlank()) {
             "${countryCodeToFlagEmoji(storePhoneCountry.code)} ${storePhoneCountry.dialCode} $storePhoneLocalDigits"
         } else if (rawStorePhone.isNotBlank()) {
             rawStorePhone
         } else {
-            "${countryCodeToFlagEmoji(storePhoneCountry.code)} ${storePhoneCountry.dialCode} (Not configured)"
+            "Not configured"
         }
     }
 
@@ -207,20 +220,20 @@ fun ProfileScreen(
             modifier = Modifier
                 .widthIn(max = 600.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // =================================================================
-            // 2. Top Avatar block (96.dp, PrimaryContainerLight, 2.dp border)
+            // 1. Top Avatar block (100.dp, PrimaryContainerLight, 2.dp border)
             // =================================================================
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
                     Box(
                         modifier = Modifier
-                            .size(96.dp)
+                            .size(100.dp)
                             .clip(CircleShape)
                             .background(PrimaryContainerLight)
                             .border(2.dp, PrimaryIndigoLight, CircleShape)
@@ -240,11 +253,9 @@ fun ProfileScreen(
                         } else {
                             Text(
                                 text = initials,
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryIndigoLight,
-                                    fontSize = 28.sp
-                                )
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryIndigoLight
                             )
                         }
                     }
@@ -255,7 +266,8 @@ fun ProfileScreen(
                         color = PrimaryIndigoLight,
                         shadowElevation = 3.dp,
                         modifier = Modifier
-                            .size(30.dp)
+                            .offset(x = (-2).dp, y = (-2).dp)
+                            .size(28.dp)
                             .clickable { openPhotoPicker() }
                             .testTag("btn_camera_avatar")
                     ) {
@@ -264,7 +276,7 @@ fun ProfileScreen(
                                 imageVector = Icons.Default.CameraAlt,
                                 contentDescription = "Edit photo",
                                 tint = PureWhite,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
@@ -274,45 +286,75 @@ fun ProfileScreen(
 
                 Text(
                     text = currentDisplayName,
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = userProfile?.currentRole ?: "ADMIN",
-                    fontSize = 13.sp,
-                    color = OnSurfaceVariantLight
-                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = PrimaryContainerLight
+                ) {
+                    Text(
+                        text = (userProfile?.currentRole ?: "ADMIN").uppercase(),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryIndigoDark,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                TextButton(onClick = { openPhotoPicker() }) {
+                OutlinedButton(
+                    onClick = { openPhotoPicker() },
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, PrimaryIndigoLight),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = PrimaryIndigoLight
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CameraAlt,
+                        contentDescription = null,
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Change Photo",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = PrimaryIndigoLight
                     )
                 }
             }
 
             // =================================================================
-            // 3. Clean Item List with INLINE Expandable Accordion Editing
+            // 2. Clean Item List with Section Grouping & Accordion Editing
             // =================================================================
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // =============================================================
+                // GROUP 1: PERSONAL INFORMATION
+                // =============================================================
+                ProfileSectionHeader(title = "PERSONAL INFORMATION")
+
                 // -------------------------------------------------------------
                 // ROW 1: Owner / Admin Name
                 // -------------------------------------------------------------
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Person,
-                    iconTint = OnSurfaceVariantLight,
+                    iconTint = PrimaryIndigoLight,
                     title = "Owner / Admin Name",
                     value = userProfile?.fullName?.ifBlank { "Demo Owner" } ?: "Demo Owner",
+                    valueColor = OnSurfaceLight,
+                    valueFontSize = 13.sp,
+                    valueFontWeight = FontWeight.Medium,
                     isExpanded = expandedSection == "name",
                     onToggle = {
                         expandedSection = if (expandedSection == "name") null else "name"
@@ -358,323 +400,16 @@ fun ProfileScreen(
                 }
 
                 // -------------------------------------------------------------
-                // ROW 2: Store / Business Name
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Store,
-                    iconTint = OnSurfaceVariantLight,
-                    title = "Store / Business Name",
-                    value = bProfile.businessName.ifBlank { "Demo Store (Debug)" },
-                    isExpanded = expandedSection == "store_name",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "store_name") null else "store_name"
-                    },
-                    testTag = "row_store_name"
-                ) {
-                    var tempStoreName by remember(bProfile.businessName) {
-                        mutableStateOf(bProfile.businessName)
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempStoreName,
-                            onValueChange = { tempStoreName = it },
-                            label = "Store / Business Name",
-                            placeholder = "e.g. Demo Store (Debug)",
-                            testTag = "input_edit_store_name"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = "Cancel",
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = "Save",
-                                onClick = {
-                                    val cleanName = tempStoreName.trim()
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(businessName = cleanName))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(businessName = cleanName))
-                                    expandedSection = null
-                                    Toast.makeText(context, "Store name updated!", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 3: Tax Registration / VAT ID
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.ReceiptLong,
-                    iconTint = OnSurfaceVariantLight,
-                    title = "Tax Registration / VAT ID",
-                    value = bProfile.vatNumber.ifBlank { "Not set" },
-                    isExpanded = expandedSection == "vat",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "vat") null else "vat"
-                    },
-                    testTag = "row_vat_number"
-                ) {
-                    var tempVat by remember(bProfile.vatNumber) {
-                        mutableStateOf(bProfile.vatNumber)
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempVat,
-                            onValueChange = { tempVat = it },
-                            label = "Tax Registration / VAT ID",
-                            placeholder = "e.g. 310000000000003",
-                            testTag = "input_edit_vat_id"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = "Cancel",
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = "Save",
-                                onClick = {
-                                    val cleanVat = tempVat.trim()
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(vatNumber = cleanVat))
-                                    expandedSection = null
-                                    Toast.makeText(context, "Tax Registration ID updated!", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 4: Permanent Store Address (Google Maps)
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Filled.Place,
-                    iconTint = OnSurfaceVariantLight,
-                    title = "Permanent Store Address",
-                    value = if (permanentAddress.isNotBlank()) permanentAddress else "5000 Vista Del Lago Rd, Ukia...",
-                    isExpanded = expandedSection == "address",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "address") null else "address"
-                    },
-                    testTag = "row_permanent_store_address"
-                ) {
-                    var tempAddr by remember(permanentAddress) { mutableStateOf(permanentAddress) }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempAddr,
-                            onValueChange = { tempAddr = it },
-                            label = "Store Address",
-                            placeholder = "Enter street address or choose from map"
-                        )
-
-                        // Google Maps Live Picker Button
-                        Surface(
-                            onClick = { showMapLocationPicker = true },
-                            shape = RoundedCornerShape(10.dp),
-                            color = PrimaryContainerLight,
-                            border = BorderStroke(1.dp, OutlineLight),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(Icons.Outlined.Map, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(18.dp))
-                                Text("Select Location on Google Maps", fontWeight = FontWeight.SemiBold, color = PrimaryIndigoLight, fontSize = 13.sp)
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = "Cancel",
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = "Save",
-                                onClick = {
-                                    val cleanAddr = tempAddr.trim()
-                                    val current = userProfile ?: UserProfile()
-                                    reportViewModel.saveUserProfile(current.copy(address = cleanAddr))
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(address = cleanAddr))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(address = cleanAddr))
-                                    expandedSection = null
-                                    Toast.makeText(context, "Store address saved!", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 5: Store Contact Phone (Country Code Selector + Digits)
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Phone,
-                    iconTint = OnSurfaceVariantLight,
-                    title = "Store Contact Phone",
-                    value = storePhoneDisplay,
-                    isExpanded = expandedSection == "phone",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "phone") null else "phone"
-                    },
-                    testTag = "row_store_phone"
-                ) {
-                    var tempPhoneCountry by remember(storePhoneCountry) { mutableStateOf(storePhoneCountry) }
-                    var tempPhoneDigits by remember(storePhoneLocalDigits) { mutableStateOf(storePhoneLocalDigits) }
-                    var showCountryPickerModal by remember { mutableStateOf(false) }
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Country Code Picker Button
-                            Surface(
-                                onClick = { showCountryPickerModal = true },
-                                shape = RoundedCornerShape(10.dp),
-                                color = BackgroundLight,
-                                border = BorderStroke(1.dp, OutlineLight),
-                                modifier = Modifier
-                                    .height(56.dp)
-                                    .testTag("btn_select_phone_country")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = countryCodeToFlagEmoji(tempPhoneCountry.code),
-                                        fontSize = 18.sp
-                                    )
-                                    Text(
-                                        text = tempPhoneCountry.dialCode,
-                                        fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = OnSurfaceLight
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "Change country",
-                                        tint = OnSurfaceVariantLight,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-
-                            // Local Phone Digits Field
-                            ProfileDialogTextField(
-                                value = tempPhoneDigits,
-                                onValueChange = { input ->
-                                    tempPhoneDigits = input.filter { it.isDigit() || it == ' ' || it == '-' }
-                                },
-                                label = "Phone Digits",
-                                placeholder = "500360360",
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                modifier = Modifier.weight(1f),
-                                testTag = "input_phone_digits"
-                            )
-                        }
-
-                        if (tempPhoneDigits.isNotBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = PrimaryContainerLight,
-                                border = BorderStroke(1.dp, OutlineLight),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "Preview: ${tempPhoneCountry.dialCode} ${tempPhoneDigits.trim()}",
-                                    fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryIndigoLight,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = "Cancel",
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = "Save",
-                                onClick = {
-                                    val fullFormatted = if (tempPhoneDigits.isNotBlank()) {
-                                        "${tempPhoneCountry.dialCode} ${tempPhoneDigits.trim()}"
-                                    } else {
-                                        ""
-                                    }
-                                    val current = userProfile ?: UserProfile()
-                                    reportViewModel.saveUserProfile(current.copy(phone = fullFormatted))
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(phone = fullFormatted))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(phone = fullFormatted))
-                                    expandedSection = null
-                                    Toast.makeText(context, "Phone number saved!", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        if (showCountryPickerModal) {
-                            CountryCodePickerDialog(
-                                selectedCountry = tempPhoneCountry,
-                                onCountrySelected = { newCountry ->
-                                    tempPhoneCountry = newCountry
-                                    showCountryPickerModal = false
-                                },
-                                onDismiss = { showCountryPickerModal = false }
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 6: Store Contact Email
+                // ROW 2: Store Contact Email
                 // -------------------------------------------------------------
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Email,
-                    iconTint = OnSurfaceVariantLight,
+                    iconTint = PrimaryIndigoLight,
                     title = "Store Contact Email",
                     value = bProfile.email.ifBlank { userProfile?.email.orEmpty() }.ifBlank { "store@example.com" },
+                    valueColor = PrimaryIndigoLight,
+                    valueFontSize = 13.sp,
+                    valueFontWeight = FontWeight.Medium,
                     isExpanded = expandedSection == "email",
                     onToggle = {
                         expandedSection = if (expandedSection == "email") null else "email"
@@ -723,14 +458,368 @@ fun ProfileScreen(
                     }
                 }
 
+                // =============================================================
+                // GROUP 2: STORE DETAILS
+                // =============================================================
+                ProfileSectionHeader(title = "STORE DETAILS")
+
+                // -------------------------------------------------------------
+                // ROW 3: Store / Business Name
+                // -------------------------------------------------------------
+                InlineEditableProfileRow(
+                    icon = Icons.Outlined.Store,
+                    iconTint = OnSurfaceVariantLight,
+                    title = "Store / Business Name",
+                    value = bProfile.businessName.ifBlank { "Demo Store (Debug)" },
+                    valueColor = OnSurfaceLight,
+                    valueFontSize = 13.sp,
+                    valueFontWeight = FontWeight.Medium,
+                    isExpanded = expandedSection == "store_name",
+                    onToggle = {
+                        expandedSection = if (expandedSection == "store_name") null else "store_name"
+                    },
+                    testTag = "row_store_name"
+                ) {
+                    var tempStoreName by remember(bProfile.businessName) {
+                        mutableStateOf(bProfile.businessName)
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        ProfileDialogTextField(
+                            value = tempStoreName,
+                            onValueChange = { tempStoreName = it },
+                            label = "Store / Business Name",
+                            placeholder = "e.g. Demo Store (Debug)",
+                            testTag = "input_edit_store_name"
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            LojiaOutlinedButton(
+                                text = "Cancel",
+                                onClick = { expandedSection = null },
+                                modifier = Modifier.weight(1f)
+                            )
+                            LojiaPrimaryButton(
+                                text = "Save",
+                                onClick = {
+                                    val cleanName = tempStoreName.trim()
+                                    reportViewModel.saveBusinessProfile(bProfile.copy(businessName = cleanName))
+                                    reportViewModel.updateBusiness(UpdateBusinessRequest(businessName = cleanName))
+                                    expandedSection = null
+                                    Toast.makeText(context, "Store name updated!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // ROW 4: Tax Registration / VAT ID
+                // -------------------------------------------------------------
+                InlineEditableProfileRow(
+                    icon = Icons.Outlined.ReceiptLong,
+                    iconTint = OnSurfaceVariantLight,
+                    title = "Tax Registration / VAT ID",
+                    value = bProfile.vatNumber.ifBlank { "Not set" },
+                    valueColor = OnSurfaceVariantLight,
+                    valueFontSize = 12.sp,
+                    valueFontFamily = FontFamily.Monospace,
+                    isExpanded = expandedSection == "vat",
+                    onToggle = {
+                        expandedSection = if (expandedSection == "vat") null else "vat"
+                    },
+                    testTag = "row_vat_number"
+                ) {
+                    var tempVat by remember(bProfile.vatNumber) {
+                        mutableStateOf(bProfile.vatNumber)
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        ProfileDialogTextField(
+                            value = tempVat,
+                            onValueChange = { tempVat = it },
+                            label = "Tax Registration / VAT ID",
+                            placeholder = "e.g. 310000000000003",
+                            testTag = "input_edit_vat_id"
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            LojiaOutlinedButton(
+                                text = "Cancel",
+                                onClick = { expandedSection = null },
+                                modifier = Modifier.weight(1f)
+                            )
+                            LojiaPrimaryButton(
+                                text = "Save",
+                                onClick = {
+                                    val cleanVat = tempVat.trim()
+                                    reportViewModel.saveBusinessProfile(bProfile.copy(vatNumber = cleanVat))
+                                    expandedSection = null
+                                    Toast.makeText(context, "Tax Registration ID updated!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // Saved Addresses Row
+                // -------------------------------------------------------------
+                InlineEditableProfileRow(
+                    icon = Icons.Outlined.LocationOn,
+                    label = "Saved Addresses",
+                    currentValue = "${addressCount} address${if (addressCount != 1) "es" else ""} saved",
+                    onEditClick = { navTo("settings/profile/addresses") }
+                )
+
+                // -------------------------------------------------------------
+                // ROW 5: Permanent Store Address (Google Maps)
+                // -------------------------------------------------------------
+                InlineEditableProfileRow(
+                    icon = Icons.Filled.Place,
+                    iconTint = OnSurfaceVariantLight,
+                    title = "Permanent Store Address",
+                    value = if (permanentAddress.isNotBlank()) permanentAddress else "5000 Vista Del Lago Rd, Ukia...",
+                    valueColor = OnSurfaceVariantLight,
+                    valueFontSize = 12.sp,
+                    valueMaxLines = 2,
+                    isExpanded = expandedSection == "address",
+                    onToggle = {
+                        expandedSection = if (expandedSection == "address") null else "address"
+                    },
+                    testTag = "row_permanent_store_address"
+                ) {
+                    var tempAddr by remember(permanentAddress) { mutableStateOf(permanentAddress) }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ProfileDialogTextField(
+                            value = tempAddr,
+                            onValueChange = { tempAddr = it },
+                            label = "Store Address",
+                            placeholder = "Enter street address or choose from map",
+                            testTag = "txt_permanent_address_field"
+                        )
+
+                        // Google Maps Live Picker Button
+                        Surface(
+                            onClick = { showMapLocationPicker = true },
+                            shape = RoundedCornerShape(10.dp),
+                            color = PrimaryContainerLight,
+                            border = BorderStroke(1.dp, OutlineLight),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Outlined.Map, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(18.dp))
+                                Text("Select Location on Google Maps", fontWeight = FontWeight.SemiBold, color = PrimaryIndigoLight, fontSize = 13.sp)
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            LojiaOutlinedButton(
+                                text = "Cancel",
+                                onClick = { expandedSection = null },
+                                modifier = Modifier.weight(1f)
+                            )
+                            LojiaPrimaryButton(
+                                text = "Save",
+                                onClick = {
+                                    val cleanAddr = tempAddr.trim()
+                                    val current = userProfile ?: UserProfile()
+                                    reportViewModel.saveUserProfile(current.copy(address = cleanAddr))
+                                    reportViewModel.saveBusinessProfile(bProfile.copy(address = cleanAddr))
+                                    reportViewModel.updateBusiness(UpdateBusinessRequest(address = cleanAddr))
+                                    expandedSection = null
+                                    Toast.makeText(context, "Store address saved!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // ROW 6: Store Contact Phone (Country Code Selector + Digits)
+                // -------------------------------------------------------------
+                InlineEditableProfileRow(
+                    icon = Icons.Outlined.Phone,
+                    iconTint = OnSurfaceVariantLight,
+                    title = "Store Contact Phone",
+                    value = storePhoneDisplay,
+                    valueColor = OnSurfaceVariantLight,
+                    valueFontSize = 13.sp,
+                    isExpanded = expandedSection == "phone",
+                    onToggle = {
+                        expandedSection = if (expandedSection == "phone") null else "phone"
+                    },
+                    testTag = "row_store_phone"
+                ) {
+                    var tempPhoneCountry by remember(storePhoneCountry) { mutableStateOf(storePhoneCountry) }
+                    var hasUserSelectedCountry by remember(hasExplicitPhoneCountry) { mutableStateOf(hasExplicitPhoneCountry) }
+                    var tempPhoneDigits by remember(storePhoneLocalDigits) { mutableStateOf(storePhoneLocalDigits) }
+                    var showCountryPickerModal by remember { mutableStateOf(false) }
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Country Code Picker Button
+                            Surface(
+                                onClick = { showCountryPickerModal = true },
+                                shape = RoundedCornerShape(10.dp),
+                                color = BackgroundLight,
+                                border = BorderStroke(1.dp, OutlineLight),
+                                modifier = Modifier
+                                    .height(56.dp)
+                                    .testTag("btn_select_phone_country")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    if (hasUserSelectedCountry) {
+                                        Text(
+                                            text = countryCodeToFlagEmoji(tempPhoneCountry.code),
+                                            fontSize = 18.sp,
+                                            color = OnSurfaceLight
+                                        )
+                                    }
+                                    Text(
+                                        text = if (hasUserSelectedCountry) tempPhoneCountry.dialCode else "Code",
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OnSurfaceLight
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Change country",
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            // Local Phone Digits Field
+                            ProfileDialogTextField(
+                                value = tempPhoneDigits,
+                                onValueChange = { input ->
+                                    tempPhoneDigits = input.filter { it.isDigit() || it == ' ' || it == '-' }
+                                },
+                                label = "Phone Digits",
+                                placeholder = "500360360",
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                modifier = Modifier.weight(1f),
+                                testTag = "input_phone_digits"
+                            )
+                        }
+
+                        if (tempPhoneDigits.isNotBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = PrimaryContainerLight,
+                                border = BorderStroke(1.dp, OutlineLight),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val previewPrefix = if (hasUserSelectedCountry) "${tempPhoneCountry.dialCode} " else ""
+                                Text(
+                                    text = "Preview: $previewPrefix${tempPhoneDigits.trim()}",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryIndigoLight,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            LojiaOutlinedButton(
+                                text = "Cancel",
+                                onClick = { expandedSection = null },
+                                modifier = Modifier.weight(1f)
+                            )
+                            LojiaPrimaryButton(
+                                text = "Save",
+                                onClick = {
+                                    val fullFormatted = if (tempPhoneDigits.isNotBlank()) {
+                                        if (hasUserSelectedCountry) {
+                                            "${tempPhoneCountry.dialCode} ${tempPhoneDigits.trim()}"
+                                        } else {
+                                            tempPhoneDigits.trim()
+                                        }
+                                    } else {
+                                        ""
+                                    }
+                                    val current = userProfile ?: UserProfile()
+                                    reportViewModel.saveUserProfile(current.copy(phone = fullFormatted))
+                                    reportViewModel.saveBusinessProfile(bProfile.copy(phone = fullFormatted))
+                                    reportViewModel.updateBusiness(UpdateBusinessRequest(phone = fullFormatted))
+                                    expandedSection = null
+                                    Toast.makeText(context, "Phone number saved!", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        if (showCountryPickerModal) {
+                            CountryCodePickerDialog(
+                                selectedCountry = tempPhoneCountry,
+                                onCountrySelected = { newCountry ->
+                                    tempPhoneCountry = newCountry
+                                    hasUserSelectedCountry = true
+                                    showCountryPickerModal = false
+                                },
+                                onDismiss = { showCountryPickerModal = false }
+                            )
+                        }
+                    }
+                }
+
+                // =============================================================
+                // GROUP 3: SECURITY
+                // =============================================================
+                ProfileSectionHeader(title = "SECURITY")
+
                 // -------------------------------------------------------------
                 // ROW 7: Change Password
                 // -------------------------------------------------------------
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Key,
-                    iconTint = OnSurfaceVariantLight,
+                    iconTint = ErrorRedLight,
                     title = "Change Password",
                     value = "Change administrator master pass...",
+                    valueColor = OnSurfaceVariantLight,
+                    valueFontSize = 13.sp,
                     isExpanded = expandedSection == "password",
                     onToggle = {
                         expandedSection = if (expandedSection == "password") null else "password"
@@ -759,7 +848,7 @@ fun ProfileScreen(
 
                     val strengthScore = listOf(hasMinLength, hasUpper, hasDigit, hasSpecial).count { it }
                     val (strengthLabel, strengthColor, strengthProgress) = when {
-                        newPassword.isEmpty() -> Triple("", Color.Transparent, 0f)
+                        newPassword.isEmpty() -> Triple("", OutlineVariantLight, 0f)
                         strengthScore <= 1 -> Triple("Weak", ErrorRedLight, 0.25f)
                         strengthScore == 2 -> Triple("Fair", WarningOrange, 0.5f)
                         strengthScore == 3 -> Triple("Good", InfoBlue, 0.75f)
@@ -781,7 +870,7 @@ fun ProfileScreen(
                                 placeholder = "Enter current password",
                                 isError = currentPasswordError != null,
                                 supportingText = {
-                                    currentPasswordError?.let { Text(it, color = ErrorRedLight) }
+                                    currentPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
                                 },
                                 visualTransformation = if (currentPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
@@ -814,7 +903,7 @@ fun ProfileScreen(
                             placeholder = "Enter new strong password",
                             isError = newPasswordError != null,
                             supportingText = {
-                                newPasswordError?.let { Text(it, color = ErrorRedLight) }
+                                newPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
                             },
                             visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
@@ -865,7 +954,7 @@ fun ProfileScreen(
                             placeholder = "Re-enter new password",
                             isError = confirmPasswordError != null,
                             supportingText = {
-                                confirmPasswordError?.let { Text(it, color = ErrorRedLight) }
+                                confirmPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
                             },
                             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
@@ -929,7 +1018,7 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
@@ -986,8 +1075,55 @@ fun EnterpriseProfileScreen(
 }
 
 // =============================================================================
-// INLINE EDITABLE PROFILE ROW (LojiaSettingsCard Accordion Spec)
+// SECTION HEADER & INLINE EDITABLE PROFILE ROW (LojiaSettingsCard Accordion Spec)
 // =============================================================================
+
+@Composable
+private fun ProfileSectionHeader(title: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, top = 20.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 3.dp, height = 14.dp)
+                .background(PrimaryIndigoLight, RoundedCornerShape(2.dp))
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title.uppercase(),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextHintColor,
+            letterSpacing = 0.8.sp
+        )
+    }
+}
+
+@Composable
+fun InlineEditableProfileRow(
+    icon: ImageVector,
+    label: String,
+    currentValue: String,
+    onEditClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    iconTint: Color = OnSurfaceVariantLight,
+    testTag: String = "row_saved_addresses"
+) {
+    InlineEditableProfileRow(
+        icon = icon,
+        iconTint = iconTint,
+        title = label,
+        value = currentValue,
+        isExpanded = false,
+        onToggle = onEditClick,
+        modifier = modifier,
+        testTag = testTag,
+        editContent = {}
+    )
+}
 
 @Composable
 fun InlineEditableProfileRow(
@@ -998,6 +1134,11 @@ fun InlineEditableProfileRow(
     isExpanded: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    valueColor: Color = OnSurfaceVariantLight,
+    valueFontSize: TextUnit = 13.sp,
+    valueFontWeight: FontWeight = FontWeight.Normal,
+    valueFontFamily: FontFamily? = null,
+    valueMaxLines: Int = 1,
     testTag: String = "",
     editContent: @Composable () -> Unit
 ) {
@@ -1026,7 +1167,7 @@ fun InlineEditableProfileRow(
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
-                    tint = OnSurfaceVariantLight,
+                    tint = iconTint,
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -1044,9 +1185,11 @@ fun InlineEditableProfileRow(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = value.ifBlank { "Not set" },
-                        fontSize = 13.sp,
-                        color = OnSurfaceVariantLight,
-                        maxLines = 1,
+                        fontSize = valueFontSize,
+                        fontWeight = valueFontWeight,
+                        fontFamily = valueFontFamily,
+                        color = valueColor,
+                        maxLines = valueMaxLines,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -1054,7 +1197,7 @@ fun InlineEditableProfileRow(
                 Icon(
                     imageVector = if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                     contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    tint = TextHintColor,
+                    tint = if (isExpanded) PrimaryIndigoLight else TextHintColor,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -1104,12 +1247,13 @@ fun ProfileDialogTextField(
         label = {
             Text(
                 text = label,
+                fontSize = 12.sp,
                 color = OnSurfaceVariantLight,
                 fontWeight = FontWeight.Medium
             )
         },
         placeholder = if (placeholder.isNotBlank()) {
-            { Text(text = placeholder, color = TextHintColor) }
+            { Text(text = placeholder, fontSize = 13.sp, color = TextHintColor) }
         } else null,
         singleLine = singleLine,
         isError = isError,
@@ -1205,11 +1349,12 @@ fun CountryCodePickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
+                .widthIn(max = Dimens.DialogMaxWidth)
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp)
-                .shadow(12.dp, RoundedCornerShape(24.dp))
+                .padding(horizontal = Dimens.SpacingLg)
+                .shadow(Dimens.DialogElevation, RoundedCornerShape(Dimens.DialogCornerRadius))
                 .testTag("dialog_select_country_code"),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
             colors = CardDefaults.cardColors(containerColor = PureWhite)
         ) {
             Column(
@@ -1287,7 +1432,7 @@ fun CountryCodePickerDialog(
                                 onDismiss()
                             },
                             shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) PrimaryContainerLight else Color.Transparent,
+                            color = if (isSelected) PrimaryContainerLight else PureWhite,
                             modifier = Modifier.fillMaxWidth().testTag("country_option_${country.code}")
                         ) {
                             Row(
@@ -1302,7 +1447,7 @@ fun CountryCodePickerDialog(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text(text = flag, fontSize = 22.sp)
+                                    Text(text = flag, fontSize = 22.sp, color = OnSurfaceLight)
                                     Column {
                                         Text(
                                             text = countryName,

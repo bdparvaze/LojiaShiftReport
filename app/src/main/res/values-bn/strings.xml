@@ -1,14 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_title">লজিয়া শিফট রিপোর্ট</string>
-    <string name="shop_module">দোকান ও পিওএস মডিউল</string>
     <string name="shift_report_module">শিফট রিপোর্ট মডিউল</string>
     <string name="switch_module">মডিউল পরিবর্তন করুন</string>
     <string name="active_module">সক্রিয় মোড</string>
-    <string name="nav_pos">শপ</string>
     <string name="nav_reports">শিফট রিপোর্ট</string>
-    <string name="nav_cash_management">ক্যাশ ড্রয়ার ব্যবস্থাপনা</string>
-    <string name="nav_inventory">ইনভেন্টরি ও পণ্য</string>
     <string name="nav_analytics">অ্যানালিটিক্স</string>
     <string name="nav_settings">সেটিংস</string>
     <string name="all_settings">সকল সেটিংস</string>
@@ -17,9 +13,6 @@
     <string name="back">ফিরে যান</string>
     <string name="back_to_main">রেজিস্টার / মূল মেনুতে ফিরে যান</string>
     <string name="back_to_reports">শিফট রিপোর্টে ফিরে যান</string>
-    <string name="role_admin">অ্যাডমিনিস্ট্রেটর</string>
-    <string name="role_cashier">ক্যাশিয়ার</string>
-    <string name="role_staff">স্টাফ</string>
     <string name="switch_role">ভূমিকা পরিবর্তন</string>
     <string name="restricted_access">নিরাপত্তা যাচাই</string>
     <string name="restricted_desc">মডিউল পরিবর্তন বা এই অংশে প্রবেশের জন্য আপনার ৬ সংখ্যার পিন বা পাসওয়ার্ড প্রদান করুন।</string>
@@ -81,7 +74,6 @@
     <string name="sales_history">বিক্রয় ইতিহাস ও লগ</string>
     <string name="receipts">রসিদ</string>
     <string name="receipt_customization">রসিদ কাস্টমাইজেশন</string>
-    <string name="shop_logo">দোকানের লোগো</string>
     <string name="custom_footer_text">রসিদের নিচের টেক্সট</string>
     <string name="customer_memos">কাস্টমার মেমো</string>
     <string name="receipt_preview">রসিদের লাইভ প্রিভিউ</string>
@@ -91,8 +83,6 @@
     <string name="report_entry">রিপোর্ট এন্ট্রি</string>
     <string name="live_cashflow_audit">লাইভ ক্যাশফ্লো ও অডিট</string>
     <string name="archives_tab">আর্কাইভস</string>
-    <string name="cash_management">ক্যাশ ড্রয়ার ব্যবস্থাপনা</string>
-    <string name="cash_management_title">ক্যাশ ড্রয়ার ব্যবস্থাপনা</string>
     <string name="pay_in_desc">ড্রয়ারে অতিরিক্ত নগদ বা প্রারম্ভিক ক্যাশ যোগ করুন</string>
     <string name="pay_out_desc">খরচ বা ভেন্ডর পেমেন্টের জন্য ড্রয়ার থেকে নগদ উত্তোলন</string>
     <string name="drawer_history">ক্যাশ ড্রয়ার লেনদেনের ইতিহাস</string>
@@ -120,7 +110,6 @@
     <string name="add_category">ক্যাটেগরি যোগ করুন</string>
     <string name="add_modifier">মডিফায়ার যোগ করুন</string>
     <string name="add_discount">ডিসকাউন্ট যোগ করুন</string>
-    <string name="inventory_title">ইনভেন্টরি ব্যবস্থাপনা</string>
     <string name="low_stock_warning">কম স্টকের সতর্কতা</string>
     <string name="product_name">পণ্যের নাম</string>
     <string name="price">বিক্রয় মূল্য</string>
@@ -151,10 +140,8 @@
     <string name="live_cashflow">লাইভ ক্যাশফ্লো ও অডিট</string>
     <string name="archives">আর্কাইভস ও রেকর্ড</string>
     <string name="drawer_menu">মূল মেনু</string>
-    <string name="mode_shop">মোড: শপ ও পিওএস</string>
     <string name="mode_shift">মোড: শিফট রিপোর্ট</string>
     <string name="switch_to_shift_module">শিফট রিপোর্ট মডিউলে যান</string>
-    <string name="switch_to_shop_module">শপ ও পিওএস মডিউলে যান</string>
     <string name="sync_now">এখনই কনফিগ সিঙ্ক করুন</string>
     <string name="centralized_sync">সেন্ট্রালাইজড কনফিগ সিঙ্ক</string>
     <string name="centralized_sync_desc">কান্ট্রি, ল্যাঙ্গুয়েজ ও ক্যাশিয়ারের যেকোনো পরিবর্তন সাথে সাথে পুরো অ্যাপের সকল স্ক্রিনে কার্যকর হয়।</string>
@@ -424,9 +411,6 @@
     <string name="cash_bank_label">নগদ / ব্যাংক</string>
     <string name="employer_advances_count">এমপ্লয়ার অ্যাডভান্স লেনদেন (%d)</string>
     <string name="no_employer_advance_records">কোনো এমপ্লয়ার অ্যাডভান্স রেকর্ড নেই</string>
-    <string name="total_shopping_expense">মোট শপিং / পেইড আউট খরচ</string>
-    <string name="outdoor_shopping_expenses_count">আউটডোর শপিং খরচ (%d)</string>
-    <string name="no_shopping_records">কোনো শপিং খরচের রেকর্ড নেই</string>
     <string name="total_walkout_loss">মোট ওয়াক-আউট ক্ষতি</string>
     <string name="walkout_unpaid_bills_count">ওয়াক-আউট অপরিশোধিত বিল (%d)</string>
     <string name="no_walkout_records">কোনো ওয়াক-আউট রেকর্ড পাওয়া যায়নি</string>
@@ -476,7 +460,6 @@
     <string name="peak_sales_day">সর্বোচ্চ বিক্রির দিন</string>
     <string name="projected_monthly">প্রত্যাশিত মাসিক আয়</string>
     <string name="monthly_revenue_trend">মাসিক আয়ের ধারা</string>
-    <string name="pos_direct_sales">পিওএস সরাসরি বিক্রয়</string>
     <string name="shift_cashier_sales">শিফট ক্যাশিয়ার বিক্রয়</string>
     <string name="weekly_breakdown">সাপ্তাহিক বিশ্লেষণ</string>
     <string name="top_revenue_days">সর্বোচ্চ আয়ের দিনসমূহ</string>
@@ -505,7 +488,6 @@
     <string name="full_name_1">পূর্ণ নাম *</string>
     <string name="eg_john_doe_sarah">যেমন: আহমেদ / সারা</string>
     <string name="msg_6digit_security_pin">৬ সংখ্যার সিকিউরিটি পিন</string>
-    <string name="select_role_position">দায়িত্ব / ভূমিকা নির্বাচন করুন:</string>
     <string name="cashier_1">ক্যাশিয়ার</string>
     <string name="employee">কর্মচারী</string>
     <string name="manager">ম্যানেজার</string>
@@ -516,7 +498,7 @@
     <string name="cancel_3">বাতিল</string>
     <string name="admin_authorization_required">অ্যাডমিন অনুমতি প্রয়োজন</string>
     <string name="this_setting_is_protected">এই সেটিংসটি সুরক্ষিত। পরিবর্তন করতে ৬ সংখ্যার অ্যাডমিন পিন দিন।</string>
-    <string name="admin_pin_default_123456">অ্যাডমিন পিন (ডিফল্ট: ১২৩৪৫৬)</string>
+    <string name="admin_pin_default_123456">অ্যাডমিন পিন</string>
     <string name="incorrect_pin_try_again">ভুল পিন। আবার চেষ্টা করুন।</string>
     <string name="unlock">আনলক করুন</string>
     <string name="cancel_4">বাতিল</string>
@@ -568,7 +550,6 @@
     <string name="msg_2f_s_11" formatted="false">%.2f %s</string>
     <string name="msg_2f_s_12" formatted="false">%.2f %s</string>
     <string name="interactive_curve_with_tooltips">টুলটিপ এবং দৈনিক রাজস্বের রেখাচিত্র</string>
-    <string name="pos_2f">পিওএস: %.2f</string>
     <string name="shift_2f">শিফট: %.2f</string>
     <string name="total_revenue_1">মোট রাজস্ব</string>
     <string name="msg_2f_s_13" formatted="false">%.2f %s</string>
@@ -579,7 +560,7 @@
     <string name="select_target_role_to">স্টাফ অ্যাক্সেস দেখতে ভূমিকা নির্বাচন করুন:</string>
     <string name="administrator">অ্যাডমিনিস্ট্রেটর</string>
     <string name="cashier_2">ক্যাশিয়ার</string>
-    <string name="admin_pin_123456">অ্যাডমিন পিন (১২৩৪৫৬)</string>
+    <string name="admin_pin_123456">অ্যাডমিন পিন</string>
     <string name="incorrect_pin">ভুল পিন</string>
     <string name="apply">প্রয়োগ করুন</string>
     <string name="cancel_8">বাতিল</string>
@@ -624,7 +605,6 @@
     <string name="hardware_localization">হার্ডওয়্যার ও ভাষা</string>
     <string name="open_2">খুলুন</string>
     <string name="cashier_management_3">ক্যাশিয়ার</string>
-    <string name="manage_pos_cashiers_and">পিওএস ক্যাশিয়ার এবং শিফট রিপোর্ট কর্মী পরিচালনা করুন</string>
     <string name="add_cashier_3">ক্যাশিয়ার যোগ করুন</string>
     <string name="no_cashiers_found_2">কোনো ক্যাশিয়ার পাওয়া যায়নি</string>
     <string name="add_staff_members_here">এখানে স্টাফ সদস্য যোগ করুন যাতে পিওএস এবং শিফট রিপোর্টে ক্যাশিয়ার নির্বাচন করা যায়।</string>
@@ -637,7 +617,6 @@
     <string name="msg_2f_s_18" formatted="false">+%.2f %s</string>
     <string name="close_6">বন্ধ করুন</string>
     <string name="close_7">বন্ধ করুন</string>
-    <string name="cash_management_1">ক্যাশ ব্যবস্থাপনা</string>
     <string name="pay_in_add_cash">ক্যাশ ইন (টাকা যোগ)</string>
     <string name="pay_out_remove_cash">ক্যাশ আউট (টাকা উত্তোলন)</string>
     <string name="reason_note">কারণ / নোট</string>
@@ -692,7 +671,6 @@
     <string name="full_name_2">পূর্ণ নাম *</string>
     <string name="eg_john_doe_sarah_1">যেমন: আহমেদ / সারা</string>
     <string name="msg_6digit_security_pin_1">৬ সংখ্যার সিকিউরিটি পিন</string>
-    <string name="select_role_position_1">দায়িত্ব / ভূমিকা নির্বাচন করুন:</string>
     <string name="cashier_3">ক্যাশিয়ার</string>
     <string name="employee_1">কর্মচারী</string>
     <string name="manager_1">ম্যানেজার</string>
@@ -705,14 +683,12 @@
     <string name="cashier_4">ক্যাশিয়ার</string>
     <string name="mpin_security">এমপিন (MPIN) নিরাপত্তা</string>
     <string name="quick_login_with_mpin">এমপিন দিয়ে দ্রুত লগইন</string>
-    <string name="unlock_pos_and_approve">৬-সংখ্যার এমপিন দিয়ে পিওএস আনলক ও লেনদেন অনুমোদন করুন</string>
     <string name="reset_mpin_1">এমপিন পরিবর্তন</string>
     <string name="tap_to_setup_or">আপনার ৬-সংখ্যার সিকিউরিটি এমপিন সেট বা পরিবর্তন করতে ট্যাপ করুন</string>
     <string name="reset_mpin_2">এমপিন রিসেট করুন</string>
     <string name="shouldnt_be_simple_number">সহজ ক্রম বা একই সংখ্যার পুনরাবৃত্তি হওয়া উচিত নয় (যেমন: ১২৩৪৫৬ বা ১১১১১১)</string>
     <string name="mpin_security_1">এমপিন (MPIN) নিরাপত্তা</string>
     <string name="quick_login_with_mpin_1">এমপিন দিয়ে দ্রুত লগইন</string>
-    <string name="unlock_pos_and_approve_1">৬-সংখ্যার এমপিন দিয়ে পিওএস আনলক ও লেনদেন অনুমোদন করুন</string>
     <string name="reset_mpin_3">এমপিন পরিবর্তন</string>
     <string name="tap_to_setup_or_1">আপনার ৬-সংখ্যার সিকিউরিটি এমপিন সেট বা পরিবর্তন করতে ট্যাপ করুন</string>
     <string name="reset_mpin_4">এমপিন রিসেট করুন</string>
@@ -753,7 +729,6 @@
     <string name="authenticated_as_administrator">অ্যাডমিনিস্ট্রেটর হিসেবে যাচাই সম্পন্ন</string>
     <string name="invalid_admin_pin">অকার্যকর অ্যাডমিন পিন</string>
     <string name="background_sync_task_enqueued">ব্যাকগ্রাউন্ড সিঙ্ক শুরু হয়েছে।</string>
-    <string name="no_pos_sales_available">স্বয়ংক্রিয়ভাবে পূরণের জন্য কোনো বিক্রয় নেই</string>
     <string name="please_fix_invalid_numeric">সংরক্ষণের আগে ভুল সংখ্যা সংশোধন করুন</string>
     <string name="draft_saved_successfully">ড্রাফট রিপোর্ট সংরক্ষিত হয়েছে</string>
     <string name="please_fix_invalid_numeric_1">সংরক্ষণের আগে ভুল সংখ্যা সংশোধন করুন</string>
@@ -785,7 +760,7 @@
     <string name="notif_low_stock">স্টক মাত্র %1$d %2$s আছে (সীমা: %3$d %4$s)। রিঅর্ডার করুন।</string>
     <string name="notif_drawer_closed">ড্রয়ার বন্ধ। নগদ পার্থক্য: %1$s</string>
     <string name="export_generated_on">তৈরি হয়েছে: %1$s</string>
-    <string name="currency_unit">রিয়াল</string>
+    <string name="currency_unit">USD</string>
     <string name="shifts_count">%1$d শিফট</string>
     <string name="staff_label">স্টাফ</string>
     <string name="day">দিন</string>
@@ -862,7 +837,6 @@
     <string name="net_cash_in_drawer_label">ড্রয়ারে নীট ক্যাশ</string>
     <string name="scan_data_label">স্ক্যান ডাটা</string>
     <string name="default_business_name">লোজিয়া সুপারস্টোর ও ক্যাফে</string>
-    <string name="shopping_pos_module">শপ পিওএস মডিউল</string>
     <string name="shift_closing_revenue_cert">শিফট ক্লোজিং ও রেভিনিউ রিপোর্ট</string>
     <string name="gross_cash_received">ক্যাশ বিক্রয় (নগদ)</string>
     <string name="mada_bank_cards">মাদা ও ব্যাংক কার্ড</string>
@@ -904,7 +878,6 @@
     <string name="toast_role_switched">রোল পরিবর্তন করে %s করা হয়েছে</string>
     <string name="toast_sync_interval_set">প্রতি %d মিনিটে অটো সিঙ্ক সেট করা হয়েছে</string>
     <string name="toast_cloud_backup_success">%s এ ক্লাউড ব্যাকআপ সফল হয়েছে</string>
-    <string name="toast_autofill_pos_sales">%1$d টি বিক্রয় থেকে অটো-ফিল করা হয়েছে (ক্যাশ: %2$s, কার্ড: %3$s)</string>
     <string name="toast_shift_opened_cash">প্রারম্ভিক ক্যাশ %1$s %2$s দিয়ে শিফট খোলা হয়েছে</string>
     <string name="toast_shift_closed_variance">শিফট বন্ধ করা হয়েছে। তারতম্য: %1$s %2$s</string>
     <string name="toast_movement_recorded">%1$s এ %2$s রেকর্ড করা হয়েছে</string>
@@ -1022,7 +995,6 @@
     <string name="desc_app_version_production">v2.5.0 • সকল মডিউল প্রস্তুত (বিল্ড 2026.08.28 - প্রোডাকশন)</string>
     <string name="desc_create_shift_handover">শিফট হস্তান্তর তৈরি করুন, ড্রয়ার ক্যাশ মেলান এবং পিডিএফ প্রিন্ট করুন</string>
     <string name="desc_currently_active_shift_report">বর্তমানে সক্রিয় (প্রতিবেদন, অ্যানালিটিক্স এবং ক্যাশ অডিট)</string>
-    <string name="desc_currently_active_shop">বর্তমানে সক্রিয় (পিওএস রেজিস্টার, আইটেম এবং বিক্রয়)</string>
     <string name="desc_customer_display_system">গ্রাহকদের অর্ডার বিবরণ ও পেমেন্ট প্রদর্শন করুন</string>
     <string name="desc_gdpr_cloud_security">জিডিপিআর এবং ক্লাউড ডেটা সুরক্ষা সম্মতি</string>
     <string name="desc_kitchen_display_system">স্বয়ংক্রিয়ভাবে রান্নাঘরের অর্ডার পাঠান</string>
@@ -1031,22 +1003,12 @@
     <string name="desc_review_eula_terms">ব্যবহারকারী লাইসেন্স চুক্তি এবং স্টোরের শর্তাবলী পর্যালোচনা করুন</string>
     <string name="desc_search_shift_reports">পূর্ববর্তী ক্যাশিয়ার শিফট রিপোর্ট খুঁজুন এবং পিডিএফ রপ্তানি করুন</string>
     <string name="desc_switch_to_shift_report">শিফট রিপোর্ট এবং অ্যানালিটিক্স মডিউলে যেতে আলতো চাপুন</string>
-    <string name="desc_switch_to_shop">শপ পিওএস রেজিস্টার মডিউলে যেতে আলতো চাপুন</string>
     <string name="desc_sync_data_back_office">সর্বশেষ সিঙ্ক: এইমাত্র • সমস্ত স্টোরের তথ্য হালনাগাদ</string>
     <string name="desc_system_architecture">এনক্রিপ্ট করা স্থানীয় স্টোরেজ • মাল্টি-স্টোর পিওএস সিঙ্ক ইঞ্জিন</string>
     <string name="desc_view_complete_sales">লেনদেন এবং বিক্রয় রসিদের সম্পূর্ণ তালিকা দেখুন</string>
     <string name="desc_whatsapp_support">গ্রাহক সেবার সাথে তাৎক্ষণিক লাইভ চ্যাট</string>
     <string name="label_total_combined">সর্বমোট সম্মিলিত</string>
-    <string name="nav_configuration">কনফিগারেশন</string>
-    <string name="nav_daily_shift_report">শিফট রিপোর্ট</string>
-    <string name="nav_data_backup_restore">ব্যাকআপ</string>
-    <string name="nav_items_modifiers">আইটেম এবং মডিফায়ার</string>
-    <string name="nav_performance_analytics">অ্যানালিটিক্স</string>
-    <string name="nav_pos_register">পিওএস রেজিস্টার</string>
-    <string name="nav_sales_analytics">বিক্রয় বিশ্লেষণ</string>
-    <string name="nav_sales_and_pos">বিক্রয় এবং পিওএস</string>
     <string name="nav_support">সাপোর্ট</string>
-    <string name="placeholder_cash_management_reason">যেমন: সরবরাহকারীকে অর্থপ্রদান, ক্যাশ তহবিল...</string>
     <string name="subtitle_estimated_30_day_run">আনুমানিক ৩০ দিনের হিসাব</string>
     <string name="finalized_month_revenue">চূড়ান্ত মাসিক হিসাব</string>
     <string name="title_24_7_helpline">২৪/৭ হেল্পলাইন</string>
@@ -1062,7 +1024,6 @@
     <string name="title_security_question">নিরাপত্তা প্রশ্ন</string>
     <string name="title_shift_report_module">শিফট রিপোর্ট</string>
     <string name="title_shift_reports_pdf_archives">শিফট রিপোর্ট এবং পিডিএফ আর্কাইভ</string>
-    <string name="title_shop_module">দোকান</string>
     <string name="title_show_cashier_name">ক্যাশিয়ারের নাম প্রদর্শন করুন</string>
     <string name="title_show_tax_number">কর নম্বর প্রদর্শন করুন</string>
     <string name="title_sync_data_back_office">ব্যাক অফিসের সাথে ডেটা সিঙ্ক করুন</string>
@@ -1200,6 +1161,8 @@
     <string name="auth_ph_password">পাসওয়ার্ড লিখুন</string>
     <string name="auth_remember_me">মনে রাখুন</string>
     <string name="auth_forgot_password">পাসওয়ার্ড ভুলে গেছেন?</string>
+    <string name="auth_sign_in_title">লগইন করুন</string>
+    <string name="auth_sign_in_subtitle">আপনার অ্যাকাউন্টে প্রবেশ করুন</string>
     <string name="auth_sign_in_btn">সাইন ইন</string>
     <string name="auth_signing_in">সাইন ইন হচ্ছে…</string>
     <string name="auth_ssl_text">২৫৬-বিট SSL এনক্রিপ্টেড · আপনার তথ্য নিরাপদ</string>
@@ -1336,6 +1299,11 @@
     <string name="doc_btn_open_camera">ক্যামেরা খুলুন</string>
     <string name="doc_btn_from_gallery">গ্যালারি থেকে</string>
     <string name="doc_dialog_document_title">ডকুমেন্ট শিরোনাম</string>
+    <string name="doc_select_all">সবগুলো নির্বাচন করুন</string>
+    <string name="doc_deselect_all">নির্বাচন বাতিল করুন</string>
+    <string name="doc_selected_count">%dটি নির্বাচিত</string>
+    <string name="doc_toast_text_copied">টেক্সট ক্লিপবোর্ডে কপি করা হয়েছে</string>
+    <string name="doc_toast_cannot_load_image">নির্বাচিত ছবি লোড করা যায়নি</string>
     <string name="doc_toast_camera_error">ক্যামেরা চালু ত্রুটি: %s</string>
     <string name="doc_toast_camera_permission_required">ডকুমেন্ট স্ক্যান করতে ক্যামেরার অনুমতি প্রয়োজন</string>
     <string name="doc_toast_saved_success">ডকুমেন্ট সফলভাবে সংরক্ষিত হয়েছে</string>
@@ -1363,7 +1331,13 @@
     <string name="nav_language">ভাষা</string>
     <string name="nav_backup">ব্যাকআপ</string>
     <string name="nav_about">সম্পর্কে</string>
+    <string name="drawer_section_management">ব্যবস্থাপনা</string>
+    <string name="drawer_section_account">অ্যাকাউন্ট</string>
+    <string name="drawer_section_system">সিস্টেম</string>
     <string name="nav_logout">লগ আউট</string>
+    <string name="doc_save_title_dialog">ডকুমেন্ট সংরক্ষণ করুন</string>
+    <string name="doc_enter_title_desc">স্ক্যান করা ডকুমেন্টের জন্য একটি নাম লিখুন:</string>
+    <string name="doc_title_placeholder">যেমন: চালান_রসিদ_০১</string>
     <string name="doc_btn_rename">পুনরায় নামকরণ</string>
     <string name="doc_btn_delete">মুছুন</string>
     <string name="doc_btn_delete_all_selected">সব নির্বাচিত মুছুন</string>
@@ -1372,6 +1346,20 @@
     <string name="doc_dialog_password">পাসওয়ার্ড</string>
     <string name="doc_dialog_confirm_password">পাসওয়ার্ড নিশ্চিত করুন</string>
     <string name="doc_btn_protect_pdf_title">পিডিএফ সুরক্ষিত করুন</string>
+    <string name="printer_setup_title">থার্মাল প্রিন্টার সেটআপ</string>
+    <string name="printer_setup_subtitle">ESC/POS রসিদ ও Z-রিপোর্ট</string>
+    <string name="printer_conn_bluetooth">ব্লুটুথ</string>
+    <string name="printer_conn_network">ওয়াইফাই / ল্যান (TCP)</string>
+    <string name="printer_paired_devices">পেয়ার করা ব্লুটুথ প্রিন্টার</string>
+    <string name="printer_searching">অনুসন্ধান করা হচ্ছে...</string>
+    <string name="printer_refresh">রিফ্রেশ</string>
+    <string name="printer_ip_label">প্রিন্টার আইপি ঠিকানা</string>
+    <string name="printer_port_label">পোর্ট (ডিফল্ট: ৯১০০)</string>
+    <string name="printer_paper_width_label">কাগজের প্রস্থ</string>
+    <string name="printer_width_58mm">৫৮ মিমি (স্ট্যান্ডার্ড রসিদ)</string>
+    <string name="printer_width_80mm">৮০ মিমি (প্রশস্ত রসিদ)</string>
+    <string name="printer_btn_test">পরীক্ষা</string>
+    <string name="printer_config_saved">প্রিন্টার কনফিগারেশন সংরক্ষিত হয়েছে!</string>
     <string name="open_printer_settings">প্রিন্টার সেটিংস খুলুন</string>
     <string name="printing_z_report">জ্রে-রিপোর্ট প্রিন্ট হচ্ছে...</string>
     <string name="print_z_report_btn">জ্রে-রিপোর্ট প্রিন্ট (শিফট বন্ধ)</string>
@@ -1379,7 +1367,7 @@
     <string name="save_pin">পিন সংরক্ষণ করুন</string>
     <string name="restore_now">এখনই পুনরুদ্ধার করুন</string>
     <string name="reading_backup_details">ব্যাকআপ তথ্য পড়া হচ্ছে...</string>
-    <string name="default_admin_pin_hint">ডিফল্ট অ্যাডমিন পিন (১২৩৪ বা ১১১১)</string>
+    <string name="default_admin_pin_hint">অ্যাডমিন পিন</string>
     <string name="complimentary_non_revenue">সৌজন্যমূলক • রাজস্ব-বহির্ভূত পরিমাপ</string>
     <string name="doc_capture_doc">ডকুমেন্ট ক্যাপচার করুন</string>
     <string name="doc_capture_desc">ক্যামেরা বা গ্যালারি থেকে ছবি নির্বাচন করে PDF হিসেবে সংরক্ষণ করুন।</string>
@@ -1440,4 +1428,72 @@
     <string name="confirm_logout_title">লগ আউট নিশ্চিত করুন</string>
     <string name="confirm_logout_desc">আপনি কি নিশ্চিত যে লগ আউট করতে চান? সমস্ত ড্রাফট শিফট স্থানীয়ভাবে নিরাপদ থাকবে।</string>
     <string name="confirm_logout_btn">লগ আউট</string>
+
+    <!-- Receipt & Z-Report Thermal Printing Strings -->
+    <string name="receipt_label_no">রসিদ নং:</string>
+    <string name="receipt_label_date">তারিখ:</string>
+    <string name="receipt_label_cashier">ক্যাশিয়ার:</string>
+    <string name="receipt_label_customer">গ্রাহক:</string>
+    <string name="receipt_label_item">পণ্য</string>
+    <string name="receipt_label_item_desc">পণ্যের বিবরণ</string>
+    <string name="receipt_label_qty">পরিমাণ</string>
+    <string name="receipt_label_qty_x_price">পরিমাণ x মূল্য</string>
+    <string name="receipt_label_subtotal">সাবটোটাল:</string>
+    <string name="receipt_label_discount">ছাড়:</string>
+    <string name="receipt_label_tax_vat">ট্যাক্স/ভ্যাট:</string>
+    <string name="receipt_label_total">সর্বমোট:</string>
+    <string name="receipt_label_payment_method">পরিশোধের মাধ্যম:</string>
+    <string name="receipt_footer_default">আমাদের সাথে কেনাকাটা করার জন্য ধন্যবাদ!\nআবার আসবেন</string>
+    <string name="zreport_title">Z-রিপোর্ট / শিফট সমাপ্তি</string>
+    <string name="zreport_shift_date">শিফট তারিখ:</string>
+    <string name="zreport_shift">শিফট:</string>
+    <string name="zreport_cashier">ক্যাশিয়ার:</string>
+    <string name="zreport_sec_sales">১. মাধ্যমভিত্তিক বিক্রয়</string>
+    <string name="zreport_cash_sales">নগদ বিক্রয়:</string>
+    <string name="zreport_card_mada">কার্ড / মাদা:</string>
+    <string name="zreport_digital_wallet">ডিজিটাল ওয়ালেট:</string>
+    <string name="zreport_total_revenue">মোট আয়:</string>
+    <string name="zreport_sec_cash_recon">২. ক্যাশ সমন্বয়</string>
+    <string name="zreport_starting_float">প্রারম্ভিক ক্যাশ:</string>
+    <string name="zreport_cash_in_dues">(+) নগদ আদায় (বাকি):</string>
+    <string name="zreport_cash_out">(-) ক্যাশ প্রদান:</string>
+    <string name="zreport_expected_cash">প্রত্যাশিত ক্যাশ:</string>
+    <string name="zreport_actual_cash">প্রকৃত ক্যাশ গণনা:</string>
+    <string name="zreport_variance">পার্থক্য (ভ্যারিয়েন্স):</string>
+    <string name="zreport_balanced">ব্যালেন্সড</string>
+    <string name="zreport_over">উদ্বৃত্ত (OVER)</string>
+    <string name="zreport_short">ঘাটতি (SHORT)</string>
+    <string name="zreport_sec_tax_summary">৩. ট্যাক্স ও ভ্যাট সারাংশ</string>
+    <string name="zreport_net_taxable">করযোগ্য নিট বিক্রয়:</string>
+    <string name="zreport_vat_label">ভ্যাট (%s%%):</string>
+    <string name="zreport_gross_total">মোট সর্বমোট (%s):</string>
+    <string name="zreport_inc_vat">ভ্যাটসহ</string>
+    <string name="zreport_exc_vat">ভ্যাটছাড়া</string>
+    <string name="zreport_tax_status">ট্যাক্স স্ট্যাটাস:</string>
+    <string name="zreport_non_taxable">করমুক্ত</string>
+    <string name="zreport_net_total">নিট মোট বিক্রয়:</string>
+    <string name="zreport_sec_other">৪. অন্যান্য হিসাব</string>
+    <string name="zreport_credit_sales">বাকি বিক্রয়:</string>
+    <string name="zreport_staff_meals">স্টাফ মিল সংখ্যা:</string>
+    <string name="zreport_notes">নোট:</string>
+    <string name="zreport_footer_generated">কম্পিউটার জেনারেটেড Z-রিপোর্ট</string>
+    <string name="zreport_footer_brand">লজিয়া পিওএস সিস্টেম</string>
+
+    <!-- Printer Setup & Preview UI Strings -->
+    <string name="printer_no_paired_found">পেয়ার করা কোনো ব্লুটুথ প্রিন্টার পাওয়া যায়নি। প্রথমে অ্যান্ড্রয়েড সেটিংসে পেয়ার করুন।</string>
+    <string name="printer_permission_required">থার্মাল প্রিন্টার খুঁজতে ব্লুটুথ অনুমতি প্রয়োজন।</string>
+    <string name="printer_no_devices_hint">পেয়ার করা কোনো ব্লুটুথ প্রিন্টার নেই।\nপ্রথমে অ্যান্ড্রয়েড ব্লুটুথ সেটিংসে আপনার থার্মাল প্রিন্টার পেয়ার করুন।</string>
+    <string name="printer_test_success">টেস্ট কানেকশন সফল হয়েছে!</string>
+    <string name="printer_test_failed">টেস্ট ব্যর্থ হয়েছে: %s</string>
+    <string name="printer_not_configured">কোনো থার্মাল প্রিন্টার কনফিগার করা হয়নি। সেটিংসে প্রিন্টার কনফিগার করুন।</string>
+    <string name="printer_zreport_sent">Z-রিপোর্ট প্রিন্টারে পাঠানো হয়েছে!</string>
+    <string name="printer_error_prefix">প্রিন্টার ত্রুটি: %s</string>
+    <string name="printer_could_not_connect">প্রিন্টারের সাথে সংযোগ স্থাপন করা যায়নি।</string>
+    <string name="printer_invalid_ip">অনুগ্রহ করে একটি সঠিক আইপি ঠিকানা লিখুন</string>
+    <string name="printer_invalid_port">অনুগ্রহ করে একটি সঠিক পোর্ট লিখুন (১-৬৫৫৩৫)</string>
+    <string name="printer_test_receipt_title">লজিয়া পিওএস</string>
+    <string name="printer_test_receipt_subtitle">শিফট রিপোর্ট সিস্টেম</string>
+    <string name="printer_test_receipt_msg">টেস্ট প্রিন্ট সফল হয়েছে</string>
+    <string name="printer_test_receipt_operational">প্রিন্টার সংযোগ সক্রিয় রয়েছে!</string>
+    <string name="print_btn">প্রিন্ট</string>
 </resources>

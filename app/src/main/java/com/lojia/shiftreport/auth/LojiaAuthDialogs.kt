@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.BuildConfig
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.theme.Dimens
 
 @Composable
 fun LojiaPasswordRecoveryDialog(
@@ -40,6 +41,7 @@ fun LojiaPasswordRecoveryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.widthIn(max = Dimens.DialogMaxWidth),
         title = {
             Text(
                 text = stringResource(R.string.auth_password_recovery_title),
@@ -159,6 +161,7 @@ fun LojiaLanguageDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.widthIn(max = Dimens.DialogSmallMaxWidth),
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(

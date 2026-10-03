@@ -67,9 +67,20 @@ fun LojiaTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    val currentDensity = androidx.compose.ui.platform.LocalDensity.current
+    // Soft clamp fontScale to max 1.25 to prevent extreme system accessibility sizes from breaking dialogs and compact grids
+    val clampedDensity = androidx.compose.ui.unit.Density(
+        density = currentDensity.density,
+        fontScale = currentDensity.fontScale.coerceIn(0.85f, 1.25f)
     )
+
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides clampedDensity
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

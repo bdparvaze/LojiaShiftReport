@@ -157,14 +157,17 @@ fun BiometricLockScreen(
             }
 
             val profile = userProfile
-            val isProfileValid = if (profile != null && profile.username.isNotBlank()) {
-                ((u.equals(profile.username, ignoreCase = true) || u.equals(profile.email, ignoreCase = true)) &&
-                        SecurityUtils.verifySecret(p, profile.passwordHash)) ||
-                        ((u.equals("demo", ignoreCase = true) || u.equals("admin", ignoreCase = true)) &&
-                                (p == "demo123" || p == "admin123"))
-            } else {
-                (u.equals("demo", ignoreCase = true) || u.equals("admin", ignoreCase = true)) &&
-                        (p == "demo123" || p == "admin123")
+            var isProfileValid = false
+            if (profile != null && profile.username.isNotBlank()) {
+                val usernameMatch = (u.equals(profile.username, ignoreCase = true) || u.equals(profile.email, ignoreCase = true))
+                val verifyResult = SecurityUtils.verifySecretWithUpgrade(p, profile.passwordHash)
+                if (usernameMatch && verifyResult.isMatch) {
+                    isProfileValid = true
+                    if (verifyResult.newHashToStore != null) {
+                        val repo = com.lojia.shiftreport.data.ShiftReportRepository.getInstance(context)
+                        repo.verifyAdminCredentials(context, p) // updates profile with upgraded hash
+                    }
+                }
             }
 
             if (isProfileValid) {
@@ -255,8 +258,8 @@ fun BiometricLockScreen(
                         ) {
                             LojiaSectionHeader(
                                 icon = Icons.Outlined.Lock,
-                                title = if (isBn) "লগইন করুন" else "Sign In",
-                                subtitle = if (isBn) "আপনার অ্যাকাউন্টে প্রবেশ করুন" else "Enter credentials to continue"
+                                title = stringResource(R.string.auth_sign_in_title),
+                                subtitle = stringResource(R.string.auth_sign_in_subtitle)
                             )
 
                             Spacer(modifier = Modifier.height(6.dp))

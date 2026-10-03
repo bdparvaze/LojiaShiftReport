@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -130,6 +131,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 
 import java.util.*
@@ -137,53 +139,6 @@ import java.util.*
 
 import androidx.compose.ui.res.stringResource
 
-
-/* ----------------------------------------------------------------------
- * DATA MODELS FOR ENTRY FORM
- * ---------------------------------------------------------------------- */
-enum class PayType { CASH, BANK }
-
-data class CreditEntry(val receiptNo: String, val amount: Double)
-data class OldDueEntry(val receiptNo: String, val amount: Double, val type: PayType)
-data class StaffEntry(val name: String, val amount: Double, val type: PayType)
-data class WalkoutEntry(val description: String, val amount: Double)
-data class ItemEntry(val name: String, val qty: Int, val unitPrice: Double) {
-    val total get() = qty * unitPrice
-}
-
-/** Snapshot handed to onSave — plug this into Room / SharedPreferences / your API. */
-data class ShiftReportData(
-    val cashier: String,
-    val shift: String,
-    val date: String,
-    val cashReceipts: Double,
-    val madaPayments: Double,
-    val digitalWallet: Double = 0.0,
-    val startingCash: Double = 0.0,
-    val openingCash: Double = 0.0,
-    val closingCash: Double = 0.0,
-    val totalDiscounts: Double = 0.0,
-    val salesReturns: Double = 0.0,
-    val actualCash: Double? = null,
-    val notes: String = "",
-    val staffCount: Int,
-    val totalExpenses: Double,
-    val muassel: Int,
-    val outdoorMuassel: Int,
-    val creditEntries: List<CreditEntry>,
-    val oldDueEntries: List<OldDueEntry>,
-    val staffEntries: List<StaffEntry>,
-    val walkoutEntries: List<WalkoutEntry>,
-    val itemEntries: List<ItemEntry>,
-    val netCash: Double,
-    val netMada: Double,
-    val isLocked: Boolean = false,
-    val managerSignedBy: String? = null,
-    val managerSignTime: Long? = null,
-    val dateMillis: Long = System.currentTimeMillis()
-)
-
-private enum class ModalType { NONE, CREDIT, OLD_DUE, STAFF, WALKOUT, ITEM }
 
 /* ----------------------------------------------------------------------
  * OVERLOAD FOR VIEWMODEL & NAVIGATION INTEGRATION (WITH TOP 3 TABS)
@@ -200,6 +155,8 @@ fun ShiftReportScreen(
     val activeShiftSession by viewModel.activeShiftSession.collectAsState()
     val cashMovements by viewModel.cashMovements.collectAsState()
     val cashiersState by viewModel.cashiers.collectAsState()
+    val currentCurrency by viewModel.currentCurrency.collectAsState()
+    val businessProfile by viewModel.businessProfile.collectAsState()
 
     val availableCashiers = remember(cashiersState) {
         val names = cashiersState.map { it.name }.filter { it.isNotBlank() }
@@ -213,6 +170,7 @@ fun ShiftReportScreen(
         cashMovements = cashMovements,
         cashierOptions = availableCashiers,
         language = language,
+        currentCurrency = currentCurrency,
         onPreviewPdf = onPreviewPdf,
         onSaveReportData = { data ->
             val dueJson = org.json.JSONArray().apply {
@@ -220,7 +178,7 @@ fun ShiftReportScreen(
                     put(org.json.JSONObject().apply {
                         put("receiptNo", e.receiptNo)
                         put("customerName", "Receipt #${e.receiptNo}")
-                        put("amount", e.amount)
+                        put("amount", MoneyFormat.toMinorUnits(e.amount))
                     })
                 }
             }.toString()
@@ -230,7 +188,7 @@ fun ShiftReportScreen(
                     put(org.json.JSONObject().apply {
                         put("receiptNo", e.receiptNo)
                         put("customerName", "Receipt #${e.receiptNo}")
-                        put("amount", e.amount)
+                        put("amount", MoneyFormat.toMinorUnits(e.amount))
                         put("paymentMode", e.type.name)
                     })
                 }
@@ -240,7 +198,7 @@ fun ShiftReportScreen(
                 data.staffEntries.forEach { e ->
                     put(org.json.JSONObject().apply {
                         put("staffName", e.name)
-                        put("amount", e.amount)
+                        put("amount", MoneyFormat.toMinorUnits(e.amount))
                         put("paymentMode", e.type.name)
                     })
                 }
@@ -250,7 +208,7 @@ fun ShiftReportScreen(
                 data.walkoutEntries.forEach { e ->
                     put(org.json.JSONObject().apply {
                         put("tableOrOrderRef", e.description)
-                        put("amount", e.amount)
+                        put("amount", MoneyFormat.toMinorUnits(e.amount))
                     })
                 }
             }.toString()
@@ -260,8 +218,8 @@ fun ShiftReportScreen(
                     put(org.json.JSONObject().apply {
                         put("itemName", e.name)
                         put("quantity", e.qty.toDouble())
-                        put("unitPrice", e.unitPrice)
-                        put("totalAmount", e.total)
+                        put("unitPrice", MoneyFormat.toMinorUnits(e.unitPrice))
+                        put("totalAmount", MoneyFormat.toMinorUnits(e.total))
                     })
                 }
             }.toString()
@@ -282,15 +240,15 @@ fun ShiftReportScreen(
                 cashierName = data.cashier.ifBlank { "Standard Cashier" },
                 shift = data.shift,
                 dateInMillis = data.dateMillis,
-                openingCash = if (data.openingCash > 0) data.openingCash else data.startingCash,
-                closingCash = if (data.closingCash > 0) data.closingCash else (data.actualCash ?: 0.0),
-                grossCash = data.cashReceipts,
-                madaPayments = data.madaPayments,
-                digitalWallet = data.digitalWallet,
-                totalDiscounts = data.totalDiscounts,
-                salesReturns = data.salesReturns,
+                openingCash = MoneyFormat.toMinorUnits(if (data.openingCash > 0) data.openingCash else data.startingCash),
+                closingCash = MoneyFormat.toMinorUnits(if (data.closingCash > 0) data.closingCash else (data.actualCash ?: 0.0)),
+                grossCash = MoneyFormat.toMinorUnits(data.cashReceipts),
+                madaPayments = MoneyFormat.toMinorUnits(data.madaPayments),
+                digitalWallet = MoneyFormat.toMinorUnits(data.digitalWallet),
+                totalDiscounts = MoneyFormat.toMinorUnits(data.totalDiscounts),
+                salesReturns = MoneyFormat.toMinorUnits(data.salesReturns),
                 staffMealsCount = data.staffCount,
-                totalExpenses = data.totalExpenses,
+                totalExpenses = MoneyFormat.toMinorUnits(data.totalExpenses),
                 muasselQty = data.muassel.toDouble(),
                 outdoorShishaQty = data.outdoorMuassel.toDouble(),
                 dueCreditEntriesJson = dueJson,
@@ -335,6 +293,7 @@ fun ShiftReportScreenContent(
     cashMovements: List<CashMovement> = emptyList(),
     cashierOptions: List<String> = listOf("Noora", "Hassan", "Athar"),
     language: AppLanguage = AppLanguage.BENGALI,
+    currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onPreviewPdf: (ShiftReport) -> Unit = {},
     onSaveReportData: (ShiftReportData) -> Unit = {},
     onOpenShift: (String, String, Double) -> Unit = { _, _, _ -> },
@@ -378,27 +337,34 @@ fun ShiftReportScreenContent(
     ) {
         // ---- SCROLLABLE OPTIONS TAB ROW ----
         Surface(
-            color = Color.White,
-            shadowElevation = 2.dp,
+            color = SurfaceLight,
+            shadowElevation = 0.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = Color.White,
-                contentColor = ShiftColors.Primary,
+                containerColor = SurfaceLight,
+                contentColor = PrimaryIndigoDark,
                 edgePadding = 8.dp,
+                modifier = Modifier.height(44.dp),
                 indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = ShiftColors.PrimaryDark,
-                        height = 3.dp
+                    Box(
+                        Modifier
+                            .tabIndicatorOffset(tabPositions[selectedTab])
+                            .height(3.dp)
+                            .background(
+                                color = PrimaryIndigoLight,
+                                shape = RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
+                            )
                     )
                 },
-                divider = { HorizontalDivider(color = ShiftColors.Border) }
+                divider = { HorizontalDivider(color = OutlineLight) }
             ) {
                 tabTitles.forEachIndexed { index, title ->
+                    val isSelected = selectedTab == index
                     Tab(
-                        selected = selectedTab == index,
+                        selected = isSelected,
+                        modifier = Modifier.height(44.dp),
                         onClick = {
                             focusManager.clearFocus()
                             keyboardController?.hide()
@@ -409,15 +375,15 @@ fun ShiftReportScreenContent(
                                 Icon(
                                     imageVector = tabIcons[index],
                                     contentDescription = null,
-                                    modifier = Modifier.size(17.dp),
-                                    tint = if (selectedTab == index) ShiftColors.PrimaryDark else ShiftColors.TextMuted
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight
                                 )
                                 Spacer(Modifier.width(5.dp))
                                 AutoText(
                                     text = title,
                                     fontSize = 12.sp,
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selectedTab == index) ShiftColors.PrimaryDark else ShiftColors.TextMuted,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -433,23 +399,29 @@ fun ShiftReportScreenContent(
             when (selectedTab) {
                 0 -> ReportEntryTab(
                     cashierOptions = cashierOptions,
+                    currentCurrency = currentCurrency,
                     onSave = onSaveReportData
                 )
                 1 -> DueLedgerTab(
-                    reports = shiftReports
+                    reports = shiftReports,
+                    currency = currentCurrency
                 )
                 2 -> EmployerLedgerTab(
-                    reports = shiftReports
+                    reports = shiftReports,
+                    currency = currentCurrency
                 )
                 3 -> PaidOutShoppingLedgerTab(
-                    reports = shiftReports
+                    reports = shiftReports,
+                    currency = currentCurrency
                 )
                 4 -> WalkoutLedgerTab(
-                    reports = shiftReports
+                    reports = shiftReports,
+                    currency = currentCurrency
                 )
                 5 -> ShiftReportArchivesTab(
                     reports = shiftReports,
                     userProfile = userProfile,
+                    currentCurrency = currentCurrency,
                     onPreviewPdf = onPreviewPdf,
                     onDeleteReport = onDeleteReport
                 )
@@ -465,6 +437,7 @@ fun ShiftReportScreenContent(
 @Composable
 private fun ReportEntryTab(
     cashierOptions: List<String>,
+    currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onSave: (ShiftReportData) -> Unit
 ) {
     val shiftOptions = listOf(stringResource(R.string.shift_day), stringResource(R.string.shift_night_option))
@@ -572,7 +545,7 @@ private fun ReportEntryTab(
     Scaffold(
         containerColor = Color.White,
         bottomBar = {
-            StickySummaryBar(expectedCash = expectedCash, variance = variance)
+            StickySummaryBar(expectedCash = expectedCash, variance = variance, currentCurrency = currentCurrency)
         }
     ) { padding ->
         Box(
@@ -716,7 +689,7 @@ private fun ReportEntryTab(
                         creditEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = "#${e.receiptNo}",
-                                right = "%.2f ${stringResource(R.string.currency_unit)}".format(e.amount),
+                                right = "%.2f $currentCurrency".format(e.amount),
                                 onRemove = { creditEntries.removeAt(i) }
                             )
                         }
@@ -728,7 +701,7 @@ private fun ReportEntryTab(
                         oldDueEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = "#${e.receiptNo}",
-                                right = "%.2f ${stringResource(R.string.currency_unit)} (${e.type.name.lowercase()})".format(e.amount),
+                                right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.amount),
                                 onRemove = { oldDueEntries.removeAt(i) }
                             )
                         }
@@ -740,7 +713,7 @@ private fun ReportEntryTab(
                         staffEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = e.name,
-                                right = "%.2f ${stringResource(R.string.currency_unit)} (${e.type.name.lowercase()})".format(e.amount),
+                                right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.amount),
                                 onRemove = { staffEntries.removeAt(i) }
                             )
                         }
@@ -752,7 +725,7 @@ private fun ReportEntryTab(
                         walkoutEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = e.description,
-                                right = "%.2f ${stringResource(R.string.currency_unit)}".format(e.amount),
+                                right = "%.2f $currentCurrency".format(e.amount),
                                 onRemove = { walkoutEntries.removeAt(i) }
                             )
                         }
@@ -762,9 +735,10 @@ private fun ReportEntryTab(
                             modalType = ModalType.ITEM
                         }
                         itemEntries.forEachIndexed { i, e ->
+                            val leftText = if (e.qty > 0) "${e.name} (${e.qty} pcs)" else e.name
                             EntryRow(
-                                left = "${e.name} (${e.qty} pcs)",
-                                right = "%.2f ${stringResource(R.string.currency_unit)}".format(e.total),
+                                left = leftText,
+                                right = "%.2f $currentCurrency".format(e.total),
                                 onRemove = { itemEntries.removeAt(i) }
                             )
                         }
@@ -793,7 +767,8 @@ private fun ReportEntryTab(
                             actualCashCount = actualCashCountInput,
                             onActualCashCountChange = { actualCashCountInput = it },
                             notes = notesInput,
-                            onNotesChange = { notesInput = it }
+                            onNotesChange = { notesInput = it },
+                            currentCurrency = currentCurrency
                         )
 
                         Spacer(Modifier.height(16.dp))
@@ -802,11 +777,11 @@ private fun ReportEntryTab(
                         Card(
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (isShiftLocked) Color(0xFFF0FDF4) else Color(0xFFF8FAFC)
+                                containerColor = if (isShiftLocked) SuccessContainer else BackgroundLight
                             ),
                             border = BorderStroke(
                                 1.dp,
-                                if (isShiftLocked) Color(0xFF86EFAC) else ShiftColors.Border
+                                if (isShiftLocked) PosCashGreen else ShiftColors.Border
                             ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -829,20 +804,20 @@ private fun ReportEntryTab(
                                             Text(
                                                 text = if (isShiftLocked) "Approved by ${managerSignedBy ?: "Manager"}" else "Optional audit lock & verification",
                                                 fontSize = 11.sp,
-                                                color = if (isShiftLocked) Color(0xFF166534) else ShiftColors.TextMuted
+                                                color = if (isShiftLocked) PosCashGreen else ShiftColors.TextMuted
                                             )
                                         }
                                     }
 
                                     Surface(
-                                        color = if (isShiftLocked) Color(0xFFDCFCE7) else Color(0xFFE2E8F0),
+                                        color = if (isShiftLocked) SuccessContainer else SurfaceVariantLight,
                                         shape = RoundedCornerShape(6.dp)
                                     ) {
                                         Text(
                                             text = stringResource(if (isShiftLocked) R.string.shift_locked_badge else R.string.shift_draft_badge),
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (isShiftLocked) Color(0xFF15803D) else Color(0xFF475569),
+                                            color = if (isShiftLocked) PosCashGreen else OnSurfaceVariantLight,
                                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                                         )
                                     }
@@ -865,7 +840,7 @@ private fun ReportEntryTab(
                                         text = "✓ Shift report is verified and locked against edits.",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF166534)
+                                        color = PosCashGreen
                                     )
                                 }
                             }
@@ -1039,6 +1014,7 @@ private fun ReportEntryTab(
     if (modalType != ModalType.NONE) {
         AddEntryDialog(
             type = modalType,
+            currentCurrency = currentCurrency,
             onDismiss = {
                 focusManager.clearFocus()
                 keyboardController?.hide()
@@ -1052,7 +1028,14 @@ private fun ReportEntryTab(
                     ModalType.OLD_DUE -> oldDueEntries.add(OldDueEntry(result.receipt, result.amount, result.type))
                     ModalType.STAFF -> staffEntries.add(StaffEntry(result.name, result.amount, result.type))
                     ModalType.WALKOUT -> walkoutEntries.add(WalkoutEntry(result.name, result.amount))
-                    ModalType.ITEM -> itemEntries.add(ItemEntry(result.name, result.qty, result.amount))
+                    ModalType.ITEM -> itemEntries.add(
+                        ItemEntry(
+                            name = result.name,
+                            qty = result.qty,
+                            unitPrice = result.unitPrice,
+                            total = result.amount
+                        )
+                    )
                     ModalType.NONE -> {}
                 }
                 modalType = ModalType.NONE
@@ -1147,6 +1130,7 @@ private fun LiveCashflowTab(
     activeSession: ShiftSession?,
     cashMovements: List<CashMovement>,
     cashierOptions: List<String>,
+    currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onOpenShift: (String, String, Double) -> Unit,
     onCloseShift: (ShiftSession, Double, String) -> Unit
 ) {
@@ -1285,7 +1269,7 @@ private fun LiveCashflowTab(
                                     )
                                     Spacer(Modifier.height(2.dp))
                                     Text(
-                                        text = "%.2f ${stringResource(R.string.currency_unit)}".format(activeSession.startingCash),
+                                        text = "%.2f $currentCurrency".format(activeSession.startingCash),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = ShiftColors.NetCashGreen,
@@ -1406,7 +1390,7 @@ private fun LiveCashflowTab(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
             MetricCard(
                 title = stringResource(R.string.total_cash_in),
-                amount = "0.00 ${stringResource(R.string.currency_unit)}",
+                amount = "0.00 $currentCurrency",
                 icon = Icons.Default.TrendingUp,
                 color = ShiftColors.NetCashGreen,
                 bgColor = Color(0xFFECFDF5),
@@ -1414,7 +1398,7 @@ private fun LiveCashflowTab(
             )
             MetricCard(
                 title = stringResource(R.string.total_cash_out),
-                amount = "0.00 ${stringResource(R.string.currency_unit)}",
+                amount = "0.00 $currentCurrency",
                 icon = Icons.Default.TrendingDown,
                 color = ShiftColors.Danger,
                 bgColor = ShiftColors.DangerLight,
@@ -1494,7 +1478,7 @@ private fun LiveCashflowTab(
                                 color = if (move.type == "PAY_IN") Color(0xFFECFDF5) else ShiftColors.DangerLight
                             ) {
                                 Text(
-                                    text = "${if (move.type == "PAY_IN") "+" else "-"}%.2f ${stringResource(R.string.currency_unit)}".format(move.amount),
+                                    text = "${if (move.type == "PAY_IN") "+" else "-"}%.2f $currentCurrency".format(move.amount),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (move.type == "PAY_IN") ShiftColors.NetCashGreen else ShiftColors.Danger,
@@ -1599,7 +1583,7 @@ private fun LiveCashflowTab(
     if (showCloseShiftModal && activeSession != null) {
         var actualCountText by remember { mutableStateOf("") }
         var notesText by remember { mutableStateOf("") }
-        val currency = stringResource(R.string.currency_unit)
+        val currency = currentCurrency
         val actualCount = actualCountText.toDoubleOrNull()
         val variance = if (actualCount != null) actualCount - activeSession.expectedCash else null
 
@@ -1716,14 +1700,14 @@ private fun LiveCashflowTab(
                         val isBalanced = Math.abs(variance) < 0.001
                         val isOver = variance > 0
                         val varColor = when {
-                            isBalanced -> Color(0xFF15803D)
-                            isOver -> Color(0xFF047857)
-                            else -> Color(0xFFDC2626)
+                            isBalanced -> PosCashGreen
+                            isOver -> PosCashGreen
+                            else -> PosShortageRed
                         }
                         val varBg = when {
-                            isBalanced -> Color(0xFFF0FDF4)
-                            isOver -> Color(0xFFECFDF5)
-                            else -> Color(0xFFFEF2F2)
+                            isBalanced -> SuccessContainer
+                            isOver -> SuccessContainer
+                            else -> ErrorContainerLight
                         }
                         val statusLabel = when {
                             isBalanced -> stringResource(R.string.balanced)
@@ -1804,1480 +1788,5 @@ private fun LiveCashflowTab(
                 }
             }
         )
-    }
-}
-
-@Composable
-fun MetricCard(
-    title: String,
-    amount: String,
-    icon: ImageVector,
-    color: Color,
-    bgColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = modifier
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(bgColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.width(10.dp))
-            Column {
-                Text(title, fontSize = 11.sp, color = ShiftColors.TextMuted)
-                Text(amount, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Charcoal)
-            }
-        }
-    }
-}
-
-/* ----------------------------------------------------------------------
- * TAB 6: SHIFT REPORT ARCHIVES VIEW
- * ---------------------------------------------------------------------- */
-@Composable
-private fun ShiftReportArchivesTab(
-    reports: List<ShiftReport>,
-    userProfile: com.lojia.shiftreport.data.UserProfile? = null,
-    onPreviewPdf: (ShiftReport) -> Unit,
-    onDeleteReport: (ShiftReport) -> Unit
-) {
-    var searchQuery by remember { mutableStateOf("") }
-    var reportToDelete by remember { mutableStateOf<ShiftReport?>(null) }
-
-    val filteredReports = remember(reports, searchQuery) {
-        if (searchQuery.isBlank()) reports
-        else reports.filter {
-            it.cashierName.contains(searchQuery, ignoreCase = true) ||
-            it.shift.contains(searchQuery, ignoreCase = true) ||
-            it.id.toString().contains(searchQuery)
-        }
-    }
-
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        // Search Filter Bar with Card container
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = Color.White,
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            shadowElevation = 1.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 14.dp)
-        ) {
-            LojiaTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.search_cashier_shift),
-                        fontSize = 13.sp,
-                        color = ShiftColors.TextMuted
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = ShiftColors.Primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.btn_clear),
-                                tint = ShiftColors.TextMuted,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    cursorColor = ShiftColors.Primary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        if (filteredReports.isEmpty()) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(36.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = ShiftColors.Bg,
-                        modifier = Modifier.size(64.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                imageVector = Icons.Default.FolderOpen,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp),
-                                tint = ShiftColors.TextMuted
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        text = stringResource(R.string.no_archived_reports),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ShiftColors.Charcoal,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                items(filteredReports, key = { it.id }) { report ->
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Header Row
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    // Cashier Avatar
-                                    Surface(
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = Color(0xFFEFF6FF),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDBEAFE)),
-                                        modifier = Modifier.size(38.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                            Text(
-                                                text = report.cashierName.take(1).uppercase(),
-                                                fontSize = 15.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ShiftColors.Primary
-                                            )
-                                        }
-                                    }
-
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = report.cashierName,
-                                                fontSize = 15.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ShiftColors.Charcoal,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Surface(
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = ShiftColors.BrassLight,
-                                                border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Brass.copy(alpha = 0.25f))
-                                            ) {
-                                                val shiftDisplayName = when (report.shift.lowercase()) {
-                                                    "morning" -> stringResource(R.string.shift_morning)
-                                                    "evening" -> stringResource(R.string.shift_evening)
-                                                    "night" -> stringResource(R.string.shift_night)
-                                                    "day" -> stringResource(R.string.shift_day)
-                                                    else -> report.shift
-                                                }
-                                                Text(
-                                                    text = shiftDisplayName,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ShiftColors.Brass,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                )
-                                            }
-                                        }
-
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.AccessTime,
-                                                contentDescription = null,
-                                                tint = ShiftColors.TextMuted,
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                            Text(
-                                                text = dateFormat.format(Date(report.dateInMillis)),
-                                                fontSize = 11.sp,
-                                                color = ShiftColors.TextMuted
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Report ID & Locked status
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color(0xFFF1F5F9),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Lock,
-                                                contentDescription = null,
-                                                tint = ShiftColors.TextMuted,
-                                                modifier = Modifier.size(11.dp)
-                                            )
-                                            Spacer(Modifier.width(3.dp))
-                                            Text(
-                                                text = "Z-REPORT",
-                                                fontSize = 9.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ShiftColors.TextMuted
-                                            )
-                                        }
-                                    }
-
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = ShiftColors.Bg,
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border)
-                                    ) {
-                                        Text(
-                                            text = "#${report.id}",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = ShiftColors.TextMuted,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Financial Metrics Box
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = ShiftColors.Bg,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border.copy(alpha = 0.6f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 10.dp, horizontal = 12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.gross_revenue),
-                                            fontSize = 11.sp,
-                                            color = ShiftColors.TextMuted,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            text = "%.2f ${stringResource(R.string.currency_unit)}".format(report.totalSales),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = ShiftColors.Text,
-                                            maxLines = 1
-                                        )
-                                    }
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.mada_bank),
-                                            fontSize = 11.sp,
-                                            color = ShiftColors.TextMuted,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            text = "%.2f ${stringResource(R.string.currency_unit)}".format(report.madaPayments),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = ShiftColors.NetMadaBlue,
-                                            maxLines = 1
-                                        )
-                                    }
-
-                                    Column(modifier = Modifier.weight(1.1f), horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = stringResource(R.string.net_cash),
-                                            fontSize = 11.sp,
-                                            color = ShiftColors.TextMuted,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            text = "%.2f ${stringResource(R.string.currency_unit)}".format(report.netCash),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = ShiftColors.NetCashGreen,
-                                            maxLines = 1
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Action Buttons
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                OutlinedButton(
-                                    onClick = { reportToDelete = report },
-                                    shape = RoundedCornerShape(10.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Danger.copy(alpha = 0.5f)),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = ShiftColors.Danger,
-                                        containerColor = ShiftColors.DangerLight.copy(alpha = 0.3f)
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                    modifier = Modifier.heightIn(min = 36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.DeleteOutline,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(
-                                        text = stringResource(R.string.delete),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
-                                }
-
-                                Spacer(Modifier.width(10.dp))
-
-                                Button(
-                                    onClick = { onPreviewPdf(report) },
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = ShiftColors.SaveBtn),
-                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-                                    modifier = Modifier.heightIn(min = 36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.PictureAsPdf,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(15.dp),
-                                        tint = Color.White
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        text = stringResource(R.string.preview_pdf),
-                                        fontSize = 12.sp,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Delete Confirmation Dialog
-    reportToDelete?.let { report ->
-        SecureDeleteModal(
-            title = stringResource(R.string.delete_shift_report_title),
-            itemDescription = stringResource(R.string.delete_shift_report_desc, report.id.toString(), report.cashierName),
-            userProfile = userProfile,
-            onDismiss = { reportToDelete = null },
-            onConfirmDelete = {
-                onDeleteReport(report)
-                reportToDelete = null
-            }
-        )
-    }
-}
-
-/* ----------------------------------------------------------------------
- * SECTION HEADER (pill with tone color, optional "+ Add" button)
- * ---------------------------------------------------------------------- */
-@Composable
-private fun SectionHeader(
-    icon: String,
-    title: String,
-    bg: Color,
-    borderColor: Color,
-    accent: Color,
-    onAdd: (() -> Unit)? = null
-) {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 6.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(bg)
-            .border(1.dp, borderColor.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(icon, fontSize = 12.sp)
-            Spacer(Modifier.width(6.dp))
-            Text(title, color = ShiftColors.Charcoal, fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
-        }
-        if (onAdd != null) {
-            OutlinedButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    onAdd()
-                },
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, accent),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = accent),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                modifier = Modifier.defaultMinSize(minHeight = 28.dp)
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(12.dp))
-                Spacer(Modifier.width(2.dp))
-                Text(stringResource(R.string.add), fontSize = 10.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-            }
-        }
-    }
-}
-
-/* ----------------------------------------------------------------------
- * DYNAMIC ENTRY ROW
- * ---------------------------------------------------------------------- */
-@Composable
-private fun EntryRow(left: String, right: String, onRemove: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 5.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(ShiftColors.Bg)
-            .border(1.dp, ShiftColors.Border, RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(left, fontSize = 12.5.sp, color = ShiftColors.Text, modifier = Modifier.weight(1f))
-        Text(right, fontSize = 12.5.sp, color = ShiftColors.Text, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(ShiftColors.DangerLight)
-                .border(1.dp, Color(0xFFFECACA), RoundedCornerShape(6.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.remove), tint = ShiftColors.Danger, modifier = Modifier.size(12.dp))
-            }
-        }
-    }
-}
-
-/* ----------------------------------------------------------------------
- * 4-CARD INTERNATIONAL POS RECONCILIATION SUMMARY (SQUARE/LOYVERSE STYLE)
- * ---------------------------------------------------------------------- */
-@Composable
-fun PosReconciliationSummary(
-    startingCash: Double,
-    cashSales: Double,
-    madaSales: Double,
-    digitalWalletSales: Double,
-    totalDiscounts: Double = 0.0,
-    salesReturns: Double = 0.0,
-    totalExpenses: Double,
-    totalDueCredit: Double,
-    totalDueCollectedCash: Double,
-    totalDueCollectedBank: Double,
-    totalStaffAdvanceCash: Double,
-    totalStaffAdvanceBank: Double,
-    totalWalkout: Double,
-    totalPurchasesCash: Double,
-    staffMealsCount: Int,
-    muasselCount: Int,
-    outdoorMuasselCount: Int,
-    actualCashCount: String,
-    onActualCashCountChange: (String) -> Unit,
-    notes: String,
-    onNotesChange: (String) -> Unit
-) {
-    val currency = stringResource(R.string.currency_unit)
-    val totalSales = cashSales + madaSales + digitalWalletSales
-    val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0.0)
-    val totalCashIn = startingCash + cashSales + totalDueCollectedCash
-    val totalCashOut = totalExpenses + totalStaffAdvanceCash + totalPurchasesCash
-    val expectedCash = totalCashIn - totalCashOut
-    val actualCountVal = actualCashCount.toDoubleOrNull()
-    val variance = actualCountVal?.let { it - expectedCash }
-    val netMada = madaSales + digitalWalletSales + totalDueCollectedBank - totalStaffAdvanceBank
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // ==========================================
-        // CARD 1: SALES SUMMARY (Payment Methods & Adjustments)
-        // ==========================================
-        Card(
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.Brass))
-            Column(Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🏷️", fontSize = 16.sp)
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            stringResource(R.string.sales_summary),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = ShiftColors.Charcoal
-                        )
-                    }
-                    Surface(
-                        color = ShiftColors.BrassLight,
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Text(
-                            text = "POS Revenue Breakdown",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ShiftColors.Brass,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                        )
-                    }
-                }
-
-                DashedDivider(Modifier.padding(vertical = 10.dp))
-
-                ReconciliationRow(stringResource(R.string.cash_sales), cashSales, currency)
-                ReconciliationRow(stringResource(R.string.mada_bank), madaSales, currency)
-                if (digitalWalletSales > 0) {
-                    ReconciliationRow(stringResource(R.string.digital_wallet), digitalWalletSales, currency)
-                }
-
-                DashedDivider(Modifier.padding(vertical = 8.dp), color = ShiftColors.Border)
-
-                // TOTAL GROSS SALES (Prominent)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFFFFBEB))
-                        .border(1.dp, Color(0xFFFDE68A), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 9.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        stringResource(R.string.total_sales),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.5.sp,
-                        color = Color(0xFF92400E)
-                    )
-                    Text(
-                        "%.2f %s".format(totalSales, currency),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp,
-                        color = Color(0xFF92400E)
-                    )
-                }
-
-                if (totalDiscounts > 0 || salesReturns > 0) {
-                    Spacer(Modifier.height(8.dp))
-                    if (totalDiscounts > 0) {
-                        ReconciliationRow(
-                            label = "- ${stringResource(R.string.total_discounts_label)}",
-                            value = totalDiscounts,
-                            currency = currency,
-                            valueColor = ShiftColors.Danger
-                        )
-                    }
-                    if (salesReturns > 0) {
-                        ReconciliationRow(
-                            label = "- ${stringResource(R.string.sales_returns_label)}",
-                            value = salesReturns,
-                            currency = currency,
-                            valueColor = ShiftColors.Danger
-                        )
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFF0FDF4))
-                            .border(1.dp, Color(0xFFBBF7D0), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            stringResource(R.string.net_sales_label),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            color = Color(0xFF166534)
-                        )
-                        Text(
-                            "%.2f %s".format(netSales, currency),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.5.sp,
-                            color = Color(0xFF166534)
-                        )
-                    }
-                }
-            }
-        }
-
-        // ==========================================
-        // CARD 2: CASH DRAWER RECONCILIATION
-        // ==========================================
-        Card(
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.NetCashGreen))
-            Column(Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("💵", fontSize = 16.sp)
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            "Cash Drawer Reconciliation",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = ShiftColors.Charcoal
-                        )
-                    }
-                }
-
-                DashedDivider(Modifier.padding(vertical = 10.dp))
-
-                // Float / Inflow
-                if (startingCash > 0) {
-                    ReconciliationRow(stringResource(R.string.starting_cash), startingCash, currency)
-                }
-                ReconciliationRow("+ ${stringResource(R.string.cash_sales)}", cashSales, currency, valueColor = Color(0xFF047857))
-                if (totalDueCollectedCash > 0) {
-                    ReconciliationRow("+ ${stringResource(R.string.due_collected_cash)}", totalDueCollectedCash, currency, valueColor = Color(0xFF047857))
-                }
-
-                // Inflow subtotal
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(stringResource(R.string.total_cash_in), fontSize = 11.5.sp, color = Color(0xFF065F46), fontWeight = FontWeight.SemiBold)
-                    Text("+ %.2f %s".format(totalCashIn, currency), fontSize = 12.sp, color = Color(0xFF065F46), fontWeight = FontWeight.Bold)
-                }
-
-                DashedDivider(Modifier.padding(vertical = 6.dp))
-
-                // Outflow
-                if (totalExpenses > 0) {
-                    ReconciliationRow("- ${stringResource(R.string.op_expenses)}", totalExpenses, currency, valueColor = ShiftColors.Danger)
-                }
-                if (totalStaffAdvanceCash > 0) {
-                    ReconciliationRow("- ${stringResource(R.string.employer_cash)}", totalStaffAdvanceCash, currency, valueColor = ShiftColors.Danger)
-                }
-                if (totalPurchasesCash > 0) {
-                    ReconciliationRow("- ${stringResource(R.string.paid_out)}", totalPurchasesCash, currency, valueColor = ShiftColors.Danger)
-                }
-
-                // Outflow subtotal
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(stringResource(R.string.total_cash_out), fontSize = 11.5.sp, color = Color(0xFFB91C1C), fontWeight = FontWeight.SemiBold)
-                    Text("- %.2f %s".format(totalCashOut, currency), fontSize = 12.sp, color = Color(0xFFB91C1C), fontWeight = FontWeight.Bold)
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                // EXPECTED CASH CALLOUT
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFECFDF5))
-                        .border(1.dp, Color(0xFFA7F3D0), RoundedCornerShape(10.dp))
-                        .padding(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                stringResource(R.string.cash_in_drawer),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF065F46)
-                            )
-                            Text(
-                                "Starting Float + Inflows - Outflows",
-                                fontSize = 9.5.sp,
-                                color = Color(0xFF047857)
-                            )
-                        }
-                        Text(
-                            "%.2f %s".format(expectedCash, currency),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF065F46)
-                        )
-                    }
-                }
-            }
-        }
-
-        // ==========================================
-        // CARD 3: ACTUAL COUNT & VARIANCE
-        // ==========================================
-        Card(
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.Primary))
-            Column(Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("⚖️", fontSize = 16.sp)
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        stringResource(R.string.variance_over_short),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = ShiftColors.Charcoal
-                    )
-                }
-
-                DashedDivider(Modifier.padding(vertical = 10.dp))
-
-                // Actual Cash Input Field
-                NumberField(
-                    label = stringResource(R.string.actual_cash_count_currency, currency),
-                    value = actualCashCount,
-                    onChange = onActualCashCountChange,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(10.dp))
-
-                // Variance Status Banner
-                if (variance == null) {
-                    Surface(
-                        color = ShiftColors.Bg,
-                        shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("ℹ️", fontSize = 14.sp)
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Enter physical cash in drawer to calculate variance",
-                                fontSize = 11.5.sp,
-                                color = ShiftColors.TextMuted
-                            )
-                        }
-                    }
-                } else {
-                    val isBalanced = Math.abs(variance) < 0.001
-                    val isOver = variance > 0
-                    val bgColor = when {
-                        isBalanced -> Color(0xFFF0FDF4)
-                        isOver -> Color(0xFFECFDF5)
-                        else -> Color(0xFFFEF2F2)
-                    }
-                    val borderColor = when {
-                        isBalanced -> Color(0xFFBBF7D0)
-                        isOver -> Color(0xFFA7F3D0)
-                        else -> Color(0xFFFECACA)
-                    }
-                    val textColor = when {
-                        isBalanced -> Color(0xFF15803D)
-                        isOver -> Color(0xFF047857)
-                        else -> Color(0xFFB91C1C)
-                    }
-                    val iconSymbol = when {
-                        isBalanced -> "✓"
-                        isOver -> "▲"
-                        else -> "▼"
-                    }
-                    val statusText = when {
-                        isBalanced -> stringResource(R.string.balanced)
-                        isOver -> "Cash Over"
-                        else -> "Cash Short"
-                    }
-
-                    Surface(
-                        color = bgColor,
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(Modifier.padding(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(iconSymbol, fontWeight = FontWeight.Bold, color = textColor, fontSize = 14.sp)
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        statusText,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        color = textColor
-                                    )
-                                }
-                                Text(
-                                    "${if (variance > 0) "+" else ""}${String.format(Locale.US, "%.2f", variance)} $currency",
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 15.sp,
-                                    color = textColor
-                                )
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "Expected: %.2f %s • Actual: %.2f %s".format(
-                                    expectedCash, currency, actualCountVal ?: 0.0, currency
-                                ),
-                                fontSize = 10.5.sp,
-                                color = textColor.copy(alpha = 0.85f)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // ==========================================
-        // CARD 4: SECONDARY & OPERATIONAL TRACKING
-        // ==========================================
-        Card(
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.Purple))
-            Column(Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("📋", fontSize = 16.sp)
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "Operational & Receivables Tracking",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = ShiftColors.Charcoal
-                    )
-                }
-
-                DashedDivider(Modifier.padding(vertical = 10.dp))
-
-                ReconciliationRow(
-                    label = stringResource(R.string.due_sales_credit_entries),
-                    value = totalDueCredit,
-                    currency = currency,
-                    note = "Tracked as Receivables • Excluded from sales & drawer"
-                )
-
-                if (staffMealsCount > 0) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(stringResource(R.string.pdf_staff_meals), fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-                            Text("Complimentary • Non-revenue metric", fontSize = 9.5.sp, color = ShiftColors.TextMuted)
-                        }
-                        Text(stringResource(R.string.people_count, staffMealsCount), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Text)
-                    }
-                }
-
-                if (totalWalkout > 0) {
-                    ReconciliationRow(
-                        label = stringResource(R.string.walk_out),
-                        value = totalWalkout,
-                        currency = currency,
-                        valueColor = ShiftColors.Danger
-                    )
-                }
-
-                if (muasselCount > 0 || outdoorMuasselCount > 0) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.muassel), fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-                        Text("${muasselCount + outdoorMuasselCount} pcs", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Purple)
-                    }
-                }
-
-                // Optional Notes Input
-                Spacer(Modifier.height(8.dp))
-                FieldLabel(stringResource(R.string.closing_notes))
-                Spacer(Modifier.height(4.dp))
-                LojiaTextField(
-                    value = notes,
-                    onValueChange = onNotesChange,
-                    placeholder = { Text(stringResource(R.string.closing_notes)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReconciliationRow(
-    label: String,
-    value: Double,
-    currency: String,
-    bold: Boolean = false,
-    valueColor: Color = ShiftColors.Text,
-    note: String? = null
-) {
-    if (value <= 0) return
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(label, fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-            if (!note.isNullOrBlank()) {
-                Text(note, fontSize = 9.5.sp, color = ShiftColors.TextMuted)
-            }
-        }
-        Text(
-            "%.2f %s".format(value, currency),
-            fontSize = 13.sp,
-            fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold,
-            color = valueColor
-        )
-    }
-}
-
-/* ----------------------------------------------------------------------
- * LEGACY / RECEIPT SUMMARY OVERLOAD (for compatibility)
- * ---------------------------------------------------------------------- */
-@Composable
-private fun ReceiptSummary(
-    cash: Double, mada: Double, gross: Double, expenses: Double,
-    totalCredit: Double, totalOldDueCash: Double, totalOldDueBank: Double,
-    totalStaffCash: Double, totalStaffBank: Double, totalWalkout: Double,
-    totalItems: Double, netCash: Double, netMada: Double
-) {
-    PosReconciliationSummary(
-        startingCash = 0.0,
-        cashSales = cash,
-        madaSales = mada,
-        digitalWalletSales = 0.0,
-        totalExpenses = expenses,
-        totalDueCredit = totalCredit,
-        totalDueCollectedCash = totalOldDueCash,
-        totalDueCollectedBank = totalOldDueBank,
-        totalStaffAdvanceCash = totalStaffCash,
-        totalStaffAdvanceBank = totalStaffBank,
-        totalWalkout = totalWalkout,
-        totalPurchasesCash = totalItems,
-        staffMealsCount = 0,
-        muasselCount = 0,
-        outdoorMuasselCount = 0,
-        actualCashCount = "",
-        onActualCashCountChange = {},
-        notes = "",
-        onNotesChange = {}
-    )
-}
-
-@Composable
-private fun DashedDivider(modifier: Modifier = Modifier, color: Color = ShiftColors.Border) {
-    Canvas(modifier = modifier.fillMaxWidth().height(1.dp)) {
-        drawLine(
-            color = color,
-            start = Offset(0f, 0f),
-            end = Offset(size.width, 0f),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
-        )
-    }
-}
-
-/* ----------------------------------------------------------------------
- * STICKY BOTTOM BAR
- * ---------------------------------------------------------------------- */
-@Composable
-private fun StickySummaryBar(expectedCash: Double, variance: Double? = null) {
-    val currency = stringResource(R.string.currency_unit)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .border(width = 1.dp, color = ShiftColors.Border)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(stringResource(R.string.cash_in_drawer), fontSize = 11.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-            Text("%.2f %s".format(expectedCash, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = ShiftColors.NetCashGreen)
-        }
-        if (variance != null) {
-            val isOver = variance > 0
-            val isBalanced = Math.abs(variance) < 0.001
-            val textColor = when {
-                isBalanced -> Color(0xFF15803D)
-                isOver -> Color(0xFF047857)
-                else -> Color(0xFFB91C1C)
-            }
-            val label = when {
-                isBalanced -> stringResource(R.string.balanced)
-                isOver -> "Over"
-                else -> "Short"
-            }
-            Surface(
-                color = when {
-                    isBalanced -> Color(0xFFF0FDF4)
-                    isOver -> Color(0xFFECFDF5)
-                    else -> Color(0xFFFEF2F2)
-                },
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, textColor.copy(alpha = 0.3f))
-            ) {
-                Text(
-                    text = "$label: ${if (variance > 0) "+" else ""}${String.format(Locale.US, "%.2f", variance)} $currency",
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-/* ----------------------------------------------------------------------
- * FORM PRIMITIVES
- * ---------------------------------------------------------------------- */
-@Composable
-private fun FieldLabel(text: String) {
-    Text(
-        text = text,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = ShiftColors.TextMuted,
-        modifier = Modifier.padding(bottom = 3.dp),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis
-    )
-}
-
-@Composable
-private fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color(0xFF0F172A),
-    unfocusedTextColor = Color(0xFF0F172A),
-    disabledTextColor = Color(0xFF475569),
-    focusedContainerColor = Color.White,
-    unfocusedContainerColor = Color.White,
-    disabledContainerColor = Color(0xFFF8FAFC),
-    focusedBorderColor = ShiftColors.Primary,
-    unfocusedBorderColor = Color(0xFFCBD5E1),
-    focusedLabelColor = ShiftColors.Primary,
-    unfocusedLabelColor = Color(0xFF475569),
-    focusedPlaceholderColor = Color(0xFF64748B),
-    unfocusedPlaceholderColor = Color(0xFF64748B),
-    cursorColor = ShiftColors.Primary
-)
-
-@Composable
-private fun NumberField(
-    label: String,
-    value: String,
-    onChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    isInteger: Boolean = false
-) {
-    Column(modifier) {
-        FieldLabel(label)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 46.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (enabled) Color.White else Color(0xFFF1F5F9))
-                .border(
-                    width = 1.dp,
-                    color = if (enabled) Color(0xFFCBD5E1) else Color(0xFFE2E8F0),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            BasicTextField(
-                value = value,
-                onValueChange = { new: String ->
-                    val filtered = if (isInteger) {
-                        new.filter { it.isDigit() }
-                    } else {
-                        var hasDot = false
-                        buildString {
-                            for (char in new) {
-                                if (char.isDigit()) {
-                                    append(char)
-                                } else if (char == '.' || char == ',') {
-                                    if (!hasDot) {
-                                        append('.')
-                                        hasDot = true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    onChange(filtered)
-                },
-                enabled = enabled,
-                singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (enabled) ShiftColors.Charcoal else Color(0xFF94A3B8)
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = if (isInteger) KeyboardType.Number else KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                decorationBox = @Composable { innerTextField: @Composable () -> Unit ->
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = if (isInteger) "0" else "0.00",
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp,
-                                color = Color(0xFF94A3B8)
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun LabeledDropdown(
-    label: String,
-    options: List<String>,
-    selected: String,
-    onSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Column {
-        FieldLabel(label)
-        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-            Box(
-                modifier = Modifier
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = selected,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = ShiftColors.Charcoal,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                }
-            }
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                containerColor = Color.White,
-                shape = RoundedCornerShape(10.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
-            ) {
-                options.forEach { opt ->
-                    val isSelected = opt == selected
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = opt,
-                                fontSize = 13.5.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) ShiftColors.Primary else Color(0xFF0F172A)
-                            )
-                        },
-                        onClick = {
-                            onSelected(opt)
-                            expanded = false
-                        },
-                        colors = MenuDefaults.itemColors(
-                            textColor = Color(0xFF0F172A),
-                            leadingIconColor = Color(0xFF0F172A),
-                            trailingIconColor = Color(0xFF0F172A)
-                        ),
-                        modifier = Modifier.background(
-                            if (isSelected) Color(0xFFEFF6FF) else Color.White
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/* ----------------------------------------------------------------------
- * ADD-ENTRY MODAL (covers Credit / Old Due / Staff / Walkout / Item)
- * ---------------------------------------------------------------------- */
-private data class ModalResult(
-    val receipt: String = "",
-    val name: String = "",
-    val amount: Double = 0.0,
-    val qty: Int = 1,
-    val type: PayType = PayType.CASH
-)
-
-@Composable
-private fun AddEntryDialog(
-    type: ModalType,
-    onDismiss: () -> Unit,
-    onSubmit: (ModalResult) -> Unit
-) {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    var receipt by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    var qtyText by remember { mutableStateOf("1") }
-    var payType by remember { mutableStateOf(PayType.CASH) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val invalidAmountError = stringResource(R.string.valid_amount_error)
-
-    val title = when (type) {
-        ModalType.CREDIT -> stringResource(R.string.add_due_sale_entry)
-        ModalType.OLD_DUE -> stringResource(R.string.add_due_collection)
-        ModalType.STAFF -> stringResource(R.string.add_employer_advance)
-        ModalType.WALKOUT -> stringResource(R.string.add_walkout_bill)
-        ModalType.ITEM -> stringResource(R.string.add_paid_out_entry)
-        ModalType.NONE -> ""
-    }
-
-    AlertDialog(
-        onDismissRequest = {
-            focusManager.clearFocus()
-            keyboardController?.hide()
-            onDismiss()
-        },
-        containerColor = Color.White,
-        titleContentColor = Color(0xFF0F172A),
-        textContentColor = Color(0xFF0F172A),
-        title = { Text(title, color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
-                when (type) {
-                    ModalType.CREDIT -> {
-                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, stringResource(R.string.currency_unit))) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                    }
-                    ModalType.OLD_DUE -> {
-                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, stringResource(R.string.currency_unit))) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        PayTypeSelector(payType) { payType = it }
-                    }
-                    ModalType.STAFF -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, stringResource(R.string.currency_unit))) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        PayTypeSelector(payType) { payType = it }
-                    }
-                    ModalType.WALKOUT -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, stringResource(R.string.currency_unit))) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                    }
-                    ModalType.ITEM -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.item_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(qtyText, { qtyText = it.filter { c -> c.isDigit() } }, label = { Text(stringResource(R.string.quantity)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.price_with_currency, stringResource(R.string.currency_unit))) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
-                    }
-                    ModalType.NONE -> {}
-                }
-                error?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(it, color = ShiftColors.Danger, fontSize = 12.sp)
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                colors = ButtonDefaults.buttonColors(containerColor = ShiftColors.Primary),
-                onClick = {
-                    val amount = amountText.toDoubleOrNull() ?: 0.0
-                    if (amount <= 0) {
-                        error = invalidAmountError
-                        return@Button
-                    }
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    onSubmit(
-                        ModalResult(
-                            receipt = receipt.ifBlank { "Unspecified" },
-                            name = name.ifBlank { "Unspecified" },
-                            amount = amount,
-                            qty = qtyText.toIntOrNull()?.coerceAtLeast(1) ?: 1,
-                            type = payType
-                        )
-                    )
-                }
-            ) { Text(stringResource(R.string.add), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    onDismiss()
-                }
-            ) { Text(stringResource(R.string.cancel), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        }
-    )
-}
-
-@Composable
-private fun PayTypeSelector(selected: PayType, onChange: (PayType) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.type), fontSize = 12.sp, color = ShiftColors.TextMuted, modifier = Modifier.padding(end = 12.dp))
-        FilterChip(selected = selected == PayType.CASH, onClick = { onChange(PayType.CASH) }, label = { Text(stringResource(R.string.cash)) })
-        Spacer(Modifier.width(8.dp))
-        FilterChip(selected = selected == PayType.BANK, onClick = { onChange(PayType.BANK) }, label = { Text(stringResource(R.string.bank)) })
     }
 }

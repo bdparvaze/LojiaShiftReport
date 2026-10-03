@@ -60,11 +60,24 @@ object PdfReportGenerator {
     private const val PAGE_WIDTH = 595 // A4 standard width in points (72 dpi)
     private const val PAGE_HEIGHT = 842 // A4 standard height in points (72 dpi)
 
-    private data class DueCreditEntry(val receiptNo: String, val customerName: String, val amount: Double)
-    private data class DueCollectionEntry(val receiptNo: String, val customerName: String, val amount: Double, val paymentMode: String)
-    private data class StaffAdvanceEntry(val staffName: String, val amount: Double, val paymentMode: String)
-    private data class WalkoutEntry(val tableOrOrderRef: String, val amount: Double)
-    private data class PurchasedItemEntry(val itemName: String, val quantity: Double, val unitPrice: Double, val totalAmount: Double)
+    private data class DueCreditEntry(val receiptNo: String, val customerName: String, val amount: Long)
+    private data class DueCollectionEntry(val receiptNo: String, val customerName: String, val amount: Long, val paymentMode: String)
+    private data class StaffAdvanceEntry(val staffName: String, val amount: Long, val paymentMode: String)
+    private data class WalkoutEntry(val tableOrOrderRef: String, val amount: Long)
+    private data class PurchasedItemEntry(val itemName: String, val quantity: Double, val unitPrice: Long, val totalAmount: Long)
+
+    private fun getLongAmount(obj: org.json.JSONObject, key: String, default: Long = 0L): Long {
+        if (!obj.has(key)) return default
+        val value = obj.get(key)
+        if (value is Number) {
+            val d = value.toDouble()
+            if (value is Double && d % 1.0 != 0.0) {
+                return Math.round(d * 100)
+            }
+            return value.toLong()
+        }
+        return default
+    }
 
     private fun parseDueCreditEntries(jsonStr: String): List<DueCreditEntry> {
         val list = mutableListOf<DueCreditEntry>()
@@ -77,7 +90,7 @@ object PdfReportGenerator {
                     DueCreditEntry(
                         receiptNo = obj.optString("receiptNo", obj.optString("receipt", "-")),
                         customerName = obj.optString("customerName", "Receipt #${obj.optString("receiptNo", "")}"),
-                        amount = obj.optDouble("amount", 0.0)
+                        amount = getLongAmount(obj, "amount", 0L)
                     )
                 )
             }
@@ -98,7 +111,7 @@ object PdfReportGenerator {
                     DueCollectionEntry(
                         receiptNo = obj.optString("receiptNo", obj.optString("receipt", "-")),
                         customerName = obj.optString("customerName", "Receipt #${obj.optString("receiptNo", "")}"),
-                        amount = obj.optDouble("amount", 0.0),
+                        amount = getLongAmount(obj, "amount", 0L),
                         paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH"))
                     )
                 )
@@ -119,7 +132,7 @@ object PdfReportGenerator {
                 list.add(
                     StaffAdvanceEntry(
                         staffName = obj.optString("staffName", obj.optString("name", "Staff")),
-                        amount = obj.optDouble("amount", 0.0),
+                        amount = getLongAmount(obj, "amount", 0L),
                         paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH"))
                     )
                 )
@@ -140,7 +153,7 @@ object PdfReportGenerator {
                 list.add(
                     WalkoutEntry(
                         tableOrOrderRef = obj.optString("tableOrOrderRef", obj.optString("name", obj.optString("description", "Walkout"))),
-                        amount = obj.optDouble("amount", 0.0)
+                        amount = getLongAmount(obj, "amount", 0L)
                     )
                 )
             }
@@ -160,9 +173,9 @@ object PdfReportGenerator {
                 list.add(
                     PurchasedItemEntry(
                         itemName = obj.optString("itemName", obj.optString("name", "Item")),
-                        quantity = obj.optDouble("quantity", obj.optDouble("qty", 1.0)),
-                        unitPrice = obj.optDouble("unitPrice", 0.0),
-                        totalAmount = obj.optDouble("totalAmount", obj.optDouble("amount", 0.0))
+                        quantity = obj.optDouble("quantity", obj.optDouble("qty", 0.0)),
+                        unitPrice = getLongAmount(obj, "unitPrice", 0L),
+                        totalAmount = getLongAmount(obj, "totalAmount", getLongAmount(obj, "amount", 0L))
                     )
                 )
             }
@@ -366,14 +379,14 @@ object PdfReportGenerator {
         val centerY = y + radius
 
         val bgPaint = Paint().apply {
-            color = Color.WHITE
+            color = PdfPalette.SURFACE
             isAntiAlias = true
             style = Paint.Style.FILL
         }
         canvas.drawCircle(centerX, centerY, radius, bgPaint)
 
         val borderPaint = Paint().apply {
-            color = Color.rgb(226, 232, 240)
+            color = PdfPalette.DIVIDER
             strokeWidth = 1.5f
             style = Paint.Style.STROKE
             isAntiAlias = true
@@ -390,16 +403,16 @@ object PdfReportGenerator {
             canvas.drawBitmap(circularBmp, drawLeft, drawTop, Paint().apply { isAntiAlias = true; isFilterBitmap = true })
         } else {
             val innerCirclePaint = Paint().apply {
-                color = Color.rgb(238, 242, 255)
+                color = PdfPalette.PRIMARY_CONTAINER
                 isAntiAlias = true
             }
             canvas.drawCircle(centerX, centerY, radius - 2.5f, innerCirclePaint)
 
             val initial = bizName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "L"
             val textPaint = Paint().apply {
-                color = Color.rgb(30, 58, 138)
+                color = PdfPalette.PRIMARY_DARK
                 textSize = size * 0.44f
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
                 isAntiAlias = true
             }
@@ -422,13 +435,13 @@ object PdfReportGenerator {
 
             val bmp = Bitmap.createBitmap(targetPixelSize, targetPixelSize, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bmp)
-            canvas.drawColor(Color.WHITE)
+            canvas.drawColor(PdfPalette.SURFACE)
 
             val moduleSize = targetPixelSize.toFloat() / matrixWidth
 
             // Charcoal dark slate minimalist color matching modern design guidelines
             val primaryPaint = Paint().apply {
-                color = Color.rgb(30, 41, 59)
+                color = PdfPalette.QR_DARK
                 isAntiAlias = true
                 style = Paint.Style.FILL
             }
@@ -492,7 +505,7 @@ object PdfReportGenerator {
 
                 // Inner white 5x5 cutout
                 val whiteRect = RectF(left + moduleSize, top + moduleSize, left + 6 * moduleSize, top + 6 * moduleSize)
-                val whitePaint = Paint().apply { color = Color.WHITE; isAntiAlias = true; style = Paint.Style.FILL }
+                val whitePaint = Paint().apply { color = PdfPalette.SURFACE; isAntiAlias = true; style = Paint.Style.FILL }
                 val whiteRadius = (5 * moduleSize) * 0.28f
                 canvas.drawRoundRect(whiteRect, whiteRadius, whiteRadius, whitePaint)
 
@@ -512,11 +525,11 @@ object PdfReportGenerator {
             val badgeRadius = logoRadiusModules.toFloat() * moduleSize
 
             // Outer white mask circle
-            canvas.drawCircle(centerPxX, centerPxY, badgeRadius, Paint().apply { color = Color.WHITE; isAntiAlias = true })
+            canvas.drawCircle(centerPxX, centerPxY, badgeRadius, Paint().apply { color = PdfPalette.SURFACE; isAntiAlias = true })
 
             // Outer dark ring
             val ringPaint = Paint().apply {
-                color = Color.rgb(30, 41, 59)
+                color = PdfPalette.QR_DARK
                 isAntiAlias = true
                 style = Paint.Style.STROKE
                 strokeWidth = moduleSize * 0.7f
@@ -534,7 +547,7 @@ object PdfReportGenerator {
     }
 
     fun extractStartingCashFromNotes(report: ShiftReport): Double {
-        if (report.openingCash > 0.0) return report.openingCash
+        if (report.openingCash > 0L) return MoneyFormat.toMajorUnits(report.openingCash)
         val regex = Regex("""(?:Starting Cash|Starting Float|Float|Opening Cash)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
         return regex.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
     }
@@ -545,7 +558,7 @@ object PdfReportGenerator {
     }
 
     fun extractActualCashFromNotes(report: ShiftReport): Double? {
-        if (report.closingCash > 0.0) return report.closingCash
+        if (report.closingCash > 0L) return MoneyFormat.toMajorUnits(report.closingCash)
         val regex = Regex("""(?:Actual Cash Count|Actual Cash|Actual Count|Actual)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
         return regex.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull()
     }
@@ -553,6 +566,32 @@ object PdfReportGenerator {
     fun extractActualCashFromNotes(notes: String): Double? {
         val regex = Regex("""(?:Actual Cash Count|Actual Cash|Actual Count|Actual)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
         return regex.find(notes)?.groupValues?.get(1)?.toDoubleOrNull()
+    }
+
+    fun extractStartingCashMinor(report: ShiftReport): Long {
+        if (report.openingCash > 0L) return report.openingCash
+        val regex = Regex("""(?:Starting Cash|Starting Float|Float|Opening Cash)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
+        val doubleVal = regex.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+        return MoneyFormat.toMinorUnits(doubleVal)
+    }
+
+    fun extractStartingCashMinor(notes: String): Long? {
+        val regex = Regex("""(?:Starting Cash|Starting Float|Float|Opening Cash)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
+        val doubleVal = regex.find(notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
+        return MoneyFormat.toMinorUnits(doubleVal)
+    }
+
+    fun extractActualCashMinor(report: ShiftReport): Long? {
+        if (report.closingCash > 0L) return report.closingCash
+        val regex = Regex("""(?:Actual Cash Count|Actual Cash|Actual Count|Actual)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
+        val doubleVal = regex.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
+        return MoneyFormat.toMinorUnits(doubleVal)
+    }
+
+    fun extractActualCashMinor(notes: String): Long? {
+        val regex = Regex("""(?:Actual Cash Count|Actual Cash|Actual Count|Actual)[:=]\s*([0-9]+(?:\.[0-9]+)?)""", RegexOption.IGNORE_CASE)
+        val doubleVal = regex.find(notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
+        return MoneyFormat.toMinorUnits(doubleVal)
     }
 
     fun cleanDisplayNotes(notes: String): String {
@@ -574,43 +613,41 @@ object PdfReportGenerator {
         language: AppLanguage = AppLanguage.fromCode(LanguagePreferences.getLanguage(context))
     ): String {
         val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
-        val vatNo = businessProfile?.vatNumber ?: "310123456700003"
+        val vatNo = businessProfile?.vatNumber.orEmpty()
         val pStr = getPdfStrings(context, language)
 
         val startingCash = extractStartingCashFromNotes(report)
         val actualCashCount = extractActualCashFromNotes(report)
-        val cashIn = report.totalDueCollectedCash
-        val cashOut = report.totalCashOut
-        val expectedCashInDrawer = startingCash + report.grossCash + cashIn - cashOut
+        val cashIn = MoneyFormat.toMajorUnits(report.totalDueCollectedCash)
+        val cashOut = MoneyFormat.toMajorUnits(report.totalCashOut)
+        val expectedCashInDrawer = startingCash + MoneyFormat.toMajorUnits(report.grossCash) + cashIn - cashOut
         val variance = actualCashCount?.let { it - expectedCashInDrawer }
 
         val dueCreditEntries = parseDueCreditEntries(report.dueCreditEntriesJson)
-        val dueCollectionEntries = parseDueCollectionEntries(report.previousDueCollectionsJson)
-        val staffAdvanceEntries = parseStaffAdvanceEntries(report.staffAdvancesJson)
-        val walkoutEntries = parseWalkoutEntries(report.unpaidBillsJson)
-        val purchasedItems = parsePurchasedItems(report.purchasedItemsJson)
         val displayNotes = cleanDisplayNotes(report.notes)
 
         return buildString {
             appendLine("=== $bizName ===")
-            appendLine("VAT ID: $vatNo")
+            if (vatNo.isNotBlank()) {
+                appendLine("VAT ID: $vatNo")
+            }
             appendLine("${pStr.reportId}: #${report.id.toString().padStart(6, '0')}")
             appendLine("${pStr.date}: ${dateFormatter.format(Date(report.dateInMillis))}")
             appendLine("${pStr.shift}: ${getLocalizedShiftName(language, report.shift)} | ${pStr.cashier}: ${report.cashierName}")
             appendLine("--------------------------------")
             appendLine("[1. SALES SUMMARY]")
-            appendLine("${pStr.cashSales}: ${MoneyFormat.format(report.grossCash, currency)}")
-            appendLine("${pStr.cardMadaSales}: ${MoneyFormat.format(report.madaPayments, currency)}")
-            if (report.digitalWallet > 0) {
-                appendLine("${pStr.digitalWallet}: ${MoneyFormat.format(report.digitalWallet, currency)}")
+            appendLine("${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency)}")
+            appendLine("${pStr.cardMadaSales}: ${MoneyFormat.formatMinor(report.madaPayments, currency)}")
+            if (report.digitalWallet > 0L) {
+                appendLine("${pStr.digitalWallet}: ${MoneyFormat.formatMinor(report.digitalWallet, currency)}")
             }
-            appendLine("${pStr.grossTotalSales}: ${MoneyFormat.format(report.totalSales, currency)}")
+            appendLine("${pStr.grossTotalSales}: ${MoneyFormat.formatMinor(report.totalSales, currency)}")
             appendLine("--------------------------------")
             appendLine("[2. CASH DRAWER RECONCILIATION]")
             if (startingCash > 0) {
                 appendLine("${pStr.startingCash}: ${MoneyFormat.format(startingCash, currency)}")
             }
-            appendLine("(+) ${pStr.cashSales}: ${MoneyFormat.format(report.grossCash, currency)}")
+            appendLine("(+) ${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency)}")
             if (cashIn > 0) {
                 appendLine("(+) ${pStr.cashIn}: ${MoneyFormat.format(cashIn, currency)}")
             }
@@ -629,7 +666,7 @@ object PdfReportGenerator {
             }
             appendLine("--------------------------------")
             appendLine("[3. OTHER TRACKING]")
-            appendLine("${pStr.dueSales}: ${MoneyFormat.format(report.totalDueCredit, currency)} (${dueCreditEntries.size})")
+            appendLine("${pStr.dueSales}: ${MoneyFormat.formatMinor(report.totalDueCredit, currency)} (${dueCreditEntries.size})")
             appendLine("${pStr.staffMeals}: ${report.staffMealsCount}")
             if (displayNotes.isNotBlank()) {
                 appendLine("${pStr.notes}: $displayNotes")
@@ -658,86 +695,138 @@ object PdfReportGenerator {
         language: AppLanguage = AppLanguage.fromCode(LanguagePreferences.getLanguage(context))
     ): ExportResult {
         val pdfDocument = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
-        val page = pdfDocument.startPage(pageInfo)
-        val canvas = page.canvas
+        var pageNum = 1
+        var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNum).create()
+        var page = pdfDocument.startPage(pageInfo)
+        var canvas = page.canvas
 
         val currency = MoneyFormat.resolveCurrency(businessProfile?.currency)
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         val dateOnlyFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val pStr = getPdfStrings(context, language)
 
-        // Paints
+        // Paints (100% PdfPalette tokens)
         val primaryPaint = Paint().apply {
-            color = Color.rgb(30, 58, 138) // Deep Blue #1E3A8A
+            color = PdfPalette.PRIMARY_DARK
             isAntiAlias = true
         }
         val secondaryPaint = Paint().apply {
-            color = Color.rgb(71, 85, 105) // Slate #475569
+            color = PdfPalette.TEXT_SECONDARY
+            textSize = 8.5f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             isAntiAlias = true
         }
         val headerTextPaint = Paint().apply {
-            color = Color.WHITE
+            color = PdfPalette.ON_PRIMARY
             textSize = 15f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val subheaderTextPaint = Paint().apply {
-            color = Color.rgb(226, 232, 240)
+            color = PdfPalette.PRIMARY_CONTAINER
             textSize = 9.5f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             isAntiAlias = true
         }
         val titlePaint = Paint().apply {
-            color = Color.rgb(15, 23, 42)
+            color = PdfPalette.TEXT_PRIMARY
             textSize = 13f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val textPaint = Paint().apply {
-            color = Color.rgb(30, 41, 59)
+            color = PdfPalette.TEXT_PRIMARY
             textSize = 9.5f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             isAntiAlias = true
         }
         val textBoldPaint = Paint().apply {
-            color = Color.rgb(15, 23, 42)
+            color = PdfPalette.TEXT_PRIMARY
             textSize = 9.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val linePaint = Paint().apply {
-            color = Color.rgb(226, 232, 240)
+            color = PdfPalette.DIVIDER
+            strokeWidth = 1f
+            isAntiAlias = true
+        }
+        val borderPaint = Paint().apply {
+            color = PdfPalette.BORDER
             strokeWidth = 1f
             isAntiAlias = true
         }
         val tableHeaderPaint = Paint().apply {
-            color = Color.rgb(241, 245, 249)
+            color = PdfPalette.SURFACE_VARIANT
             isAntiAlias = true
         }
         val zebraPaint = Paint().apply {
-            color = Color.rgb(248, 250, 252)
+            color = PdfPalette.BACKGROUND
             isAntiAlias = true
         }
         val totalBoxPaint = Paint().apply {
-            color = Color.rgb(238, 242, 255)
+            color = PdfPalette.PRIMARY_CONTAINER
             isAntiAlias = true
         }
         val accentGreenPaint = Paint().apply {
-            color = Color.rgb(16, 185, 129)
+            color = PdfPalette.SUCCESS
             textSize = 9.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
 
         val margin = 36f
         var currentY = margin
+        val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
+        val vatNo = businessProfile?.vatNumber.orEmpty()
+        val phone = businessProfile?.phone.orEmpty()
+
+        fun drawSummaryFooter() {
+            val footerY = PAGE_HEIGHT - 22f
+            canvas.drawLine(margin, footerY - 8f, PAGE_WIDTH - margin, footerY - 8f, linePaint)
+            canvas.drawText(context.getString(R.string.lojia_pos_system_v10), margin, footerY + 2f, secondaryPaint)
+            val pageStr = "${pStr.page} $pageNum"
+            val pageW = secondaryPaint.measureText(pageStr)
+            canvas.drawText(pageStr, PAGE_WIDTH - margin - pageW, footerY + 2f, secondaryPaint)
+        }
+
+        val colDate = margin + 8f
+        val colCashier = margin + 80f
+        val colShift = margin + 185f
+        val colCashRight = margin + 295f
+        val colMadaRight = margin + 368f
+        val colExpRight = margin + 435f
+        val colTotalRight = PAGE_WIDTH - margin - 8f
+
+        fun drawSummaryTableHeader(topY: Float): Float {
+            val tableHeaderRect = RectF(margin, topY, PAGE_WIDTH - margin, topY + 20f)
+            canvas.drawRect(tableHeaderRect, tableHeaderPaint)
+            canvas.drawLine(margin, topY + 20f, PAGE_WIDTH - margin, topY + 20f, borderPaint)
+
+            val headerY = topY + 14f
+            canvas.drawText(context.getString(R.string.date_2), colDate, headerY, textBoldPaint)
+            canvas.drawText(context.getString(R.string.cashier_6), colCashier, headerY, textBoldPaint)
+            canvas.drawText(context.getString(R.string.shift_2), colShift, headerY, textBoldPaint)
+
+            val cashH = context.getString(R.string.cash_1)
+            canvas.drawText(cashH, colCashRight - textBoldPaint.measureText(cashH), headerY, textBoldPaint)
+
+            val madaH = context.getString(R.string.madacard)
+            canvas.drawText(madaH, colMadaRight - textBoldPaint.measureText(madaH), headerY, textBoldPaint)
+
+            val expH = context.getString(R.string.expenses)
+            canvas.drawText(expH, colExpRight - textBoldPaint.measureText(expH), headerY, textBoldPaint)
+
+            val totalH = context.getString(R.string.pdf_total_currency, currency)
+            canvas.drawText(totalH, colTotalRight - textBoldPaint.measureText(totalH), headerY, textBoldPaint)
+
+            return topY + 20f
+        }
 
         // 1. Header Banner
         val headerHeight = 72f
         val headerRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + headerHeight)
         canvas.drawRoundRect(headerRect, 8f, 8f, primaryPaint)
-
-        val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
-        val vatNo = businessProfile?.vatNumber ?: "310123456700003"
-        val phone = businessProfile?.phone ?: "+966 54 123 4567"
 
         val logoSize = 52f
         val logoX = PAGE_WIDTH - margin - logoSize - 12f
@@ -774,11 +863,11 @@ object PdfReportGenerator {
         val cardHeight = 44f
 
         // Card 1: Total Sales
-        drawKpiCard(canvas, margin, currentY, cardWidth, cardHeight, context.getString(R.string.total_revenue_label), MoneyFormat.format(totalGrossRevenue, currency), Color.rgb(16, 185, 129))
+        drawKpiCard(canvas, margin, currentY, cardWidth, cardHeight, context.getString(R.string.total_revenue_label), MoneyFormat.formatMinor(totalGrossRevenue, currency), PdfPalette.SUCCESS)
         // Card 2: Total Mada / Digital
-        drawKpiCard(canvas, margin + cardWidth + 10f, currentY, cardWidth, cardHeight, context.getString(R.string.mada_cards_label), MoneyFormat.format(totalMada + totalWallet, currency), Color.rgb(99, 102, 241))
+        drawKpiCard(canvas, margin + cardWidth + 10f, currentY, cardWidth, cardHeight, context.getString(R.string.mada_cards_label), MoneyFormat.formatMinor(totalMada + totalWallet, currency), PdfPalette.PRIMARY)
         // Card 3: Net Cash in Drawer
-        drawKpiCard(canvas, margin + (cardWidth * 2) + 20f, currentY, cardWidth, cardHeight, context.getString(R.string.net_cash_in_drawer_label), MoneyFormat.format(totalNet, currency), Color.rgb(30, 58, 138))
+        drawKpiCard(canvas, margin + (cardWidth * 2) + 20f, currentY, cardWidth, cardHeight, context.getString(R.string.net_cash_in_drawer_label), MoneyFormat.formatMinor(totalNet, currency), PdfPalette.PRIMARY_DARK)
 
         currentY += cardHeight + 22f
 
@@ -786,35 +875,35 @@ object PdfReportGenerator {
         canvas.drawText(context.getString(R.string.detailed_shift_records), margin, currentY, textBoldPaint)
         currentY += 8f
 
-        // Table Header
-        val colDate = margin + 8f
-        val colCashier = margin + 85f
-        val colShift = margin + 190f
-        val colCash = margin + 250f
-        val colMada = margin + 315f
-        val colExp = margin + 380f
-        val colTotal = margin + 445f
+        currentY = drawSummaryTableHeader(currentY)
 
-        val tableHeaderRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 20f)
-        canvas.drawRect(tableHeaderRect, tableHeaderPaint)
+        // Draw ALL rows with multi-page pagination
+        reports.forEachIndexed { index, report ->
+            if (currentY + 18f > PAGE_HEIGHT - 55f) {
+                drawSummaryFooter()
+                pdfDocument.finishPage(page)
 
-        val headerY = currentY + 14f
-        canvas.drawText(context.getString(R.string.date_2), colDate, headerY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.cashier_6), colCashier, headerY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.shift_2), colShift, headerY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.cash_1), colCash, headerY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.madacard), colMada, headerY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.expenses), colExp, headerY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.pdf_total_currency, currency), colTotal, headerY, textBoldPaint)
+                pageNum++
+                pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNum).create()
+                page = pdfDocument.startPage(pageInfo)
+                canvas = page.canvas
+                currentY = margin
 
-        currentY += 20f
+                val miniBox = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 24f)
+                canvas.drawRoundRect(miniBox, 4f, 4f, primaryPaint)
+                headerTextPaint.textSize = 10.5f
+                canvas.drawText(
+                    "$bizName — $reportTitle (${pStr.page} $pageNum)",
+                    margin + 10f,
+                    currentY + 16f,
+                    headerTextPaint
+                )
+                headerTextPaint.textSize = 15f
+                currentY += 32f
+                currentY = drawSummaryTableHeader(currentY)
+            }
 
-        // Table Rows (Draw up to 18 rows to fit gracefully on standard page)
-        val maxRows = 18
-        val rowsToDraw = reports.take(maxRows)
-
-        rowsToDraw.forEachIndexed { index, report ->
-            val rowY = currentY + 14f
+            val rowY = currentY + 13f
             if (index % 2 == 1) {
                 canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 18f), zebraPaint)
             }
@@ -823,18 +912,33 @@ object PdfReportGenerator {
             val truncatedCashier = if (report.cashierName.length > 15) report.cashierName.take(13) + ".." else report.cashierName
             canvas.drawText(truncatedCashier, colCashier, rowY, textPaint)
             canvas.drawText(getLocalizedShiftName(language, report.shift), colShift, rowY, textPaint)
-            canvas.drawText(context.getString(R.string.msg_0f_5).format(report.grossCash), colCash, rowY, textPaint)
-            canvas.drawText(context.getString(R.string.msg_0f_5).format(report.madaPayments + report.digitalWallet), colMada, rowY, textPaint)
-            canvas.drawText(context.getString(R.string.msg_0f_5).format(report.totalExpenses), colExp, rowY, textPaint)
-            canvas.drawText(context.getString(R.string.msg_2f_2).format(report.totalSales), colTotal, rowY, textBoldPaint)
+
+            val cashValStr = context.getString(R.string.msg_2f_2).format(report.grossCash)
+            canvas.drawText(cashValStr, colCashRight - textPaint.measureText(cashValStr), rowY, textPaint)
+
+            val madaValStr = context.getString(R.string.msg_2f_2).format(report.madaPayments + report.digitalWallet)
+            canvas.drawText(madaValStr, colMadaRight - textPaint.measureText(madaValStr), rowY, textPaint)
+
+            val expValStr = context.getString(R.string.msg_2f_2).format(report.totalExpenses)
+            canvas.drawText(expValStr, colExpRight - textPaint.measureText(expValStr), rowY, textPaint)
+
+            val totValStr = context.getString(R.string.msg_2f_2).format(report.totalSales)
+            canvas.drawText(totValStr, colTotalRight - textBoldPaint.measureText(totValStr), rowY, textBoldPaint)
 
             canvas.drawLine(margin, currentY + 18f, PAGE_WIDTH - margin, currentY + 18f, linePaint)
             currentY += 18f
         }
 
-        if (reports.size > maxRows) {
-            canvas.drawText(context.getString(R.string.pdf_more_entries, reports.size - maxRows), margin + 8f, currentY + 12f, secondaryPaint)
-            currentY += 16f
+        // Ensure space for Totals + Operational Metrics + Signatures
+        if (currentY + 130f > PAGE_HEIGHT - 45f) {
+            drawSummaryFooter()
+            pdfDocument.finishPage(page)
+
+            pageNum++
+            pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNum).create()
+            page = pdfDocument.startPage(pageInfo)
+            canvas = page.canvas
+            currentY = margin
         }
 
         // Totals Footer Row
@@ -843,10 +947,18 @@ object PdfReportGenerator {
 
         val totalY = currentY + 19f
         canvas.drawText(context.getString(R.string.grand_totals), colDate, totalY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.msg_0f_5).format(totalGrossCash), colCash, totalY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.msg_0f_5).format(totalMada + totalWallet), colMada, totalY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.msg_0f_5).format(totalExp), colExp, totalY, textBoldPaint)
-        canvas.drawText(context.getString(R.string.msg_2f_s_21).format(totalGrossRevenue, currency), colTotal, totalY, accentGreenPaint)
+
+        val totCashStr = context.getString(R.string.msg_2f_2).format(MoneyFormat.toMajorUnits(totalGrossCash))
+        canvas.drawText(totCashStr, colCashRight - textBoldPaint.measureText(totCashStr), totalY, textBoldPaint)
+
+        val totMadaStr = context.getString(R.string.msg_2f_2).format(MoneyFormat.toMajorUnits(totalMada + totalWallet))
+        canvas.drawText(totMadaStr, colMadaRight - textBoldPaint.measureText(totMadaStr), totalY, textBoldPaint)
+
+        val totExpStr = context.getString(R.string.msg_2f_2).format(MoneyFormat.toMajorUnits(totalExp))
+        canvas.drawText(totExpStr, colExpRight - textBoldPaint.measureText(totExpStr), totalY, textBoldPaint)
+
+        val totRevStr = context.getString(R.string.msg_2f_s_21).format(MoneyFormat.toMajorUnits(totalGrossRevenue), currency)
+        canvas.drawText(totRevStr, colTotalRight - accentGreenPaint.measureText(totRevStr), totalY, accentGreenPaint)
 
         currentY += 40f
 
@@ -857,7 +969,12 @@ object PdfReportGenerator {
         val opsBoxRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 36f)
         canvas.drawRoundRect(opsBoxRect, 6f, 6f, tableHeaderPaint)
         canvas.drawText(context.getString(R.string.pdf_operational_metrics, totalStaffMeals, totalMuassel), margin + 12f, currentY + 16f, textBoldPaint)
-        canvas.drawText(context.getString(R.string.pdf_payment_split, (totalGrossCash / totalGrossRevenue.coerceAtLeast(1.0) * 100).toInt(), (totalMada / totalGrossRevenue.coerceAtLeast(1.0) * 100).toInt(), (totalWallet / totalGrossRevenue.coerceAtLeast(1.0) * 100).toInt()), margin + 12f, currentY + 28f, secondaryPaint)
+        
+        val totalGrossRevenueDouble = totalGrossRevenue.toDouble().coerceAtLeast(1.0)
+        val cashPct = ((totalGrossCash.toDouble() / totalGrossRevenueDouble) * 100).toInt()
+        val madaPct = ((totalMada.toDouble() / totalGrossRevenueDouble) * 100).toInt()
+        val walletPct = ((totalWallet.toDouble() / totalGrossRevenueDouble) * 100).toInt()
+        canvas.drawText(context.getString(R.string.pdf_payment_split, cashPct, madaPct, walletPct), margin + 12f, currentY + 28f, secondaryPaint)
 
         // 6. Signatures & Official Seal
         val signY = PAGE_HEIGHT - margin - 50f
@@ -868,8 +985,7 @@ object PdfReportGenerator {
         canvas.drawText(context.getString(R.string.finance_auditor_official_seal), PAGE_WIDTH - margin - 180f, signY + 38f, secondaryPaint)
 
         // 7. Page Footer
-        val footerY = PAGE_HEIGHT - margin + 10f
-        canvas.drawText(context.getString(R.string.lojia_pos_system_v10), margin, footerY, secondaryPaint)
+        drawSummaryFooter()
 
         pdfDocument.finishPage(page)
 
@@ -893,8 +1009,8 @@ object PdfReportGenerator {
         val currency = MoneyFormat.resolveCurrency(businessProfile?.currency)
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
-        val startingCash = extractStartingCashFromNotes(report)
-        val actualCashCount = extractActualCashFromNotes(report)
+        val startingCash = extractStartingCashMinor(report)
+        val actualCashCount = extractActualCashMinor(report)
         val cashIn = report.totalDueCollectedCash
         val cashOut = report.totalCashOut
         val expectedCashInDrawer = startingCash + report.grossCash + cashIn - cashOut
@@ -914,73 +1030,90 @@ object PdfReportGenerator {
         var canvas = page.canvas
 
         val primaryPaint = Paint().apply {
-            color = Color.rgb(30, 58, 138) // Deep Navy
+            color = PdfPalette.PRIMARY_DARK
             isAntiAlias = true
         }
         val headerTextPaint = Paint().apply {
-            color = Color.WHITE
+            color = PdfPalette.ON_PRIMARY
             textSize = 14f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val subheaderTextPaint = Paint().apply {
-            color = Color.rgb(226, 232, 240)
+            color = PdfPalette.PRIMARY_CONTAINER
             textSize = 9f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             isAntiAlias = true
         }
         val sectionTitlePaint = Paint().apply {
-            color = Color.rgb(15, 23, 42)
+            color = PdfPalette.TEXT_PRIMARY
             textSize = 11.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val textPaint = Paint().apply {
-            color = Color.rgb(30, 41, 59)
+            color = PdfPalette.TEXT_PRIMARY
             textSize = 9.5f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             isAntiAlias = true
         }
         val textBoldPaint = Paint().apply {
-            color = Color.rgb(15, 23, 42)
+            color = PdfPalette.TEXT_PRIMARY
             textSize = 9.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val secondaryPaint = Paint().apply {
-            color = Color.rgb(100, 116, 139)
+            color = PdfPalette.TEXT_HINT
             textSize = 8.5f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
             isAntiAlias = true
         }
         val linePaint = Paint().apply {
-            color = Color.rgb(226, 232, 240)
+            color = PdfPalette.DIVIDER
             strokeWidth = 1f
             isAntiAlias = true
         }
         val boxBgPaint = Paint().apply {
-            color = Color.rgb(248, 250, 252)
+            color = PdfPalette.BACKGROUND
             isAntiAlias = true
         }
         val highlightBgPaint = Paint().apply {
-            color = Color.rgb(240, 253, 244) // Light Emerald
+            color = PdfPalette.SUCCESS_CONTAINER
+            isAntiAlias = true
+        }
+        val warningBgPaint = Paint().apply {
+            color = PdfPalette.WARNING_CONTAINER
+            isAntiAlias = true
+        }
+        val errorBgPaint = Paint().apply {
+            color = PdfPalette.ERROR_CONTAINER
             isAntiAlias = true
         }
         val emeraldPaint = Paint().apply {
-            color = Color.rgb(5, 150, 105)
+            color = PdfPalette.SUCCESS
             textSize = 10.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            isAntiAlias = true
+        }
+        val warningPaint = Paint().apply {
+            color = PdfPalette.WARNING
+            textSize = 10.5f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val rosePaint = Paint().apply {
-            color = Color.rgb(220, 38, 38)
+            color = PdfPalette.ERROR
             textSize = 10.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val tableHeaderPaint = Paint().apply {
-            color = Color.rgb(241, 245, 249)
+            color = PdfPalette.SURFACE_VARIANT
             isAntiAlias = true
         }
         val zebraPaint = Paint().apply {
-            color = Color.rgb(248, 250, 252)
+            color = PdfPalette.BACKGROUND
             isAntiAlias = true
         }
 
@@ -1034,8 +1167,8 @@ object PdfReportGenerator {
         canvas.drawRoundRect(headerRect, 8f, 8f, primaryPaint)
 
         val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
-        val vatNo = businessProfile?.vatNumber ?: "310123456700003"
-        val phone = businessProfile?.phone ?: "+966 50 123 4567"
+        val vatNo = businessProfile?.vatNumber.orEmpty()
+        val phone = businessProfile?.phone.orEmpty()
 
         val logoSize = 52f
         val logoX = PAGE_WIDTH - margin - logoSize - 12f
@@ -1043,8 +1176,17 @@ object PdfReportGenerator {
         drawBusinessLogoBadge(canvas, context, businessProfile?.logoUri, bizName, logoX, logoY, logoSize)
 
         canvas.drawText(bizName, margin + 14f, currentY + 24f, headerTextPaint)
-        canvas.drawText(context.getString(R.string.pdf_vat_reg_no_tel, vatNo, phone), margin + 14f, currentY + 42f, subheaderTextPaint)
-        canvas.drawText(context.getString(R.string.pdf_location, businessProfile?.address ?: context.getString(R.string.pdf_default_location)), margin + 14f, currentY + 58f, subheaderTextPaint)
+        val metaParts = mutableListOf<String>()
+        if (vatNo.isNotBlank()) metaParts.add("VAT: $vatNo")
+        if (phone.isNotBlank()) metaParts.add("Tel: $phone")
+        val metaLine = metaParts.joinToString(" · ")
+        if (metaLine.isNotBlank()) {
+            canvas.drawText(metaLine, margin + 14f, currentY + 42f, subheaderTextPaint)
+        }
+        val address = businessProfile?.address.orEmpty()
+        if (address.isNotBlank()) {
+            canvas.drawText(address, margin + 14f, currentY + 58f, subheaderTextPaint)
+        }
 
         val badgeText = pStr.officialReport
         val badgeWidth = subheaderTextPaint.measureText(badgeText)
@@ -1056,7 +1198,7 @@ object PdfReportGenerator {
         val infoBoxHeight = 78f
         val infoBox = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + infoBoxHeight)
         canvas.drawRoundRect(infoBox, 6f, 6f, boxBgPaint)
-        canvas.drawRoundRect(infoBox, 6f, 6f, Paint().apply { color = Color.rgb(226, 232, 240); style = Paint.Style.STROKE; strokeWidth = 1f })
+        canvas.drawRoundRect(infoBox, 6f, 6f, Paint().apply { color = PdfPalette.DIVIDER; style = Paint.Style.STROKE; strokeWidth = 1f; isAntiAlias = true })
 
         // Left Shift info
         canvas.drawText("${pStr.reportId}: #${report.id.toString().padStart(6, '0')}", margin + 12f, currentY + 20f, textBoldPaint)
@@ -1075,10 +1217,10 @@ object PdfReportGenerator {
         val qrCardBottom = qrCardTop + qrCardSize
 
         val qrCardBg = RectF(qrCardLeft, qrCardTop, qrCardRight, qrCardBottom)
-        canvas.drawRoundRect(qrCardBg, 5f, 5f, Paint().apply { color = Color.WHITE; style = Paint.Style.FILL })
-        canvas.drawRoundRect(qrCardBg, 5f, 5f, Paint().apply { color = Color.rgb(203, 213, 225); style = Paint.Style.STROKE; strokeWidth = 1f })
+        canvas.drawRoundRect(qrCardBg, 5f, 5f, Paint().apply { color = PdfPalette.SURFACE; style = Paint.Style.FILL; isAntiAlias = true })
+        canvas.drawRoundRect(qrCardBg, 5f, 5f, Paint().apply { color = PdfPalette.BORDER; style = Paint.Style.STROKE; strokeWidth = 1f; isAntiAlias = true })
 
-        val qrText = buildShiftReportQrText(context, report, businessProfile, currency, dateFormatter)
+        val qrText = buildShiftReportQrText(context, report, businessProfile, currency, dateFormatter, language)
         val qrBitmap = generateStyledQrCodeBitmap(qrText, 350)
         if (qrBitmap != null) {
             val qrPadding = 4f
@@ -1091,9 +1233,9 @@ object PdfReportGenerator {
             canvas.drawBitmap(qrBitmap, srcRect, dstRectF, null)
 
             val captionPaint = Paint().apply {
-                color = Color.rgb(30, 58, 138)
+                color = PdfPalette.PRIMARY_DARK
                 textSize = 5f
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
                 isAntiAlias = true
             }
             val scanLabel = context.getString(R.string.scan_data_label)
@@ -1109,7 +1251,7 @@ object PdfReportGenerator {
             val pillWidth = 24f
             val pillRect = RectF(margin, currentY, margin + pillWidth, currentY + 16f)
             canvas.drawRoundRect(pillRect, 3f, 3f, primaryPaint)
-            val pillNumPaint = Paint().apply { color = Color.WHITE; textSize = 8.5f; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); isAntiAlias = true }
+            val pillNumPaint = Paint().apply { color = PdfPalette.ON_PRIMARY; textSize = 8.5f; typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD); isAntiAlias = true }
             val numW = pillNumPaint.measureText(sectionNum)
             canvas.drawText(sectionNum, margin + (pillWidth - numW) / 2f, currentY + 11.5f, pillNumPaint)
 
@@ -1124,11 +1266,14 @@ object PdfReportGenerator {
             isBold: Boolean = false,
             isHighlight: Boolean = false,
             customPaint: Paint? = null,
+            customBgPaint: Paint? = null,
             indent: Float = 0f
         ) {
             ensureSpace(19f)
             val rowRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 18f)
-            if (isHighlight) {
+            if (customBgPaint != null) {
+                canvas.drawRoundRect(rowRect, 3f, 3f, customBgPaint)
+            } else if (isHighlight) {
                 canvas.drawRoundRect(rowRect, 3f, 3f, highlightBgPaint)
             } else if (isBold) {
                 canvas.drawRect(rowRect, tableHeaderPaint)
@@ -1148,12 +1293,12 @@ object PdfReportGenerator {
         // SECTION 1: SALES SUMMARY (Payment Methods Only)
         // ==========================================
         drawSectionHeader("1", pStr.salesSummary)
-        drawDataRow(pStr.cashSales, MoneyFormat.format(report.grossCash, currency))
-        drawDataRow(pStr.cardMadaSales, MoneyFormat.format(report.madaPayments, currency))
-        if (report.digitalWallet > 0) {
-            drawDataRow(pStr.digitalWallet, MoneyFormat.format(report.digitalWallet, currency))
+        drawDataRow(pStr.cashSales, MoneyFormat.formatMinor(report.grossCash, currency))
+        drawDataRow(pStr.cardMadaSales, MoneyFormat.formatMinor(report.madaPayments, currency))
+        if (report.digitalWallet > 0L) {
+            drawDataRow(pStr.digitalWallet, MoneyFormat.formatMinor(report.digitalWallet, currency))
         }
-        drawDataRow(pStr.grossTotalSales, MoneyFormat.format(report.totalSales, currency), isBold = true, isHighlight = true)
+        drawDataRow(pStr.grossTotalSales, MoneyFormat.formatMinor(report.totalSales, currency), isBold = true, isHighlight = true)
 
         ensureSpace(14f)
         val salesNote = context.getString(R.string.pdf_sales_exclusion_note)
@@ -1164,40 +1309,47 @@ object PdfReportGenerator {
         // SECTION 2: CASH DRAWER RECONCILIATION
         // ==========================================
         drawSectionHeader("2", pStr.cashDrawerReconciliation)
-        drawDataRow(pStr.startingCash, MoneyFormat.format(startingCash, currency))
-        drawDataRow("(+) ${pStr.cashSales}", "+ " + MoneyFormat.format(report.grossCash, currency))
-        if (cashIn > 0) {
-            drawDataRow("(+) ${pStr.cashIn}", "+ " + MoneyFormat.format(cashIn, currency))
+        drawDataRow(pStr.startingCash, MoneyFormat.formatMinor(startingCash, currency))
+        drawDataRow("(+) ${pStr.cashSales}", "+ " + MoneyFormat.formatMinor(report.grossCash, currency))
+        if (cashIn > 0L) {
+            drawDataRow("(+) ${pStr.cashIn}", "+ " + MoneyFormat.formatMinor(cashIn, currency))
         }
-        if (report.totalExpenses > 0) {
-            drawDataRow("   • ${pStr.expenses}", "- " + MoneyFormat.format(report.totalExpenses, currency), indent = 8f)
+        if (report.totalExpenses > 0L) {
+            drawDataRow("   • ${pStr.expenses}", "- " + MoneyFormat.formatMinor(report.totalExpenses, currency), indent = 8f)
         }
-        if (report.totalStaffAdvancesAmount > 0) {
-            drawDataRow("   • ${pStr.employerAdvances}", "- " + MoneyFormat.format(report.totalStaffAdvancesAmount, currency), indent = 8f)
+        if (report.totalStaffAdvancesAmount > 0L) {
+            drawDataRow("   • ${pStr.employerAdvances}", "- " + MoneyFormat.formatMinor(report.totalStaffAdvancesAmount, currency), indent = 8f)
         }
-        if (report.totalPurchasedCash > 0) {
-            drawDataRow("   • ${pStr.paidOutItems}", "- " + MoneyFormat.format(report.totalPurchasedCash, currency), indent = 8f)
+        if (report.totalPurchasedCash > 0L) {
+            drawDataRow("   • ${pStr.paidOutItems}", "- " + MoneyFormat.formatMinor(report.totalPurchasedCash, currency), indent = 8f)
         }
-        drawDataRow("(-) ${pStr.cashOut}", "- " + MoneyFormat.format(cashOut, currency), isBold = (cashOut > 0 && report.totalExpenses == 0.0 && report.totalStaffAdvancesAmount == 0.0 && report.totalPurchasedCash == 0.0))
+        drawDataRow("(-) ${pStr.cashOut}", "- " + MoneyFormat.formatMinor(cashOut, currency), isBold = (cashOut > 0L && report.totalExpenses == 0L && report.totalStaffAdvancesAmount == 0L && report.totalPurchasedCash == 0L))
 
         // Expected Cash in Drawer
-        drawDataRow(pStr.expectedCashInDrawer, MoneyFormat.format(expectedCashInDrawer, currency), isBold = true, isHighlight = true)
+        drawDataRow(pStr.expectedCashInDrawer, MoneyFormat.formatMinor(expectedCashInDrawer, currency), isBold = true, isHighlight = true)
 
         // Actual Cash Count & Variance
         if (actualCashCount != null) {
-            drawDataRow(pStr.actualCashCount, MoneyFormat.format(actualCashCount, currency), isBold = true)
+            drawDataRow(pStr.actualCashCount, MoneyFormat.formatMinor(actualCashCount, currency), isBold = true)
             val varianceStr = when {
                 variance == null -> "N/A"
-                variance == 0.0 -> "${MoneyFormat.format(0.0, currency)} (Balanced)"
-                variance > 0.0 -> "+${MoneyFormat.format(variance, currency)} (Over)"
-                else -> "-${MoneyFormat.format(Math.abs(variance), currency)} (Short)"
+                variance == 0L -> "${MoneyFormat.formatMinor(0L, currency)} (Balanced)"
+                variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency)} (Over)"
+                else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency)} (Short)"
             }
             val varPaint = when {
                 variance == null -> textPaint
-                variance >= 0.0 -> emeraldPaint
+                variance == 0L -> emeraldPaint
+                variance > 0L -> warningPaint
                 else -> rosePaint
             }
-            drawDataRow(pStr.variance, varianceStr, isBold = true, customPaint = varPaint)
+            val varBgPaint = when {
+                variance == null -> null
+                variance == 0L -> highlightBgPaint
+                variance > 0L -> warningBgPaint
+                else -> errorBgPaint
+            }
+            drawDataRow(pStr.variance, varianceStr, isBold = true, customPaint = varPaint, customBgPaint = varBgPaint)
         } else {
             drawDataRow(pStr.actualCashCount, "[ _______________________ ]", isBold = false)
             drawDataRow(pStr.variance, "[ _______________________ ] (Pending Count)", isBold = false)
@@ -1218,23 +1370,22 @@ object PdfReportGenerator {
         val vatRate = if (isTax) (businessProfile?.vatRate ?: 15.0) else 0.0
         val (netTaxableVal, vatVal, grossTaxVal) = if (isTax && vatRate > 0.0) {
             if (isTaxIncluded) {
-                val divisor = 1.0 + (vatRate / 100.0)
-                val net = report.totalSales / divisor
-                val vat = report.totalSales - net
+                val vat = MoneyFormat.calculateTaxMinor(report.totalSales, vatRate, true)
+                val net = MoneyFormat.subtractMinor(report.totalSales, vat)
                 Triple(net, vat, report.totalSales)
             } else {
-                val net = report.totalSales
-                val vat = net * (vatRate / 100.0)
-                Triple(net, vat, net + vat)
+                val vat = MoneyFormat.calculateTaxMinor(report.totalSales, vatRate, false)
+                val gross = MoneyFormat.addMinor(report.totalSales, vat)
+                Triple(report.totalSales, vat, gross)
             }
         } else {
-            Triple(report.totalSales, 0.0, report.totalSales)
+            Triple(report.totalSales, 0L, report.totalSales)
         }
 
         drawSectionHeader("3", taxTitle)
-        drawDataRow(netTaxableStr, MoneyFormat.format(netTaxableVal, currency))
-        drawDataRow(vatStr, MoneyFormat.format(vatVal, currency))
-        drawDataRow(grossTaxStr, MoneyFormat.format(grossTaxVal, currency), isBold = true, isHighlight = true)
+        drawDataRow(netTaxableStr, MoneyFormat.formatMinor(netTaxableVal, currency))
+        drawDataRow(vatStr, MoneyFormat.formatMinor(vatVal, currency))
+        drawDataRow(grossTaxStr, MoneyFormat.formatMinor(grossTaxVal, currency), isBold = true, isHighlight = true)
 
         currentY += 12f
 
@@ -1244,20 +1395,20 @@ object PdfReportGenerator {
         drawSectionHeader("4", pStr.otherTracking)
 
         val dueCountStr = if (dueCreditEntries.isNotEmpty()) " (${dueCreditEntries.size} ${pStr.customer})" else ""
-        drawDataRow("${pStr.dueSales}$dueCountStr", MoneyFormat.format(report.totalDueCredit, currency))
+        drawDataRow("${pStr.dueSales}$dueCountStr", MoneyFormat.formatMinor(report.totalDueCredit, currency))
         drawDataRow(pStr.staffMeals, "${report.staffMealsCount}x")
         if (report.muasselQty > 0 || report.outdoorShishaQty > 0) {
             drawDataRow("${pStr.regularMuassel} / ${pStr.outdoorMuassel}", "${report.muasselQty.toInt()} / ${report.outdoorShishaQty.toInt()}")
         }
-        if (report.totalUnpaidLoss > 0) {
-            drawDataRow(pStr.walkoutBills, MoneyFormat.format(report.totalUnpaidLoss, currency))
+        if (report.totalUnpaidLoss > 0L) {
+            drawDataRow(pStr.walkoutBills, MoneyFormat.formatMinor(report.totalUnpaidLoss, currency))
         }
 
         if (displayNotes.isNotBlank()) {
             ensureSpace(26f)
             val noteBox = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 22f)
             canvas.drawRoundRect(noteBox, 4f, 4f, boxBgPaint)
-            canvas.drawRoundRect(noteBox, 4f, 4f, Paint().apply { color = Color.rgb(226, 232, 240); style = Paint.Style.STROKE; strokeWidth = 1f })
+            canvas.drawRoundRect(noteBox, 4f, 4f, Paint().apply { color = PdfPalette.DIVIDER; style = Paint.Style.STROKE; strokeWidth = 1f; isAntiAlias = true })
             canvas.drawText("${pStr.notes}: $displayNotes", margin + 10f, currentY + 14f, textPaint)
             currentY += 28f
         } else {
@@ -1269,37 +1420,49 @@ object PdfReportGenerator {
         // ==========================================
         fun drawSectionTable(title: String, headers: List<String>, rows: List<List<String>>, totalAmountStr: String) {
             if (rows.isEmpty()) return
-            ensureSpace(40f + (rows.size * 19f))
+            ensureSpace(58f)
 
             canvas.drawText(title, margin, currentY, textBoldPaint)
             currentY += 6f
 
-            // Header Row
-            val tableH = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 17f)
-            canvas.drawRect(tableH, primaryPaint)
-
             val col1X = margin + 10f
             val col2X = margin + 180f
-            val col3X = PAGE_WIDTH - margin - 110f
+            val col3RightX = PAGE_WIDTH - margin - 10f
+            val headerP = Paint().apply { color = PdfPalette.ON_PRIMARY; textSize = 8.5f; typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD); isAntiAlias = true }
 
-            val headerP = Paint().apply { color = Color.WHITE; textSize = 8.5f; typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); isAntiAlias = true }
-            canvas.drawText(headers[0], col1X, currentY + 12f, headerP)
-            if (headers.size > 1) canvas.drawText(headers[1], col2X, currentY + 12f, headerP)
-            if (headers.size > 2) canvas.drawText(headers[2], col3X, currentY + 12f, headerP)
+            fun drawDetailHeader() {
+                val tableH = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 17f)
+                canvas.drawRect(tableH, primaryPaint)
+                canvas.drawText(headers[0], col1X, currentY + 12f, headerP)
+                if (headers.size > 1 && headers[1].isNotBlank()) {
+                    canvas.drawText(headers[1], col2X, currentY + 12f, headerP)
+                }
+                if (headers.size > 2 && headers[2].isNotBlank()) {
+                    val h3W = headerP.measureText(headers[2])
+                    canvas.drawText(headers[2], col3RightX - h3W, currentY + 12f, headerP)
+                }
+                currentY += 17f
+            }
 
-            currentY += 17f
+            drawDetailHeader()
 
             // Data Rows
             rows.forEachIndexed { idx, row ->
+                val pageBefore = pageNum
                 ensureSpace(18f)
+                if (pageNum != pageBefore) {
+                    drawDetailHeader()
+                }
                 if (idx % 2 == 1) {
                     canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 17f), zebraPaint)
                 }
                 canvas.drawText(row[0], col1X, currentY + 12f, textPaint)
-                if (row.size > 1) canvas.drawText(row[1], col2X, currentY + 12f, textPaint)
+                if (row.size > 1 && row[1].isNotBlank()) {
+                    canvas.drawText(row[1], col2X, currentY + 12f, textPaint)
+                }
                 if (row.size > 2) {
                     val w = textBoldPaint.measureText(row[2])
-                    canvas.drawText(row[2], PAGE_WIDTH - margin - w - 10f, currentY + 12f, textBoldPaint)
+                    canvas.drawText(row[2], col3RightX - w, currentY + 12f, textBoldPaint)
                 }
                 canvas.drawLine(margin, currentY + 17f, PAGE_WIDTH - margin, currentY + 17f, linePaint)
                 currentY += 17f
@@ -1310,7 +1473,7 @@ object PdfReportGenerator {
             canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 18f), tableHeaderPaint)
             canvas.drawText("${pStr.total}:", col1X, currentY + 13f, textBoldPaint)
             val totW = emeraldPaint.measureText(totalAmountStr)
-            canvas.drawText(totalAmountStr, PAGE_WIDTH - margin - totW - 10f, currentY + 13f, emeraldPaint)
+            canvas.drawText(totalAmountStr, col3RightX - totW, currentY + 13f, emeraldPaint)
             canvas.drawLine(margin, currentY + 18f, PAGE_WIDTH - margin, currentY + 18f, linePaint)
             currentY += 22f
         }
@@ -1319,40 +1482,40 @@ object PdfReportGenerator {
         drawSectionTable(
             title = pStr.dueSales,
             headers = listOf(pStr.receiptNo, pStr.customer, pStr.amount),
-            rows = dueCreditEntries.map { listOf(it.receiptNo, it.customerName, MoneyFormat.format(it.amount, currency)) },
-            totalAmountStr = MoneyFormat.format(dueCreditEntries.sumOf { it.amount }, currency)
+            rows = dueCreditEntries.map { listOf(it.receiptNo, it.customerName, MoneyFormat.formatMinor(it.amount, currency)) },
+            totalAmountStr = MoneyFormat.formatMinor(dueCreditEntries.sumOf { it.amount }, currency)
         )
 
         // Table 2: Due Collection
         drawSectionTable(
             title = pStr.dueCollection,
             headers = listOf(pStr.receiptNo, pStr.mode, pStr.amount),
-            rows = dueCollectionEntries.map { listOf(it.receiptNo, it.paymentMode, MoneyFormat.format(it.amount, currency)) },
-            totalAmountStr = MoneyFormat.format(dueCollectionEntries.sumOf { it.amount }, currency)
+            rows = dueCollectionEntries.map { listOf(it.receiptNo, it.paymentMode, MoneyFormat.formatMinor(it.amount, currency)) },
+            totalAmountStr = MoneyFormat.formatMinor(dueCollectionEntries.sumOf { it.amount }, currency)
         )
 
         // Table 3: Employer Advances
         drawSectionTable(
             title = pStr.employerAdvances,
             headers = listOf(pStr.staffName, pStr.mode, pStr.amount),
-            rows = staffAdvanceEntries.map { listOf(it.staffName, it.paymentMode, MoneyFormat.format(it.amount, currency)) },
-            totalAmountStr = MoneyFormat.format(staffAdvanceEntries.sumOf { it.amount }, currency)
+            rows = staffAdvanceEntries.map { listOf(it.staffName, it.paymentMode, MoneyFormat.formatMinor(it.amount, currency)) },
+            totalAmountStr = MoneyFormat.formatMinor(staffAdvanceEntries.sumOf { it.amount }, currency)
         )
 
         // Table 4: Walkout Bills
         drawSectionTable(
             title = pStr.walkoutBills,
-            headers = listOf(pStr.customer, pStr.amount),
-            rows = walkoutEntries.map { listOf(it.tableOrOrderRef, "", MoneyFormat.format(it.amount, currency)) },
-            totalAmountStr = MoneyFormat.format(walkoutEntries.sumOf { it.amount }, currency)
+            headers = listOf(pStr.customer, "", pStr.amount),
+            rows = walkoutEntries.map { listOf(it.tableOrOrderRef, "", MoneyFormat.formatMinor(it.amount, currency)) },
+            totalAmountStr = MoneyFormat.formatMinor(walkoutEntries.sumOf { it.amount }, currency)
         )
 
         // Table 5: Paid Out Items / Purchases
         drawSectionTable(
             title = pStr.paidOutItems,
             headers = listOf(pStr.item, pStr.qty, pStr.total),
-            rows = purchasedItems.map { listOf(it.itemName, "${it.quantity.toInt()}x", MoneyFormat.format(it.totalAmount, currency)) },
-            totalAmountStr = MoneyFormat.format(purchasedItems.sumOf { it.totalAmount }, currency)
+            rows = purchasedItems.map { listOf(it.itemName, if (it.quantity > 0) "${it.quantity.toInt()}x" else "—", MoneyFormat.formatMinor(it.totalAmount, currency)) },
+            totalAmountStr = MoneyFormat.formatMinor(purchasedItems.sumOf { it.totalAmount }, currency)
         )
 
         // ==========================================
@@ -1405,7 +1568,7 @@ object PdfReportGenerator {
             // Fallback for older devices or if MediaStore insert returned null
             if (outputStream == null) {
                 val docsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) 
-                    ?: context.filesDir
+                    ?: File(context.filesDir, "reports")
                 if (!docsDir.exists()) {
                     docsDir.mkdirs()
                 }
@@ -1462,65 +1625,61 @@ object PdfReportGenerator {
     ) {
         val rect = RectF(x, y, x + width, y + height)
         val bgPaint = Paint().apply {
-            color = Color.rgb(248, 250, 252)
+            color = PdfPalette.BACKGROUND
             isAntiAlias = true
         }
         val borderPaint = Paint().apply {
-            color = Color.rgb(226, 232, 240)
+            color = PdfPalette.DIVIDER
             style = Paint.Style.STROKE
             strokeWidth = 1f
             isAntiAlias = true
         }
+        val accentBarPaint = Paint().apply {
+            color = accentColor
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
         val titlePaint = Paint().apply {
-            color = Color.rgb(100, 116, 139)
+            color = PdfPalette.TEXT_HINT
             textSize = 7.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
         val valuePaint = Paint().apply {
             color = accentColor
             textSize = 10.5f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             isAntiAlias = true
         }
 
         canvas.drawRoundRect(rect, 6f, 6f, bgPaint)
         canvas.drawRoundRect(rect, 6f, 6f, borderPaint)
+        canvas.drawRoundRect(RectF(x, y + 4f, x + 3.5f, y + height - 4f), 2f, 2f, accentBarPaint)
 
-        canvas.drawText(title, x + 8f, y + 16f, titlePaint)
-        canvas.drawText(value, x + 8f, y + 33f, valuePaint)
+        canvas.drawText(title, x + 10f, y + 16f, titlePaint)
+        canvas.drawText(value, x + 10f, y + 33f, valuePaint)
     }
 
     /**
      * Opens the exported PDF with the system viewer or any installed PDF application.
      */
-    fun openPdfFile(context: Context, uri: Uri) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/pdf")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(Intent.createChooser(intent, "Open PDF Report").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        } catch (e: Exception) {
-            Toast.makeText(context, context.getString(R.string.no_pdf_viewer_found), Toast.LENGTH_LONG).show()
-        }
-    }
+    fun openPdfFile(context: Context, uri: Uri) = PdfShareUtils.openPdfFile(context, uri)
 
     /**
      * Shares the exported PDF file via Intent chooser.
      */
-    fun sharePdfFile(context: Context, uri: Uri, title: String = "Shift Sales Report PDF") {
-        try {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, title)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(intent, "Share PDF Report").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        } catch (e: Exception) {
-            Toast.makeText(context, context.getString(R.string.could_not_share_pdf, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
-        }
-    }
+    fun sharePdfFile(context: Context, uri: Uri, title: String = "Shift Sales Report PDF") =
+        PdfShareUtils.sharePdfFile(context, uri, title)
+
+    /**
+     * Sends the exported PDF file as an email attachment using Intent.ACTION_SEND.
+     */
+    fun sendEmailWithPdf(context: Context, pdfUri: Uri, recipientEmail: String = "") =
+        PdfShareUtils.sendEmailWithPdf(context, pdfUri, recipientEmail)
+
+    /**
+     * Shares the exported PDF file directly to WhatsApp, falling back to a generic chooser if not installed.
+     */
+    fun sharePdfToWhatsApp(context: Context, pdfUri: Uri, message: String = "") =
+        PdfShareUtils.sharePdfToWhatsApp(context, pdfUri, message)
 }

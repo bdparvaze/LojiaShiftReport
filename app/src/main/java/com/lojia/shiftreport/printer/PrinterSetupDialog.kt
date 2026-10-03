@@ -22,7 +22,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.theme.Dimens
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,13 +77,13 @@ fun PrinterSetupDialog(
                 pairedPrinters = list
                 isScanning = false
                 if (list.isEmpty()) {
-                    statusMessage = "No paired Bluetooth printers found. Pair in Android Settings first."
+                    statusMessage = context.getString(R.string.printer_no_paired_found)
                     isErrorMessage = false
                 }
             }
         },
         onDenied = {
-            statusMessage = "Bluetooth permission is required to discover thermal printers."
+            statusMessage = context.getString(R.string.printer_permission_required)
             isErrorMessage = true
         }
     )
@@ -93,11 +96,25 @@ fun PrinterSetupDialog(
                 pairedPrinters = list
                 isScanning = false
                 if (list.isEmpty()) {
-                    statusMessage = "No paired Bluetooth printers found. Pair in Android Settings first."
+                    statusMessage = context.getString(R.string.printer_no_paired_found)
                     isErrorMessage = false
                 }
             }
         }
+    }
+
+    fun isValidIp(ip: String): Boolean {
+        val parts = ip.trim().split(".")
+        if (parts.size != 4) return false
+        return parts.all { part ->
+            val num = part.toIntOrNull()
+            num != null && num in 0..255
+        }
+    }
+
+    fun isValidPort(portStr: String): Boolean {
+        val p = portStr.trim().toIntOrNull()
+        return p != null && p in 1..65535
     }
 
     LaunchedEffect(connectionType) {
@@ -109,12 +126,13 @@ fun PrinterSetupDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = modifier
+                .widthIn(max = Dimens.DialogMaxWidth)
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(vertical = 16.dp),
-            shape = RoundedCornerShape(24.dp),
+                .padding(horizontal = Dimens.SpacingLg),
+            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
             color = Color.White,
-            tonalElevation = 6.dp
+            tonalElevation = Dimens.DialogElevation
         ) {
             Column(
                 modifier = Modifier
@@ -145,13 +163,13 @@ fun PrinterSetupDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Thermal Printer Setup",
+                                text = stringResource(R.string.printer_setup_title),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0F172A)
                             )
                             Text(
-                                text = "ESC/POS Receipt & Z-Report",
+                                text = stringResource(R.string.printer_setup_subtitle),
                                 fontSize = 12.sp,
                                 color = Color(0xFF64748B)
                             )
@@ -161,7 +179,7 @@ fun PrinterSetupDialog(
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = Color(0xFF94A3B8)
                         )
                     }
@@ -190,7 +208,7 @@ fun PrinterSetupDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Bluetooth",
+                            text = stringResource(R.string.printer_conn_bluetooth),
                             fontSize = 13.sp,
                             fontWeight = if (connectionType == "bluetooth") FontWeight.Bold else FontWeight.Medium,
                             color = if (connectionType == "bluetooth") AccentEmerald else Color(0xFF64748B)
@@ -210,7 +228,7 @@ fun PrinterSetupDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Wi-Fi / LAN (TCP)",
+                            text = stringResource(R.string.printer_conn_network),
                             fontSize = 13.sp,
                             fontWeight = if (connectionType == "network") FontWeight.Bold else FontWeight.Medium,
                             color = if (connectionType == "network") AccentEmerald else Color(0xFF64748B)
@@ -228,7 +246,7 @@ fun PrinterSetupDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Paired Bluetooth Printers",
+                            text = stringResource(R.string.printer_paired_devices),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF334155)
@@ -243,7 +261,7 @@ fun PrinterSetupDialog(
                                 Spacer(modifier = Modifier.width(4.dp))
                             }
                             Text(
-                                text = if (isScanning) "Searching..." else "Refresh",
+                                text = if (isScanning) stringResource(R.string.printer_searching) else stringResource(R.string.printer_refresh),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AccentEmerald
@@ -262,7 +280,7 @@ fun PrinterSetupDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (isScanning) "Searching for paired devices..." else "No paired Bluetooth printers.\nPair your thermal printer in Android Bluetooth Settings first.",
+                                text = if (isScanning) stringResource(R.string.printer_searching) else stringResource(R.string.printer_no_devices_hint),
                                 fontSize = 12.sp,
                                 color = Color(0xFF64748B),
                                 textAlign = TextAlign.Center
@@ -326,8 +344,11 @@ fun PrinterSetupDialog(
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         LojiaTextField(
                             value = networkIp,
-                            onValueChange = { networkIp = it },
-                            label = { Text("Printer IP Address") },
+                            onValueChange = {
+                                networkIp = it
+                                statusMessage = null
+                            },
+                            label = { Text(stringResource(R.string.printer_ip_label)) },
                             placeholder = { Text("e.g. 192.168.1.100") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -336,8 +357,11 @@ fun PrinterSetupDialog(
 
                         LojiaTextField(
                             value = networkPort,
-                            onValueChange = { networkPort = it },
-                            label = { Text("Port (Default: 9100)") },
+                            onValueChange = {
+                                networkPort = it
+                                statusMessage = null
+                            },
+                            label = { Text(stringResource(R.string.printer_port_label)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
@@ -349,7 +373,7 @@ fun PrinterSetupDialog(
 
                 // Paper Width Selector
                 Text(
-                    text = "Paper Roll Width",
+                    text = stringResource(R.string.printer_paper_width_label),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF334155)
@@ -364,14 +388,14 @@ fun PrinterSetupDialog(
                     FilterChip(
                         selected = selectedPaperWidth == 58,
                         onClick = { selectedPaperWidth = 58 },
-                        label = { Text("58 mm (Standard Receipt)") },
+                        label = { Text(stringResource(R.string.printer_width_58mm)) },
                         modifier = Modifier.weight(1f)
                     )
 
                     FilterChip(
                         selected = selectedPaperWidth == 80,
                         onClick = { selectedPaperWidth = 80 },
-                        label = { Text("80 mm (Wide Receipt)") },
+                        label = { Text(stringResource(R.string.printer_width_80mm)) },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -398,28 +422,29 @@ fun PrinterSetupDialog(
                 ) {
                     OutlinedButton(
                         onClick = {
+                            if (connectionType == "network") {
+                                if (!isValidIp(networkIp)) {
+                                    statusMessage = context.getString(R.string.printer_invalid_ip)
+                                    isErrorMessage = true
+                                    return@OutlinedButton
+                                }
+                                if (!isValidPort(networkPort)) {
+                                    statusMessage = context.getString(R.string.printer_invalid_port)
+                                    isErrorMessage = true
+                                    return@OutlinedButton
+                                }
+                            }
+
                             isTestingPrint = true
                             statusMessage = null
                             isErrorMessage = false
 
                             val executeTest = {
                                 scope.launch {
-                                    val testReceipt = """
-                                        [C]<b>LOJIA POS</b>
-                                        [C]Shift Report System
-                                        [C]================================
-                                        [L]<b>TEST PRINT SUCCESSFUL</b>
-                                        [L]Hardware: ${if (connectionType == "bluetooth") selectedAddress else "$networkIp:$networkPort"}
-                                        [L]Width: ${selectedPaperWidth}mm
-                                        [C]--------------------------------
-                                        [C]Printer connection operational!
-                                        [C]================================
-                                    """.trimIndent()
-
                                     val result = if (connectionType == "network") {
                                         printerManager.testNetworkConnection(
-                                            networkIp,
-                                            networkPort.toIntOrNull() ?: 9100
+                                            networkIp.trim(),
+                                            networkPort.trim().toIntOrNull() ?: 9100
                                         )
                                     } else {
                                         printerManager.testConnection(selectedAddress)
@@ -428,11 +453,11 @@ fun PrinterSetupDialog(
                                     isTestingPrint = false
                                     result.fold(
                                         onSuccess = {
-                                            statusMessage = "Test connection successful!"
+                                            statusMessage = context.getString(R.string.printer_test_success)
                                             isErrorMessage = false
                                         },
                                         onFailure = { e ->
-                                            statusMessage = "Test failed: ${e.message}"
+                                            statusMessage = context.getString(R.string.printer_test_failed, e.message ?: "")
                                             isErrorMessage = true
                                         }
                                     )
@@ -456,7 +481,7 @@ fun PrinterSetupDialog(
                         } else {
                             Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Test", fontSize = 13.sp)
+                            Text(stringResource(R.string.printer_btn_test), fontSize = 13.sp)
                         }
                     }
 
@@ -465,13 +490,23 @@ fun PrinterSetupDialog(
                             if (connectionType == "bluetooth") {
                                 printerManager.savePrinterConfig(selectedAddress, selectedPaperWidth)
                             } else {
+                                if (!isValidIp(networkIp)) {
+                                    statusMessage = context.getString(R.string.printer_invalid_ip)
+                                    isErrorMessage = true
+                                    return@Button
+                                }
+                                if (!isValidPort(networkPort)) {
+                                    statusMessage = context.getString(R.string.printer_invalid_port)
+                                    isErrorMessage = true
+                                    return@Button
+                                }
                                 printerManager.saveNetworkPrinterConfig(
-                                    networkIp,
-                                    networkPort.toIntOrNull() ?: 9100,
+                                    networkIp.trim(),
+                                    networkPort.trim().toIntOrNull() ?: 9100,
                                     selectedPaperWidth
                                 )
                             }
-                            Toast.makeText(context, "Printer configuration saved!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.printer_config_saved), Toast.LENGTH_SHORT).show()
                             onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = AccentEmerald),
@@ -479,7 +514,7 @@ fun PrinterSetupDialog(
                         enabled = connectionType == "bluetooth" && selectedAddress.isNotBlank() || connectionType == "network" && networkIp.isNotBlank(),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Save", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(stringResource(R.string.save), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }

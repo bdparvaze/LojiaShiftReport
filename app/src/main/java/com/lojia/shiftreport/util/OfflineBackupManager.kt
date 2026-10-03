@@ -236,6 +236,7 @@ object OfflineBackupManager {
             })
         }
         rootJson.put("auditLogs", auditLogsArr)
+        rootJson.put("schemaVersion", 15)
 
         val totalRecords = shiftReports.size + shiftSessions.size + cashiers.size + users.size + cashMovements.size
         Pair(rootJson.toString(2), totalRecords)
@@ -369,6 +370,18 @@ object OfflineBackupManager {
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val root = JSONObject(jsonString)
+            val schemaVersion = root.optInt("schemaVersion", 1)
+            val isLegacyBackup = schemaVersion < 15
+
+            fun getMoneyVal(obj: JSONObject, key: String, defaultVal: Double = 0.0): Long {
+                val value = obj.optDouble(key, defaultVal)
+                return if (isLegacyBackup) {
+                    MoneyFormat.toMinorUnits(value)
+                } else {
+                    value.toLong()
+                }
+            }
+
             val reportDao = database.reportDao()
 
             var restoredCount = 0
@@ -402,12 +415,12 @@ object OfflineBackupManager {
                 val passwordHash = if (obj.has("passwordHash") && obj.getString("passwordHash").isNotBlank()) {
                     obj.getString("passwordHash")
                 } else {
-                    existing?.passwordHash ?: SecurityUtils.hashSecret("admin123")
+                    existing?.passwordHash.orEmpty()
                 }
                 val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) {
                     obj.getString("pin")
                 } else {
-                    existing?.pin ?: SecurityUtils.hashSecret("1234")
+                    existing?.pin.orEmpty()
                 }
 
                 val up = UserProfile(
@@ -424,7 +437,7 @@ object OfflineBackupManager {
                     autoLockMinutes = obj.optInt("autoLockMinutes", 5),
                     currentRole = obj.optString("currentRole", "ADMIN"),
                     registeredAt = obj.optLong("registeredAt", System.currentTimeMillis()),
-                    isRegistered = obj.optBoolean("isRegistered", true)
+                    isRegistered = obj.optBoolean("isRegistered", true) && pinVal.isNotBlank()
                 )
                 reportDao.saveUserProfile(up)
                 restoredCount++
@@ -465,14 +478,14 @@ object OfflineBackupManager {
                 val list = mutableListOf<Cashier>()
                 for (i in 0 until cashiersArr.length()) {
                     val obj = cashiersArr.getJSONObject(i)
-                    val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) obj.getString("pin") else SecurityUtils.hashSecret("1234")
+                    val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) obj.getString("pin") else ""
                     list.add(
                         Cashier(
                             id = obj.optInt("id", 0),
                             name = obj.getString("name"),
                             pin = pinVal,
                             role = obj.optString("role", "CASHIER"),
-                            active = obj.optBoolean("active", true)
+                            active = obj.optBoolean("active", true) && pinVal.isNotBlank()
                         )
                     )
                 }
@@ -486,8 +499,8 @@ object OfflineBackupManager {
                 val list = mutableListOf<User>()
                 for (i in 0 until usersArr.length()) {
                     val obj = usersArr.getJSONObject(i)
-                    val passVal = if (obj.has("passwordHash") && obj.getString("passwordHash").isNotBlank()) obj.getString("passwordHash") else SecurityUtils.hashSecret("admin123")
-                    val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) obj.getString("pin") else SecurityUtils.hashSecret("1234")
+                    val passVal = if (obj.has("passwordHash") && obj.getString("passwordHash").isNotBlank()) obj.getString("passwordHash") else ""
+                    val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) obj.getString("pin") else ""
                     list.add(
                         User(
                             id = obj.optInt("id", 0),
@@ -515,11 +528,13 @@ object OfflineBackupManager {
                             cashierName = obj.getString("cashierName"),
                             shift = obj.getString("shift"),
                             dateInMillis = obj.getLong("dateInMillis"),
-                            grossCash = obj.getDouble("grossCash"),
-                            madaPayments = obj.getDouble("madaPayments"),
-                            digitalWallet = obj.optDouble("digitalWallet", 0.0),
+                            openingCash = getMoneyVal(obj, "openingCash", 0.0),
+                            closingCash = getMoneyVal(obj, "closingCash", 0.0),
+                            grossCash = getMoneyVal(obj, "grossCash"),
+                            madaPayments = getMoneyVal(obj, "madaPayments"),
+                            digitalWallet = getMoneyVal(obj, "digitalWallet", 0.0),
                             staffMealsCount = obj.optInt("staffMealsCount", 0),
-                            totalExpenses = obj.optDouble("totalExpenses", 0.0),
+                            totalExpenses = getMoneyVal(obj, "totalExpenses", 0.0),
                             muasselQty = obj.optDouble("muasselQty", 0.0),
                             outdoorShishaQty = obj.optDouble("outdoorShishaQty", 0.0),
                             dueCreditEntriesJson = obj.optString("dueCreditEntriesJson", "[]"),
@@ -549,15 +564,15 @@ object OfflineBackupManager {
                             status = obj.optString("status", "OPEN"),
                             openedAt = obj.getLong("openedAt"),
                             closedAt = if (obj.has("closedAt")) obj.getLong("closedAt") else null,
-                            startingCash = obj.optDouble("startingCash", 0.0),
-                            cashSales = obj.optDouble("cashSales", 0.0),
-                            cardSales = obj.optDouble("cardSales", 0.0),
-                            digitalSales = obj.optDouble("digitalSales", 0.0),
-                            totalPayIn = obj.optDouble("totalPayIn", 0.0),
-                            totalPayOut = obj.optDouble("totalPayOut", 0.0),
-                            expectedCash = obj.optDouble("expectedCash", 0.0),
-                            actualCashCount = if (obj.has("actualCashCount")) obj.getDouble("actualCashCount") else 0.0,
-                            variance = if (obj.has("variance")) obj.getDouble("variance") else 0.0,
+                            startingCash = getMoneyVal(obj, "startingCash"),
+                            cashSales = getMoneyVal(obj, "cashSales"),
+                            cardSales = getMoneyVal(obj, "cardSales"),
+                            digitalSales = getMoneyVal(obj, "digitalSales"),
+                            totalPayIn = getMoneyVal(obj, "totalPayIn"),
+                            totalPayOut = getMoneyVal(obj, "totalPayOut"),
+                            expectedCash = getMoneyVal(obj, "expectedCash"),
+                            actualCashCount = getMoneyVal(obj, "actualCashCount"),
+                            variance = getMoneyVal(obj, "variance"),
                             notes = obj.optString("notes", "")
                         )
                     )
@@ -578,7 +593,7 @@ object OfflineBackupManager {
                             shiftSessionId = obj.getInt("shiftSessionId"),
                             cashierName = obj.getString("cashierName"),
                             type = obj.getString("type"),
-                            amount = obj.getDouble("amount"),
+                            amount = getMoneyVal(obj, "amount"),
                             reason = obj.optString("reason", ""),
                             timestamp = obj.optLong("timestamp", System.currentTimeMillis())
                         )

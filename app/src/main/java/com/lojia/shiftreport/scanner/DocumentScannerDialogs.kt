@@ -32,7 +32,7 @@ fun SaveDocumentTitleDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Save Document",
+                text = stringResource(R.string.doc_save_title_dialog),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -45,7 +45,7 @@ fun SaveDocumentTitleDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Enter a title for this scanned document:",
+                    text = stringResource(R.string.doc_enter_title_desc),
                     fontSize = 13.sp,
                     color = Color(0xFF64748B)
                 )
@@ -53,7 +53,7 @@ fun SaveDocumentTitleDialog(
                     value = title,
                     onValueChange = onTitleChange,
                     singleLine = true,
-                    placeholder = { Text("e.g. Receipt_Invoice_01") },
+                    placeholder = { Text(stringResource(R.string.doc_title_placeholder)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("save_title_input")

@@ -61,6 +61,9 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     private val _currentCountry = MutableStateFlow(loadInitialCountry())
     val currentCountry: StateFlow<AppCountry> = _currentCountry.asStateFlow()
 
+    private val _currentCurrency = MutableStateFlow("USD")
+    val currentCurrency: StateFlow<String> = _currentCurrency.asStateFlow()
+
     // 3. Cashier Roster State
     val cashiers: StateFlow<List<Cashier>> = reportDao.getAllCashiers()
         .stateIn(scope, SharingStarted.Eagerly, emptyList())
@@ -87,6 +90,9 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     val syncState: StateFlow<ConfigurationSyncState> = _syncState.asStateFlow()
 
     init {
+        _currentCurrency.value = prefs.getString(KEY_SELECTED_CURRENCY, "USD")
+            ?: "USD"
+
         // Initial setup and DB sync verification
         scope.launch {
             verifyAndSeedDefaultCashiers()
@@ -161,6 +167,18 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                 reportDao.setSetting(AppSetting(KEY_SELECTED_COUNTRY, _currentCountry.value.code))
             }
 
+            // Restore currency from Room DB if present
+            val dbCurrency = reportDao.getSetting(KEY_SELECTED_CURRENCY)
+            if (!dbCurrency.isNullOrBlank()) {
+                val normalized = dbCurrency.trim().uppercase()
+                if (normalized != _currentCurrency.value) {
+                    _currentCurrency.value = normalized
+                    prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
+                }
+            } else {
+                reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, _currentCurrency.value))
+            }
+
             // Restore active cashier from Room DB if present
             val dbCashier = reportDao.getSetting(KEY_ACTIVE_CASHIER)
             if (!dbCashier.isNullOrBlank()) {
@@ -207,6 +225,13 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                                 prefs.edit().putString(KEY_SELECTED_COUNTRY, country.code).apply()
                             }
                         }
+                        KEY_SELECTED_CURRENCY -> {
+                            val normalized = setting.value.trim().uppercase()
+                            if (normalized.isNotEmpty() && normalized != _currentCurrency.value) {
+                                _currentCurrency.value = normalized
+                                prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
+                            }
+                        }
                         KEY_ACTIVE_CASHIER -> {
                             if (setting.value.isNotBlank() && setting.value != _activeCashier.value) {
                                 _activeCashier.value = setting.value
@@ -227,21 +252,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     }
 
     private suspend fun verifyAndSeedDefaultCashiers() {
-        if (!BuildConfig.DEBUG) return
-        try {
-            val count = reportDao.getCashierCount()
-            if (count == 0) {
-                val defaults = listOf(
-                    Cashier(name = "Lojia Manager", pin = SecurityUtils.hashSecret("1234"), role = "ADMIN"),
-                    Cashier(name = "Ahmed Al-Harbi", pin = SecurityUtils.hashSecret("1111"), role = "CASHIER"),
-                    Cashier(name = "Fahad Al-Otaibi", pin = SecurityUtils.hashSecret("2222"), role = "CASHIER"),
-                    Cashier(name = "Sultan Al-Ghamdi", pin = SecurityUtils.hashSecret("3333"), role = "CASHIER")
-                )
-                defaults.forEach { reportDao.insertCashier(it) }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error verifying cashiers", e)
-        }
+        // Enforce security: Do not seed cashiers with hardcoded default PINs
     }
 
     /**
@@ -269,9 +280,14 @@ class ConfigurationSyncManager private constructor(private val context: Context)
      */
     fun setCountry(country: AppCountry) {
         _currentCountry.value = country
-        prefs.edit().putString(KEY_SELECTED_COUNTRY, country.code).apply()
+        _currentCurrency.value = country.currencyCode
+        prefs.edit()
+            .putString(KEY_SELECTED_COUNTRY, country.code)
+            .putString(KEY_SELECTED_CURRENCY, country.currencyCode)
+            .apply()
         scope.launch {
             reportDao.setSetting(AppSetting(KEY_SELECTED_COUNTRY, country.code))
+            reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, country.currencyCode))
             // Automatically update BusinessProfile with the selected country and currency
             val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
             val updatedProfile = currentProfile.copy(
@@ -294,19 +310,34 @@ class ConfigurationSyncManager private constructor(private val context: Context)
      * Change and synchronize currency setting independently across all modules.
      */
     fun setCurrency(currencyCode: String) {
-        val matchedCountry = AppCountry.entries.find { it.currencyCode.equals(currencyCode, ignoreCase = true) }
+        val normalized = currencyCode.trim().uppercase()
+        if (normalized.isEmpty()) return
+
+        // 1. Update StateFlow immediately (reactive)
+        _currentCurrency.value = normalized
+
+        // 2. Persist to SharedPreferences
+        prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
+
+        // 3. Update BusinessProfile
         scope.launch {
             val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
+            val matchedCountry = AppCountry.entries.find {
+                it.currencyCode.equals(normalized, ignoreCase = true)
+            }
             val updatedProfile = currentProfile.copy(
-                currency = currencyCode,
+                currency = normalized,
                 vatRate = matchedCountry?.defaultVatRate ?: currentProfile.vatRate
             )
             reportDao.saveBusinessProfile(updatedProfile)
+
+            // 4. Persist to Room app_settings
+            reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, normalized))
             reportDao.insertAuditLog(
                 AuditLog(
                     username = _activeCashier.value,
                     action = "CURRENCY_CHANGE",
-                    details = "Currency set to $currencyCode"
+                    details = "Currency set to $normalized"
                 )
             )
         }
@@ -339,10 +370,11 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     /**
      * Add new cashier to the centralized database roster.
      */
-    fun addCashier(name: String, pin: String = "1111", role: String = "CASHIER", onComplete: (() -> Unit)? = null) {
+    fun addCashier(name: String, pin: String, role: String = "CASHIER", onComplete: (() -> Unit)? = null) {
         val cleanName = name.trim()
-        if (cleanName.isBlank()) return
-        val hashedPin = SecurityUtils.hashSecret(pin)
+        val cleanPin = pin.trim()
+        if (cleanName.isBlank() || cleanPin.isBlank()) return
+        val hashedPin = SecurityUtils.hashSecret(cleanPin)
         scope.launch {
             val existing = reportDao.getCashierByName(cleanName)
             if (existing == null) {
@@ -479,9 +511,11 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
                     val name = obj.getString("name")
-                    val pin = if (obj.has("pin")) obj.getString("pin") else "1111"
+                    val pin = if (obj.has("pin")) obj.getString("pin") else ""
                     val role = if (obj.has("role")) obj.getString("role") else "CASHIER"
-                    addCashier(name, pin, role)
+                    if (pin.isNotBlank()) {
+                        addCashier(name, pin, role)
+                    }
                 }
             }
             forceSync()
@@ -497,6 +531,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
         private const val PREFS_NAME = "lojia_app_prefs"
         const val KEY_SELECTED_LANGUAGE = "selected_language"
         const val KEY_SELECTED_COUNTRY = "selected_country"
+        const val KEY_SELECTED_CURRENCY = "selected_currency"
         const val KEY_ACTIVE_CASHIER = "active_cashier_name"
         const val KEY_ACTIVE_MODULE = "active_module"
 

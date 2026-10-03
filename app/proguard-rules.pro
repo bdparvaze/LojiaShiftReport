@@ -1,6 +1,6 @@
-# ProGuard rules for Lojia POS
--keep class com.lojia.pos.** { *; }
--dontwarn com.lojia.pos.**
+# ProGuard rules for Lojia Shift Report
+-keep class com.lojia.shiftreport.** { *; }
+-dontwarn com.lojia.shiftreport.**
 
 # Jetpack Compose
 -keepclassmembers class * extends androidx.compose.ui.Modifier { *; }

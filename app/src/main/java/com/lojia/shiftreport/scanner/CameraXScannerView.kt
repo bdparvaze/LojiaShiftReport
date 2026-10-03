@@ -34,6 +34,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -41,9 +42,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import org.opencv.core.Point
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.max
 
 private val CamScannerGreen = Color(0xFF10B981)
 private val CamScannerDark = Color(0xFF000000)
@@ -63,12 +69,14 @@ enum class TorchState {
 /**
  * 100% Visual Clone of CamScanner's Custom Camera Capture Screen.
  * Uses CameraX with high-resolution document capture, A4 alignment reticle,
+ * real-time OpenCV edge detection every 3rd frame,
  * transparent top control bar (Flash, Auto-Detect, Grid), "Single" vs "Batch" text toggle,
  * and a prominent circular shutter button.
  */
 @Composable
 fun CameraXScannerView(
     onImageCaptured: (Bitmap) -> Unit,
+    onImageCapturedWithCorners: ((Bitmap, DocumentCorners?) -> Unit)? = null,
     onBatchCaptured: (List<Bitmap>) -> Unit = { list -> if (list.isNotEmpty()) onImageCaptured(list.first()) },
     onGalleryPick: () -> Unit,
     onClose: () -> Unit,
@@ -77,6 +85,8 @@ fun CameraXScannerView(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val view = LocalView.current
+
+    androidx.activity.compose.BackHandler(enabled = true) { onClose() }
 
     var captureMode by remember { mutableStateOf(ScanCaptureMode.SINGLE) }
     var torchState by remember { mutableStateOf(TorchState.OFF) }
@@ -87,6 +97,19 @@ fun CameraXScannerView(
     var camera by remember { mutableStateOf<Camera?>(null) }
     var cameraProviderRef by remember { mutableStateOf<ProcessCameraProvider?>(null) }
 
+    // Real-time OpenCV document corner detection state (stored from every 3rd frame)
+    var lastDetectedCorners by remember { mutableStateOf<List<Point>?>(null) }
+    var analysisFrameWidth by remember { mutableIntStateOf(0) }
+    var analysisFrameHeight by remember { mutableIntStateOf(0) }
+    val frameCounter = remember { AtomicInteger(0) }
+    val isAutoDetectEnabledState by rememberUpdatedState(isAutoDetectEnabled)
+
+    LaunchedEffect(isAutoDetectEnabled) {
+        if (!isAutoDetectEnabled) {
+            lastDetectedCorners = null
+        }
+    }
+
     // Batch captured pictures list
     val batchList = remember { mutableStateListOf<Bitmap>() }
 
@@ -96,11 +119,18 @@ fun CameraXScannerView(
             .setTargetRotation(android.view.Surface.ROTATION_0)
             .build()
     }
+    val imageAnalysis = remember {
+        ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setTargetRotation(android.view.Surface.ROTATION_0)
+            .build()
+    }
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
     DisposableEffect(lifecycleOwner) {
         onDispose {
             try {
+                imageAnalysis.clearAnalyzer()
                 cameraProviderRef?.unbindAll()
             } catch (e: Exception) {
                 Log.e("CamScanner", "Error unbinding camera on dispose", e)
@@ -136,15 +166,58 @@ fun CameraXScannerView(
                         val preview = Preview.Builder().build().also {
                             it.setSurfaceProvider(previewView.surfaceProvider)
                         }
-                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                        val cameraSelector = if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
+                            CameraSelector.DEFAULT_BACK_CAMERA
+                        } else {
+                            CameraSelector.DEFAULT_FRONT_CAMERA
+                        }
+
+                        imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                            try {
+                                val frameIdx = frameCounter.incrementAndGet()
+                                if (!isAutoDetectEnabledState) {
+                                    ctx.mainExecutor.execute {
+                                        lastDetectedCorners = null
+                                    }
+                                } else if (frameIdx % 3 == 0) {
+                                    val frameBitmap = imageProxyToUprightBitmap(imageProxy)
+                                    if (frameBitmap != null) {
+                                        val corners = EdgeDetector.detectDocumentCorners(frameBitmap)
+                                        val fw = frameBitmap.width
+                                        val fh = frameBitmap.height
+                                        frameBitmap.recycle()
+                                        ctx.mainExecutor.execute {
+                                            lastDetectedCorners = corners
+                                            analysisFrameWidth = fw
+                                            analysisFrameHeight = fh
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("CamScanner", "Frame analysis error", e)
+                            } finally {
+                                imageProxy.close()
+                            }
+                        }
 
                         cameraProvider.unbindAll()
-                        camera = cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageCapture
-                        )
+                        camera = try {
+                            cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                cameraSelector,
+                                preview,
+                                imageCapture,
+                                imageAnalysis
+                            )
+                        } catch (e: Exception) {
+                            Log.w("CamScanner", "Fallback binding without imageAnalysis", e)
+                            cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                cameraSelector,
+                                preview,
+                                imageCapture
+                            )
+                        }
 
                         // Set initial torch
                         camera?.cameraControl?.enableTorch(torchState == TorchState.ON)
@@ -157,6 +230,7 @@ fun CameraXScannerView(
             },
             onRelease = {
                 try {
+                    imageAnalysis.clearAnalyzer()
                     cameraProviderRef?.unbindAll()
                 } catch (e: Exception) {
                     Log.e("CamScanner", "Error releasing camera provider", e)
@@ -165,7 +239,7 @@ fun CameraXScannerView(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Viewfinder Guide: Reticle + Corner Brackets + Optional Grid
+        // Viewfinder Guide: Reticle + Corner Brackets + Optional Grid + Real-Time Detected Document Overlay
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasW = size.width
             val canvasH = size.height
@@ -222,6 +296,55 @@ fun CameraXScannerView(
             // Bottom-Right
             drawLine(bracketColor, Offset(left + targetW, top + targetH), Offset(left + targetW - bracketLength, top + targetH), bracketStroke)
             drawLine(bracketColor, Offset(left + targetW, top + targetH), Offset(left + targetW, top + targetH - bracketLength), bracketStroke)
+
+            // Real-time OpenCV Detected Document Corners Overlay
+            val detected = lastDetectedCorners
+            if (isAutoDetectEnabled && detected != null && detected.size == 4 && analysisFrameWidth > 0 && analysisFrameHeight > 0) {
+                val scale = max(
+                    canvasW / analysisFrameWidth.toFloat(),
+                    canvasH / analysisFrameHeight.toFloat()
+                )
+                val offsetX = (canvasW - analysisFrameWidth * scale) / 2f
+                val offsetY = (canvasH - analysisFrameHeight * scale) / 2f
+
+                val uiPoints = detected.map { pt ->
+                    Offset(
+                        x = (pt.x.toFloat() * scale + offsetX).coerceIn(0f, canvasW),
+                        y = (pt.y.toFloat() * scale + offsetY).coerceIn(0f, canvasH)
+                    )
+                }
+
+                val polyPath = Path().apply {
+                    moveTo(uiPoints[0].x, uiPoints[0].y)
+                    lineTo(uiPoints[1].x, uiPoints[1].y)
+                    lineTo(uiPoints[2].x, uiPoints[2].y)
+                    lineTo(uiPoints[3].x, uiPoints[3].y)
+                    close()
+                }
+
+                drawPath(
+                    path = polyPath,
+                    color = CamScannerGreen.copy(alpha = 0.22f)
+                )
+                drawPath(
+                    path = polyPath,
+                    color = CamScannerGreen,
+                    style = Stroke(width = 3.dp.toPx())
+                )
+
+                uiPoints.forEach { cornerOffset ->
+                    drawCircle(
+                        color = Color.White,
+                        radius = 8.dp.toPx(),
+                        center = cornerOffset
+                    )
+                    drawCircle(
+                        color = CamScannerGreen,
+                        radius = 5.dp.toPx(),
+                        center = cornerOffset
+                    )
+                }
+            }
         }
 
         // ==============================================================
@@ -419,12 +542,36 @@ fun CameraXScannerView(
                             takePhoto(
                                 context = context,
                                 imageCapture = imageCapture,
-                                executor = cameraExecutor
+                                executor = cameraExecutor,
+                                onErrorClose = {
+                                    isCapturing = false
+                                    onClose()
+                                }
                             ) { bitmap ->
                                 isCapturing = false
                                 if (bitmap != null) {
                                     if (captureMode == ScanCaptureMode.SINGLE) {
-                                        onImageCaptured(bitmap)
+                                        val cornersSnapshot = lastDetectedCorners
+                                        val mappedCorners = if (
+                                            isAutoDetectEnabled &&
+                                            cornersSnapshot != null &&
+                                            cornersSnapshot.size == 4 &&
+                                            analysisFrameWidth > 0 &&
+                                            analysisFrameHeight > 0
+                                        ) {
+                                            EdgeDetector.toDocumentCorners(
+                                                points = cornersSnapshot,
+                                                srcWidth = analysisFrameWidth,
+                                                srcHeight = analysisFrameHeight,
+                                                dstWidth = bitmap.width,
+                                                dstHeight = bitmap.height
+                                            )
+                                        } else {
+                                            null
+                                        }
+
+                                        onImageCapturedWithCorners?.invoke(bitmap, mappedCorners)
+                                            ?: onImageCaptured(bitmap)
                                     } else {
                                         batchList.add(bitmap)
                                         Toast.makeText(
@@ -505,10 +652,39 @@ fun CameraXScannerView(
     }
 }
 
+private fun imageProxyToUprightBitmap(imageProxy: ImageProxy): Bitmap? {
+    return try {
+        val rawBitmap = imageProxy.toBitmap()
+        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+        if (rotationDegrees != 0) {
+            val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+            val rotated = Bitmap.createBitmap(
+                rawBitmap,
+                0,
+                0,
+                rawBitmap.width,
+                rawBitmap.height,
+                matrix,
+                true
+            )
+            if (rotated !== rawBitmap) {
+                rawBitmap.recycle()
+            }
+            rotated
+        } else {
+            rawBitmap
+        }
+    } catch (t: Throwable) {
+        Log.e("CamScanner", "Failed to convert ImageProxy to Bitmap", t)
+        null
+    }
+}
+
 private fun takePhoto(
     context: Context,
     imageCapture: ImageCapture,
     executor: java.util.concurrent.Executor,
+    onErrorClose: () -> Unit = {},
     onResult: (Bitmap?) -> Unit
 ) {
     val outputStream = ByteArrayOutputStream()
@@ -519,17 +695,50 @@ private fun takePhoto(
         executor,
         object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                val bytes = outputStream.toByteArray()
-                var bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                try {
+                    val bytes = outputStream.toByteArray()
 
-                // Rotate portrait if necessary
-                if (bmp != null && bmp.width > bmp.height) {
-                    val matrix = Matrix().apply { postRotate(90f) }
-                    bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
-                }
+                    // Downsample to avoid OOM
+                    val boundsOpts = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, boundsOpts)
 
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    onResult(bmp)
+                    val maxDim = 2048
+                    var sampleSize = 1
+                    var larger = maxOf(boundsOpts.outWidth, boundsOpts.outHeight)
+                    while (larger / sampleSize > maxDim) sampleSize *= 2
+
+                    val decodeOpts = BitmapFactory.Options().apply {
+                        inSampleSize = sampleSize
+                        inPreferredConfig = Bitmap.Config.ARGB_8888
+                    }
+                    var bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOpts)
+                        ?: throw IllegalStateException("Bitmap decode failed")
+
+                    // Rotate if landscape
+                    if (bmp.width > bmp.height) {
+                        val rotated = Bitmap.createBitmap(
+                            bmp, 0, 0, bmp.width, bmp.height,
+                            Matrix().apply { postRotate(90f) }, true
+                        )
+                        if (rotated != bmp) bmp.recycle()
+                        bmp = rotated
+                    }
+
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        onResult(bmp)
+                    }
+                } catch (e: OutOfMemoryError) {
+                    Log.e("CameraXScannerView", "OOM during capture", e)
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        onErrorClose()
+                    }
+                } catch (e: Exception) {
+                    Log.e("CameraXScannerView", "Capture failed", e)
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        onErrorClose()
+                    }
                 }
             }
 

@@ -16,6 +16,92 @@ object MoneyFormat {
     const val DEFAULT_CURRENCY_SYMBOL = "$"
 
     /**
+     * Converts major unit (e.g. Double 10.25) to minor unit (e.g. Long 1025)
+     */
+    fun toMinorUnits(major: Double): Long {
+        return java.math.BigDecimal.valueOf(major)
+            .multiply(java.math.BigDecimal.valueOf(100))
+            .setScale(0, java.math.RoundingMode.HALF_UP)
+            .toLong()
+    }
+
+    /**
+     * Converts minor unit (e.g. Long 1025) to major unit (e.g. Double 10.25)
+     */
+    fun toMajorUnits(minor: Long): Double {
+        return java.math.BigDecimal.valueOf(minor)
+            .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    /**
+     * Formats a minor Long value (e.g. 1025 cents) into a display string (e.g. "$10.25")
+     */
+    fun formatMinor(
+        minor: Long,
+        currencyCodeOrSymbol: String? = null,
+        locale: Locale = Locale.getDefault()
+    ): String {
+        return format(toMajorUnits(minor), currencyCodeOrSymbol, locale)
+    }
+
+    fun addMinor(vararg values: Long): Long {
+        var total = 0L
+        for (v in values) {
+            total += v
+        }
+        return total
+    }
+
+    fun sumOfMinor(values: Iterable<Long>): Long {
+        var total = 0L
+        for (v in values) {
+            total += v
+        }
+        return total
+    }
+
+    fun subtractMinor(a: Long, b: Long): Long {
+        return a - b
+    }
+
+    fun multiplyMinor(minor: Long, factor: Double): Long {
+        return java.math.BigDecimal.valueOf(minor)
+            .multiply(java.math.BigDecimal.valueOf(factor))
+            .setScale(0, java.math.RoundingMode.HALF_UP)
+            .toLong()
+    }
+
+    fun calculateExpectedCashMinor(
+        startingCash: Long,
+        cashSales: Long,
+        payIn: Long,
+        payOut: Long,
+        salesReturns: Long = 0L
+    ): Long {
+        return startingCash + cashSales + payIn - payOut - salesReturns
+    }
+
+    fun calculateVarianceMinor(actualCash: Long, expectedCash: Long): Long {
+        return actualCash - expectedCash
+    }
+
+    fun calculateTaxMinor(amountMinor: Long, taxRatePercent: Double, isTaxInclusive: Boolean): Long {
+        if (taxRatePercent <= 0.0 || amountMinor <= 0L) return 0L
+        val amtBD = java.math.BigDecimal.valueOf(amountMinor)
+        val rateBD = java.math.BigDecimal.valueOf(taxRatePercent)
+        val hundredBD = java.math.BigDecimal.valueOf(100.0)
+
+        val tax = if (isTaxInclusive) {
+            val divisor = hundredBD.add(rateBD)
+            amtBD.multiply(rateBD).divide(divisor, 4, java.math.RoundingMode.HALF_UP)
+        } else {
+            amtBD.multiply(rateBD).divide(hundredBD, 4, java.math.RoundingMode.HALF_UP)
+        }
+        return tax.setScale(0, java.math.RoundingMode.HALF_UP).toLong()
+    }
+
+    /**
      * Formats a monetary BigDecimal value with exact financial precision into a locale-aware display string.
      */
     fun format(
@@ -34,6 +120,99 @@ object MoneyFormat {
         return java.math.BigDecimal.valueOf(value)
             .setScale(2, java.math.RoundingMode.HALF_UP)
             .toDouble()
+    }
+
+    /**
+     * Safely adds multiple monetary values using BigDecimal precision.
+     */
+    fun add(vararg values: Double): Double {
+        var total = java.math.BigDecimal.ZERO
+        for (v in values) {
+            total = total.add(java.math.BigDecimal.valueOf(v))
+        }
+        return total.setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
+    }
+
+    /**
+     * Safely adds a collection of monetary values using BigDecimal precision.
+     */
+    fun sumOf(values: Iterable<Double>): Double {
+        var total = java.math.BigDecimal.ZERO
+        for (v in values) {
+            total = total.add(java.math.BigDecimal.valueOf(v))
+        }
+        return total.setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
+    }
+
+    /**
+     * Safely subtracts b from a using BigDecimal precision.
+     */
+    fun subtract(a: Double, b: Double): Double {
+        return java.math.BigDecimal.valueOf(a)
+            .subtract(java.math.BigDecimal.valueOf(b))
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    /**
+     * Safely multiplies a by b using BigDecimal precision.
+     */
+    fun multiply(a: Double, b: Double): Double {
+        return java.math.BigDecimal.valueOf(a)
+            .multiply(java.math.BigDecimal.valueOf(b))
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    /**
+     * Safely calculates expected cash in drawer using BigDecimal arithmetic:
+     * Expected Cash = Starting Cash + Cash Sales + Pay In - Pay Out - Sales Returns
+     */
+    fun calculateExpectedCash(
+        startingCash: Double,
+        cashSales: Double,
+        payIn: Double,
+        payOut: Double,
+        salesReturns: Double = 0.0
+    ): Double {
+        val start = java.math.BigDecimal.valueOf(startingCash)
+        val sales = java.math.BigDecimal.valueOf(cashSales)
+        val inAmt = java.math.BigDecimal.valueOf(payIn)
+        val outAmt = java.math.BigDecimal.valueOf(payOut)
+        val returns = java.math.BigDecimal.valueOf(salesReturns)
+
+        return start.add(sales).add(inAmt).subtract(outAmt).subtract(returns)
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    /**
+     * Safely calculates cash variance (discrepancy) using BigDecimal arithmetic:
+     * Variance = Actual Cash - Expected Cash
+     */
+    fun calculateVariance(actualCash: Double, expectedCash: Double): Double {
+        return java.math.BigDecimal.valueOf(actualCash)
+            .subtract(java.math.BigDecimal.valueOf(expectedCash))
+            .setScale(2, java.math.RoundingMode.HALF_UP)
+            .toDouble()
+    }
+
+    /**
+     * Safely calculates tax using BigDecimal precision and HALF_UP 2-decimal rounding.
+     */
+    fun calculateTax(amount: Double, taxRatePercent: Double, isTaxInclusive: Boolean): Double {
+        if (taxRatePercent <= 0.0 || amount <= 0.0) return 0.0
+        val amtBD = java.math.BigDecimal.valueOf(amount)
+        val rateBD = java.math.BigDecimal.valueOf(taxRatePercent)
+        val hundredBD = java.math.BigDecimal.valueOf(100.0)
+
+        val tax = if (isTaxInclusive) {
+            val divisor = hundredBD.add(rateBD)
+            amtBD.multiply(rateBD).divide(divisor, 4, java.math.RoundingMode.HALF_UP)
+        } else {
+            amtBD.multiply(rateBD).divide(hundredBD, 4, java.math.RoundingMode.HALF_UP)
+        }
+        return tax.setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
     }
 
     /**

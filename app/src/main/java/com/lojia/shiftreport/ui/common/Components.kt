@@ -37,6 +37,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.lojia.shiftreport.ui.theme.Dimens
 import androidx.compose.foundation.shape.CircleShape
 
 
@@ -101,6 +104,12 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.SwapHoriz
 import kotlinx.coroutines.launch
 import com.lojia.shiftreport.data.AppModule
@@ -113,7 +122,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @Composable
 fun SecureDeleteModal(
-    title: String = stringResource(R.string.delete),
+    title: String = "Delete Shift Report",
     itemDescription: String = stringResource(R.string.delete_report_confirm),
     userProfile: UserProfile?,
     onDismiss: () -> Unit,
@@ -129,120 +138,272 @@ fun SecureDeleteModal(
     val actualQuestion = userProfile?.securityQuestion?.ifBlank { defaultQuestion } ?: defaultQuestion
     val actualAnswer = userProfile?.securityAnswer?.ifBlank { "Lojia" } ?: "Lojia"
 
-    AlertDialog(
+    val reportSubtitle = remember(itemDescription) {
+        Regex("#(\\d+)").find(itemDescription)?.let { "Shift Report #${it.groupValues[1]}" }
+            ?: itemDescription
+    }
+
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color(0xFFFEE2E2),
-                    modifier = Modifier.size(36.dp)
+        maxWidth = Dimens.DialogMaxWidth,
+        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
+        containerColor = SurfaceLight
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header block (top of dialog)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    // Warning icon in circle
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(ErrorContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.DeleteForever,
+                            imageVector = Icons.Outlined.DeleteForever,
                             contentDescription = null,
-                            tint = Color(0xFFDC2626),
-                            modifier = Modifier.size(20.dp)
+                            tint = ErrorRedLight,
+                            modifier = Modifier.size(28.dp)
                         )
                     }
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF991B1B))
-            }
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = itemDescription,
-                    fontSize = 12.sp,
-                    color = TextSecondaryLight
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Security Question Box
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFF1F5F9),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Text(
-                            text = stringResource(R.string.security_question),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryIndigo
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = actualQuestion,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ShiftColors.Charcoal
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                LojiaTextField(
-                    value = passwordInput,
-                    onValueChange = { passwordInput = it; errorMsg = null },
-                    label = { Text(stringResource(R.string.password_1)) },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("delete_auth_password_input")
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LojiaTextField(
-                    value = answerInput,
-                    onValueChange = { answerInput = it; errorMsg = null },
-                    label = { Text(stringResource(R.string.security_answer)) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("delete_auth_answer_input")
-                )
-
-                if (errorMsg != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = errorMsg!!,
-                        color = MaterialTheme.colorScheme.error,
+                        text = "Delete Shift Report",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceLight,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = reportSubtitle,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Medium,
+                        color = PrimaryIndigoDark,
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val passValid = SecurityUtils.verifySecret(passwordInput, actualPasswordHash)
-                    val ansValid = answerInput.trim().equals(actualAnswer.trim(), ignoreCase = true)
-                    if (passValid && ansValid) {
-                        onConfirmDelete()
-                        onDismiss()
-                    } else {
-                        errorMsg = context.getString(R.string.wrong_password_or_security_answer)
+
+                HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
+
+                // Body block
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    // Warning banner
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = ErrorContainer.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.25f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = ErrorRedLight,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "This action cannot be undone. Enter your security credentials to confirm.",
+                                fontSize = 12.sp,
+                                color = OnSurfaceLight,
+                                lineHeight = 16.sp
+                            )
+                        }
                     }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-                modifier = Modifier.testTag("confirm_secure_delete_btn")
-            ) {
-                Text(stringResource(R.string.verify_and_delete), color = Color.White, fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_18), color = TextSecondaryLight)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Security question label (English only — no bilingual mixing)
+                    Text(
+                        text = "Security Question",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextHintColor,
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Question
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = SurfaceVariantLight
+                    ) {
+                        Text(
+                            text = actualQuestion,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = PrimaryIndigoDark,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Password field
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = { passwordInput = it; errorMsg = null },
+                        label = { Text("Password", fontSize = 12.sp, color = OnSurfaceVariantLight) },
+                        placeholder = { Text("Enter your password", fontSize = 12.sp, color = TextHintColor) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Lock,
+                                contentDescription = null,
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("delete_auth_password_input"),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryIndigoLight,
+                            unfocusedBorderColor = OutlineLight,
+                            focusedContainerColor = SurfaceLight,
+                            unfocusedContainerColor = SurfaceLight,
+                            cursorColor = PrimaryIndigoLight
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Security answer field
+                    OutlinedTextField(
+                        value = answerInput,
+                        onValueChange = { answerInput = it; errorMsg = null },
+                        label = { Text("Security Answer", fontSize = 12.sp, color = OnSurfaceVariantLight) },
+                        placeholder = { Text("Enter answer", fontSize = 12.sp, color = TextHintColor) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.HelpOutline,
+                                contentDescription = null,
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("delete_auth_answer_input"),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryIndigoLight,
+                            unfocusedBorderColor = OutlineLight,
+                            focusedContainerColor = SurfaceLight,
+                            unfocusedContainerColor = SurfaceLight,
+                            cursorColor = PrimaryIndigoLight
+                        )
+                    )
+
+                    // Error message (if any)
+                    if (errorMsg != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.ErrorOutline,
+                                contentDescription = null,
+                                tint = ErrorRedLight,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = errorMsg!!,
+                                fontSize = 11.sp,
+                                color = ErrorRedLight,
+                                maxLines = 2
+                            )
+                        }
+                    }
+                }
+
+                // Footer (buttons)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Cancel — outlined
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(Dimens.ButtonHeightStandard),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, PrimaryIndigoLight),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = PrimaryIndigoLight
+                        )
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryIndigoLight
+                        )
+                    }
+
+                    // Delete — filled error
+                    Button(
+                        onClick = {
+                            val passValid = SecurityUtils.verifySecret(passwordInput, actualPasswordHash)
+                            val ansValid = answerInput.trim().equals(actualAnswer.trim(), ignoreCase = true)
+                            if (passValid && ansValid) {
+                                onConfirmDelete()
+                                onDismiss()
+                            } else {
+                                errorMsg = context.getString(R.string.wrong_password_or_security_answer)
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(Dimens.ButtonHeightStandard)
+                            .testTag("confirm_secure_delete_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ErrorRedLight,
+                            contentColor = PureWhite
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = null,
+                            tint = PureWhite,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Delete",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PureWhite
+                        )
+                    }
+                }
             }
         }
-    )
-}
+    }
 
 @Composable
 fun SolidCard(
@@ -466,35 +627,28 @@ fun SecurityPinModal(
     val shakeOffset = remember { Animatable(0f) }
 
     val accentColor = PrimaryIndigo
-    val targetBadgeBg = Color(0xFFEFF6FF)
+    val targetBadgeBg = PrimaryContainerLight
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        maxWidth = 380.dp,
+        shape = RoundedCornerShape(Dimens.RadiusXl),
+        containerColor = PureWhite,
+        border = BorderStroke(1.dp, OutlineVariantLight)
     ) {
-        Surface(
-            shape = RoundedCornerShape(32.dp),
-            color = PureWhite,
-            shadowElevation = 16.dp,
-            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        Box(
             modifier = Modifier
-                .widthIn(max = 380.dp)
-                .fillMaxWidth(0.92f)
-                .wrapContentHeight()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                accentColor.copy(alpha = 0.05f),
-                                PureWhite,
-                                PureWhite
-                            )
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = 0.05f),
+                            PureWhite,
+                            PureWhite
                         )
                     )
-            ) {
+                )
+        ) {
                 // Top close button
                 IconButton(
                     onClick = onDismiss,
@@ -502,13 +656,13 @@ fun SecurityPinModal(
                         .align(Alignment.TopEnd)
                         .padding(top = 16.dp, end = 16.dp)
                         .size(34.dp)
-                        .background(Color(0xFFF1F5F9), CircleShape)
+                        .background(SurfaceVariantLight, CircleShape)
                         .testTag("btn_close_pin_modal")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.close),
-                        tint = Color(0xFF64748B),
+                        tint = TextHintColor,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -545,7 +699,7 @@ fun SecurityPinModal(
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = PureWhite,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -559,7 +713,7 @@ fun SecurityPinModal(
                             text = title,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            color = Color(0xFF0F172A),
+                            color = OnBackgroundLight,
                             textAlign = TextAlign.Center
                         )
                     } else {
@@ -567,7 +721,7 @@ fun SecurityPinModal(
                             id = R.string.confirm_pin_number,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
-                            color = Color(0xFF0F172A),
+                            color = OnBackgroundLight,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -600,7 +754,7 @@ fun SecurityPinModal(
                                     id = R.string.switch_to,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF64748B)
+                                    color = TextHintColor
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Icon(
@@ -648,20 +802,20 @@ fun SecurityPinModal(
 
                             val dotBgColor by animateColorAsState(
                                 targetValue = when {
-                                    isError -> Color(0xFFFEE2E2)
+                                    isError -> ErrorContainerLight
                                     isFilled -> accentColor
                                     isActive -> accentColor.copy(alpha = 0.15f)
-                                    else -> Color(0xFFF1F5F9)
+                                    else -> SurfaceVariantLight
                                 },
                                 label = "modal_dot_bg"
                             )
 
                             val dotBorderColor by animateColorAsState(
                                 targetValue = when {
-                                    isError -> Color(0xFFEF4444)
+                                    isError -> ErrorRedLight
                                     isFilled -> accentColor
                                     isActive -> accentColor
-                                    else -> Color(0xFFCBD5E1)
+                                    else -> OutlineLight
                                 },
                                 label = "modal_dot_border"
                             )
@@ -695,13 +849,13 @@ fun SecurityPinModal(
                             Icon(
                                 imageVector = Icons.Default.ErrorOutline,
                                 contentDescription = null,
-                                tint = Color(0xFFEF4444),
+                                tint = ErrorRedLight,
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             AutoText(
                                 text = errorMsg ?: "",
-                                color = Color(0xFFEF4444),
+                                color = ErrorRedLight,
                                 fontSize = 12.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -744,14 +898,14 @@ fun SecurityPinModal(
                             ) {
                                 rowKeys.forEach { item ->
                                     val containerColor = when {
-                                        item.isClear -> Color(0xFFFEF2F2)
-                                        item.isDelete -> Color(0xFFF8FAFC)
-                                        else -> Color(0xFFF8FAFC)
+                                        item.isClear -> ErrorContainerLight.copy(alpha = 0.5f)
+                                        item.isDelete -> BackgroundLight
+                                        else -> BackgroundLight
                                     }
                                     val borderColor = when {
-                                        item.isClear -> Color(0xFFFECDD3)
-                                        item.isDelete -> Color(0xFFE2E8F0)
-                                        else -> Color(0xFFE2E8F0)
+                                        item.isClear -> ErrorRedLight.copy(alpha = 0.3f)
+                                        item.isDelete -> OutlineVariantLight
+                                        else -> OutlineVariantLight
                                     }
 
                                     Surface(
@@ -819,7 +973,7 @@ fun SecurityPinModal(
                                                     Icon(
                                                         imageVector = Icons.AutoMirrored.Outlined.Backspace,
                                                         contentDescription = stringResource(R.string.cd_backspace),
-                                                        tint = Color(0xFF334155),
+                                                        tint = OnSurfaceVariantLight,
                                                         modifier = Modifier.size(22.dp)
                                                     )
                                                 }
@@ -828,7 +982,7 @@ fun SecurityPinModal(
                                                         text = item.key,
                                                         fontWeight = FontWeight.Bold,
                                                         fontSize = 19.sp,
-                                                        color = Color(0xFFE11D48)
+                                                        color = ErrorRedLight
                                                     )
                                                 }
                                                 else -> {
@@ -840,7 +994,7 @@ fun SecurityPinModal(
                                                             text = item.key,
                                                             fontWeight = FontWeight.SemiBold,
                                                             fontSize = 21.sp,
-                                                            color = Color(0xFF0F172A)
+                                                            color = OnBackgroundLight
                                                         )
                                                         if (item.subText.isNotEmpty()) {
                                                             Text(
@@ -848,7 +1002,7 @@ fun SecurityPinModal(
                                                                 fontWeight = FontWeight.Bold,
                                                                 fontSize = 8.5.sp,
                                                                 letterSpacing = 1.sp,
-                                                                color = Color(0xFF94A3B8)
+                                                                color = TextDisabledColor
                                                             )
                                                         }
                                                     }
@@ -873,7 +1027,7 @@ fun SecurityPinModal(
                     ) {
                         AutoText(
                             id = R.string.cancel_18,
-                            color = Color(0xFF64748B),
+                            color = TextHintColor,
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -882,7 +1036,6 @@ fun SecurityPinModal(
             }
         }
     }
-}
 
 @Composable
 fun LoyverseMenuItemRow(
@@ -908,13 +1061,13 @@ fun LoyverseMenuItemRow(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color(0xFFF1F5F9), CircleShape),
+                    .background(SurfaceVariantLight, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color(0xFF475569),
+                    tint = OnSurfaceVariantLight,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -926,7 +1079,7 @@ fun LoyverseMenuItemRow(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     ),
-                    color = Color(0xFF0F172A),
+                    color = OnBackgroundLight,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
@@ -937,7 +1090,7 @@ fun LoyverseMenuItemRow(
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp
                         ),
-                        color = Color(0xFF64748B),
+                        color = TextHintColor,
                         maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
@@ -949,7 +1102,7 @@ fun LoyverseMenuItemRow(
                 Icon(
                     imageVector = Icons.Filled.ChevronRight,
                     contentDescription = null,
-                    tint = Color(0xFF94A3B8),
+                    tint = TextDisabledColor,
                     modifier = Modifier.size(20.dp)
                 )
             }

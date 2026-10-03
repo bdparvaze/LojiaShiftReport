@@ -561,11 +561,12 @@ fun PresetLogoPickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
+                .widthIn(max = Dimens.DialogMaxWidth)
                 .fillMaxWidth()
-                .padding(12.dp),
-            shape = RoundedCornerShape(24.dp),
+                .padding(horizontal = Dimens.SpacingLg),
+            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
             colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.DialogElevation)
         ) {
             Column(
                 modifier = Modifier

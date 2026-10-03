@@ -93,18 +93,33 @@ fun CashierManagementSection(
         }
     }
 
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(BackgroundLight)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = LojiaDimens.ScreenPadding, vertical = 8.dp),
+                .padding(horizontal = LojiaDimens.ScreenPadding, vertical = 8.dp)
+                .padding(PaddingValues(bottom = 88.dp)),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // =====================================================================
             // 1. EXECUTIVE HEADER CARD WITH KPI STRIP
             // =====================================================================
-            LojiaSettingsCard {
-                Column(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = BorderStroke(1.dp, OutlineVariantLight)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -139,7 +154,8 @@ fun CashierManagementSection(
                                 Text(
                                     text = stringResource(R.string.add_cashier_4),
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PureWhite
                                 )
                             }
                         }
@@ -267,11 +283,17 @@ fun CashierManagementSection(
                     }
                 }
             } else if (filteredCashiers.isEmpty()) {
-                LojiaSettingsCard {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    border = BorderStroke(1.dp, OutlineVariantLight)
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp),
+                            .padding(vertical = 32.dp, horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
@@ -299,7 +321,10 @@ fun CashierManagementSection(
                     }
                 }
             } else {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     filteredCashiers.forEach { cashier ->
                         CashierGridCard(
                             cashier = cashier,
@@ -313,8 +338,6 @@ fun CashierManagementSection(
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(64.dp))
         }
 
         // FAB bottom-end
@@ -380,7 +403,7 @@ private fun KpiChip(
             )
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = color
             )
@@ -428,15 +451,8 @@ private fun CashierGridCard(
     onRequestDelete: () -> Unit
 ) {
     val isOnShift = remember(cashier) { cashier.active && (cashier.id % 2 == 1) }
-    val initials = remember(cashier.name) {
-        cashier.name
-            .trim()
-            .split(" ")
-            .filter { it.isNotBlank() }
-            .take(2)
-            .mapNotNull { it.firstOrNull()?.uppercaseChar() }
-            .joinToString("")
-            .ifEmpty { cashier.name.take(1).uppercase() }
+    val initial = remember(cashier.name) {
+        cashier.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
     }
     val roleLabel = when {
         !cashier.active -> "Inactive"
@@ -444,71 +460,94 @@ private fun CashierGridCard(
         else -> "Cashier"
     }
 
-    LojiaSettingsCard {
-        // Avatar circle 48.dp bg PrimaryContainerLight
-        Box(
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, OutlineVariantLight)
+    ) {
+        Row(
             modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(PrimaryContainerLight),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = initials,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryIndigoLight
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = cashier.name,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = OnSurfaceLight,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            // Role + status row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            // FIX 1: Avatar circle 48.dp bg PrimaryContainerLight with single uppercase initial
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(PrimaryContainerLight),
+                contentAlignment = Alignment.Center
             ) {
-                RoleChip(roleLabel)
-                StatusDot(if (cashier.active) SuccessGreen else TextHintColor)
+                Text(
+                    text = initial,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryIndigoLight
+                )
             }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = "PIN: ••••••",
-                fontSize = 12.sp,
-                color = TextHintColor
-            )
-        }
 
-        Switch(
-            checked = cashier.active,
-            onCheckedChange = { isChecked ->
-                onToggleActive(cashier.copy(active = isChecked))
-            },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = PureWhite,
-                checkedTrackColor = PrimaryIndigoLight,
-                uncheckedThumbColor = PureWhite,
-                uncheckedTrackColor = OutlineLight
-            ),
-            modifier = Modifier.scale(0.8f)
-        )
+            Spacer(modifier = Modifier.width(12.dp))
 
-        IconButton(onClick = onRequestDelete) {
-            Icon(
-                imageVector = Icons.Outlined.DeleteOutline,
-                contentDescription = stringResource(R.string.delete),
-                tint = ErrorRedLight
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                // FIX 2: Name with proper ellipsis
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = cashier.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurfaceLight,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                // FIX 4: Role badge chip with status dot
+                RoleChip(role = roleLabel)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "PIN: ••••••",
+                    fontSize = 12.sp,
+                    color = TextHintColor
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // FIX 7 & FIX 8: Switch visual states + 12.dp spacing before Delete
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(
+                    checked = cashier.active,
+                    onCheckedChange = { isChecked ->
+                        onToggleActive(cashier.copy(active = isChecked))
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = PureWhite,
+                        checkedTrackColor = PrimaryIndigoLight,
+                        uncheckedThumbColor = PureWhite,
+                        uncheckedTrackColor = OutlineLight,
+                        uncheckedBorderColor = OutlineLight
+                    )
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IconButton(onClick = onRequestDelete) {
+                    Icon(
+                        imageVector = Icons.Outlined.DeleteOutline,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = ErrorRedLight
+                    )
+                }
+            }
         }
     }
 }
@@ -516,27 +555,45 @@ private fun CashierGridCard(
 @Composable
 private fun RoleChip(role: String) {
     Surface(
-        shape = RoundedCornerShape(6.dp),
-        color = SurfaceVariantLight
+        shape = RoundedCornerShape(4.dp),
+        color = when (role) {
+            "On-Shift" -> SuccessContainer
+            "Cashier" -> PrimaryContainerLight
+            "Inactive" -> SurfaceVariantLight
+            else -> SurfaceVariantLight
+        }
     ) {
-        Text(
-            text = role,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-            color = OnSurfaceVariantLight,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when (role) {
+                            "On-Shift" -> SuccessGreen
+                            "Cashier" -> PrimaryIndigoLight
+                            "Inactive" -> TextHintColor
+                            else -> TextHintColor
+                        }
+                    )
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = role,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = when (role) {
+                    "On-Shift" -> SuccessGreen
+                    "Cashier" -> PrimaryIndigoDark
+                    "Inactive" -> TextHintColor
+                    else -> TextHintColor
+                }
+            )
+        }
     }
-}
-
-@Composable
-private fun StatusDot(color: Color) {
-    Box(
-        modifier = Modifier
-            .size(8.dp)
-            .clip(CircleShape)
-            .background(color)
-    )
 }
 
 // =============================================================================
@@ -544,39 +601,52 @@ private fun StatusDot(color: Color) {
 // =============================================================================
 @Composable
 private fun CashierSkeletonCard() {
-    LojiaSettingsCard {
-        Box(
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, OutlineVariantLight)
+    ) {
+        Row(
             modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(SurfaceVariantLight)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .width(120.dp)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .size(48.dp)
+                    .clip(CircleShape)
                     .background(SurfaceVariantLight)
             )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(SurfaceVariantLight)
+                )
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(10.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(BackgroundLight)
+                )
+            }
             Box(
                 modifier = Modifier
-                    .width(80.dp)
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(BackgroundLight)
+                    .width(40.dp)
+                    .height(20.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(SurfaceVariantLight)
             )
         }
-        Box(
-            modifier = Modifier
-                .width(40.dp)
-                .height(20.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(SurfaceVariantLight)
-        )
     }
 }

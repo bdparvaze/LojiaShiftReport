@@ -1,5 +1,7 @@
 package com.lojia.shiftreport.data
 
+import android.content.Context
+import com.lojia.shiftreport.util.SecurityUtils
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -32,5 +34,45 @@ class ShiftReportRepository(private val reportDao: ReportDao) {
 
     suspend fun clearDraft() {
         reportDao.clearDraftReport()
+    }
+
+    suspend fun verifyAdminCredentials(context: Context, enteredPinOrPassword: String): Boolean {
+        val trimmed = enteredPinOrPassword.trim()
+        if (trimmed.isEmpty()) return false
+        val profile = reportDao.getUserProfileOnce() ?: return false
+        val storedPin = profile.pin
+        val storedHash = profile.passwordHash
+
+        val pinResult = if (storedPin.isNotEmpty()) SecurityUtils.verifySecretWithUpgrade(trimmed, storedPin) else null
+        if (pinResult?.isMatch == true) {
+            if (pinResult.newHashToStore != null) {
+                reportDao.saveUserProfile(profile.copy(pin = pinResult.newHashToStore))
+            }
+            return true
+        }
+
+        val passResult = if (storedHash.isNotEmpty()) SecurityUtils.verifySecretWithUpgrade(trimmed, storedHash) else null
+        if (passResult?.isMatch == true) {
+            if (passResult.newHashToStore != null) {
+                reportDao.saveUserProfile(profile.copy(passwordHash = passResult.newHashToStore))
+            }
+            return true
+        }
+
+        return false
+    }
+
+    companion object {
+        @Volatile
+        private var INSTANCE: ShiftReportRepository? = null
+
+        fun getInstance(context: Context): ShiftReportRepository {
+            return INSTANCE ?: synchronized(this) {
+                val db = AppDatabase.getInstance(context)
+                val instance = ShiftReportRepository(db.reportDao())
+                INSTANCE = instance
+                instance
+            }
+        }
     }
 }

@@ -97,9 +97,15 @@ object GoogleDriveManager {
         return Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
     }
 
+    private const val KEY_OAUTH_STATE = "oauth_state"
+
     fun buildAuthUrl(context: Context): String {
         val verifier = generateCodeVerifier()
-        getPrefs(context).edit().putString(KEY_CODE_VERIFIER, verifier).apply()
+        val state = UUID.randomUUID().toString()
+        getPrefs(context).edit()
+            .putString(KEY_CODE_VERIFIER, verifier)
+            .putString(KEY_OAUTH_STATE, state)
+            .apply()
         val challenge = generateCodeChallenge(verifier)
 
         return "https://accounts.google.com/o/oauth2/v2/auth?" +
@@ -107,6 +113,7 @@ object GoogleDriveManager {
                 "&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, "UTF-8") +
                 "&response_type=code" +
                 "&scope=" + URLEncoder.encode(SCOPES, "UTF-8") +
+                "&state=" + URLEncoder.encode(state, "UTF-8") +
                 "&code_challenge=" + URLEncoder.encode(challenge, "UTF-8") +
                 "&code_challenge_method=S256" +
                 "&access_type=offline" +
@@ -121,9 +128,13 @@ object GoogleDriveManager {
         context.startActivity(intent)
     }
 
-    suspend fun handleOAuthCallback(context: Context, code: String): Result<DriveAccountInfo> = withContext(Dispatchers.IO) {
+    suspend fun handleOAuthCallback(context: Context, code: String, state: String? = null): Result<DriveAccountInfo> = withContext(Dispatchers.IO) {
         try {
             val prefs = getPrefs(context)
+            val expectedState = prefs.getString(KEY_OAUTH_STATE, null)
+            if (!state.isNullOrEmpty() && !expectedState.isNullOrEmpty() && state != expectedState) {
+                return@withContext Result.failure(SecurityException("OAuth state mismatch during Google Drive authorization."))
+            }
             val verifier = prefs.getString(KEY_CODE_VERIFIER, "") ?: ""
 
             val tokenUrl = URL("https://oauth2.googleapis.com/token")
