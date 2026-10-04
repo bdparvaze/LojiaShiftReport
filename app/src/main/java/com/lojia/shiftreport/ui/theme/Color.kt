@@ -7,12 +7,16 @@ import androidx.compose.ui.graphics.Color
 // =========================================================================
 
 // ============ PRIMARY (Brand Blue) ============
-val PrimaryIndigoLight = Color(0xFF1D4ED8)
-val PrimaryIndigoDark = Color(0xFF1E3A8A)
+val PrimaryBlueLight = Color(0xFF1D4ED8)
+val PrimaryBlueDark = Color(0xFF1E3A8A)
 val PrimaryLight = Color(0xFF3B82F6)
 val PrimaryContainerLight = Color(0xFFDBEAFE)
 val OnPrimaryLight = Color(0xFFFFFFFF)
 val OnPrimaryContainerLight = Color(0xFF1E3A8A)
+
+// Primary Aliases
+val PrimaryIndigoLight = PrimaryBlueLight
+val PrimaryIndigoDark = PrimaryBlueDark
 
 // ============ SECONDARY (Teal) ============
 val SecondaryTealLight = Color(0xFF0F766E)
@@ -21,10 +25,13 @@ val OnSecondaryLight = Color(0xFFFFFFFF)
 val OnSecondaryContainerLight = Color(0xFF134E4A)
 
 // ============ TERTIARY (Purple) ============
-val TertiaryCyanLight = Color(0xFF7C3AED)
+val TertiaryPurpleLight = Color(0xFF7C3AED)
 val TertiaryContainerLight = Color(0xFFEDE9FE)
 val OnTertiaryLight = Color(0xFFFFFFFF)
 val OnTertiaryContainerLight = Color(0xFF4C1D95)
+
+// Tertiary Aliases
+val TertiaryCyanLight = TertiaryPurpleLight
 
 // ============ STATUS COLORS ============
 val SuccessGreen = Color(0xFF047857)
@@ -62,13 +69,15 @@ val TextDisabledColor = Color(0xFF94A3B8)
 val TextOnDark = Color(0xFFFFFFFF)
 val TextOnPrimary = Color(0xFFFFFFFF)
 
-// ============ POS SEMANTIC COLORS ============
-val PosCashGreen = Color(0xFF059669)
+// ============ POS SEMANTIC COLORS (WCAG AA Compliant) ============
+val PosCashGreen = Color(0xFF047857)
+val PosCashGreenFill = Color(0xFF059669)
 val PosCardBlue = Color(0xFF2563EB)
-val PosDueOrange = Color(0xFFEA580C)
+val PosDueOrange = Color(0xFFC2410C)
+val PosDueOrangeFill = Color(0xFFEA580C)
 val PosExpenseRed = Color(0xFFDC2626)
 val PosShortageRed = Color(0xFFDC2626)
-val PosSurplusGreen = Color(0xFF059669)
+val PosSurplusGreen = Color(0xFF047857)
 val PosVarianceNeutral = Color(0xFF64748B)
 
 // ============ CHART COLORS ============
@@ -78,42 +87,15 @@ val ChartOrange = Color(0xFFEA580C)
 val ChartPurple = Color(0xFF7C3AED)
 val ChartTeal = Color(0xFF0F766E)
 
-// ============ DARK TOKENS (Synchronized with values-night/colors.xml) ============
-val OnPrimaryDark = Color(0xFF0F172A)
-val PrimaryContainerDark = Color(0xFF1E3A8A)
-val OnPrimaryContainerDark = Color(0xFFDBEAFE)
-val SecondaryTealDark = Color(0xFF5EEAD4)
-val OnSecondaryDark = Color(0xFF0F172A)
-val SecondaryContainerDark = Color(0xFF134E4A)
-val OnSecondaryContainerDark = Color(0xFFCCFBF1)
-val TertiaryCyanDark = Color(0xFFA78BFA)
-val OnTertiaryDark = Color(0xFF0F172A)
-val TertiaryContainerDark = Color(0xFF4C1D95)
-val OnTertiaryContainerDark = Color(0xFFEDE9FE)
-val ErrorRedDark = Color(0xFFF87171)
-val OnErrorDark = Color(0xFF0F172A)
-val ErrorContainerDark = Color(0xFF7F1D1D)
-val OnErrorContainerDark = Color(0xFFFEE2E2)
-val BackgroundDark = Color(0xFF0F172A)
-val OnBackgroundDark = Color(0xFFF1F5F9)
-val SurfaceDark = Color(0xFF1E293B)
-val OnSurfaceDark = Color(0xFFF1F5F9)
-val SurfaceVariantDark = Color(0xFF334155)
-val OnSurfaceVariantDark = Color(0xFFCBD5E1)
-val OutlineDark = Color(0xFF475569)
-val OutlineVariantDark = Color(0xFF334155)
-
 // --- Common Token Aliases & System Compatibility ---
 val BgLightGrey = SurfaceVariantLight
 val BgWhite = SurfaceLight
 val CardWhite = SurfaceLight
 val BorderLight = OutlineLight
-val BorderDark = OutlineDark
 
-val PrimaryBlue = PrimaryIndigoLight
-val PrimaryBlueDark = PrimaryIndigoDark
+val PrimaryBlue = PrimaryBlueLight
 val PrimaryContainer = PrimaryContainerLight
-val PrimaryIndigo = PrimaryIndigoLight
+val PrimaryIndigo = PrimaryBlueLight
 
 val AccentEmerald = PosCashGreen
 val AccentGold = WarningOrange

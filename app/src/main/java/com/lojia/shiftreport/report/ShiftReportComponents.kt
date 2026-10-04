@@ -213,7 +213,7 @@ fun NumberField(
                                 text = if (isInteger) "0" else "0.00",
                                 fontSize = 13.sp,
                                 lineHeight = 18.sp,
-                                color = TextDisabledColor
+                                color = TextHintColor
                             )
                         }
                         innerTextField()

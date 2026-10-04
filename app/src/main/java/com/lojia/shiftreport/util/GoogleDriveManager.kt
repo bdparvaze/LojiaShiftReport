@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Base64
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.lojia.shiftreport.data.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,7 +21,6 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.text.SimpleDateFormat
 import java.util.*
 
 data class DriveBackupItem(
@@ -39,32 +40,98 @@ data class DriveAccountInfo(
 
 object GoogleDriveManager {
 
-    private const val PREFS_NAME = "google_drive_prefs"
+    private const val PLAIN_PREFS_NAME = "google_drive_prefs"
+    private const val SECURE_PREFS_NAME = "secure_google_drive_prefs"
     private const val KEY_ACCESS_TOKEN = "drive_access_token"
     private const val KEY_REFRESH_TOKEN = "drive_refresh_token"
     private const val KEY_TOKEN_EXPIRY = "drive_token_expiry"
     private const val KEY_ACCOUNT_EMAIL = "drive_account_email"
     private const val KEY_ACCOUNT_NAME = "drive_account_name"
     private const val KEY_CODE_VERIFIER = "drive_code_verifier"
+    private const val KEY_OAUTH_STATE = "oauth_state"
 
     // OAuth configuration
     const val CLIENT_ID = "654989706304-6knvt1b4gravtsu1a59snfg1acgjre74.apps.googleusercontent.com"
     const val REDIRECT_URI = "com.lojia.shiftreport:/oauth2callback"
     private const val SCOPES = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email"
 
-    private fun getPrefs(context: Context): SharedPreferences {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    @Volatile
+    private var encryptedPrefsInstance: SharedPreferences? = null
+
+    private fun getEncryptedPrefs(context: Context): SharedPreferences {
+        return encryptedPrefsInstance ?: synchronized(this) {
+            encryptedPrefsInstance ?: run {
+                val masterKey = MasterKey.Builder(context.applicationContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+                val prefs = EncryptedSharedPreferences.create(
+                    context.applicationContext,
+                    SECURE_PREFS_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+                migratePlainToEncrypted(context.applicationContext, prefs)
+                encryptedPrefsInstance = prefs
+                prefs
+            }
+        }
+    }
+
+    private fun migratePlainToEncrypted(context: Context, encPrefs: SharedPreferences) {
+        val plainPrefs = context.getSharedPreferences(PLAIN_PREFS_NAME, Context.MODE_PRIVATE)
+        val hasTokens = plainPrefs.contains(KEY_ACCESS_TOKEN) ||
+                plainPrefs.contains(KEY_REFRESH_TOKEN) ||
+                plainPrefs.contains(KEY_ACCOUNT_EMAIL) ||
+                plainPrefs.contains(KEY_CODE_VERIFIER)
+
+        if (hasTokens) {
+            val encEditor = encPrefs.edit()
+            if (plainPrefs.contains(KEY_ACCESS_TOKEN)) {
+                encEditor.putString(KEY_ACCESS_TOKEN, plainPrefs.getString(KEY_ACCESS_TOKEN, null))
+            }
+            if (plainPrefs.contains(KEY_REFRESH_TOKEN)) {
+                encEditor.putString(KEY_REFRESH_TOKEN, plainPrefs.getString(KEY_REFRESH_TOKEN, null))
+            }
+            if (plainPrefs.contains(KEY_TOKEN_EXPIRY)) {
+                encEditor.putLong(KEY_TOKEN_EXPIRY, plainPrefs.getLong(KEY_TOKEN_EXPIRY, 0L))
+            }
+            if (plainPrefs.contains(KEY_ACCOUNT_EMAIL)) {
+                encEditor.putString(KEY_ACCOUNT_EMAIL, plainPrefs.getString(KEY_ACCOUNT_EMAIL, null))
+            }
+            if (plainPrefs.contains(KEY_ACCOUNT_NAME)) {
+                encEditor.putString(KEY_ACCOUNT_NAME, plainPrefs.getString(KEY_ACCOUNT_NAME, null))
+            }
+            if (plainPrefs.contains(KEY_CODE_VERIFIER)) {
+                encEditor.putString(KEY_CODE_VERIFIER, plainPrefs.getString(KEY_CODE_VERIFIER, null))
+            }
+            if (plainPrefs.contains(KEY_OAUTH_STATE)) {
+                encEditor.putString(KEY_OAUTH_STATE, plainPrefs.getString(KEY_OAUTH_STATE, null))
+            }
+            encEditor.apply()
+
+            // Delete migrated keys from the plain file
+            plainPrefs.edit()
+                .remove(KEY_ACCESS_TOKEN)
+                .remove(KEY_REFRESH_TOKEN)
+                .remove(KEY_TOKEN_EXPIRY)
+                .remove(KEY_ACCOUNT_EMAIL)
+                .remove(KEY_ACCOUNT_NAME)
+                .remove(KEY_CODE_VERIFIER)
+                .remove(KEY_OAUTH_STATE)
+                .apply()
+        }
     }
 
     fun isConnected(context: Context): Boolean {
-        val prefs = getPrefs(context)
+        val prefs = getEncryptedPrefs(context)
         val token = prefs.getString(KEY_ACCESS_TOKEN, null)
         val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, null)
         return !token.isNullOrEmpty() || !refreshToken.isNullOrEmpty()
     }
 
     fun getAccountInfo(context: Context): DriveAccountInfo {
-        val prefs = getPrefs(context)
+        val prefs = getEncryptedPrefs(context)
         val connected = isConnected(context)
         val email = prefs.getString(KEY_ACCOUNT_EMAIL, null)
         val name = prefs.getString(KEY_ACCOUNT_NAME, null)
@@ -76,7 +143,13 @@ object GoogleDriveManager {
     }
 
     fun disconnect(context: Context) {
-        getPrefs(context).edit().clear().apply()
+        getEncryptedPrefs(context).edit().clear().apply()
+        context.getSharedPreferences(PLAIN_PREFS_NAME, Context.MODE_PRIVATE).edit().clear().apply()
+    }
+
+    fun clearOAuthState(context: Context) {
+        getEncryptedPrefs(context).edit().remove(KEY_OAUTH_STATE).apply()
+        context.getSharedPreferences(PLAIN_PREFS_NAME, Context.MODE_PRIVATE).edit().remove(KEY_OAUTH_STATE).apply()
     }
 
     /**
@@ -97,12 +170,10 @@ object GoogleDriveManager {
         return Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
     }
 
-    private const val KEY_OAUTH_STATE = "oauth_state"
-
     fun buildAuthUrl(context: Context): String {
         val verifier = generateCodeVerifier()
         val state = UUID.randomUUID().toString()
-        getPrefs(context).edit()
+        getEncryptedPrefs(context).edit()
             .putString(KEY_CODE_VERIFIER, verifier)
             .putString(KEY_OAUTH_STATE, state)
             .apply()
@@ -129,13 +200,19 @@ object GoogleDriveManager {
     }
 
     suspend fun handleOAuthCallback(context: Context, code: String, state: String? = null): Result<DriveAccountInfo> = withContext(Dispatchers.IO) {
+        val encPrefs = getEncryptedPrefs(context)
+        val expectedState = encPrefs.getString(KEY_OAUTH_STATE, null)
+
         try {
-            val prefs = getPrefs(context)
-            val expectedState = prefs.getString(KEY_OAUTH_STATE, null)
-            if (!state.isNullOrEmpty() && !expectedState.isNullOrEmpty() && state != expectedState) {
-                return@withContext Result.failure(SecurityException("OAuth state mismatch during Google Drive authorization."))
+            // Fail-closed OAuth state validation
+            if (state.isNullOrEmpty() || expectedState.isNullOrEmpty() || state != expectedState) {
+                clearOAuthState(context)
+                return@withContext Result.failure(
+                    SecurityException("OAuth state verification failed: state is missing or mismatched.")
+                )
             }
-            val verifier = prefs.getString(KEY_CODE_VERIFIER, "") ?: ""
+
+            val verifier = encPrefs.getString(KEY_CODE_VERIFIER, "") ?: ""
 
             val tokenUrl = URL("https://oauth2.googleapis.com/token")
             val conn = tokenUrl.openConnection() as HttpURLConnection
@@ -160,7 +237,7 @@ object GoogleDriveManager {
                 val refreshToken = json.optString("refresh_token", "")
                 val expiryTime = System.currentTimeMillis() + (expiresIn * 1000)
 
-                val editor = prefs.edit()
+                val editor = encPrefs.edit()
                     .putString(KEY_ACCESS_TOKEN, accessToken)
                     .putLong(KEY_TOKEN_EXPIRY, expiryTime)
 
@@ -182,13 +259,16 @@ object GoogleDriveManager {
             }
         } catch (e: Exception) {
             Result.failure(e)
+        } finally {
+            // Clear the saved state after any callback (success or failure)
+            clearOAuthState(context)
         }
     }
 
     suspend fun connectWithToken(context: Context, token: String): Result<DriveAccountInfo> = withContext(Dispatchers.IO) {
         try {
             val accountInfo = fetchDriveUserInfo(token)
-            val prefs = getPrefs(context)
+            val prefs = getEncryptedPrefs(context)
             prefs.edit()
                 .putString(KEY_ACCESS_TOKEN, token)
                 .putLong(KEY_TOKEN_EXPIRY, System.currentTimeMillis() + (3600 * 1000))
@@ -214,7 +294,7 @@ object GoogleDriveManager {
                 val user = root.optJSONObject("user")
                 val email = user?.optString("emailAddress", "Google Drive User") ?: "Google Drive User"
                 val name = user?.optString("displayName", "User") ?: "User"
-                val photo = user?.optString("photoLink", null)
+                val photo = if (user?.has("photoLink") == true && !user.isNull("photoLink")) user.getString("photoLink") else null
                 DriveAccountInfo(isConnected = true, email = email, displayName = name, photoUrl = photo)
             } else {
                 DriveAccountInfo(isConnected = true, email = "Google Drive Connected", displayName = "User")
@@ -225,7 +305,7 @@ object GoogleDriveManager {
     }
 
     private suspend fun getValidAccessToken(context: Context): String? = withContext(Dispatchers.IO) {
-        val prefs = getPrefs(context)
+        val prefs = getEncryptedPrefs(context)
         val token = prefs.getString(KEY_ACCESS_TOKEN, null) ?: return@withContext null
         val expiry = prefs.getLong(KEY_TOKEN_EXPIRY, 0L)
         val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, null)
@@ -282,7 +362,7 @@ object GoogleDriveManager {
             val (jsonString, totalRecords) = OfflineBackupManager.generateBackupJson(database, isCloudBackup = true)
             val jsonBytes = jsonString.toByteArray(StandardCharsets.UTF_8)
 
-            val timeStampStr = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US).format(Date())
+            val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
             val fileName = "Lojia_Backup_$timeStampStr.json"
 
             // Multipart upload to Google Drive v3
@@ -331,7 +411,7 @@ object GoogleDriveManager {
                     id = respJson.getString("id"),
                     name = respJson.optString("name", fileName),
                     size = jsonBytes.size.toLong(),
-                    modifiedTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date()),
+                    modifiedTime = DateTimeFormatUtils.formatIsoDateTime(),
                     description = "$totalRecords records"
                 )
                 Result.success(item)

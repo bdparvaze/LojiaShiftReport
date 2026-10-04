@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 val LightColorScheme = lightColorScheme(
-    primary = PrimaryIndigoLight,
+    primary = PrimaryBlueLight,
     onPrimary = OnPrimaryLight,
     primaryContainer = PrimaryContainerLight,
     onPrimaryContainer = OnPrimaryContainerLight,
@@ -19,7 +19,7 @@ val LightColorScheme = lightColorScheme(
     onSecondary = OnSecondaryLight,
     secondaryContainer = SecondaryContainerLight,
     onSecondaryContainer = OnSecondaryContainerLight,
-    tertiary = TertiaryCyanLight,
+    tertiary = TertiaryPurpleLight,
     onTertiary = OnTertiaryLight,
     tertiaryContainer = TertiaryContainerLight,
     onTertiaryContainer = OnTertiaryContainerLight,
@@ -48,23 +48,27 @@ val LightColorScheme = lightColorScheme(
     surfaceContainerLowest = PureWhite
 )
 
-// Alias DarkColorScheme to LightColorScheme so the business app never renders dark/black popups or dropdowns
-val DarkColorScheme = LightColorScheme
-
 @Composable
 fun LojiaTheme(
-    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // Always enforce the crisp White & Black Business LightColorScheme across the entire app
+    // Enforce the crisp White & Black Business LightColorScheme across the entire app
     val colorScheme = LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = PrimaryIndigoLight.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }
+    }
+
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val currentLanguage = androidx.compose.runtime.remember(configuration) {
+        val locale = configuration.locales[0]
+        locale?.language ?: com.lojia.shiftreport.util.AppLanguageManager.getCurrentLanguageCode()
+    }
+    val currentTypography = androidx.compose.runtime.remember(currentLanguage) {
+        typographyFor(currentLanguage)
     }
 
     val currentDensity = androidx.compose.ui.platform.LocalDensity.current
@@ -79,7 +83,7 @@ fun LojiaTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = currentTypography,
             content = content
         )
     }

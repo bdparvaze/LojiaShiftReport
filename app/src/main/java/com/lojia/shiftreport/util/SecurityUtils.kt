@@ -12,7 +12,7 @@ import javax.crypto.spec.PBEKeySpec
 object SecurityUtils {
     private const val DEFAULT_SALT = "lojia_pos_salt_v1"
     private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
-    private const val PBKDF2_ITERATIONS = 10000
+    const val PBKDF2_ITERATIONS = 210000
     private const val PBKDF2_KEY_LENGTH = 256 // bits
 
     data class VerifyResult(
@@ -21,9 +21,18 @@ object SecurityUtils {
     )
 
     /**
-     * Hashes a secret string using PBKDF2WithHmacSHA256 with 10,000 iterations and a cryptographically
+     * Hashes a secret string using PBKDF2WithHmacSHA256 with 210,000 iterations and a cryptographically
      * secure 16-byte random salt.
-     * Output format: "pbkdf2:sha256:10000:<salt_hex>:<hash_hex>"
+     * Output format: "pbkdf2:sha256:210000:<salt_hex>:<hash_hex>"
+     */
+    fun hashSecret(input: String): String {
+        return hashSecretPbkdf2(input, iterations = PBKDF2_ITERATIONS)
+    }
+
+    /**
+     * Hashes a secret string using PBKDF2WithHmacSHA256 with the specified iteration count
+     * and a cryptographically secure 16-byte random salt.
+     * Output format: "pbkdf2:sha256:<iterations>:<salt_hex>:<hash_hex>"
      */
     fun hashSecretPbkdf2(
         input: String,
@@ -47,16 +56,11 @@ object SecurityUtils {
     /**
      * Hashes a password or PIN string using SHA-256 with an application salt (Legacy format).
      * Output is a 64-character lowercase hex string.
+     * Retained only for verifying old legacy hashes inside verifySecretWithUpgrade.
      */
-    fun hashSecret(input: String, salt: String = DEFAULT_SALT): String {
+    fun legacyHashSecret(input: String, salt: String = DEFAULT_SALT): String {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) return ""
-        
-        // If already a 64-character hex string (SHA-256), return normalized lowercase
-        if (trimmed.length == 64 && trimmed.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
-            return trimmed.lowercase()
-        }
-        
         val saltedInput = "$salt:$trimmed"
         val md = MessageDigest.getInstance("SHA-256")
         val hashBytes = md.digest(saltedInput.toByteArray(Charsets.UTF_8))
@@ -82,9 +86,15 @@ object SecurityUtils {
         return verifySecretWithUpgrade(enteredInput, storedHashOrPlaintext).isMatch
     }
 
+    private fun isHashFormatted(str: String): Boolean {
+        if (str.startsWith("pbkdf2:sha256:")) return true
+        if (str.length == 64 && str.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) return true
+        return false
+    }
+
     /**
      * Verifies an entered secret against stored hash and returns whether it matched along with an
-     * upgraded PBKDF2 hash string if the stored hash was legacy format.
+     * upgraded PBKDF2 hash string if the stored hash was legacy format or had fewer than 210,000 iterations.
      */
     fun verifySecretWithUpgrade(enteredInput: String, storedHashOrPlaintext: String): VerifyResult {
         val cleanEntered = enteredInput.trim()
@@ -94,7 +104,7 @@ object SecurityUtils {
             return VerifyResult(isMatch = false)
         }
 
-        // 1. Check if stored hash is PBKDF2 format ("pbkdf2:sha256:10000:<salt_hex>:<hash_hex>")
+        // 1. Check if stored hash is PBKDF2 format ("pbkdf2:sha256:<iterations>:<salt_hex>:<hash_hex>")
         if (cleanStored.startsWith("pbkdf2:sha256:")) {
             try {
                 val parts = cleanStored.split(":")
@@ -111,7 +121,13 @@ object SecurityUtils {
                         computedHashHex.lowercase().toByteArray(Charsets.UTF_8),
                         expectedHashHex.lowercase().toByteArray(Charsets.UTF_8)
                     )
-                    return VerifyResult(isMatch = isMatch, newHashToStore = null)
+                    if (isMatch) {
+                        val needsIterationUpgrade = iterations < PBKDF2_ITERATIONS
+                        val newHash = if (needsIterationUpgrade) hashSecret(cleanEntered) else null
+                        return VerifyResult(isMatch = true, newHashToStore = newHash)
+                    } else {
+                        return VerifyResult(isMatch = false)
+                    }
                 }
             } catch (e: Exception) {
                 // Fall back to legacy checks if parsing PBKDF2 fails
@@ -119,23 +135,22 @@ object SecurityUtils {
         }
 
         // 2. Legacy salted SHA-256 match
-        val saltedEntered = hashSecret(cleanEntered)
+        val saltedEntered = legacyHashSecret(cleanEntered)
         if (saltedEntered.equals(cleanStored, ignoreCase = true)) {
-            val upgraded = hashSecretPbkdf2(cleanEntered)
+            val upgraded = hashSecret(cleanEntered)
             return VerifyResult(isMatch = true, newHashToStore = upgraded)
         }
 
         // 3. Legacy plain SHA-256 match
         val plainEntered = hashSecretPlain(cleanEntered)
-        val plainStored = hashSecretPlain(cleanStored)
-        if (plainEntered.equals(cleanStored, ignoreCase = true) || plainEntered.equals(plainStored, ignoreCase = true)) {
-            val upgraded = hashSecretPbkdf2(cleanEntered)
+        if (plainEntered.equals(cleanStored, ignoreCase = true)) {
+            val upgraded = hashSecret(cleanEntered)
             return VerifyResult(isMatch = true, newHashToStore = upgraded)
         }
 
-        // 4. Direct plaintext comparison (legacy fallback)
-        if (cleanEntered == cleanStored) {
-            val upgraded = hashSecretPbkdf2(cleanEntered)
+        // 4. Direct plaintext comparison ONLY for values that are not hash-formatted (to migrate very old plaintext PINs)
+        if (!isHashFormatted(cleanStored) && cleanEntered == cleanStored) {
+            val upgraded = hashSecret(cleanEntered)
             return VerifyResult(isMatch = true, newHashToStore = upgraded)
         }
 
@@ -143,9 +158,16 @@ object SecurityUtils {
     }
 
     /**
-     * Checks if a stored hash is legacy format and needs upgrading to PBKDF2.
+     * Checks if a stored hash is legacy format or low-iteration PBKDF2 and needs upgrading to 210,000 PBKDF2.
      */
     fun needsUpgrade(storedHash: String): Boolean {
-        return !storedHash.trim().startsWith("pbkdf2:sha256:")
+        val trimmed = storedHash.trim()
+        if (!trimmed.startsWith("pbkdf2:sha256:")) return true
+        val parts = trimmed.split(":")
+        if (parts.size == 5) {
+            val iter = parts[2].toIntOrNull() ?: 0
+            return iter < PBKDF2_ITERATIONS
+        }
+        return true
     }
 }

@@ -1,5 +1,6 @@
 package com.lojia.shiftreport.report
 
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -98,7 +99,6 @@ fun ShiftReportArchivesTab(
         }
     }
 
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
     val numberFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
             minimumFractionDigits = 2
@@ -267,7 +267,7 @@ fun ShiftReportArchivesTab(
                                     )
                                     Spacer(Modifier.height(2.dp))
                                     Text(
-                                        text = dateFormat.format(Date(report.dateInMillis)),
+                                        text = DateTimeFormatUtils.formatDateTime(report.dateInMillis),
                                         fontSize = 11.sp,
                                         color = TextHintColor,
                                         maxLines = 1

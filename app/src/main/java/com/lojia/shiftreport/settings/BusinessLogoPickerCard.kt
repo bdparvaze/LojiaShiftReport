@@ -319,7 +319,7 @@ fun BusinessLogoPickerCard(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(TextDisabledColor),
+                        .background(PrimaryBlueLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -499,7 +499,7 @@ fun ProfileDetailItemRow(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    AutoText(
+                    Text(
                         text = label,
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = TextHintColor,

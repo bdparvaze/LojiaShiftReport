@@ -234,17 +234,18 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun handleDriveAuthRedirect(uri: android.net.Uri, onComplete: (Boolean) -> Unit = {}) {
+    fun handleDriveAuthRedirect(uri: android.net.Uri, state: String? = null, onComplete: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             val code = uri.getQueryParameter("code")
-            val state = uri.getQueryParameter("state")
+            val resolvedState = state ?: uri.getQueryParameter("state")
             if (code.isNullOrEmpty()) {
+                GoogleDriveManager.clearOAuthState(context)
                 val error = uri.getQueryParameter("error") ?: "Authorization cancelled or failed"
                 _uiMessage.emit(UiText.DynamicString(error))
                 onComplete(false)
                 return@launch
             }
-            val result = GoogleDriveManager.handleOAuthCallback(context, code, state)
+            val result = GoogleDriveManager.handleOAuthCallback(context, code, resolvedState)
             result.onSuccess { account: DriveAccountInfo ->
                 _driveAccountInfo.value = account
                 val emailStr = account.email ?: "Google Account"
@@ -382,6 +383,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     val firebaseSyncState: StateFlow<FirebaseSyncStatusState> = FirebaseCloudSyncManager.syncState
 
     fun toggleFirebaseCloudSync(enabled: Boolean) {
+        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) return
         FirebaseCloudSyncManager.setSyncEnabled(context, enabled)
         viewModelScope.launch {
             if (enabled) {
@@ -395,6 +397,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     fun syncFirebaseNow(
         onComplete: (Boolean, String) -> Unit = { _, _ -> }
     ) {
+        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
+            viewModelScope.launch {
+                _uiMessage.emit(UiText.StringResource(R.string.cloud_sync_not_available))
+                onComplete(false, "Cloud sync is not available in this version")
+            }
+            return
+        }
         viewModelScope.launch {
             val result = FirebaseCloudSyncManager.performSync(context, isManual = true)
             if (result.success) {
@@ -846,7 +855,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     init {
         loadDraft()
         FirebaseCloudSyncManager.init(context)
-        if (FirebaseCloudSyncManager.isSyncEnabled(context)) {
+        if (com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED && FirebaseCloudSyncManager.isSyncEnabled(context)) {
             FirebaseCloudSyncScheduler.schedulePeriodicSync(context)
         }
         viewModelScope.launch {

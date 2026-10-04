@@ -36,6 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -215,6 +217,7 @@ fun LojiaInputField(
     label: String,
     placeholder: String,
     modifier: Modifier = Modifier,
+    focusRequester: FocusRequester? = null,
     leadingIcon: ImageVector? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     isRequired: Boolean = false,
@@ -361,6 +364,7 @@ fun LojiaInputField(
                         cursorBrush = SolidColor(LojiaColors.P500),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                             .onFocusChanged { isFocused = it.isFocused }
                             .testTag(testTag)
                     )
@@ -409,11 +413,7 @@ fun LojiaGradientButton(
     testTag: String = ""
 ) {
     val primaryBlue = PrimaryIndigo
-    val buttonBrush = if (enabled) {
-        SolidColor(primaryBlue)
-    } else {
-        SolidColor(primaryBlue.copy(alpha = 0.45f))
-    }
+    val backgroundColor = if (enabled) primaryBlue else primaryBlue.copy(alpha = 0.45f)
 
     Surface(
         onClick = onClick,
@@ -421,12 +421,10 @@ fun LojiaGradientButton(
         shape = RoundedCornerShape(12.dp),
         shadowElevation = if (enabled) 2.dp else 0.dp,
         tonalElevation = 0.dp,
-        color = Color.Transparent,
+        color = backgroundColor,
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(buttonBrush)
             .testTag(testTag)
     ) {
         Box(
@@ -454,20 +452,12 @@ fun LojiaGradientButton(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.20f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = text,

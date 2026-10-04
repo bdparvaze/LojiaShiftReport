@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -390,15 +392,8 @@ fun LojiaRegisterScreen(
                         }
                     }
                 }
-            }
 
-            // Card 2: Security Details
-            LojiaCard(modifier = Modifier.padding(top = 12.dp)) {
-                LojiaSectionHeader(
-                    icon = Icons.Outlined.Shield,
-                    title = stringResource(R.string.auth_sec_title),
-                    subtitle = stringResource(R.string.auth_sec_sub)
-                )
+                Spacer(modifier = Modifier.height(12.dp))
 
                 LojiaInputField(
                     value = rPw,
@@ -462,17 +457,11 @@ fun LojiaRegisterScreen(
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                     testTag = "rCp"
                 )
-            }
 
-            // Card 3: Recovery & Compliance
-            LojiaCard(modifier = Modifier.padding(top = 12.dp)) {
-                LojiaSectionHeader(
-                    icon = Icons.Outlined.HelpOutline,
-                    title = stringResource(R.string.auth_rec_title),
-                    subtitle = stringResource(R.string.auth_rec_sub)
-                )
+                Spacer(modifier = Modifier.height(12.dp))
 
                 var showQuestionMenu by remember { mutableStateOf(false) }
+                val answerFocusRequester = remember { FocusRequester() }
                 val questionResIds = listOf(
                     R.string.auth_sq1,
                     R.string.auth_sq2,
@@ -511,7 +500,10 @@ fun LojiaRegisterScreen(
                                 if (vSq == FieldValidationState.ERROR) LojiaColors.R500 else LojiaColors.N300,
                                 RoundedCornerShape(10.dp)
                             )
-                            .clickable { showQuestionMenu = true }
+                            .clickable {
+                                focusManager.clearFocus()
+                                showQuestionMenu = true
+                            }
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
@@ -555,6 +547,13 @@ fun LojiaRegisterScreen(
                                         rSq = qText
                                         showQuestionMenu = false
                                         vSq = FieldValidationState.SUCCESS
+                                        focusManager.clearFocus()
+                                        coroutineScope.launch {
+                                            delay(100)
+                                            try {
+                                                answerFocusRequester.requestFocus()
+                                            } catch (_: Exception) {}
+                                        }
                                     }
                                 )
                             }
@@ -578,6 +577,7 @@ fun LojiaRegisterScreen(
                     onValueChange = { rSa = it },
                     label = stringResource(R.string.auth_sec_answer),
                     placeholder = stringResource(R.string.auth_ph_answer),
+                    focusRequester = answerFocusRequester,
                     leadingIcon = Icons.Outlined.CheckCircle,
                     isRequired = true,
                     isValid = rSa.trim().isNotEmpty(),

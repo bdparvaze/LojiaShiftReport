@@ -21,6 +21,11 @@ object FirebaseCloudSyncScheduler {
         context: Context,
         intervalMinutes: Long = 30L
     ) {
+        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
+            Log.i(TAG, "Cloud sync is disabled in BuildConfig. Skipping periodic sync scheduling.")
+            return
+        }
+
         val effectiveInterval = maxOf(intervalMinutes, 15L) // WorkManager minimum is 15 mins
 
         val constraints = Constraints.Builder()
@@ -62,7 +67,12 @@ object FirebaseCloudSyncScheduler {
     /**
      * Triggers an immediate one-time background sync task.
      */
-    fun triggerImmediateSync(context: Context): Operation {
+    fun triggerImmediateSync(context: Context): Operation? {
+        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
+            Log.i(TAG, "Cloud sync is disabled in BuildConfig. Skipping immediate sync.")
+            return null
+        }
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()

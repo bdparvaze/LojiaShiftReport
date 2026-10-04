@@ -15,7 +15,6 @@ import com.lojia.shiftreport.data.ShiftReport
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
-import java.text.SimpleDateFormat
 import java.util.*
 
 object ExportHelper {
@@ -30,15 +29,14 @@ object ExportHelper {
         currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
     ): File {
         val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
         val csvFile = File(exportDir, "Shift_Reports_$timeStamp.csv")
 
         FileWriter(csvFile).use { writer ->
             writer.append("Report ID,Cashier Name,Shift,Date,Gross Cash ($currency),Mada/Card ($currency),Digital Wallet ($currency),Staff Meals,Expenses ($currency),Net Cash ($currency),Total Sales ($currency),Notes\n")
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
             for (r in reports) {
-                val dateStr = dateFormat.format(Date(r.dateInMillis))
+                val dateStr = DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US)
                 val sanitizedNotes = r.notes.replace("\"", "\"\"")
                 writer.append("${r.id},\"${r.cashierName}\",${r.shift},$dateStr,${r.grossCash},${r.madaPayments},${r.digitalWallet},${r.staffMealsCount},${r.totalExpenses},${r.netCash},${r.totalSales},\"$sanitizedNotes\"\n")
             }
@@ -59,7 +57,7 @@ object ExportHelper {
     fun exportReportsAsPdf(context: Context, reports: List<ShiftReport>, currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE) {
         try {
             val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
             val pdfFile = File(exportDir, "Shift_Reports_$timeStamp.pdf")
 
             val document = PdfDocument()
@@ -137,7 +135,7 @@ object ExportHelper {
 
             val generatedStr = context.getString(
                 R.string.pdf_generated_at,
-                SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+                DateTimeFormatUtils.formatIsoDateTime()
             )
 
             fun drawFooter() {
@@ -188,7 +186,6 @@ object ExportHelper {
             y += bannerHeight + 16f
             y = drawTableHeader(y)
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val rowHeight = 20f
 
             reports.forEachIndexed { index, r ->
@@ -224,7 +221,7 @@ object ExportHelper {
                 val cashierStr = if (r.cashierName.length > 18) r.cashierName.take(16) + ".." else r.cashierName
                 canvas.drawText(cashierStr, colCashier, textY, textPaint)
                 canvas.drawText(r.shift, colShift, textY, textPaint)
-                canvas.drawText(dateFormat.format(Date(r.dateInMillis)), colDate, textY, textSecondaryPaint)
+                canvas.drawText(DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US), colDate, textY, textSecondaryPaint)
 
                 val netStr = context.getString(R.string.msg_2f_s_21).format(r.netCash, currency)
                 val netW = textPaint.measureText(netStr)

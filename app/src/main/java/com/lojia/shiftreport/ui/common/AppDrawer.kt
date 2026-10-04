@@ -217,20 +217,6 @@ fun MainAppDrawer(
                 }
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(
-                    horizontal = 20.dp,
-                    vertical = 8.dp
-                ),
-                thickness = 0.5.dp,
-                color = OutlineVariantLight.copy(alpha = 0.5f)
-            )
-
-            // ===============================================
-            // Group B — header "MANAGEMENT"
-            // ===============================================
-            DrawerSectionHeader(stringResource(R.string.drawer_section_management))
-
             // 3. Cashier
             DrawerMenuItem(
                 title = stringResource(R.string.nav_cashier),
@@ -243,20 +229,6 @@ fun MainAppDrawer(
                     onCloseDrawer()
                 }
             )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(
-                    horizontal = 20.dp,
-                    vertical = 8.dp
-                ),
-                thickness = 0.5.dp,
-                color = OutlineVariantLight.copy(alpha = 0.5f)
-            )
-
-            // ===============================================
-            // Group C — header "ACCOUNT"
-            // ===============================================
-            DrawerSectionHeader(stringResource(R.string.drawer_section_account))
 
             // 4. Profile
             DrawerMenuItem(
@@ -310,20 +282,6 @@ fun MainAppDrawer(
                 }
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(
-                    horizontal = 20.dp,
-                    vertical = 8.dp
-                ),
-                thickness = 0.5.dp,
-                color = OutlineVariantLight.copy(alpha = 0.5f)
-            )
-
-            // ===============================================
-            // Group D — header "SYSTEM"
-            // ===============================================
-            DrawerSectionHeader(stringResource(R.string.drawer_section_system))
-
             // 8. Support
             DrawerMenuItem(
                 title = stringResource(R.string.nav_support),
@@ -348,15 +306,6 @@ fun MainAppDrawer(
                     onNavigate(AppNavState.ShiftReportState.SettingsDetail("about"))
                     onCloseDrawer()
                 }
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(
-                    horizontal = 20.dp,
-                    vertical = 8.dp
-                ),
-                thickness = 0.5.dp,
-                color = OutlineVariantLight.copy(alpha = 0.5f)
             )
 
             // 10. Log Out

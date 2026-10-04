@@ -3,9 +3,12 @@ package com.lojia.shiftreport.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.lojia.shiftreport.util.SecurityUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
  * PreferencesRepository manages persistent user session state and Quick Login credentials
@@ -32,8 +35,9 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class PreferencesRepository private constructor(context: Context) {
 
+    private val appContext: Context = context.applicationContext
     private val prefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _isQuickLoginActive = MutableStateFlow(shouldDefaultToQuickLogin())
     val isQuickLoginActive: StateFlow<Boolean> = _isQuickLoginActive.asStateFlow()
@@ -203,17 +207,49 @@ class PreferencesRepository private constructor(context: Context) {
      * Verifies an entered PIN against the stored hash in PreferencesRepository,
      * or a fallback profile PIN hash.
      * Strictly requires PIN configuration to be active - no auto debug backdoor.
+     * Upgrades legacy hashes to PBKDF2 automatically on successful verification.
      */
     fun verifyPin(enteredPin: String, fallbackPinHash: String? = null): Boolean {
         if (!isQuickLoginEnabled() && !hasPinConfigured()) {
             return false
         }
         val storedHash = getStoredPinHash()
-        if (!storedHash.isNullOrBlank() && SecurityUtils.verifySecret(enteredPin, storedHash)) {
-            return true
+        if (!storedHash.isNullOrBlank()) {
+            val result = SecurityUtils.verifySecretWithUpgrade(enteredPin, storedHash)
+            if (result.isMatch) {
+                if (result.newHashToStore != null) {
+                    prefs.edit().putString(KEY_STORED_PIN_HASH, result.newHashToStore).apply()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val db = AppDatabase.getInstance(appContext)
+                            val profile = db.reportDao().getUserProfileOnce()
+                            if (profile != null && profile.pin == storedHash) {
+                                db.reportDao().saveUserProfile(profile.copy(pin = result.newHashToStore))
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+                return true
+            }
         }
-        if (!fallbackPinHash.isNullOrBlank() && SecurityUtils.verifySecret(enteredPin, fallbackPinHash)) {
-            return true
+        if (!fallbackPinHash.isNullOrBlank()) {
+            val result = SecurityUtils.verifySecretWithUpgrade(enteredPin, fallbackPinHash)
+            if (result.isMatch) {
+                val upgradeHash = result.newHashToStore ?: fallbackPinHash
+                prefs.edit().putString(KEY_STORED_PIN_HASH, upgradeHash).apply()
+                if (result.newHashToStore != null) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val db = AppDatabase.getInstance(appContext)
+                            val profile = db.reportDao().getUserProfileOnce()
+                            if (profile != null && profile.pin == fallbackPinHash) {
+                                db.reportDao().saveUserProfile(profile.copy(pin = result.newHashToStore))
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+                return true
+            }
         }
         return false
     }
@@ -237,7 +273,7 @@ class PreferencesRepository private constructor(context: Context) {
             }
             // Only update the stored PIN hash if the user has already enabled Quick Login
             if (isQuickLoginEnabled() && profile.pin.isNotBlank()) {
-                val hashToStore = if (profile.pin.length == 64 && profile.pin.all { it.isDigit() || it in 'a'..'f' || it in 'A'..'F' }) {
+                val hashToStore = if (!SecurityUtils.needsUpgrade(profile.pin)) {
                     profile.pin
                 } else {
                     SecurityUtils.hashSecret(profile.pin)

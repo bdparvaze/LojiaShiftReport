@@ -613,12 +613,12 @@ fun MonthlySalesSummaryView(
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = TertiaryContainerLight,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, TertiaryCyanLight.copy(alpha = 0.4f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, TertiaryPurpleLight.copy(alpha = 0.4f)),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.product_purchases), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TertiaryCyanLight)
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = TertiaryCyanLight)
+                            Text(stringResource(R.string.product_purchases), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TertiaryPurpleLight)
+                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = TertiaryPurpleLight)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(stringResource(R.string.inventory_investment), fontSize = 10.sp, color = TextSecondaryLight)
                         }

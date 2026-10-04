@@ -1,5 +1,11 @@
 # ProGuard rules for Lojia Shift Report
--keep class com.lojia.shiftreport.** { *; }
+# Narrow keep rules: keep Room entities, DAOs, and data classes in com.lojia.shiftreport.data
+-keep class com.lojia.shiftreport.data.** { *; }
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao interface * { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep class com.lojia.shiftreport.scanner.ScannedDocument { *; }
+-keep class com.lojia.shiftreport.scanner.DocumentScannerDao { *; }
 -dontwarn com.lojia.shiftreport.**
 
 # Jetpack Compose

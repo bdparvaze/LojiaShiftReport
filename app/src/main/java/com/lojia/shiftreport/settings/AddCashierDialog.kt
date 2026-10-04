@@ -107,7 +107,7 @@ fun AddCashierDialog(
                             Text(
                                 text = stringResource(R.string.add_cashiers_here_to),
                                 fontSize = 12.sp,
-                                color = OnPrimaryContainerDark
+                                color = PrimaryContainerLight
                             )
                         }
                     }

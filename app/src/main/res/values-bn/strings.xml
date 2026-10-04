@@ -896,8 +896,8 @@
     <string name="cashier_label_fmt">ক্যাশিয়ার: %s</string>
     <string name="ticket_number_fmt">টিকিট #%d</string>
     <string name="items_count_and_customer_fmt">%1$d আইটেম • %2$s</string>
-    <string name="shift_report_title_fmt">Shift Report - %s</string>
-    <string name="tax_invoice_title_fmt">Tax Invoice #%s</string>
+    <string name="shift_report_title_fmt">শিফট রিপোর্ট - %s</string>
+    <string name="tax_invoice_title_fmt">ট্যাক্স ইনভয়েস #%s</string>
     <string name="payment_success">পেমেন্ট সফল হয়েছে</string>
     <string name="auto_calculated_financial_summary">মাসিক বিক্রি, ক্যাশ, ব্যাংক জমার পরিমাণ, বকেয়া (ডিউ), খরচ ও পণ্য ক্রয়ের স্বয়ংক্রিয় মোট তথ্য</string>
     <string name="bank_mada_fmt">ব্যাংক / মাদা জমা: %1$s %2$s</string>
@@ -1064,9 +1064,9 @@
     <string name="auth_no_account">অ্যাকাউন্ট নেই?</string>
     <string name="auth_have_account">আগে থেকেই অ্যাকাউন্ট আছে? লগ ইন করুন</string>
     <string name="auth_logout">লগ আউট</string>
-    <string name="backup_data_title">Backup Data</string>
+    <string name="backup_data_title">ডেটা ব্যাকআপ</string>
     <string name="backup_data_desc">সব ব্যবসার ডেটা JSON ফাইলে ডাউনলোডস ফোল্ডারে ব্যাকআপ করুন</string>
-    <string name="restore_backup_title">Restore Backup</string>
+    <string name="restore_backup_title">ব্যাকআপ রিস্টোর করুন</string>
     <string name="restore_backup_desc">ব্যাকআপ ফাইল থেকে ব্যবসার ডেটা ফিরিয়ে আনুন</string>
     <string name="restore_confirm_title">ডেটা রিস্টোর করবেন?</string>
     <string name="restore_confirm_message">এই ব্যাকআপ থেকে ডেটা রিস্টোর করলে বর্তমান ডেটা পরিবর্তন হতে পারে। আপনি কি নিশ্চিত?</string>
@@ -1116,9 +1116,11 @@
     <string name="firebase_sync_conflict_note">দ্বন্দ্ব পরিচালনা: সর্বশেষ আপডেট করা টাইমস্ট্যাম্প (স্থানীয় রুম প্রাথমিক উত্স হিসাবে থাকবে)</string>
     <string name="firebase_sync_security_note">গোপনীয়তা গ্যারান্টি: পাসওয়ার্ড এবং পিন হ্যাশগুলি কখনও ক্লাউডে সিঙ্ক করা হয় না</string>
     <string name="firebase_sync_project_id">ফায়ারবেস প্রকল্প: %s</string>
-    <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
-    <string name="document_scanner">ডকুমেন্ট স্ক্যানার</string>
-    <string name="doc_scanner_title">ডকুমেন্ট স্ক্যানার</string>
+    <string name="firebase_sync_summary" formatted="false">পণ্য, ক্যাটাগরি, রিপোর্ট এবং বিক্রয় সিঙ্ক করা হয়েছে</string>
+    <string name="cloud_sync_not_available">এই সংস্করণে ক্লাউড সিঙ্ক উপলব্ধ নেই</string>
+    <string name="cloud_sync_signin_required">ক্লাউড সিঙ্ক অনুপলব্ধ — সাইন ইন প্রয়োজন</string>
+    <string name="document_scanner">স্ক্যানার</string>
+    <string name="doc_scanner_title">স্ক্যানার</string>
     <string name="doc_scanner_desc">ML Kit দিয়ে ইনভয়েস, রসিদ এবং চুক্তি স্ক্যান করুন</string>
     <string name="scan_now">ডকুমেন্ট স্ক্যান করুন</string>
     <string name="scan_with_camera_fallback">ক্যামেরা দিয়ে স্ক্যান করুন (বিকল্প)</string>
@@ -1496,4 +1498,9 @@
     <string name="printer_test_receipt_msg">টেস্ট প্রিন্ট সফল হয়েছে</string>
     <string name="printer_test_receipt_operational">প্রিন্টার সংযোগ সক্রিয় রয়েছে!</string>
     <string name="print_btn">প্রিন্ট</string>
+    <string name="action_confirm">নিশ্চিত করুন</string>
+    <string name="action_cancel">বাতিল</string>
+    <string name="printer_btn_test_drawer">ক্যাশ ড্রয়ার পরীক্ষা করুন</string>
+    <string name="printer_test_drawer_admin_desc">ক্যাশ ড্রয়ার খোলার পরীক্ষা করতে অ্যাডমিন যাচাইকরণ আবশ্যক।</string>
+    <string name="printer_drawer_kick_success">ক্যাশ ড্রয়ার খোলার সিগন্যাল পাঠানো হয়েছে!</string>
 </resources>

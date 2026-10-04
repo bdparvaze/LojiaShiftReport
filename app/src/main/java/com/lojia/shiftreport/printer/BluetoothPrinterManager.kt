@@ -24,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -393,7 +392,7 @@ class BluetoothPrinterManager(private val context: Context) {
     ): String {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
         val is58 = paperWidth == PrinterPaperWidth.MM_58
-        val lineSeparator = if (is58) "--------------------------------" else "------------------------------------------------"
+        val lineSeparator = "-".repeat(paperWidth.charsPerLine)
 
         val labelReceiptNo = context.getString(R.string.receipt_label_no)
         val labelDate = context.getString(R.string.receipt_label_date)
@@ -504,7 +503,7 @@ class BluetoothPrinterManager(private val context: Context) {
     ): String {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
         val is58 = paperWidth == PrinterPaperWidth.MM_58
-        val lineSeparator = if (is58) "--------------------------------" else "------------------------------------------------"
+        val lineSeparator = "-".repeat(paperWidth.charsPerLine)
         val formattedDate = DateTimeFormatUtils.formatDateTime(report.dateInMillis)
 
         val startingCash = com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashFromNotes(report)

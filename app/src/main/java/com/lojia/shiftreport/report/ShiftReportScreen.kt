@@ -379,7 +379,7 @@ fun ShiftReportScreenContent(
                                     tint = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight
                                 )
                                 Spacer(Modifier.width(5.dp))
-                                AutoText(
+                                Text(
                                     text = title,
                                     fontSize = 12.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,

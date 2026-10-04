@@ -125,8 +125,8 @@ fun BiometricLockScreen(
         role.contains("cashier") || role.contains("staff") || desig.contains("cashier") || desig.contains("staff")
     }
 
-    var loginUser by remember { mutableStateOf(sessionUser.ifEmpty { savedUser.ifEmpty { DevCredentials.DEFAULT_USERNAME } }) }
-    var loginPass by remember { mutableStateOf(DevCredentials.DEFAULT_PASSWORD) }
+    var loginUser by remember { mutableStateOf(sessionUser.ifEmpty { savedUser.ifEmpty { "" } }) }
+    var loginPass by remember { mutableStateOf("") }
     var loginPassVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(if (isCashierRole) false else preferencesRepository.isRememberMe()) }
     var isSigningIn by remember { mutableStateOf(false) }
@@ -164,8 +164,8 @@ fun BiometricLockScreen(
                 if (usernameMatch && verifyResult.isMatch) {
                     isProfileValid = true
                     if (verifyResult.newHashToStore != null) {
-                        val repo = com.lojia.shiftreport.data.ShiftReportRepository.getInstance(context)
-                        repo.verifyAdminCredentials(context, p) // updates profile with upgraded hash
+                        val db = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                        db.reportDao().saveUserProfile(profile.copy(passwordHash = verifyResult.newHashToStore))
                     }
                 }
             }

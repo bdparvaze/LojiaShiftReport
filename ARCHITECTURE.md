@@ -25,13 +25,16 @@ com.lojia.shiftreport
 │   ├── Models.kt                  # ShiftReport, ShiftSession, CashMovement, User, Country
 │   ├── ReportDao.kt               # Shift report queries, analytics aggregations & user prefs
 │   ├── PreferencesRepository.kt   # Encrypted SharedPreferences for tokens & quick login
-│   └── ShiftReportRepository.kt   # Central repository orchestrating local Room & cloud sync
+│   └── ShiftReportRepository.kt   # Central repository orchestrating local Room & data flows
 │
 ├── report/                        # 📊 Shift Reports & Analytics Module
 │   ├── DashboardScreen.kt         # Shift performance metrics & financial analytics
 │   ├── ShiftReportScreen.kt       # Active shift creation, cash counting & history list
 │   ├── ShiftReportLedgerTabs.kt   # Multi-tab shift details & expense breakdown
-│   ├── ShiftReportPreviewDialog.kt# Thermal & PDF preview dialog with QR verification
+│   ├── PosReconciliationSummary.kt# Shift financial reconciliation calculations and details
+│   ├── ShiftReportComponents.kt   # Dynamic input cards and UI layout blocks for reports
+│   ├── ShiftReportArchivesTab.kt  # Historic shift lists and PDF exports
+│   ├── AddEntryDialog.kt          # Input dialog for recording shift revenue or expenses
 │   └── ReportViewModel.kt         # ViewModel managing shift states, metrics & exports
 │
 ├── scanner/                       # 📄 Document Scanner & OCR Module
@@ -41,7 +44,7 @@ com.lojia.shiftreport
 │   ├── DocumentScannerViewModel.kt# Document persistence, Word export & PDF encryption
 │   ├── OcrTextExtractor.kt        # Google ML Kit on-device text recognition
 │   ├── DocxExporter.kt            # Microsoft Word (.docx) document generator
-│   ├── PdfSecurityManager.kt      # PDF password protection and encryption
+│   └── PdfProtector.kt            # PDF password protection and encryption
 │   └── ScannedDocument.kt         # Room entity & DAO for scanned documents
 │
 ├── settings/                      # ⚙️ Settings & Configuration Module
@@ -52,15 +55,23 @@ com.lojia.shiftreport
 ├── ui/                            # 🎨 Shared UI, Theme & Design System
 │   ├── common/
 │   │   ├── LojiaTextField.kt      # Standardized input fields with validation states
+│   │   ├── LojiaDialog.kt         # Standardized, scrollable and responsive dialog layouts
 │   │   ├── AppDrawer.kt           # Side navigation drawer
 │   │   └── Components.kt          # Shared cards, badges, statistics chips & headers
 │   └── theme/
-│       ├── Color.kt               # Material 3 color system (Primary Indigo, Slate, Emerald)
+│       ├── Color.kt               # Material 3 color system (Primary Blue, Slate, Emerald)
 │       ├── Theme.kt               # Dynamic color schemes & typography bindings
-│       └── Type.kt                # Poppins & system typography definitions
+│       ├── Type.kt                # Poppins & system typography definitions
+│       └── Dimens.kt              # App density, padding, spacing & standard sizes
+│
+├── printer/                       # 🖨️ ESC/POS Thermal Printing Module
+│   ├── PrinterSetupDialog.kt      # Configures network and Bluetooth receipt printers
+│   ├── BluetoothPrinterManager.kt # Core printer communication & cash drawer kick pulse
+│   └── ThermalBitmapRenderer.kt   # RTL Arabic & Bengali custom bitmap line renderer
 │
 └── util/                          # 🛠️ Utility Functions & Helpers
     ├── PdfReportGenerator.kt      # Vector-based PDF receipt & shift summary builder
+    ├── PdfShareUtils.kt           # Native Android document sharing & opening utility
     ├── LocaleManager.kt           # Runtime language switching & RTL direction support
     └── SecurityUtils.kt           # SHA-256 secret hashing & cryptographic helpers
 ```

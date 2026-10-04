@@ -31,6 +31,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -203,7 +204,7 @@ fun AdminAuthDialog(
                         if (authError != null) authError = null
                     },
                     placeholder = {
-                        Text("Enter Admin PIN or Password", fontSize = 12.5.sp, color = TextDisabledColor)
+                        Text(stringResource(R.string.enter_pin_or_password), style = MaterialTheme.typography.bodySmall, color = TextHintColor)
                     },
                     leadingIcon = {
                         Icon(

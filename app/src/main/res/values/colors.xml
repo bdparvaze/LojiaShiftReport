@@ -55,12 +55,14 @@
     <color name="text_on_primary">#FFFFFFFF</color>
 
     <!-- ============ POS SEMANTIC COLORS (VERY IMPORTANT) ============ -->
-    <color name="cash_green">#FF059669</color>
+    <color name="cash_green">#FF047857</color>
+    <color name="cash_green_fill">#FF059669</color>
     <color name="card_blue">#FF2563EB</color>
-    <color name="due_orange">#FFEA580C</color>
+    <color name="due_orange">#FFC2410C</color>
+    <color name="due_orange_fill">#FFEA580C</color>
     <color name="expense_red">#FFDC2626</color>
     <color name="shortage_red">#FFDC2626</color>
-    <color name="surplus_green">#FF059669</color>
+    <color name="surplus_green">#FF047857</color>
     <color name="variance_neutral">#FF64748B</color>
 
     <!-- ============ CHART COLORS ============ -->

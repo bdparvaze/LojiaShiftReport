@@ -41,18 +41,17 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 
 import java.text.SimpleDateFormat
-
 import java.util.*
 
 object PdfReportGenerator {
     private fun getLocalizedShiftName(language: AppLanguage, shift: String): String {
         val code = language.code
         return when (shift.lowercase()) {
-            "morning" -> TranslationEngine.translate("Morning", code)
-            "evening" -> TranslationEngine.translate("Evening", code)
-            "night" -> TranslationEngine.translate("Night", code)
-            "day" -> TranslationEngine.translate("Day", code)
-            else -> TranslationEngine.translate(shift, code)
+            "morning" -> if (code == "bn") "সকাল" else if (code == "ar") "صباحية" else "Morning"
+            "evening" -> if (code == "bn") "সন্ধ্যা" else if (code == "ar") "مسائية" else "Evening"
+            "night" -> if (code == "bn") "রাত" else if (code == "ar") "ليلية" else "Night"
+            "day" -> if (code == "bn") "দিন" else if (code == "ar") "نهارية" else "Day"
+            else -> shift
         }
     }
 
@@ -609,7 +608,6 @@ object PdfReportGenerator {
         report: ShiftReport,
         businessProfile: BusinessProfile?,
         currency: String,
-        dateFormatter: SimpleDateFormat,
         language: AppLanguage = AppLanguage.fromCode(LanguagePreferences.getLanguage(context))
     ): String {
         val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
@@ -632,7 +630,7 @@ object PdfReportGenerator {
                 appendLine("VAT ID: $vatNo")
             }
             appendLine("${pStr.reportId}: #${report.id.toString().padStart(6, '0')}")
-            appendLine("${pStr.date}: ${dateFormatter.format(Date(report.dateInMillis))}")
+            appendLine("${pStr.date}: ${DateTimeFormatUtils.formatIsoDateTime(report.dateInMillis)}")
             appendLine("${pStr.shift}: ${getLocalizedShiftName(language, report.shift)} | ${pStr.cashier}: ${report.cashierName}")
             appendLine("--------------------------------")
             appendLine("[1. SALES SUMMARY]")
@@ -701,8 +699,6 @@ object PdfReportGenerator {
         var canvas = page.canvas
 
         val currency = MoneyFormat.resolveCurrency(businessProfile?.currency)
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        val dateOnlyFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val pStr = getPdfStrings(context, language)
 
         // Paints (100% PdfPalette tokens)
@@ -838,7 +834,7 @@ object PdfReportGenerator {
         canvas.drawText(context.getString(R.string.pdf_address, businessProfile?.address ?: context.getString(R.string.pdf_default_address)), margin + 14f, currentY + 54f, subheaderTextPaint)
 
         // Right side badge (placed to the left of the logo)
-        val dateGen = context.getString(R.string.pdf_generated_at, dateFormatter.format(Date()))
+        val dateGen = context.getString(R.string.pdf_generated_at, DateTimeFormatUtils.formatIsoDateTime())
         val textWidth = subheaderTextPaint.measureText(dateGen)
         canvas.drawText(dateGen, logoX - textWidth - 12f, currentY + 24f, subheaderTextPaint)
         val entriesCount = context.getString(R.string.pdf_total_records, reports.size)
@@ -908,7 +904,7 @@ object PdfReportGenerator {
                 canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 18f), zebraPaint)
             }
 
-            canvas.drawText(dateOnlyFormatter.format(Date(report.dateInMillis)), colDate, rowY, textPaint)
+            canvas.drawText(DateTimeFormatUtils.formatDateOnly(report.dateInMillis, Locale.US), colDate, rowY, textPaint)
             val truncatedCashier = if (report.cashierName.length > 15) report.cashierName.take(13) + ".." else report.cashierName
             canvas.drawText(truncatedCashier, colCashier, rowY, textPaint)
             canvas.drawText(getLocalizedShiftName(language, report.shift), colShift, rowY, textPaint)
@@ -990,7 +986,7 @@ object PdfReportGenerator {
         pdfDocument.finishPage(page)
 
         // Save to Storage
-        val fileName = "Shift_Summary_Report_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.pdf"
+        val fileName = "Shift_Summary_Report_${DateTimeFormatUtils.formatFileTimestamp()}.pdf"
         return savePdfToStorage(context, pdfDocument, fileName)
     }
 
@@ -1007,7 +1003,6 @@ object PdfReportGenerator {
     ): ExportResult {
         val pStr = getPdfStrings(context, language)
         val currency = MoneyFormat.resolveCurrency(businessProfile?.currency)
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
         val startingCash = extractStartingCashMinor(report)
         val actualCashCount = extractActualCashMinor(report)
@@ -1123,7 +1118,7 @@ object PdfReportGenerator {
         fun drawFooter() {
             val footerY = PAGE_HEIGHT - 22f
             canvas.drawLine(margin, footerY - 8f, PAGE_WIDTH - margin, footerY - 8f, linePaint)
-            val genTimeStr = "${context.getString(R.string.pdf_date)}: ${dateFormatter.format(Date())}"
+            val genTimeStr = "${context.getString(R.string.pdf_date)}: ${DateTimeFormatUtils.formatIsoDateTimeSeconds()}"
             canvas.drawText(genTimeStr, margin, footerY + 2f, secondaryPaint)
             val noticeStr = pStr.computerGeneratedNotice
             val noticeWidth = secondaryPaint.measureText(noticeStr)
@@ -1206,7 +1201,7 @@ object PdfReportGenerator {
         canvas.drawText("${pStr.cashier}: ${report.cashierName}", margin + 12f, currentY + 60f, textBoldPaint)
 
         // Middle Shift info
-        canvas.drawText("${pStr.date}: ${dateFormatter.format(Date(report.dateInMillis))}", margin + 170f, currentY + 20f, textPaint)
+        canvas.drawText("${pStr.date}: ${DateTimeFormatUtils.formatIsoDateTimeSeconds(report.dateInMillis)}", margin + 170f, currentY + 20f, textPaint)
         canvas.drawText(context.getString(R.string.official_digital_verification), margin + 170f, currentY + 40f, secondaryPaint)
 
         // Right QR Container Card
@@ -1220,7 +1215,7 @@ object PdfReportGenerator {
         canvas.drawRoundRect(qrCardBg, 5f, 5f, Paint().apply { color = PdfPalette.SURFACE; style = Paint.Style.FILL; isAntiAlias = true })
         canvas.drawRoundRect(qrCardBg, 5f, 5f, Paint().apply { color = PdfPalette.BORDER; style = Paint.Style.STROKE; strokeWidth = 1f; isAntiAlias = true })
 
-        val qrText = buildShiftReportQrText(context, report, businessProfile, currency, dateFormatter, language)
+        val qrText = buildShiftReportQrText(context, report, businessProfile, currency, language)
         val qrBitmap = generateStyledQrCodeBitmap(qrText, 350)
         if (qrBitmap != null) {
             val qrPadding = 4f

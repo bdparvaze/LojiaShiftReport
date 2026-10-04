@@ -8,7 +8,7 @@
 
 প্রজেক্টটি সফলভাবে রান করার জন্য সিস্টেমে নিম্নলিখিত টুলসগুলো থাকতে হবে:
 
-*   **JDK (Java Development Kit):** JDK 17 রেকমেন্ডেড।
+*   **JDK (Java Development Kit):** JDK 21 রেকমেন্ডেড (Java 21)।
 *   **Android Studio:** Android Studio Koala, Ladybug বা এর পরবর্তী সংস্করণ।
 *   **Gradle:** প্রজেক্টে Gradle Wrapper কনফিগার করা আছে।
 *   **Git:** সোর্স কোড ক্লোন করার জন্য।
@@ -18,11 +18,11 @@
 ## ২. পরিবেশ সেটআপ (Environment Setup)
 
 ### `JAVA_HOME` সেটআপ:
-আপনার সিস্টেমে `JAVA_HOME` ভেরিয়েবলটি JDK 17 এর ডিরেক্টরিতে পয়েন্ট করা থাকতে হবে।
+আপনার সিস্টেমে `JAVA_HOME` ভেরিয়েবলটি JDK 21 এর ডিরেক্টরিতে পয়েন্ট করা থাকতে হবে।
 *   **Windows:** `Environment Variables` থেকে `JAVA_HOME` সেট করুন।
 *   **macOS/Linux:** আপনার `.bashrc` বা `.zshrc` ফাইলে নিচের লাইনটি যোগ করুন:
     ```bash
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
     ```
 
 ### Android SDK সেটআপ:

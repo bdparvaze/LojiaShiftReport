@@ -34,7 +34,7 @@
 
 ## 🛠️ Tech Stack
 
-* **Platform:** Android (minSdk 26, targetSdk 34)
+* **Platform:** Android (minSdk 24, targetSdk 36)
 * **Language:** Kotlin
 * **UI Framework:** Jetpack Compose (Material Design 3)
 * **Local Database:** Room Database (SQLite) with KSP
@@ -64,11 +64,14 @@ com.lojia.shiftreport
 │   ├── PreferencesRepository.kt
 │   └── ShiftReportRepository.kt
 │
-├── report/                        # 📊 Shift Reports, Analytics, Ledgers & PDF Previews
+├── report/                        # 📊 Shift Reports, Analytics, Ledgers & Summaries
 │   ├── DashboardScreen.kt
 │   ├── ShiftReportScreen.kt
 │   ├── ShiftReportLedgerTabs.kt
-│   ├── ShiftReportPreviewDialog.kt
+│   ├── PosReconciliationSummary.kt
+│   ├── ShiftReportComponents.kt
+│   ├── ShiftReportArchivesTab.kt
+│   ├── AddEntryDialog.kt
 │   └── ReportViewModel.kt
 │
 ├── scanner/                       # 📄 Document Scanner, OCR, Word Export & PDF Security
@@ -78,7 +81,7 @@ com.lojia.shiftreport
 │   ├── DocumentScannerViewModel.kt
 │   ├── OcrTextExtractor.kt
 │   ├── DocxExporter.kt
-│   └── ScannedDocument.kt
+│   └── PdfProtector.kt
 │
 ├── settings/                      # ⚙️ Store Profile, Cashiers, Backup, Currency & Language
 │   ├── SettingsReportSection.kt
@@ -88,15 +91,23 @@ com.lojia.shiftreport
 ├── ui/                            # 🎨 Theme, Typography, Reusable UI Components
 │   ├── common/
 │   │   ├── LojiaTextField.kt
+│   │   ├── LojiaDialog.kt
 │   │   ├── AppDrawer.kt
 │   │   └── Components.kt
 │   └── theme/
 │       ├── Color.kt
 │       ├── Theme.kt
-│       └── Type.kt
+│       ├── Type.kt
+│       └── Dimens.kt
 │
-└── util/                          # 🛠️ Utilities (PDF Generator, Security, Locale)
+├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps
+│   ├── PrinterSetupDialog.kt
+│   ├── BluetoothPrinterManager.kt
+│   └── ThermalBitmapRenderer.kt
+│
+└── util/                          # 🛠️ Utilities (PDF Generator, Sharing, Locale)
     ├── PdfReportGenerator.kt
+    ├── PdfShareUtils.kt
     ├── LocaleManager.kt
     └── SecurityUtils.kt
 ```

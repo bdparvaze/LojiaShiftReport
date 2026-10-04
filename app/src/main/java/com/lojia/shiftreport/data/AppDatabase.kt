@@ -27,18 +27,16 @@ import kotlinx.coroutines.launch
         AppSetting::class,
         ShiftSession::class,
         CashMovement::class,
-        TranslationCacheEntity::class,
         ShopReceiptConfig::class,
         ScannedDocument::class,
         SavedAddress::class
     ],
-    version = 15,
-    exportSchema = false
+    version = 16,
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun reportDao(): ReportDao
-    abstract fun translationDao(): TranslationDao
     abstract fun documentScannerDao(): DocumentScannerDao
     abstract fun savedAddressDao(): SavedAddressDao
 
@@ -369,7 +367,7 @@ abstract class AppDatabase : RoomDatabase() {
             cursorDrafts.close()
         }
 
-        private fun migrateJsonArraySingleAmount(jsonStr: String?): String {
+        internal fun migrateJsonArraySingleAmount(jsonStr: String?): String {
             if (jsonStr.isNullOrBlank()) return "[]"
             return try {
                 val arr = org.json.JSONArray(jsonStr)
@@ -387,7 +385,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private fun migrateJsonArrayPurchased(jsonStr: String?): String {
+        internal fun migrateJsonArrayPurchased(jsonStr: String?): String {
             if (jsonStr.isNullOrBlank()) return "[]"
             return try {
                 val arr = org.json.JSONArray(jsonStr)
@@ -408,6 +406,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `translation_cache` ")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val builder = Room.databaseBuilder(
@@ -419,9 +423,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
                     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
                     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
-                    MIGRATION_13_14, MIGRATION_14_15
+                    MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16
                 )
-                .fallbackToDestructiveMigrationOnDowngrade()
 
                 builder.addCallback(DatabaseCallback(scope) { INSTANCE })
                 val instance = builder.build()
@@ -431,7 +434,12 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         fun getInstance(context: Context): AppDatabase {
-            return INSTANCE ?: getDatabase(context, CoroutineScope(Dispatchers.IO + SupervisorJob()))
+            return try {
+                INSTANCE ?: getDatabase(context, CoroutineScope(Dispatchers.IO + SupervisorJob()))
+            } catch (e: Exception) {
+                android.util.Log.e("AppDatabase", "Database initialization or downgrade failure (data preserved): ${e.message}", e)
+                throw e
+            }
         }
     }
 

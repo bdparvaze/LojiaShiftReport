@@ -26,6 +26,8 @@ gen/
 
 # Local configuration files
 local.properties
+.env
+*.keystore.properties
 # gradle.properties # Optional: Uncomment to ignore global gradle properties
 
 # Python artifacts

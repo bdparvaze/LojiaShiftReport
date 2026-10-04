@@ -125,6 +125,7 @@ object MoneyFormat {
     /**
      * Safely adds multiple monetary values using BigDecimal precision.
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("addMinor"))
     fun add(vararg values: Double): Double {
         var total = java.math.BigDecimal.ZERO
         for (v in values) {
@@ -136,6 +137,7 @@ object MoneyFormat {
     /**
      * Safely adds a collection of monetary values using BigDecimal precision.
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("sumOfMinor"))
     fun sumOf(values: Iterable<Double>): Double {
         var total = java.math.BigDecimal.ZERO
         for (v in values) {
@@ -147,6 +149,7 @@ object MoneyFormat {
     /**
      * Safely subtracts b from a using BigDecimal precision.
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("subtractMinor"))
     fun subtract(a: Double, b: Double): Double {
         return java.math.BigDecimal.valueOf(a)
             .subtract(java.math.BigDecimal.valueOf(b))
@@ -157,6 +160,7 @@ object MoneyFormat {
     /**
      * Safely multiplies a by b using BigDecimal precision.
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("multiplyMinor"))
     fun multiply(a: Double, b: Double): Double {
         return java.math.BigDecimal.valueOf(a)
             .multiply(java.math.BigDecimal.valueOf(b))
@@ -168,6 +172,7 @@ object MoneyFormat {
      * Safely calculates expected cash in drawer using BigDecimal arithmetic:
      * Expected Cash = Starting Cash + Cash Sales + Pay In - Pay Out - Sales Returns
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("calculateExpectedCashMinor"))
     fun calculateExpectedCash(
         startingCash: Double,
         cashSales: Double,
@@ -190,6 +195,7 @@ object MoneyFormat {
      * Safely calculates cash variance (discrepancy) using BigDecimal arithmetic:
      * Variance = Actual Cash - Expected Cash
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("calculateVarianceMinor"))
     fun calculateVariance(actualCash: Double, expectedCash: Double): Double {
         return java.math.BigDecimal.valueOf(actualCash)
             .subtract(java.math.BigDecimal.valueOf(expectedCash))
@@ -200,6 +206,7 @@ object MoneyFormat {
     /**
      * Safely calculates tax using BigDecimal precision and HALF_UP 2-decimal rounding.
      */
+    @Deprecated("Use Long-based minor unit API instead", ReplaceWith("calculateTaxMinor"))
     fun calculateTax(amount: Double, taxRatePercent: Double, isTaxInclusive: Boolean): Double {
         if (taxRatePercent <= 0.0 || amount <= 0.0) return 0.0
         val amtBD = java.math.BigDecimal.valueOf(amount)

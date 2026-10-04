@@ -20,8 +20,8 @@ class FirebaseCloudSyncWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val appContext = applicationContext
 
-        // Only proceed if cloud sync is enabled by the user in Settings
-        if (!FirebaseCloudSyncManager.isSyncEnabled(appContext)) {
+        // Only proceed if cloud sync is enabled in BuildConfig and by the user in Settings
+        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED || !FirebaseCloudSyncManager.isSyncEnabled(appContext)) {
             Log.d(TAG, "Cloud sync is disabled. Worker exiting early.")
             return@withContext Result.success(workDataOf("status" to "DISABLED"))
         }

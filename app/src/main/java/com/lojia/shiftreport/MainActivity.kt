@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.AppModule
 import com.lojia.shiftreport.data.ShiftReport
-import com.lojia.shiftreport.util.TranslationEngine
-import com.lojia.shiftreport.util.UniversalLocalizationProvider
 
 import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
@@ -82,9 +80,6 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
         val appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(savedLang)
         androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
         enableEdgeToEdge()
-
-        // Initialize Universal Real-Time Translation Engine
-        TranslationEngine.init(applicationContext)
 
         // Schedule periodic background shift report sync via WorkManager
         com.lojia.shiftreport.util.ShiftReportSyncScheduler.schedulePeriodicSync(
@@ -135,9 +130,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val scope = rememberCoroutineScope()
 
-            UniversalLocalizationProvider(currentLanguage = currentLanguage) {
-                LojiaTheme {
-                    if (!isAuthenticated) {
+            LojiaTheme {
+                if (!isAuthenticated) {
                         BiometricLockScreen(
                             activity = this@MainActivity,
                             userProfile = userProfile,
@@ -255,16 +249,16 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                             ) {
                                                                 Icon(
                                                                     imageVector = Icons.Default.Menu,
-                                                                    contentDescription = rememberTranslatedString(stringResource(R.string.title_drawer_menu)),
+                                                                    contentDescription = stringResource(R.string.title_drawer_menu),
                                                                     tint = PureWhite
                                                                 )
                                                             }
                                                             Spacer(modifier = Modifier.width(4.dp))
-                                                            DynamicText(
+                                                            Text(
                                                                 text = screenTitle,
                                                                 color = PureWhite,
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = 18.sp,
+                                                                style = MaterialTheme.typography.headlineSmall,
                                                                 maxLines = 1,
                                                                 modifier = Modifier.weight(1f, fill = false)
                                                             )
@@ -310,7 +304,6 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                 }
             }
         }
-    }
 
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
@@ -320,7 +313,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
     private fun handleAuthIntent(intent: android.content.Intent?) {
         val uri = intent?.data ?: return
         if (uri.scheme == "com.lojia.shiftreport" && uri.host == "oauth2callback") {
-            reportViewModel.handleDriveAuthRedirect(uri)
+            val state = uri.getQueryParameter("state")
+            reportViewModel.handleDriveAuthRedirect(uri, state)
         }
     }
 }

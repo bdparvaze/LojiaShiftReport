@@ -896,8 +896,8 @@
     <string name="cashier_label_fmt">الكاشير: %s</string>
     <string name="ticket_number_fmt">تذكرة #%d</string>
     <string name="items_count_and_customer_fmt">%1$d عناصر • %2$s</string>
-    <string name="shift_report_title_fmt">Shift Report - %s</string>
-    <string name="tax_invoice_title_fmt">Tax Invoice #%s</string>
+    <string name="shift_report_title_fmt">تقرير الوردية - %s</string>
+    <string name="tax_invoice_title_fmt">Tax Invoice / فاتورة ضريبية #%s</string>
     <string name="payment_success">تم الدفع بنجاح</string>
     <string name="auto_calculated_financial_summary">تقرير تلقائي للمبيعات، التدفقات النقدية والبنكية، الديون، المصروفات ومشتريات المنتجات</string>
     <string name="bank_mada_fmt">البنك / مدى: %1$s %2$s</string>
@@ -1116,9 +1116,11 @@
     <string name="firebase_sync_conflict_note">معالجة التعارض: الطابع الزمني لآخر تحديث (تبقى قاعدة بيانات روم المصدر الأساسي)</string>
     <string name="firebase_sync_security_note">ضمان الخصوصية: لا تتم مزامنة كلمات المرور أو أرقام PIN مع السحابة نهائياً</string>
     <string name="firebase_sync_project_id">مشروع فايربيز: %s</string>
-    <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
-    <string name="document_scanner">ماسح المستندات الضوئي</string>
-    <string name="doc_scanner_title">ماسح المستندات الضوئي</string>
+    <string name="firebase_sync_summary" formatted="false">تمت مزامنة المنتجات والفئات والتقارير والمبيعات</string>
+    <string name="cloud_sync_not_available">المزامنة السحابية غير متوفرة في هذا الإصدار</string>
+    <string name="cloud_sync_signin_required">المزامنة السحابية غير متاحة — تسجيل الدخول مطلوب</string>
+    <string name="document_scanner">الماسح الضوئي</string>
+    <string name="doc_scanner_title">الماسح الضوئي</string>
     <string name="doc_scanner_desc">مسح الفواتير والإيصالات والعقود ضوئياً باستخدام ML Kit</string>
     <string name="scan_now">مسح مستند ضوئياً</string>
     <string name="scan_with_camera_fallback">المسح بواسطة الكاميرا (بديل)</string>
@@ -1496,4 +1498,9 @@
     <string name="printer_test_receipt_msg">نجحت طباعة الاختبار</string>
     <string name="printer_test_receipt_operational">اتصال الطابعة يعمل بنجاح!</string>
     <string name="print_btn">طباعة</string>
+    <string name="action_confirm">تأكيد</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="printer_btn_test_drawer">اختبار درج النقد</string>
+    <string name="printer_test_drawer_admin_desc">يلزم مصادقة المسؤول لاختبار فتح درج النقد.</string>
+    <string name="printer_drawer_kick_success">تم إرسال إشارة فتح درج النقد!</string>
 </resources>

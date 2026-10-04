@@ -709,7 +709,7 @@ fun SecurityPinModal(
 
                     // Primary title
                     if (title != null) {
-                        AutoText(
+                        Text(
                             text = title,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
@@ -717,8 +717,8 @@ fun SecurityPinModal(
                             textAlign = TextAlign.Center
                         )
                     } else {
-                        AutoText(
-                            id = R.string.confirm_pin_number,
+                        Text(
+                            text = stringResource(R.string.confirm_pin_number),
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
                             color = OnBackgroundLight,
@@ -750,8 +750,8 @@ fun SecurityPinModal(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                AutoText(
-                                    id = R.string.switch_to,
+                                Text(
+                                    text = stringResource(R.string.switch_to),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = TextHintColor
@@ -764,8 +764,8 @@ fun SecurityPinModal(
                                     modifier = Modifier.size(15.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                AutoText(
-                                    id = targetNameRes,
+                                Text(
+                                    text = stringResource(targetNameRes),
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = accentColor
@@ -774,7 +774,7 @@ fun SecurityPinModal(
                         }
                     } else if (!subtitle.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(6.dp))
-                        AutoText(
+                        Text(
                             text = subtitle,
                             fontSize = 13.sp,
                             color = TextSecondaryLight,
@@ -853,7 +853,7 @@ fun SecurityPinModal(
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(5.dp))
-                            AutoText(
+                            Text(
                                 text = errorMsg ?: "",
                                 color = ErrorRedLight,
                                 fontSize = 12.5.sp,
@@ -1002,7 +1002,7 @@ fun SecurityPinModal(
                                                                 fontWeight = FontWeight.Bold,
                                                                 fontSize = 8.5.sp,
                                                                 letterSpacing = 1.sp,
-                                                                color = TextDisabledColor
+                                                                color = TextHintColor
                                                             )
                                                         }
                                                     }
@@ -1025,8 +1025,8 @@ fun SecurityPinModal(
                             .defaultMinSize(minHeight = 42.dp)
                             .testTag("btn_cancel_pin_auth")
                     ) {
-                        AutoText(
-                            id = R.string.cancel_18,
+                        Text(
+                            text = stringResource(R.string.cancel_18),
                             color = TextHintColor,
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Medium
@@ -1102,7 +1102,7 @@ fun LoyverseMenuItemRow(
                 Icon(
                     imageVector = Icons.Filled.ChevronRight,
                     contentDescription = null,
-                    tint = TextDisabledColor,
+                    tint = TextHintColor,
                     modifier = Modifier.size(20.dp)
                 )
             }

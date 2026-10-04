@@ -1117,8 +1117,10 @@
     <string name="firebase_sync_security_note">Privacy Guarantee: Passwords and PIN hashes are never synced to the cloud</string>
     <string name="firebase_sync_project_id">Firebase Project: %s</string>
     <string name="firebase_sync_summary" formatted="false">Synced products, categories, reports and sales</string>
-    <string name="document_scanner">Document Scanner</string>
-    <string name="doc_scanner_title">Document Scanner</string>
+    <string name="cloud_sync_not_available">Cloud sync is not available in this version</string>
+    <string name="cloud_sync_signin_required">Cloud sync unavailable — sign-in required</string>
+    <string name="document_scanner">Scanner</string>
+    <string name="doc_scanner_title">Scanner</string>
     <string name="doc_scanner_desc">Scan invoices, receipts, and contracts with ML Kit</string>
     <string name="scan_now">Scan Document</string>
     <string name="scan_with_camera_fallback">Scan with Camera (Fallback)</string>
@@ -1496,4 +1498,9 @@
     <string name="printer_test_receipt_msg">TEST PRINT SUCCESSFUL</string>
     <string name="printer_test_receipt_operational">Printer connection operational!</string>
     <string name="print_btn">Print</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="printer_btn_test_drawer">Test Cash Drawer</string>
+    <string name="printer_test_drawer_admin_desc">Admin authentication required to test opening the cash drawer.</string>
+    <string name="printer_drawer_kick_success">Cash drawer kick signal sent!</string>
 </resources>

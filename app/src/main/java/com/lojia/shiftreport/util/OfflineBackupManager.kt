@@ -14,7 +14,6 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.text.SimpleDateFormat
 import java.util.*
 
 data class BackupInfo(
@@ -57,7 +56,7 @@ object OfflineBackupManager {
         val rootJson = JSONObject()
         rootJson.put("app", "Lojia Shift Report")
         rootJson.put("version", 1)
-        rootJson.put("exportDate", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date()))
+        rootJson.put("exportDate", DateTimeFormatUtils.formatIsoDateTimeSeconds())
         rootJson.put("timestamp", System.currentTimeMillis())
         rootJson.put("isCloudBackup", isCloudBackup)
 
@@ -163,49 +162,14 @@ object OfflineBackupManager {
         // Shift Reports
         val shiftReportsArr = JSONArray()
         shiftReports.forEach { r ->
-            shiftReportsArr.put(JSONObject().apply {
-                put("id", r.id)
-                put("cashierName", r.cashierName)
-                put("shift", r.shift)
-                put("dateInMillis", r.dateInMillis)
-                put("grossCash", r.grossCash)
-                put("madaPayments", r.madaPayments)
-                put("digitalWallet", r.digitalWallet)
-                put("staffMealsCount", r.staffMealsCount)
-                put("totalExpenses", r.totalExpenses)
-                put("muasselQty", r.muasselQty)
-                put("outdoorShishaQty", r.outdoorShishaQty)
-                put("dueCreditEntriesJson", r.dueCreditEntriesJson)
-                put("previousDueCollectionsJson", r.previousDueCollectionsJson)
-                put("staffAdvancesJson", r.staffAdvancesJson)
-                put("unpaidBillsJson", r.unpaidBillsJson)
-                put("purchasedItemsJson", r.purchasedItemsJson)
-                put("notes", r.notes)
-            })
+            shiftReportsArr.put(shiftReportToJson(r))
         }
         rootJson.put("shiftReports", shiftReportsArr)
 
         // Shift Sessions
         val shiftSessionsArr = JSONArray()
         shiftSessions.forEach { ss ->
-            shiftSessionsArr.put(JSONObject().apply {
-                put("id", ss.id)
-                put("cashierName", ss.cashierName)
-                put("shiftName", ss.shiftName)
-                put("status", ss.status)
-                put("openedAt", ss.openedAt)
-                if (ss.closedAt != null) put("closedAt", ss.closedAt)
-                put("startingCash", ss.startingCash)
-                put("cashSales", ss.cashSales)
-                put("cardSales", ss.cardSales)
-                put("digitalSales", ss.digitalSales)
-                put("totalPayIn", ss.totalPayIn)
-                put("totalPayOut", ss.totalPayOut)
-                put("expectedCash", ss.expectedCash)
-                put("actualCashCount", ss.actualCashCount)
-                put("variance", ss.variance)
-                put("notes", ss.notes)
-            })
+            shiftSessionsArr.put(shiftSessionToJson(ss))
         }
         rootJson.put("shiftSessions", shiftSessionsArr)
 
@@ -250,7 +214,7 @@ object OfflineBackupManager {
             val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = false)
             val jsonBytes = jsonString.toByteArray(Charsets.UTF_8)
 
-            val timeStampStr = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US).format(Date())
+            val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
             val fileName = "Lojia_ShiftReport_Backup_$timeStampStr.json"
 
             var savedUri: Uri? = null
@@ -362,6 +326,134 @@ object OfflineBackupManager {
         }
     }
 
+    fun getMoneyVal(obj: JSONObject, key: String, defaultMinorVal: Long = 0L, isLegacy: Boolean = false): Long {
+        if (!obj.has(key) || obj.isNull(key)) return defaultMinorVal
+        return if (isLegacy) {
+            val value = obj.optDouble(key, MoneyFormat.toMajorUnits(defaultMinorVal))
+            MoneyFormat.toMinorUnits(value)
+        } else {
+            obj.optLong(key, defaultMinorVal)
+        }
+    }
+
+    fun shiftReportToJson(r: ShiftReport): JSONObject = JSONObject().apply {
+        put("id", r.id)
+        put("cashierName", r.cashierName)
+        put("shift", r.shift)
+        put("dateInMillis", r.dateInMillis)
+        put("openingCash", r.openingCash)
+        put("closingCash", r.closingCash)
+        put("grossCash", r.grossCash)
+        put("madaPayments", r.madaPayments)
+        put("digitalWallet", r.digitalWallet)
+        put("totalDiscounts", r.totalDiscounts)
+        put("salesReturns", r.salesReturns)
+        put("staffMealsCount", r.staffMealsCount)
+        put("totalExpenses", r.totalExpenses)
+        put("muasselQty", r.muasselQty)
+        put("outdoorShishaQty", r.outdoorShishaQty)
+        put("dueCreditEntriesJson", r.dueCreditEntriesJson)
+        put("previousDueCollectionsJson", r.previousDueCollectionsJson)
+        put("staffAdvancesJson", r.staffAdvancesJson)
+        put("unpaidBillsJson", r.unpaidBillsJson)
+        put("purchasedItemsJson", r.purchasedItemsJson)
+        put("notes", r.notes)
+        put("isLocked", r.isLocked)
+        if (r.managerSignedBy != null) put("managerSignedBy", r.managerSignedBy)
+        if (r.managerSignTime != null) put("managerSignTime", r.managerSignTime)
+    }
+
+    fun jsonToShiftReport(obj: JSONObject, isLegacyBackup: Boolean = false): ShiftReport {
+        val rawDueCredit = obj.optString("dueCreditEntriesJson", "[]")
+        val rawPrevDue = obj.optString("previousDueCollectionsJson", "[]")
+        val rawStaff = obj.optString("staffAdvancesJson", "[]")
+        val rawUnpaid = obj.optString("unpaidBillsJson", "[]")
+        val rawPurchased = obj.optString("purchasedItemsJson", "[]")
+
+        val dueCreditJson = if (isLegacyBackup) AppDatabase.migrateJsonArraySingleAmount(rawDueCredit) else rawDueCredit
+        val prevDueJson = if (isLegacyBackup) AppDatabase.migrateJsonArraySingleAmount(rawPrevDue) else rawPrevDue
+        val staffJson = if (isLegacyBackup) AppDatabase.migrateJsonArraySingleAmount(rawStaff) else rawStaff
+        val unpaidJson = if (isLegacyBackup) AppDatabase.migrateJsonArraySingleAmount(rawUnpaid) else rawUnpaid
+        val purchasedJson = if (isLegacyBackup) AppDatabase.migrateJsonArrayPurchased(rawPurchased) else rawPurchased
+
+        return ShiftReport(
+            id = obj.optInt("id", 0),
+            cashierName = obj.optString("cashierName", "Staff"),
+            shift = obj.optString("shift", "Day"),
+            dateInMillis = obj.optLong("dateInMillis", 0L),
+            openingCash = getMoneyVal(obj, "openingCash", 0L, isLegacyBackup),
+            closingCash = getMoneyVal(obj, "closingCash", 0L, isLegacyBackup),
+            grossCash = getMoneyVal(obj, "grossCash", 0L, isLegacyBackup),
+            madaPayments = getMoneyVal(obj, "madaPayments", 0L, isLegacyBackup),
+            digitalWallet = getMoneyVal(obj, "digitalWallet", 0L, isLegacyBackup),
+            totalDiscounts = getMoneyVal(obj, "totalDiscounts", 0L, isLegacyBackup),
+            salesReturns = getMoneyVal(obj, "salesReturns", 0L, isLegacyBackup),
+            staffMealsCount = obj.optInt("staffMealsCount", 0),
+            totalExpenses = getMoneyVal(obj, "totalExpenses", 0L, isLegacyBackup),
+            muasselQty = obj.optDouble("muasselQty", 0.0),
+            outdoorShishaQty = obj.optDouble("outdoorShishaQty", 0.0),
+            dueCreditEntriesJson = dueCreditJson,
+            previousDueCollectionsJson = prevDueJson,
+            staffAdvancesJson = staffJson,
+            unpaidBillsJson = unpaidJson,
+            purchasedItemsJson = purchasedJson,
+            notes = obj.optString("notes", ""),
+            isLocked = obj.optBoolean("isLocked", false),
+            managerSignedBy = if (obj.has("managerSignedBy") && !obj.isNull("managerSignedBy")) obj.getString("managerSignedBy") else null,
+            managerSignTime = if (obj.has("managerSignTime") && !obj.isNull("managerSignTime")) obj.getLong("managerSignTime") else null
+        )
+    }
+
+    fun shiftSessionToJson(ss: ShiftSession): JSONObject = JSONObject().apply {
+        put("id", ss.id)
+        put("cashierName", ss.cashierName)
+        put("shiftName", ss.shiftName)
+        put("status", ss.status)
+        put("openedAt", ss.openedAt)
+        if (ss.closedAt != null) put("closedAt", ss.closedAt)
+        put("startingCash", ss.startingCash)
+        put("cashSales", ss.cashSales)
+        put("cardSales", ss.cardSales)
+        put("digitalSales", ss.digitalSales)
+        put("totalDiscounts", ss.totalDiscounts)
+        put("salesReturns", ss.salesReturns)
+        put("totalPayIn", ss.totalPayIn)
+        put("totalPayOut", ss.totalPayOut)
+        put("expectedCash", ss.expectedCash)
+        put("actualCashCount", ss.actualCashCount)
+        put("variance", ss.variance)
+        put("notes", ss.notes)
+        put("isLocked", ss.isLocked)
+        if (ss.managerSignedBy != null) put("managerSignedBy", ss.managerSignedBy)
+        if (ss.managerSignTime != null) put("managerSignTime", ss.managerSignTime)
+    }
+
+    fun jsonToShiftSession(obj: JSONObject, isLegacyBackup: Boolean = false): ShiftSession {
+        return ShiftSession(
+            id = obj.optInt("id", 0),
+            cashierName = obj.optString("cashierName", "Staff"),
+            shiftName = obj.optString("shiftName", "Morning"),
+            status = obj.optString("status", "OPEN"),
+            openedAt = obj.optLong("openedAt", 0L),
+            closedAt = if (obj.has("closedAt") && !obj.isNull("closedAt")) obj.getLong("closedAt") else null,
+            startingCash = getMoneyVal(obj, "startingCash", 50000L, isLegacyBackup),
+            cashSales = getMoneyVal(obj, "cashSales", 0L, isLegacyBackup),
+            cardSales = getMoneyVal(obj, "cardSales", 0L, isLegacyBackup),
+            digitalSales = getMoneyVal(obj, "digitalSales", 0L, isLegacyBackup),
+            totalDiscounts = getMoneyVal(obj, "totalDiscounts", 0L, isLegacyBackup),
+            salesReturns = getMoneyVal(obj, "salesReturns", 0L, isLegacyBackup),
+            totalPayIn = getMoneyVal(obj, "totalPayIn", 0L, isLegacyBackup),
+            totalPayOut = getMoneyVal(obj, "totalPayOut", 0L, isLegacyBackup),
+            expectedCash = getMoneyVal(obj, "expectedCash", 50000L, isLegacyBackup),
+            actualCashCount = getMoneyVal(obj, "actualCashCount", 0L, isLegacyBackup),
+            variance = getMoneyVal(obj, "variance", 0L, isLegacyBackup),
+            notes = obj.optString("notes", ""),
+            isLocked = obj.optBoolean("isLocked", false),
+            managerSignedBy = if (obj.has("managerSignedBy") && !obj.isNull("managerSignedBy")) obj.getString("managerSignedBy") else null,
+            managerSignTime = if (obj.has("managerSignTime") && !obj.isNull("managerSignTime")) obj.getLong("managerSignTime") else null
+        )
+    }
+
     suspend fun restoreBackupFromString(
         jsonString: String,
         database: AppDatabase,
@@ -372,15 +464,6 @@ object OfflineBackupManager {
             val root = JSONObject(jsonString)
             val schemaVersion = root.optInt("schemaVersion", 1)
             val isLegacyBackup = schemaVersion < 15
-
-            fun getMoneyVal(obj: JSONObject, key: String, defaultVal: Double = 0.0): Long {
-                val value = obj.optDouble(key, defaultVal)
-                return if (isLegacyBackup) {
-                    MoneyFormat.toMinorUnits(value)
-                } else {
-                    value.toLong()
-                }
-            }
 
             val reportDao = database.reportDao()
 
@@ -522,29 +605,7 @@ object OfflineBackupManager {
                 val list = mutableListOf<ShiftReport>()
                 for (i in 0 until reportsArr.length()) {
                     val obj = reportsArr.getJSONObject(i)
-                    list.add(
-                        ShiftReport(
-                            id = obj.optInt("id", 0),
-                            cashierName = obj.getString("cashierName"),
-                            shift = obj.getString("shift"),
-                            dateInMillis = obj.getLong("dateInMillis"),
-                            openingCash = getMoneyVal(obj, "openingCash", 0.0),
-                            closingCash = getMoneyVal(obj, "closingCash", 0.0),
-                            grossCash = getMoneyVal(obj, "grossCash"),
-                            madaPayments = getMoneyVal(obj, "madaPayments"),
-                            digitalWallet = getMoneyVal(obj, "digitalWallet", 0.0),
-                            staffMealsCount = obj.optInt("staffMealsCount", 0),
-                            totalExpenses = getMoneyVal(obj, "totalExpenses", 0.0),
-                            muasselQty = obj.optDouble("muasselQty", 0.0),
-                            outdoorShishaQty = obj.optDouble("outdoorShishaQty", 0.0),
-                            dueCreditEntriesJson = obj.optString("dueCreditEntriesJson", "[]"),
-                            previousDueCollectionsJson = obj.optString("previousDueCollectionsJson", "[]"),
-                            staffAdvancesJson = obj.optString("staffAdvancesJson", "[]"),
-                            unpaidBillsJson = obj.optString("unpaidBillsJson", "[]"),
-                            purchasedItemsJson = obj.optString("purchasedItemsJson", "[]"),
-                            notes = obj.optString("notes", "")
-                        )
-                    )
+                    list.add(jsonToShiftReport(obj, isLegacyBackup))
                 }
                 reportDao.insertShiftReports(list)
                 restoredCount += list.size
@@ -556,26 +617,7 @@ object OfflineBackupManager {
                 val list = mutableListOf<ShiftSession>()
                 for (i in 0 until sessionsArr.length()) {
                     val obj = sessionsArr.getJSONObject(i)
-                    list.add(
-                        ShiftSession(
-                            id = obj.optInt("id", 0),
-                            cashierName = obj.getString("cashierName"),
-                            shiftName = obj.getString("shiftName"),
-                            status = obj.optString("status", "OPEN"),
-                            openedAt = obj.getLong("openedAt"),
-                            closedAt = if (obj.has("closedAt")) obj.getLong("closedAt") else null,
-                            startingCash = getMoneyVal(obj, "startingCash"),
-                            cashSales = getMoneyVal(obj, "cashSales"),
-                            cardSales = getMoneyVal(obj, "cardSales"),
-                            digitalSales = getMoneyVal(obj, "digitalSales"),
-                            totalPayIn = getMoneyVal(obj, "totalPayIn"),
-                            totalPayOut = getMoneyVal(obj, "totalPayOut"),
-                            expectedCash = getMoneyVal(obj, "expectedCash"),
-                            actualCashCount = getMoneyVal(obj, "actualCashCount"),
-                            variance = getMoneyVal(obj, "variance"),
-                            notes = obj.optString("notes", "")
-                        )
-                    )
+                    list.add(jsonToShiftSession(obj, isLegacyBackup))
                 }
                 reportDao.insertShiftSessions(list)
                 restoredCount += list.size
@@ -593,7 +635,7 @@ object OfflineBackupManager {
                             shiftSessionId = obj.getInt("shiftSessionId"),
                             cashierName = obj.getString("cashierName"),
                             type = obj.getString("type"),
-                            amount = getMoneyVal(obj, "amount"),
+                            amount = getMoneyVal(obj, "amount", 0L, isLegacyBackup),
                             reason = obj.optString("reason", ""),
                             timestamp = obj.optLong("timestamp", System.currentTimeMillis())
                         )

@@ -270,8 +270,8 @@ fun SettingsReportSection(
                             Icon(Icons.Outlined.Assessment, contentDescription = null, tint = PureWhite, modifier = Modifier.size(20.dp))
                         }
                         Column {
-                            AutoText(id = R.string.daily_shift_report, fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = OnSurfaceLight)
-                            AutoText(id = R.string.audit_drawer_cash_create, fontSize = 11.5.sp, color = OnSurfaceVariantLight)
+                            Text(stringResource(R.string.daily_shift_report), fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = OnSurfaceLight)
+                            Text(stringResource(R.string.audit_drawer_cash_create), fontSize = 11.5.sp, color = OnSurfaceVariantLight)
                         }
                     }
                     Button(
@@ -280,7 +280,7 @@ fun SettingsReportSection(
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        AutoText(id = R.string.open_2, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.open_2), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -293,8 +293,8 @@ fun SettingsReportSection(
             // 0. ROOT / ALL SETTINGS HUB (Overview of all Shift Report Settings)
             // =================================================================
             "root", "all", "overview" -> {
-                AutoText(
-                    id = R.string.staff_admin_section,
+                Text(
+                    text = stringResource(R.string.staff_admin_section),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextHintColor,
@@ -315,8 +315,8 @@ fun SettingsReportSection(
                     onClick = { reportViewModel.selectReportSettingsMenu("cashiers") }
                 )
 
-                AutoText(
-                    id = R.string.security_data_section,
+                Text(
+                    text = stringResource(R.string.security_data_section),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextHintColor,
@@ -344,8 +344,8 @@ fun SettingsReportSection(
                     onClick = onConfigurePrinterClick
                 )
 
-                AutoText(
-                    id = R.string.regional_interface_section,
+                Text(
+                    text = stringResource(R.string.regional_interface_section),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextHintColor,
@@ -363,8 +363,8 @@ fun SettingsReportSection(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                 )
 
-                AutoText(
-                    id = R.string.system_support_section,
+                Text(
+                    text = stringResource(R.string.system_support_section),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextHintColor,
@@ -938,81 +938,109 @@ fun SettingsReportSection(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Icon(
                                         imageVector = Icons.Outlined.CloudSync,
                                         contentDescription = null,
-                                        tint = OnSurfaceVariantLight,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(LojiaDimens.IconSize)
                                     )
                                     Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
                                     Column {
                                         Text(
                                             text = stringResource(R.string.firebase_sync_title),
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = OnSurfaceLight
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                                         Text(
-                                            text = if (firebaseSyncState.lastSyncTimestamp > 0L) {
-                                                stringResource(R.string.firebase_sync_last_time, FirebaseCloudSyncManager.formatSyncTime(firebaseSyncState.lastSyncTimestamp))
-                                            } else {
-                                                stringResource(R.string.firebase_sync_never)
-                                            },
-                                            fontSize = 13.sp,
-                                            color = OnSurfaceVariantLight
+                                            text = stringResource(R.string.cloud_sync_not_available),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
-
-                                Switch(
-                                    checked = firebaseSyncState.isEnabled,
-                                    onCheckedChange = { isChecked ->
-                                        reportViewModel.toggleFirebaseCloudSync(isChecked)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = PureWhite,
-                                        checkedTrackColor = PrimaryIndigoLight,
-                                        uncheckedThumbColor = PureWhite,
-                                        uncheckedTrackColor = OutlineLight
-                                    )
-                                )
-                            }
-
-                            if (firebaseSyncState.isEnabled) {
+                            } else {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(
-                                        text = if (firebaseSyncState.isSyncing) "Syncing in background..." else firebaseSyncState.statusMessage,
-                                        fontSize = 12.sp,
-                                        color = if (firebaseSyncState.isSyncing) InfoBlue else SuccessGreen
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.CloudSync,
+                                            contentDescription = null,
+                                            tint = OnSurfaceVariantLight,
+                                            modifier = Modifier.size(LojiaDimens.IconSize)
+                                        )
+                                        Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.firebase_sync_title),
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = OnSurfaceLight
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = if (firebaseSyncState.lastSyncTimestamp > 0L) {
+                                                    stringResource(R.string.firebase_sync_last_time, FirebaseCloudSyncManager.formatSyncTime(firebaseSyncState.lastSyncTimestamp))
+                                                } else {
+                                                    stringResource(R.string.firebase_sync_never)
+                                                },
+                                                fontSize = 13.sp,
+                                                color = OnSurfaceVariantLight
+                                            )
+                                        }
+                                    }
 
-                                    Button(
-                                        onClick = { reportViewModel.syncFirebaseNow() },
-                                        enabled = !firebaseSyncState.isSyncing,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = PrimaryIndigoLight,
-                                            contentColor = PureWhite
-                                        ),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                        shape = RoundedCornerShape(8.dp)
+                                    Switch(
+                                        checked = firebaseSyncState.isEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            reportViewModel.toggleFirebaseCloudSync(isChecked)
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = PureWhite,
+                                            checkedTrackColor = PrimaryIndigoLight,
+                                            uncheckedThumbColor = PureWhite,
+                                            uncheckedTrackColor = OutlineLight
+                                        )
+                                    )
+                                }
+
+                                if (firebaseSyncState.isEnabled) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        if (firebaseSyncState.isSyncing) {
-                                            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = PureWhite)
-                                        } else {
-                                            Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(stringResource(R.string.firebase_sync_now), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = if (firebaseSyncState.isSyncing) "Syncing in background..." else firebaseSyncState.statusMessage,
+                                            fontSize = 12.sp,
+                                            color = if (firebaseSyncState.isSyncing) InfoBlue else SuccessGreen
+                                        )
+
+                                        Button(
+                                            onClick = { reportViewModel.syncFirebaseNow() },
+                                            enabled = !firebaseSyncState.isSyncing,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = PrimaryIndigoLight,
+                                                contentColor = PureWhite
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            if (firebaseSyncState.isSyncing) {
+                                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = PureWhite)
+                                            } else {
+                                                Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(stringResource(R.string.firebase_sync_now), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            }
                                         }
                                     }
                                 }

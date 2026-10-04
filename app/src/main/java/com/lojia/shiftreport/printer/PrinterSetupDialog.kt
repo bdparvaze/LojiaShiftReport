@@ -64,6 +64,8 @@ fun PrinterSetupDialog(
     var pairedPrinters by remember { mutableStateOf<List<BluetoothPrinterDevice>>(emptyList()) }
     var isScanning by remember { mutableStateOf(false) }
     var isTestingPrint by remember { mutableStateOf(false) }
+    var isTestingDrawer by remember { mutableStateOf(false) }
+    var showAdminAuthDialog by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var isErrorMessage by remember { mutableStateOf(false) }
 
@@ -415,73 +417,104 @@ fun PrinterSetupDialog(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // Action Buttons: Test Print & Save
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            if (connectionType == "network") {
-                                if (!isValidIp(networkIp)) {
-                                    statusMessage = context.getString(R.string.printer_invalid_ip)
-                                    isErrorMessage = true
-                                    return@OutlinedButton
-                                }
-                                if (!isValidPort(networkPort)) {
-                                    statusMessage = context.getString(R.string.printer_invalid_port)
-                                    isErrorMessage = true
-                                    return@OutlinedButton
-                                }
-                            }
-
-                            isTestingPrint = true
-                            statusMessage = null
-                            isErrorMessage = false
-
-                            val executeTest = {
-                                scope.launch {
-                                    val result = if (connectionType == "network") {
-                                        printerManager.testNetworkConnection(
-                                            networkIp.trim(),
-                                            networkPort.trim().toIntOrNull() ?: 9100
-                                        )
-                                    } else {
-                                        printerManager.testConnection(selectedAddress)
+                // Action Buttons: Test Print, Test Cash Drawer & Save
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                if (connectionType == "network") {
+                                    if (!isValidIp(networkIp)) {
+                                        statusMessage = context.getString(R.string.printer_invalid_ip)
+                                        isErrorMessage = true
+                                        return@OutlinedButton
                                     }
-
-                                    isTestingPrint = false
-                                    result.fold(
-                                        onSuccess = {
-                                            statusMessage = context.getString(R.string.printer_test_success)
-                                            isErrorMessage = false
-                                        },
-                                        onFailure = { e ->
-                                            statusMessage = context.getString(R.string.printer_test_failed, e.message ?: "")
-                                            isErrorMessage = true
-                                        }
-                                    )
+                                    if (!isValidPort(networkPort)) {
+                                        statusMessage = context.getString(R.string.printer_invalid_port)
+                                        isErrorMessage = true
+                                        return@OutlinedButton
+                                    }
                                 }
-                            }
 
-                            if (connectionType == "bluetooth") {
-                                bluetoothPermissionRequester.launch {
+                                isTestingPrint = true
+                                statusMessage = null
+                                isErrorMessage = false
+
+                                val executeTest = {
+                                    scope.launch {
+                                        val result = if (connectionType == "network") {
+                                            printerManager.testNetworkConnection(
+                                                networkIp.trim(),
+                                                networkPort.trim().toIntOrNull() ?: 9100
+                                            )
+                                        } else {
+                                            printerManager.testConnection(selectedAddress)
+                                        }
+
+                                        isTestingPrint = false
+                                        result.fold(
+                                            onSuccess = {
+                                                statusMessage = context.getString(R.string.printer_test_success)
+                                                isErrorMessage = false
+                                            },
+                                            onFailure = { e ->
+                                                statusMessage = context.getString(R.string.printer_test_failed, e.message ?: "")
+                                                isErrorMessage = true
+                                            }
+                                        )
+                                    }
+                                }
+
+                                if (connectionType == "bluetooth") {
+                                    bluetoothPermissionRequester.launch {
+                                        executeTest()
+                                    }
+                                } else {
                                     executeTest()
                                 }
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isTestingPrint && !isTestingDrawer && (connectionType == "network" || selectedAddress.isNotBlank()),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (isTestingPrint) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                             } else {
-                                executeTest()
+                                Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.printer_btn_test), fontSize = 13.sp)
                             }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !isTestingPrint && (connectionType == "network" || selectedAddress.isNotBlank()),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        if (isTestingPrint) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                        } else {
-                            Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.printer_btn_test), fontSize = 13.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                if (connectionType == "network") {
+                                    if (!isValidIp(networkIp)) {
+                                        statusMessage = context.getString(R.string.printer_invalid_ip)
+                                        isErrorMessage = true
+                                        return@OutlinedButton
+                                    }
+                                    if (!isValidPort(networkPort)) {
+                                        statusMessage = context.getString(R.string.printer_invalid_port)
+                                        isErrorMessage = true
+                                        return@OutlinedButton
+                                    }
+                                }
+                                showAdminAuthDialog = true
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isTestingPrint && !isTestingDrawer && (connectionType == "network" || selectedAddress.isNotBlank()),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (isTestingDrawer) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(stringResource(R.string.printer_btn_test_drawer), fontSize = 12.sp)
+                            }
                         }
                     }
 
@@ -512,12 +545,51 @@ fun PrinterSetupDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = AccentEmerald),
                         shape = RoundedCornerShape(12.dp),
                         enabled = connectionType == "bluetooth" && selectedAddress.isNotBlank() || connectionType == "network" && networkIp.isNotBlank(),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(R.string.save), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }
+        }
+
+        if (showAdminAuthDialog) {
+            com.lojia.shiftreport.auth.AdminAuthDialog(
+                actionTitle = stringResource(R.string.printer_btn_test_drawer),
+                actionDescription = stringResource(R.string.printer_test_drawer_admin_desc),
+                onDismissRequest = { showAdminAuthDialog = false },
+                onAuthSuccess = {
+                    showAdminAuthDialog = false
+                    isTestingDrawer = true
+                    statusMessage = null
+                    isErrorMessage = false
+
+                    val executeDrawerKick = {
+                        scope.launch {
+                            val result = printerManager.openCashDrawer()
+                            isTestingDrawer = false
+                            result.fold(
+                                onSuccess = {
+                                    statusMessage = context.getString(R.string.printer_drawer_kick_success)
+                                    isErrorMessage = false
+                                },
+                                onFailure = { e ->
+                                    statusMessage = context.getString(R.string.printer_test_failed, e.message ?: "")
+                                    isErrorMessage = true
+                                }
+                            )
+                        }
+                    }
+
+                    if (connectionType == "bluetooth") {
+                        bluetoothPermissionRequester.launch {
+                            executeDrawerKick()
+                        }
+                    } else {
+                        executeDrawerKick()
+                    }
+                }
+            )
         }
     }
 }

@@ -34,7 +34,6 @@ import com.lojia.shiftreport.util.PdfReportGenerator
 
 import kotlinx.coroutines.launch
 
-import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
@@ -49,7 +48,9 @@ fun ShiftReportPreviewDialog(
     val scope = rememberCoroutineScope()
     val printerManager = remember(context) { com.lojia.shiftreport.printer.BluetoothPrinterManager(context) }
     val currencyCode = businessProfile?.currency
-    val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    val formattedDate = remember(report.dateInMillis) {
+        com.lojia.shiftreport.util.DateTimeFormatUtils.formatIsoDateTime(report.dateInMillis)
+    }
 
     var isExporting by remember { mutableStateOf(false) }
     var exportedUri by remember { mutableStateOf<Uri?>(null) }
@@ -80,7 +81,6 @@ fun ShiftReportPreviewDialog(
 
     val defaultBizName = stringResource(R.string.default_business_name)
     val businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName
-    val formattedDate = dateFormatter.format(Date(report.dateInMillis))
     val cleanNotes = PdfReportGenerator.cleanDisplayNotes(report.notes)
 
     val isTax = businessProfile?.isTaxEnabled ?: false

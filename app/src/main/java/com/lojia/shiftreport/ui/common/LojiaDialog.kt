@@ -13,23 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.Dimens
-import com.lojia.shiftreport.ui.theme.PrimaryIndigoLight
-import com.lojia.shiftreport.ui.theme.PureWhite
 
 /**
  * Standard reusable modal dialog container for Lojia Shift Report.
- * - Sized for mobile phones: constrained by [maxWidth] (default 400.dp) and [Dimens.SpacingLg] margin.
- * - Prefers [wrapContentHeight] instead of forced large screen fractions.
+ * - Sized for mobile phones: constrained by [maxWidth] (default [Dimens.DialogMaxWidth]) and [Dimens.DialogMaxHeight].
+ * - Screen-height aware: bounded by 85% of screen height to ensure usability across all devices.
  * - Supports scrollable content when needed.
  */
 @Composable
@@ -38,11 +38,14 @@ fun LojiaDialog(
     modifier: Modifier = Modifier,
     maxWidth: Dp = Dimens.DialogMaxWidth,
     shape: Shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-    containerColor: Color = PureWhite,
-    border: BorderStroke? = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    border: BorderStroke? = null,
     properties: DialogProperties = DialogProperties(usePlatformDefaultWidth = false),
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = properties
@@ -50,12 +53,13 @@ fun LojiaDialog(
         Surface(
             shape = shape,
             color = containerColor,
-            border = border,
+            border = border ?: BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             shadowElevation = Dimens.DialogElevation,
             modifier = modifier
                 .padding(horizontal = Dimens.SpacingLg)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
+                .heightIn(max = maxDialogHeight)
                 .wrapContentHeight()
         ) {
             Column(
@@ -79,15 +83,18 @@ fun LojiaConfirmDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
-    confirmText: String = "Confirm",
-    dismissText: String = "Cancel",
+    confirmText: String = stringResource(R.string.action_confirm),
+    dismissText: String = stringResource(R.string.action_cancel),
     icon: ImageVector? = null,
-    iconTint: Color = PrimaryIndigoLight,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     isDestructive: Boolean = false,
     confirmTestTag: String = "btn_dialog_confirm",
     dismissTestTag: String = "btn_dialog_dismiss",
     extraContent: (@Composable () -> Unit)? = null
 ) {
+    val configuration = LocalConfiguration.current
+    val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+
     LojiaDialog(
         onDismissRequest = onDismissRequest,
         maxWidth = Dimens.DialogSmallMaxWidth,
@@ -96,6 +103,7 @@ fun LojiaConfirmDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = maxDialogHeight)
                 .verticalScroll(rememberScrollState())
                 .padding(Dimens.DialogPaddingComfortable),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -105,7 +113,7 @@ fun LojiaConfirmDialog(
                 Surface(
                     shape = CircleShape,
                     color = iconTint.copy(alpha = 0.12f),
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(Dimens.MinTouchTarget)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -120,19 +128,17 @@ fun LojiaConfirmDialog(
 
             Text(
                 text = title,
-                fontSize = 17.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A),
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Text(
                 text = message,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color(0xFF475569),
-                lineHeight = 18.sp,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -151,10 +157,10 @@ fun LojiaConfirmDialog(
                 OutlinedButton(
                     onClick = onDismissRequest,
                     shape = RoundedCornerShape(Dimens.RadiusMd),
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = PureWhite,
-                        contentColor = Color(0xFF475569)
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier
                         .weight(1f)
@@ -163,7 +169,7 @@ fun LojiaConfirmDialog(
                 ) {
                     Text(
                         text = dismissText,
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -174,8 +180,8 @@ fun LojiaConfirmDialog(
                     onClick = onConfirm,
                     shape = RoundedCornerShape(Dimens.RadiusMd),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isDestructive) Color(0xFFDC2626) else PrimaryIndigoLight,
-                        contentColor = PureWhite
+                        containerColor = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     modifier = Modifier
                         .weight(1f)
@@ -184,7 +190,140 @@ fun LojiaConfirmDialog(
                 ) {
                     Text(
                         text = confirmText,
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Standard reusable modal form dialog for dialogs with input fields.
+ * - Sized for mobile phones: constrained by [maxWidth] (default [Dimens.DialogMaxWidth]) and 85% screen height.
+ * - Structure: Fixed title header row, verticalScroll-able body content, and fixed bottom action row.
+ */
+@Composable
+fun LojiaFormDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    confirmText: String = stringResource(R.string.action_confirm),
+    onConfirm: () -> Unit,
+    dismissText: String = stringResource(R.string.action_cancel),
+    modifier: Modifier = Modifier,
+    isConfirmEnabled: Boolean = true,
+    isDestructive: Boolean = false,
+    confirmTestTag: String = "btn_form_dialog_confirm",
+    dismissTestTag: String = "btn_form_dialog_dismiss",
+    maxWidth: Dp = Dimens.DialogMaxWidth,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val configuration = LocalConfiguration.current
+    val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+
+    LojiaDialog(
+        onDismissRequest = onDismissRequest,
+        maxWidth = maxWidth,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxDialogHeight)
+        ) {
+            // 1. Fixed Title Header Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = Dimens.DialogPaddingComfortable,
+                        top = Dimens.DialogPaddingComfortable,
+                        end = Dimens.DialogPaddingComfortable,
+                        bottom = Dimens.SpacingSm
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
+
+            // 2. Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
+                content()
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
+
+            // 3. Fixed Bottom Action Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismissRequest,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(Dimens.ButtonHeightStandard)
+                        .testTag(dismissTestTag)
+                ) {
+                    Text(
+                        text = dismissText,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Button(
+                    onClick = onConfirm,
+                    enabled = isConfirmEnabled,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(Dimens.ButtonHeightStandard)
+                        .testTag(confirmTestTag)
+                ) {
+                    Text(
+                        text = confirmText,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
