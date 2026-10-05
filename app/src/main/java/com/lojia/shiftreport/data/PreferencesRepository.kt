@@ -67,6 +67,11 @@ class PreferencesRepository private constructor(context: Context) {
         private const val KEY_PRINTER_NET_IP = "key_printer_net_ip"
         private const val KEY_PRINTER_NET_PORT = "key_printer_net_port"
 
+        // Data preservation on uninstall keys
+        private const val KEY_PRESERVE_DATA_ON_UNINSTALL = "key_preserve_data_on_uninstall"
+        private const val KEY_FIRST_RUN_DATA_PRESERVATION_SHOWN = "key_first_run_data_preservation_shown"
+        private const val KEY_HAS_RUN_BEFORE = "key_has_run_before"
+
         @Volatile
         private var instance: PreferencesRepository? = null
 
@@ -348,6 +353,24 @@ class PreferencesRepository private constructor(context: Context) {
 
     fun getPrinterNetworkPort(): Int {
         return prefs.getInt(KEY_PRINTER_NET_PORT, 9100)
+    }
+
+    fun isPreserveDataOnUninstall(): Boolean = prefs.getBoolean(KEY_PRESERVE_DATA_ON_UNINSTALL, true)
+
+    fun setPreserveDataOnUninstall(preserve: Boolean) {
+        prefs.edit().putBoolean(KEY_PRESERVE_DATA_ON_UNINSTALL, preserve).apply()
+    }
+
+    fun isFirstRunDataPreservationShown(): Boolean = prefs.getBoolean(KEY_FIRST_RUN_DATA_PRESERVATION_SHOWN, false)
+
+    fun setFirstRunDataPreservationShown(shown: Boolean) {
+        prefs.edit().putBoolean(KEY_FIRST_RUN_DATA_PRESERVATION_SHOWN, shown).apply()
+    }
+
+    fun hasRunBefore(): Boolean = prefs.getBoolean(KEY_HAS_RUN_BEFORE, false)
+
+    fun setHasRunBefore(hasRun: Boolean) {
+        prefs.edit().putBoolean(KEY_HAS_RUN_BEFORE, hasRun).apply()
     }
 
     /**

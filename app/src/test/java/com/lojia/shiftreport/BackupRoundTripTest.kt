@@ -151,4 +151,28 @@ class BackupRoundTripTest {
         val populatedResult = OfflineBackupManager.getMoneyVal(populatedObj, "grossCash", 0L, isLegacy = false)
         assertEquals(98765L, populatedResult)
     }
+
+    @Test
+    fun parseBackupSummaryFromString_correctlyParsesStats() {
+        val sampleJson = """
+            {
+                "app": "Lojia Shift Report",
+                "exportDate": "2026-10-05 12:00:00",
+                "shiftReports": [{}, {}],
+                "shiftSessions": [{}],
+                "cashiers": [{}, {}, {}],
+                "businessProfile": {"businessName": "Test Store"}
+            }
+        """.trimIndent()
+
+        val summaryResult = OfflineBackupManager.parseBackupSummaryFromString(sampleJson)
+        assertTrue(summaryResult.isSuccess)
+        val summary = summaryResult.getOrThrow()
+        assertEquals(2, summary.shiftReportsCount)
+        assertEquals(1, summary.shiftSessionsCount)
+        assertEquals(3, summary.cashiersCount)
+        assertEquals(6, summary.totalRecords)
+        assertTrue(summary.hasBusinessProfile)
+        assertFalse(summary.hasUserProfile)
+    }
 }

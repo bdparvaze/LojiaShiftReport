@@ -429,6 +429,15 @@ abstract class AppDatabase : RoomDatabase() {
                 builder.addCallback(DatabaseCallback(scope) { INSTANCE })
                 val instance = builder.build()
                 INSTANCE = instance
+
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        if (PreferencesRepository.getInstance(context).isPreserveDataOnUninstall()) {
+                            com.lojia.shiftreport.util.OfflineBackupManager.createAutoBackup(context.applicationContext, instance)
+                        }
+                    } catch (_: Exception) {}
+                }
+
                 instance
             }
         }

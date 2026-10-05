@@ -272,12 +272,8 @@ fun RegionalPreferencesDetailView(
 
     var activeSheet by remember { mutableStateOf<RegionalSheetType?>(null) }
 
-    BackHandler {
-        if (activeSheet != null) {
-            activeSheet = null
-        } else {
-            reportViewModel.selectReportSettingsMenu("root")
-        }
+    BackHandler(enabled = activeSheet != null) {
+        activeSheet = null
     }
 
     Column(

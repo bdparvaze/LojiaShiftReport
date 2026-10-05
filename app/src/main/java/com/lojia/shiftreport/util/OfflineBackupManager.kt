@@ -267,6 +267,170 @@ object OfflineBackupManager {
         }
     }
 
+    /**
+     * Resolves the dedicated Backups directory inside the app reports folder.
+     */
+    fun getBackupsDirectory(context: Context): File {
+        val baseDir = PdfShareUtils.getAppReportsDirectory(context)
+        val backupsDir = File(baseDir, "Backups")
+        if (!backupsDir.exists()) {
+            backupsDir.mkdirs()
+        }
+        return backupsDir
+    }
+
+    private fun rotateAutoBackups(backupsDir: File) {
+        try {
+            val autoFiles = backupsDir.listFiles { f ->
+                f.isFile && f.name.startsWith("lojia_auto_backup_") && f.name.endsWith(".json")
+            }?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+            if (autoFiles.size > 5) {
+                for (oldFile in autoFiles.drop(5)) {
+                    oldFile.delete()
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * Stores metadata in an external file to verify preservation across uninstalls.
+     */
+    fun saveReinstallMeta(context: Context, preserve: Boolean) {
+        try {
+            val baseDir = PdfShareUtils.getAppReportsDirectory(context)
+            val metaFile = File(baseDir, ".lojia_meta")
+            val obj = JSONObject().apply {
+                put("has_run_before", true)
+                put("preserve_data_on_uninstall", preserve)
+                put("last_active_time", System.currentTimeMillis())
+            }
+            metaFile.writeText(obj.toString())
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * Reads metadata stored across uninstalls.
+     */
+    fun readReinstallMeta(context: Context): Pair<Boolean, Boolean> {
+        return try {
+            val baseDir = PdfShareUtils.getAppReportsDirectory(context)
+            val metaFile = File(baseDir, ".lojia_meta")
+            if (metaFile.exists()) {
+                val obj = JSONObject(metaFile.readText())
+                val hasRun = obj.optBoolean("has_run_before", false)
+                val preserve = obj.optBoolean("preserve_data_on_uninstall", true)
+                Pair(hasRun, preserve)
+            } else {
+                Pair(false, true)
+            }
+        } catch (_: Exception) {
+            Pair(false, true)
+        }
+    }
+
+    /**
+     * Explicitly exports a backup before uninstalling and stores it in the Backups folder.
+     */
+    suspend fun createUninstallBackup(
+        context: Context,
+        database: AppDatabase
+    ): Result<BackupInfo> = withContext(Dispatchers.IO) {
+        try {
+            val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = false)
+            val jsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+
+            val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
+            val fileName = "lojia_auto_backup_$timeStampStr.json"
+
+            val backupsDir = getBackupsDirectory(context)
+            val targetFile = File(backupsDir, fileName)
+            targetFile.writeBytes(jsonBytes)
+
+            saveReinstallMeta(context, true)
+            rotateAutoBackups(backupsDir)
+
+            Result.success(
+                BackupInfo(
+                    fileName = fileName,
+                    savedPath = targetFile.absolutePath,
+                    uri = null,
+                    totalRecords = totalRecords,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Creates a periodic auto-backup file surviving app deletion if external storage is available.
+     */
+    suspend fun createAutoBackup(
+        context: Context,
+        database: AppDatabase
+    ): Result<BackupInfo> = withContext(Dispatchers.IO) {
+        createUninstallBackup(context, database)
+    }
+
+    /**
+     * Locates the latest available JSON backup file in the Backups or Reports directories.
+     */
+    fun findLatestBackupFile(context: Context): File? {
+        return try {
+            val backupsDir = getBackupsDirectory(context)
+            val filesInBackups = backupsDir.listFiles { f ->
+                f.isFile && f.name.endsWith(".json")
+            }?.toList() ?: emptyList()
+
+            val baseDir = PdfShareUtils.getAppReportsDirectory(context)
+            val filesInBase = baseDir.listFiles { f ->
+                f.isFile && f.name.endsWith(".json")
+            }?.toList() ?: emptyList()
+
+            val allFiles = (filesInBackups + filesInBase).distinctBy { it.absolutePath }
+                .sortedByDescending { it.lastModified() }
+
+            allFiles.firstOrNull()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Restores backup from a local file.
+     */
+    suspend fun restoreBackupFromFile(
+        context: Context,
+        database: AppDatabase,
+        backupFile: File
+    ): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val jsonString = backupFile.readText(Charsets.UTF_8)
+            restoreBackupFromString(jsonString, database, backupFile.name)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Clears all database tables and resets preferences to start fresh.
+     */
+    suspend fun wipeAllData(
+        context: Context,
+        database: AppDatabase
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            database.clearAllTables()
+            PreferencesRepository.getInstance(context).clearAll()
+            saveReinstallMeta(context, false)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun writeBackupToUri(
         context: Context,
         database: AppDatabase,

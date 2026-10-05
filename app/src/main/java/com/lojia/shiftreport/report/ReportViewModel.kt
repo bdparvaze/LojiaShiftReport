@@ -1285,6 +1285,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             } catch (_: Exception) {}
 
             _uiMessage.emit(UiText.StringResource(R.string.shift_report_submitted_successfully_1))
+
+            if (preferencesRepository.isPreserveDataOnUninstall()) {
+                try {
+                    OfflineBackupManager.createAutoBackup(context, db)
+                } catch (_: Exception) {}
+            }
+
             onSuccess(report)
         }
     }
@@ -1361,6 +1368,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             val curr = syncManager.currentCurrency.value
             NotificationHelper.sendShiftClosedNotification(context, session.cashierName, varianceMajor, curr)
             _uiMessage.emit(UiText.StringResource(R.string.toast_shift_closed_variance, "%.2f".format(varianceMajor), curr))
+
+            if (preferencesRepository.isPreserveDataOnUninstall()) {
+                try {
+                    OfflineBackupManager.createAutoBackup(context, db)
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -1421,6 +1434,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             val curr = syncManager.currentCurrency.value
             NotificationHelper.sendShiftClosedNotification(context, session.cashierName, varianceMajor, curr)
             _uiMessage.emit(UiText.StringResource(R.string.toast_shift_closed_variance, "%.2f".format(varianceMajor), curr))
+
+            if (preferencesRepository.isPreserveDataOnUninstall()) {
+                try {
+                    OfflineBackupManager.createAutoBackup(context, db)
+                } catch (_: Exception) {}
+            }
+
             onReportCreated(finalReport)
         }
     }
@@ -1495,7 +1515,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun addCashier(name: String, pin: String, role: String = "CASHIER") {
-        if (name.isBlank() || pin.isBlank()) return
+        if (name.isBlank()) return
         syncManager.addCashier(name, pin, role) {
             viewModelScope.launch {
                 _uiMessage.emit(UiText.StringResource(R.string.toast_staff_added, name))

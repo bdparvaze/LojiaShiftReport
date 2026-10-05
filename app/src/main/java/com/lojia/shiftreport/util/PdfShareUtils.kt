@@ -5,11 +5,65 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import com.lojia.shiftreport.R
+import java.io.File
+import androidx.core.content.FileProvider
 
 /**
  * Utility for opening and sharing generated PDF report files via Android Intents.
  */
 object PdfShareUtils {
+
+    /**
+     * Resolves the app-specific visible external directory for reports.
+     */
+    fun getAppReportsDirectory(context: Context): File {
+        val folderName = try {
+            context.getString(R.string.app_reports_folder_name)
+        } catch (e: Exception) {
+            "Lojia Reports"
+        }
+        val reportsDir = context.getExternalFilesDir(null)?.resolve(folderName)
+            ?: context.filesDir.resolve(folderName)
+        if (!reportsDir.exists()) {
+            reportsDir.mkdirs()
+        }
+        return reportsDir
+    }
+
+    /**
+     * Opens the reports folder in the device file manager.
+     */
+    fun openFolderInFileManager(context: Context, folder: File) {
+        try {
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                folder
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "resource/folder")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    folder
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "*/*")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            } catch (ex: Exception) {
+                Toast.makeText(context, "Could not open folder: ${ex.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     /**
      * Opens the exported PDF with the system viewer or any installed PDF application.

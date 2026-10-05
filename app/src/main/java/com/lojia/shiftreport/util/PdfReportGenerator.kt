@@ -1545,37 +1545,15 @@ object PdfReportGenerator {
         var displayPath = fileName
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/LojiaReports")
-                }
-                val resolver = context.contentResolver
-                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-                if (uri != null) {
-                    fileUri = uri
-                    outputStream = resolver.openOutputStream(uri)
-                    displayPath = "Downloads/LojiaReports/$fileName"
-                }
-            }
-
-            // Fallback for older devices or if MediaStore insert returned null
-            if (outputStream == null) {
-                val docsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) 
-                    ?: File(context.filesDir, "reports")
-                if (!docsDir.exists()) {
-                    docsDir.mkdirs()
-                }
-                targetFile = File(docsDir, fileName)
-                outputStream = FileOutputStream(targetFile)
-                displayPath = targetFile.absolutePath
-                fileUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    targetFile
-                )
-            }
+            val reportsDir = PdfShareUtils.getAppReportsDirectory(context)
+            targetFile = File(reportsDir, fileName)
+            outputStream = FileOutputStream(targetFile)
+            displayPath = targetFile.absolutePath
+            fileUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                targetFile
+            )
 
             outputStream?.let {
                 pdfDocument.writeTo(it)

@@ -4,4 +4,5 @@
     <files-path name="reports_internal" path="reports/" />
     <cache-path name="cache_exports" path="exports/" />
     <external-files-path name="external_docs" path="Documents/" />
+    <external-files-path name="external_reports" path="." />
 </paths>

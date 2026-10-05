@@ -54,62 +54,117 @@ com.lojia.shiftreport
 ├── auth/                          # 🔐 Authentication, Biometrics, PIN Lock & Roles
 │   ├── AdminAuthDialog.kt
 │   ├── BiometricAuthManager.kt
+│   ├── BiometricHelper.kt
 │   ├── BiometricLockScreen.kt
-│   └── LojiaAuthComponents.kt
+│   ├── LojiaAuthComponents.kt
+│   ├── LojiaAuthDialogs.kt
+│   ├── LojiaAuthModels.kt
+│   ├── LojiaRegisterScreen.kt
+│   ├── QuickPinScreen.kt
+│   └── SecurityHelper.kt
 │
 ├── data/                          # 💾 Room Database, Entities, DAOs & Repositories
 │   ├── AppDatabase.kt
+│   ├── ConfigurationSyncManager.kt
 │   ├── Models.kt
-│   ├── ReportDao.kt
 │   ├── PreferencesRepository.kt
+│   ├── ReportDao.kt
+│   ├── SavedAddressDao.kt
 │   └── ShiftReportRepository.kt
 │
+├── permission/                    # 🛂 Runtime Permission Handling
+│   └── PermissionManager.kt
+│
+├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps
+│   ├── BluetoothPrinterManager.kt
+│   ├── PrinterSetupDialog.kt
+│   └── ThermalBitmapRenderer.kt
+│
 ├── report/                        # 📊 Shift Reports, Analytics, Ledgers & Summaries
-│   ├── DashboardScreen.kt
-│   ├── ShiftReportScreen.kt
-│   ├── ShiftReportLedgerTabs.kt
-│   ├── PosReconciliationSummary.kt
-│   ├── ShiftReportComponents.kt
-│   ├── ShiftReportArchivesTab.kt
 │   ├── AddEntryDialog.kt
-│   └── ReportViewModel.kt
+│   ├── DashboardScreen.kt
+│   ├── MonthlySalesCharts.kt
+│   ├── MonthlySalesSummaryView.kt
+│   ├── PosReconciliationSummary.kt
+│   ├── ReportViewModel.kt
+│   ├── ShiftReportArchivesTab.kt
+│   ├── ShiftReportComponents.kt
+│   ├── ShiftReportLedgerTabs.kt
+│   ├── ShiftReportModels.kt
+│   └── ShiftReportScreen.kt
 │
 ├── scanner/                       # 📄 Document Scanner, OCR, Word Export & PDF Security
-│   ├── DocumentScannerScreen.kt
+│   ├── CamScannerCropView.kt
+│   ├── CamScannerEditorScreen.kt
+│   ├── CameraXScannerView.kt
+│   ├── DocumentImageFilter.kt
 │   ├── DocumentScannerComponents.kt
 │   ├── DocumentScannerDialogs.kt
+│   ├── DocumentScannerScreen.kt
 │   ├── DocumentScannerViewModel.kt
-│   ├── OcrTextExtractor.kt
 │   ├── DocxExporter.kt
-│   └── PdfProtector.kt
+│   ├── EdgeDetector.kt
+│   ├── OcrImagePreprocessor.kt
+│   ├── OcrTextExtractor.kt
+│   ├── PdfProtector.kt
+│   ├── PerspectiveTransformHelper.kt
+│   └── ScannedDocument.kt
 │
 ├── settings/                      # ⚙️ Store Profile, Cashiers, Backup, Currency & Language
-│   ├── SettingsReportSection.kt
+│   ├── AddCashierDialog.kt
+│   ├── AddEditAddressScreen.kt
+│   ├── BusinessLogoPickerCard.kt
 │   ├── CashierManagementSection.kt
-│   └── LanguageSettingsComponent.kt
+│   ├── DataPreservationDialogs.kt
+│   ├── GoogleMapsLocationPickerModal.kt
+│   ├── LanguageSettingsComponent.kt
+│   ├── ProfileScreen.kt
+│   ├── RegionalPreferencesSection.kt
+│   ├── SavedAddressesScreen.kt
+│   ├── SettingsCommonDialogs.kt
+│   ├── SettingsReportSection.kt
+│   └── SettingsScreen.kt
+│
+├── sync/                          # 🔄 Cloud Data Synchronization
+│   ├── FirebaseCloudSyncManager.kt
+│   ├── FirebaseCloudSyncScheduler.kt
+│   └── FirebaseCloudSyncWorker.kt
 │
 ├── ui/                            # 🎨 Theme, Typography, Reusable UI Components
 │   ├── common/
-│   │   ├── LojiaTextField.kt
-│   │   ├── LojiaDialog.kt
 │   │   ├── AppDrawer.kt
-│   │   └── Components.kt
+│   │   ├── Components.kt
+│   │   ├── LojiaComponents.kt
+│   │   ├── LojiaDialog.kt
+│   │   ├── LojiaTextField.kt
+│   │   ├── OtpInputField.kt
+│   │   ├── PdfPreviewDialog.kt
+│   │   └── PhoneNumberHint.kt
 │   └── theme/
 │       ├── Color.kt
+│       ├── Dimens.kt
 │       ├── Theme.kt
-│       ├── Type.kt
-│       └── Dimens.kt
+│       └── Type.kt
 │
-├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps
-│   ├── PrinterSetupDialog.kt
-│   ├── BluetoothPrinterManager.kt
-│   └── ThermalBitmapRenderer.kt
-│
-└── util/                          # 🛠️ Utilities (PDF Generator, Sharing, Locale)
+└── util/                          # 🛠️ Utilities (PDF Generator, Sharing, Locale, Security)
+    ├── AppLanguageManager.kt
+    ├── CountryDetector.kt
+    ├── CurrencyUtils.kt
+    ├── DateTimeFormatUtils.kt
+    ├── ExportHelper.kt
+    ├── GoogleDriveManager.kt
+    ├── LanguagePreferences.kt
+    ├── LocaleManager.kt
+    ├── MoneyFormat.kt
+    ├── NotificationHelper.kt
+    ├── OfflineBackupManager.kt
+    ├── PdfPalette.kt
     ├── PdfReportGenerator.kt
     ├── PdfShareUtils.kt
-    ├── LocaleManager.kt
-    └── SecurityUtils.kt
+    ├── SecurityUtils.kt
+    ├── ShiftReportSyncScheduler.kt
+    ├── ShiftReportSyncWorker.kt
+    └── UiText.kt
 ```
 
 ---

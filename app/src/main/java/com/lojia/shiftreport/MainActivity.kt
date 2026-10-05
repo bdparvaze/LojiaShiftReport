@@ -12,8 +12,10 @@ import com.lojia.shiftreport.util.*
 import android.os.Bundle
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 
 import androidx.compose.animation.Crossfade
@@ -100,13 +102,61 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                 mutableStateOf<AppNavState>(AppNavState.ShiftReportState.Reports)
             }
 
+            val navBackStack = remember { mutableStateListOf<AppNavState>() }
+
+            fun navigateTo(newState: AppNavState) {
+                if (newState != navState) {
+                    navBackStack.add(navState)
+                    navState = newState
+                }
+            }
+
             LaunchedEffect(navState) {
-                if (navState !is AppNavState.ShiftReportState.SettingsDetail) {
-                    reportViewModel.selectReportSettingsMenu("")
+                when (val state = navState) {
+                    is AppNavState.ShiftReportState.SettingsDetail -> {
+                        reportViewModel.selectReportSettingsMenu(state.section)
+                    }
+                    else -> {
+                        reportViewModel.selectReportSettingsMenu("")
+                    }
                 }
             }
 
             var previewReport by remember { mutableStateOf<ShiftReport?>(null) }
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val scope = rememberCoroutineScope()
+            val prefsRepo = remember { PreferencesRepository.getInstance(context) }
+            val reinstallMeta = remember { OfflineBackupManager.readReinstallMeta(context) }
+            val latestBackupFile = remember { OfflineBackupManager.findLatestBackupFile(context) }
+
+            var showPreservationSetup by rememberSaveable {
+                mutableStateOf(!prefsRepo.isFirstRunDataPreservationShown() && !reinstallMeta.first)
+            }
+
+            var showRecoveryDialog by rememberSaveable {
+                mutableStateOf(reinstallMeta.first && reinstallMeta.second && latestBackupFile != null && !prefsRepo.isFirstRunDataPreservationShown())
+            }
+
+            val backupPickerLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.OpenDocument()
+            ) { uri ->
+                if (uri != null) {
+                    showRecoveryDialog = false
+                    prefsRepo.setFirstRunDataPreservationShown(true)
+                    prefsRepo.setHasRunBefore(true)
+                    scope.launch {
+                        val db = AppDatabase.getInstance(context)
+                        val res = OfflineBackupManager.restoreBackup(context, uri, db)
+                        res.onSuccess { count ->
+                            val msg = context.getString(R.string.data_restored_success, count)
+                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                        }.onFailure { err ->
+                            android.widget.Toast.makeText(context, err.localizedMessage ?: "Restore failed", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+
             var isAuthenticated by rememberSaveable { 
                 mutableStateOf(reportViewModel.preferencesRepository.isLoggedIn()) 
             }
@@ -128,7 +178,6 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             }
 
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-            val scope = rememberCoroutineScope()
 
             LojiaTheme {
                 if (!isAuthenticated) {
@@ -162,11 +211,15 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             val isRootScreen = navState is AppNavState.ShiftReportState.Reports
                             val isScannerActive = navState is AppNavState.ShiftReportState.DocumentScanner
 
-                            // Handle back button smoothly to close drawer or return from sub-screens to main view
-                            BackHandler(enabled = !isScannerActive && (drawerState.isOpen || !isRootScreen)) {
+                            // Handle back button smoothly to close drawer, pop back stack, return to Reports or exit
+                            val canHandleBack = drawerState.isOpen || navBackStack.isNotEmpty() || navState != AppNavState.ShiftReportState.Reports
+                            BackHandler(enabled = !isScannerActive && canHandleBack) {
                                 if (drawerState.isOpen) {
                                     scope.launch { drawerState.close() }
-                                } else if (!isRootScreen) {
+                                } else if (navBackStack.isNotEmpty()) {
+                                    focusManager.clearFocus()
+                                    navState = navBackStack.removeAt(navBackStack.lastIndex)
+                                } else if (navState != AppNavState.ShiftReportState.Reports) {
                                     focusManager.clearFocus()
                                     navState = AppNavState.ShiftReportState.Reports
                                 }
@@ -181,8 +234,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                         currentLanguage = currentLanguage,
                                         businessProfile = businessProfile,
                                         userProfile = userProfile,
-                                        onNavigate = { newNavState -> navState = newNavState },
-                                        onOpenReportMenu = { menuKey -> reportViewModel.selectReportSettingsMenu(menuKey) },
+                                        onNavigate = { newNavState -> navigateTo(newNavState) },
+                                        onOpenReportMenu = { menuKey -> navigateTo(AppNavState.ShiftReportState.SettingsDetail(menuKey)) },
                                         onCloseDrawer = { scope.launch { drawerState.close() } },
                                         onLockApp = {
                                             reportViewModel.preferencesRepository.recordLogout(keepQuickLoginState = true)
@@ -281,7 +334,17 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                             reportViewModel = reportViewModel,
                                             language = currentLanguage,
                                             activity = this@MainActivity,
-                                            onPreviewPdf = { report -> previewReport = report }
+                                            onPreviewPdf = { report -> previewReport = report },
+                                            onNavigateToSection = { section ->
+                                                navigateTo(AppNavState.ShiftReportState.SettingsDetail(section))
+                                            },
+                                            onNavigateBack = {
+                                                if (navBackStack.isNotEmpty()) {
+                                                    navState = navBackStack.removeAt(navBackStack.lastIndex)
+                                                } else {
+                                                    navState = AppNavState.ShiftReportState.Reports
+                                                }
+                                            }
                                         )
 
                                         // Shift Report Preview Dialog
@@ -292,7 +355,61 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 language = currentLanguage,
                                                 onDismiss = { previewReport = null },
                                                 onOpenPrinterSettings = {
-                                                    navState = AppNavState.ShiftReportState.SettingsDetail("profile")
+                                                    navigateTo(AppNavState.ShiftReportState.SettingsDetail("profile"))
+                                                }
+                                            )
+                                        }
+
+                                        // Data Recovery Dialog (on Reinstall)
+                                        if (showRecoveryDialog) {
+                                            DataRecoveryDialog(
+                                                backupFile = latestBackupFile,
+                                                onRestore = {
+                                                    showRecoveryDialog = false
+                                                    prefsRepo.setFirstRunDataPreservationShown(true)
+                                                    prefsRepo.setHasRunBefore(true)
+                                                    scope.launch {
+                                                        if (latestBackupFile != null) {
+                                                            val db = AppDatabase.getInstance(context)
+                                                            val res = OfflineBackupManager.restoreBackupFromFile(context, db, latestBackupFile)
+                                                            res.onSuccess { count ->
+                                                                val msg = context.getString(R.string.data_restored_success, count)
+                                                                android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                                            }.onFailure { err ->
+                                                                android.widget.Toast.makeText(context, err.localizedMessage ?: "Restore failed", android.widget.Toast.LENGTH_SHORT).show()
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                onBrowseBackups = {
+                                                    backupPickerLauncher.launch(arrayOf("application/json", "*/*"))
+                                                },
+                                                onStartFresh = {
+                                                    showRecoveryDialog = false
+                                                    prefsRepo.setFirstRunDataPreservationShown(true)
+                                                    prefsRepo.setHasRunBefore(true)
+                                                    scope.launch {
+                                                        val db = AppDatabase.getInstance(context)
+                                                        OfflineBackupManager.wipeAllData(context, db)
+                                                        showPreservationSetup = true
+                                                    }
+                                                },
+                                                onDismiss = {
+                                                    showRecoveryDialog = false
+                                                    prefsRepo.setFirstRunDataPreservationShown(true)
+                                                }
+                                            )
+                                        }
+
+                                        // Data Preservation First-Run Setup Dialog
+                                        if (showPreservationSetup) {
+                                            DataPreservationSetupDialog(
+                                                onChoice = { preserve ->
+                                                    prefsRepo.setPreserveDataOnUninstall(preserve)
+                                                    prefsRepo.setFirstRunDataPreservationShown(true)
+                                                    prefsRepo.setHasRunBefore(true)
+                                                    OfflineBackupManager.saveReinstallMeta(context, preserve)
+                                                    showPreservationSetup = false
                                                 }
                                             )
                                         }
@@ -329,6 +446,8 @@ fun AppNavigationHost(
     language: AppLanguage,
     activity: android.app.Activity,
     onPreviewPdf: (ShiftReport) -> Unit,
+    onNavigateToSection: (String) -> Unit = {},
+    onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Crossfade(
@@ -344,7 +463,9 @@ fun AppNavigationHost(
                     reportViewModel = reportViewModel,
                     language = language,
                     activity = activity,
-                    onPreviewPdf = onPreviewPdf
+                    onPreviewPdf = onPreviewPdf,
+                    onNavigateToSection = onNavigateToSection,
+                    onNavigateBack = onNavigateBack
                 )
             }
         }
@@ -360,7 +481,9 @@ private fun ShiftReportModuleNavHost(
     reportViewModel: ReportViewModel,
     language: AppLanguage,
     activity: android.app.Activity,
-    onPreviewPdf: (ShiftReport) -> Unit
+    onPreviewPdf: (ShiftReport) -> Unit,
+    onNavigateToSection: (String) -> Unit = {},
+    onNavigateBack: () -> Unit = {}
 ) {
     when (destination) {
         is AppNavState.ShiftReportState.Reports -> {

@@ -6,6 +6,7 @@ import android.widget.Toast
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -403,7 +404,12 @@ fun ShiftReportPreviewDialog(
                         color = SuccessContainer,
                         shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.5f)),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                val reportsDir = com.lojia.shiftreport.util.PdfShareUtils.getAppReportsDirectory(context)
+                                com.lojia.shiftreport.util.PdfShareUtils.openFolderInFileManager(context, reportsDir)
+                            }
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -426,6 +432,13 @@ fun ShiftReportPreviewDialog(
                                 text = exportSuccessMessage ?: "",
                                 fontSize = 11.sp,
                                 color = OnSurfaceVariantLight
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.tap_to_open_folder),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = SuccessGreen
                             )
                         }
                     }
@@ -549,8 +562,13 @@ fun ShiftReportPreviewDialog(
                             isExporting = false
                             if (result.isSuccess) {
                                 exportedUri = result.uri
-                                exportSuccessMessage = "Saved to: ${result.displayPath}"
-                                Toast.makeText(context, context.getString(R.string.pdf_report_exported_success), Toast.LENGTH_SHORT).show()
+                                val folderName = try {
+                                    context.getString(R.string.app_reports_folder_name)
+                                } catch (e: Exception) {
+                                    "Lojia Reports"
+                                }
+                                exportSuccessMessage = context.getString(R.string.pdf_saved_to_folder, folderName)
+                                Toast.makeText(context, exportSuccessMessage ?: "", Toast.LENGTH_LONG).show()
                                 result.uri?.let { uri ->
                                     PdfReportGenerator.openPdfFile(context, uri)
                                 }

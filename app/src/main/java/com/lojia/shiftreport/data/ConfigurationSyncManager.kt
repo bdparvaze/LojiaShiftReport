@@ -373,8 +373,8 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     fun addCashier(name: String, pin: String, role: String = "CASHIER", onComplete: (() -> Unit)? = null) {
         val cleanName = name.trim()
         val cleanPin = pin.trim()
-        if (cleanName.isBlank() || cleanPin.isBlank()) return
-        val hashedPin = SecurityUtils.hashSecret(cleanPin)
+        if (cleanName.isBlank()) return
+        val hashedPin = if (cleanPin.isBlank()) "" else SecurityUtils.hashSecret(cleanPin)
         scope.launch {
             val existing = reportDao.getCashierByName(cleanName)
             if (existing == null) {

@@ -95,6 +95,8 @@ fun SettingsScreen(
     reportViewModel: ReportViewModel,
     activeModule: AppModule = AppModule.SHIFT_REPORT,
     onSwitchModule: (AppModule) -> Unit = {},
+    onNavigateToSection: (String) -> Unit = {},
+    onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -140,7 +142,9 @@ fun SettingsScreen(
                 isAdmin = isAdmin,
                 onRestrictedClick = handleRestrictedClick,
                 onSwitchModule = onSwitchModule,
-                onConfigurePrinterClick = { showTestPrintDialog = true }
+                onConfigurePrinterClick = { showTestPrintDialog = true },
+                onNavigateToSection = onNavigateToSection,
+                onNavigateBack = onNavigateBack
             )
 
             // Bottom Spacing

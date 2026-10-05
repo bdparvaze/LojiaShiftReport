@@ -108,8 +108,7 @@ import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
 
 import java.util.*
-
-
+import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 
 
@@ -121,9 +120,13 @@ fun SettingsReportSection(
     isAdmin: Boolean,
     onRestrictedClick: (action: () -> Unit) -> Unit,
     onSwitchModule: (AppModule) -> Unit,
-    onConfigurePrinterClick: () -> Unit = {}
+    onConfigurePrinterClick: () -> Unit = {},
+    onNavigateToSection: (String) -> Unit = {},
+    onNavigateBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isUninstallBackingUp by remember { mutableStateOf(false) }
     val userProfile by reportViewModel.userProfile.collectAsState()
     val businessProfile by reportViewModel.businessProfile.collectAsState()
     val isBackingUp by reportViewModel.isBackingUp.collectAsState()
@@ -305,14 +308,14 @@ fun SettingsReportSection(
                     icon = Icons.Outlined.Person,
                     title = "Profile",
                     subtitle = stringResource(R.string.profile_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("profile") }
+                    onClick = { onNavigateToSection("profile") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.People,
                     title = "Cashier",
                     subtitle = stringResource(R.string.cashiers_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("cashiers") }
+                    onClick = { onNavigateToSection("cashiers") }
                 )
 
                 Text(
@@ -327,14 +330,14 @@ fun SettingsReportSection(
                     icon = Icons.Outlined.Shield,
                     title = "Security",
                     subtitle = stringResource(R.string.security_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("security") }
+                    onClick = { onNavigateToSection("security") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.CloudUpload,
                     title = "Backup",
                     subtitle = stringResource(R.string.backup_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("backup") }
+                    onClick = { onNavigateToSection("backup") }
                 )
 
                 LoyverseMenuItemRow(
@@ -358,7 +361,7 @@ fun SettingsReportSection(
                     businessProfile = businessProfile,
                     onOpenRegionalMenu = { tabIndex ->
                         langCountryTab = tabIndex
-                        reportViewModel.selectReportSettingsMenu("regional")
+                        onNavigateToSection("regional")
                     },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                 )
@@ -375,14 +378,14 @@ fun SettingsReportSection(
                     icon = Icons.Outlined.Info,
                     title = "About",
                     subtitle = stringResource(R.string.about_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("about") }
+                    onClick = { onNavigateToSection("about") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.HeadsetMic,
                     title = "Support",
                     subtitle = stringResource(R.string.support_subtitle),
-                    onClick = { reportViewModel.selectReportSettingsMenu("support") }
+                    onClick = { onNavigateToSection("support") }
                 )
             }
 
@@ -430,9 +433,7 @@ fun SettingsReportSection(
             "profile" -> {
                 ProfileScreen(
                     reportViewModel = reportViewModel,
-                    onLogoutClick = {
-                        reportViewModel.selectReportSettingsMenu("root")
-                    }
+                    onLogoutClick = onNavigateBack
                 )
             }
 
@@ -747,6 +748,112 @@ fun SettingsReportSection(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
+                        }
+
+                        // Before Uninstalling Helper Card
+                        Surface(
+                            shape = RoundedCornerShape(LojiaDimens.CardRadius),
+                            color = BackgroundLight,
+                            border = BorderStroke(1.dp, OutlineLight),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Security,
+                                        contentDescription = null,
+                                        tint = PrimaryIndigoLight,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.backup_before_uninstall_title),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OnSurfaceLight
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.backup_before_uninstall_desc),
+                                    fontSize = 12.sp,
+                                    color = TextSecondaryLight,
+                                    lineHeight = 16.sp
+                                )
+                                OutlinedButton(
+                                    onClick = {
+                                        if (!isUninstallBackingUp) {
+                                            isUninstallBackingUp = true
+                                            coroutineScope.launch {
+                                                val result = com.lojia.shiftreport.util.OfflineBackupManager.createUninstallBackup(
+                                                    context,
+                                                    com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                                                )
+                                                isUninstallBackingUp = false
+                                                result.onSuccess { info ->
+                                                    lastCreatedBackupInfo = info
+                                                    val msg = context.getString(R.string.backup_saved_to_path, info.savedPath)
+                                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                                }.onFailure { err ->
+                                                    android.widget.Toast.makeText(context, err.localizedMessage ?: "Backup error", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        }
+                                    },
+                                    enabled = !isUninstallBackingUp,
+                                    shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
+                                    border = BorderStroke(1.dp, PrimaryIndigoLight),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(44.dp)
+                                        .testTag("btn_create_backup_before_uninstall")
+                                ) {
+                                    Icon(Icons.Outlined.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = stringResource(R.string.btn_create_backup_before_uninstall),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                OutlinedButton(
+                                    onClick = {
+                                        PdfShareUtils.openFolderInFileManager(
+                                            context,
+                                            com.lojia.shiftreport.util.OfflineBackupManager.getBackupsDirectory(context)
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
+                                    border = BorderStroke(1.dp, OutlineLight),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = OnSurfaceLight),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(44.dp)
+                                        .testTag("btn_browse_backups")
+                                ) {
+                                    Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = stringResource(R.string.btn_browse_backups),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -1408,9 +1515,10 @@ fun SettingsReportSection(
     // Add Cashier Modal
     if (showAddCashierDialog) {
         AddCashierDialog(
+            userProfile = userProfile,
             onDismissRequest = { showAddCashierDialog = false },
-            onConfirmAdd = { name, pin ->
-                reportViewModel.addCashier(name, pin, "CASHIER")
+            onConfirmAdd = { name ->
+                reportViewModel.addCashier(name, "", "CASHIER")
                 Toast.makeText(context, context.getString(R.string.user_added_success_msg, "Cashier", name), Toast.LENGTH_SHORT).show()
                 showAddCashierDialog = false
             }
