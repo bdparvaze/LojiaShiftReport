@@ -50,6 +50,7 @@ val LightColorScheme = lightColorScheme(
 
 @Composable
 fun LojiaTheme(
+    language: com.lojia.shiftreport.data.AppLanguage? = null,
     content: @Composable () -> Unit
 ) {
     // Enforce the crisp White & Black Business LightColorScheme across the entire app
@@ -63,12 +64,20 @@ fun LojiaTheme(
     }
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    val currentLanguage = androidx.compose.runtime.remember(configuration) {
-        val locale = configuration.locales[0]
-        locale?.language ?: com.lojia.shiftreport.util.AppLanguageManager.getCurrentLanguageCode()
+    val effectiveLanguageCode = androidx.compose.runtime.remember(language, configuration) {
+        language?.code ?: run {
+            val locale = if (configuration.locales.size() > 0) configuration.locales[0] else null
+            locale?.language ?: com.lojia.shiftreport.util.AppLanguageManager.getCurrentLanguageCode()
+        }
     }
-    val currentTypography = androidx.compose.runtime.remember(currentLanguage) {
-        typographyFor(currentLanguage)
+    val currentTypography = androidx.compose.runtime.remember(effectiveLanguageCode) {
+        typographyFor(effectiveLanguageCode)
+    }
+
+    val layoutDirection = if (effectiveLanguageCode == "ar") {
+        androidx.compose.ui.unit.LayoutDirection.Rtl
+    } else {
+        androidx.compose.ui.unit.LayoutDirection.Ltr
     }
 
     val currentDensity = androidx.compose.ui.platform.LocalDensity.current
@@ -79,7 +88,8 @@ fun LojiaTheme(
     )
 
     androidx.compose.runtime.CompositionLocalProvider(
-        androidx.compose.ui.platform.LocalDensity provides clampedDensity
+        androidx.compose.ui.platform.LocalDensity provides clampedDensity,
+        androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

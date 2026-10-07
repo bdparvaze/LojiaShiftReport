@@ -95,7 +95,7 @@ fun LanguageSettingsComponent(
                     onClick = {
                         coroutineScope.launch {
                             LanguagePreferences.saveLanguageDataStore(context, lang.code)
-                            AppLanguageManager.changeLanguage(context, lang.code)
+                            ConfigurationSyncManager.getInstance(context).setLanguage(lang)
                             onLanguageChanged(lang)
                             Toast.makeText(
                                 context,
@@ -269,7 +269,8 @@ fun LanguageToggleSettingsCard(
             onCheckedChange = { _ ->
                 coroutineScope.launch {
                     val newLang = LanguagePreferences.toggleLanguage(context)
-                    AppLanguageManager.changeLanguage(context, newLang.code)
+                    LanguagePreferences.saveLanguageDataStore(context, newLang.code)
+                    ConfigurationSyncManager.getInstance(context).setLanguage(newLang)
                     onLanguageChanged(newLang)
                 }
             },

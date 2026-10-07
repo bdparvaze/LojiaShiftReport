@@ -262,6 +262,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
         _currentLanguage.value = language
         prefs.edit().putString(KEY_SELECTED_LANGUAGE, language.code).apply()
         com.lojia.shiftreport.util.LanguagePreferences.saveLanguage(context, language.code)
+        com.lojia.shiftreport.util.AppLanguageManager.changeLanguage(context, language.code)
         scope.launch {
             reportDao.setSetting(AppSetting(KEY_SELECTED_LANGUAGE, language.code))
             reportDao.insertAuditLog(

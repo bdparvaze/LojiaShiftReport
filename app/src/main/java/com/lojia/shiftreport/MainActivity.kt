@@ -64,6 +64,27 @@ sealed interface AppNavState {
     }
 }
 
+private val AppNavStateSaver = androidx.compose.runtime.saveable.Saver<AppNavState, String>(
+    save = { state ->
+        when (state) {
+            is AppNavState.ShiftReportState.Reports -> "reports"
+            is AppNavState.ShiftReportState.Analytics -> "analytics"
+            is AppNavState.ShiftReportState.DocumentScanner -> "scanner"
+            is AppNavState.ShiftReportState.SettingsDetail -> "settings:${state.section}"
+            else -> "reports"
+        }
+    },
+    restore = { key ->
+        when {
+            key == "reports" -> AppNavState.ShiftReportState.Reports
+            key == "analytics" -> AppNavState.ShiftReportState.Analytics
+            key == "scanner" -> AppNavState.ShiftReportState.DocumentScanner
+            key.startsWith("settings:") -> AppNavState.ShiftReportState.SettingsDetail(key.removePrefix("settings:"))
+            else -> AppNavState.ShiftReportState.Reports
+        }
+    }
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : androidx.appcompat.app.AppCompatActivity() {
     private val reportViewModel: ReportViewModel by viewModels()
@@ -79,8 +100,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
         // Initialize saved language
         val savedLang = com.lojia.shiftreport.util.LanguagePreferences.getLanguage(this)
-        val appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(savedLang)
-        androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
+        val currentLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
+        if (currentLocales.isEmpty || currentLocales.toLanguageTags() != savedLang) {
+            val appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(savedLang)
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
+        }
         enableEdgeToEdge()
 
         // Schedule periodic background shift report sync via WorkManager
@@ -98,7 +122,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             val activeModule by reportViewModel.currentModule.collectAsState()
             val businessProfile by reportViewModel.businessProfile.collectAsState()
 
-            var navState by remember {
+            var navState by rememberSaveable(stateSaver = AppNavStateSaver) {
                 mutableStateOf<AppNavState>(AppNavState.ShiftReportState.Reports)
             }
 
@@ -179,7 +203,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-            LojiaTheme {
+            LojiaTheme(language = currentLanguage) {
                 if (!isAuthenticated) {
                         BiometricLockScreen(
                             activity = this@MainActivity,
