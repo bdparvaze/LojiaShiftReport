@@ -1696,4 +1696,9 @@
     <string name="cd_show_password">Show password</string>
     <string name="gallery_error">Gallery error</string>
     <string name="optional_details_label">Optional details (for better tracking)</string>
+    <string name="search_shift_history">Search by date, customer, or cashier…</string>
+    <string name="showing_results_count">Showing %1$d of %2$d reports</string>
+    <string name="no_matching_reports_found">No matching shift reports found</string>
+    <string name="try_different_search">Try searching with a different date, customer name, or cashier.</string>
+    <string name="clear_search">Clear search</string>
 </resources>

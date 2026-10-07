@@ -3,6 +3,8 @@ package com.lojia.shiftreport.util
 
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.lojia.shiftreport.data.AppLanguage
@@ -14,7 +16,13 @@ object AppLanguageManager {
 
     fun changeLanguage(context: Context, languageCode: String) {
         val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
-        AppCompatDelegate.setApplicationLocales(appLocale)
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            AppCompatDelegate.setApplicationLocales(appLocale)
+        } else {
+            Handler(Looper.getMainLooper()).post {
+                AppCompatDelegate.setApplicationLocales(appLocale)
+            }
+        }
         LanguagePreferences.saveLanguage(context, languageCode)
     }
     

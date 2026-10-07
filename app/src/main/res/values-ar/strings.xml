@@ -1696,4 +1696,9 @@
     <string name="cd_show_password">إظهار كلمة المرور</string>
     <string name="gallery_error">خطأ في معرض الصور</string>
     <string name="optional_details_label">تفاصيل اختيارية (لتتبع أفضل)</string>
+    <string name="search_shift_history">البحث حسب التاريخ أو العميل أو الكاشير…</string>
+    <string name="showing_results_count">عرض %1$d من أصل %2$d من التقارير</string>
+    <string name="no_matching_reports_found">لم يتم العثور على تقارير مطابقة</string>
+    <string name="try_different_search">جرّب البحث بتاريخ آخر أو اسم عميل أو كاشير مختلف.</string>
+    <string name="clear_search">مسح البحث</string>
 </resources>

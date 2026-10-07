@@ -1696,4 +1696,9 @@
     <string name="cd_show_password">পাসওয়ার্ড দেখান</string>
     <string name="gallery_error">গ্যালারি ত্রুটি</string>
     <string name="optional_details_label">ঐচ্ছিক বিবরণ (উন্নত ট্র্যাকিংয়ের জন্য)</string>
+    <string name="search_shift_history">তারিখ, গ্রাহক বা ক্যাশিয়ার দিয়ে খুঁজুন…</string>
+    <string name="showing_results_count">%2$d টির মধ্যে %1$d টি রিপোর্ট প্রদর্শিত হচ্ছে</string>
+    <string name="no_matching_reports_found">কোনো মেলানো রিপোর্ট পাওয়া যায়নি</string>
+    <string name="try_different_search">ভিন্ন তারিখ, গ্রাহকের নাম বা ক্যাশিয়ার দিয়ে চেষ্টা করুন।</string>
+    <string name="clear_search">অনুসন্ধান মুছুন</string>
 </resources>
