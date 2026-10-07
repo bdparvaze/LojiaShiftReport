@@ -39,8 +39,7 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.permission.AppFeaturePermission
 import com.lojia.shiftreport.permission.rememberPermissionRequester
 import com.lojia.shiftreport.ui.common.LojiaTextField
-import com.lojia.shiftreport.ui.theme.PrimaryIndigo
-import com.lojia.shiftreport.ui.theme.PureWhite
+import com.lojia.shiftreport.ui.theme.*
 
 @Composable
 fun DocumentScannerScreen(
@@ -165,7 +164,7 @@ fun DocumentScannerScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundLight)
     ) {
         Column(
             modifier = Modifier
@@ -191,11 +190,11 @@ fun DocumentScannerScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = { Text(stringResource(R.string.search), fontSize = 13.5.sp) },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = Color(0xFF64748B)) },
+                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = TextHintColor) },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
                         {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Outlined.Close, contentDescription = "Clear", tint = Color(0xFF64748B))
+                                Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.cd_clear), tint = TextHintColor)
                             }
                         }
                     } else null,
@@ -215,8 +214,8 @@ fun DocumentScannerScreen(
                     ) {
                         Icon(
                             imageVector = if (isSelectionMode) Icons.Outlined.ChecklistRtl else Icons.Outlined.Checklist,
-                            contentDescription = "Select Mode",
-                            tint = if (isSelectionMode) PrimaryIndigo else Color(0xFF64748B)
+                            contentDescription = stringResource(R.string.cd_select_mode),
+                            tint = if (isSelectionMode) PrimaryIndigo else TextHintColor
                         )
                     }
                 }
@@ -390,10 +389,10 @@ fun DocumentScannerScreen(
             onProtect = { password ->
                 viewModel.protectPdfWithPassword(context, doc, password) { result ->
                     result.onSuccess { protectedFile ->
-                        Toast.makeText(context, "Protected PDF created: ${protectedFile.name}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.protected_pdf_created, protectedFile.name), Toast.LENGTH_SHORT).show()
                         viewModel.shareProtectedPdf(context, protectedFile)
                     }.onFailure { err ->
-                        Toast.makeText(context, "Encryption error: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.encryption_error, err.localizedMessage ?: ""), Toast.LENGTH_LONG).show()
                     }
                 }
                 documentForPasswordProtect = null

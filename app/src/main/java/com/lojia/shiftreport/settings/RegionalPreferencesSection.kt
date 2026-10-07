@@ -385,7 +385,7 @@ fun RegionalPreferencesDetailView(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(20.dp)
                         )
@@ -416,7 +416,7 @@ fun RegionalPreferencesDetailView(
                             IconButton(onClick = { searchQuery = "" }) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear",
+                                    contentDescription = stringResource(R.string.cd_clear),
                                     tint = OnSurfaceVariantLight,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -488,7 +488,7 @@ fun RegionalPreferencesDetailView(
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
+                                    contentDescription = stringResource(R.string.cd_selected),
                                     tint = PrimaryIndigoLight,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -539,7 +539,7 @@ fun RegionalPreferencesDetailView(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(20.dp)
                         )
@@ -595,7 +595,7 @@ fun RegionalPreferencesDetailView(
                         if (isSelected) {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
+                                contentDescription = stringResource(R.string.cd_selected),
                                 tint = PrimaryIndigoLight,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -658,7 +658,7 @@ fun RegionalPreferencesDetailView(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(20.dp)
                         )
@@ -689,7 +689,7 @@ fun RegionalPreferencesDetailView(
                             IconButton(onClick = { searchQuery = "" }) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear",
+                                    contentDescription = stringResource(R.string.cd_clear),
                                     tint = OnSurfaceVariantLight,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -779,7 +779,7 @@ fun RegionalPreferencesDetailView(
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
+                                    contentDescription = stringResource(R.string.cd_selected),
                                     tint = PrimaryIndigoLight,
                                     modifier = Modifier.size(20.dp)
                                 )

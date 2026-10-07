@@ -18,28 +18,29 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.lojia.shiftreport.ui.theme.*
 
 @Composable
 fun lojiaDefaultTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color(0xFF0F172A),
-    unfocusedTextColor = Color(0xFF0F172A),
-    disabledTextColor = Color(0xFF475569),
-    errorTextColor = Color(0xFFDC2626),
-    focusedContainerColor = Color(0xFFFFFFFF),
-    unfocusedContainerColor = Color(0xFFFFFFFF),
-    disabledContainerColor = Color(0xFFF8FAFC),
-    errorContainerColor = Color(0xFFFFF5F5),
-    focusedLabelColor = Color(0xFF2563EB),
-    unfocusedLabelColor = Color(0xFF475569),
-    disabledLabelColor = Color(0xFF64748B),
-    errorLabelColor = Color(0xFFDC2626),
-    focusedPlaceholderColor = Color(0xFF64748B),
-    unfocusedPlaceholderColor = Color(0xFF64748B),
-    focusedBorderColor = Color(0xFF2563EB),
-    unfocusedBorderColor = Color(0xFFCBD5E1),
-    disabledBorderColor = Color(0xFFE2E8F0),
-    errorBorderColor = Color(0xFFDC2626),
-    cursorColor = Color(0xFF2563EB)
+    focusedTextColor = OnSurfaceLight,
+    unfocusedTextColor = OnSurfaceLight,
+    disabledTextColor = OnSurfaceVariantLight,
+    errorTextColor = ErrorRedLight,
+    focusedContainerColor = SurfaceLight,
+    unfocusedContainerColor = SurfaceLight,
+    disabledContainerColor = BackgroundLight,
+    errorContainerColor = ErrorContainerLight,
+    focusedLabelColor = PrimaryIndigoLight,
+    unfocusedLabelColor = OnSurfaceVariantLight,
+    disabledLabelColor = TextHintColor,
+    errorLabelColor = ErrorRedLight,
+    focusedPlaceholderColor = TextHintColor,
+    unfocusedPlaceholderColor = TextHintColor,
+    focusedBorderColor = PrimaryIndigoLight,
+    unfocusedBorderColor = OutlineLight,
+    disabledBorderColor = OutlineVariantLight,
+    errorBorderColor = ErrorRedLight,
+    cursorColor = PrimaryIndigoLight
 )
 
 @Composable
@@ -50,7 +51,7 @@ fun LojiaTextField(
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current.copy(
-        color = Color(0xFF0F172A),
+        color = OnSurfaceLight,
         fontWeight = FontWeight.Medium
     ),
     label: @Composable (() -> Unit)? = null,
@@ -100,7 +101,7 @@ fun LojiaMultilineTextField(
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current.copy(
-        color = Color(0xFF0F172A),
+        color = OnSurfaceLight,
         fontWeight = FontWeight.Medium
     ),
     label: @Composable (() -> Unit)? = null,

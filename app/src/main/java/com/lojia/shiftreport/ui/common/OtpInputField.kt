@@ -45,9 +45,8 @@ import androidx.compose.ui.text.input.KeyboardType
 
 
 import androidx.compose.ui.unit.dp
-
-
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.ui.theme.*
 
 @Composable
 fun OtpInputField(
@@ -83,17 +82,17 @@ fun OtpInputField(
                             .clip(RoundedCornerShape(10.dp))
                             .background(
                                 when {
-                                    isActive -> Color(0xFFCCFBF1) // Light teal for active state
-                                    isFilled -> Color(0xFFECFDF5) // Light mint for filled states
-                                    else -> Color(0xFFF1F5F9)     // Soft neutral grey for empty state
+                                    isActive -> SecondaryContainerLight
+                                    isFilled -> SuccessContainer
+                                    else -> SurfaceVariantLight
                                 }
                             )
                             .border(
                                 width = if (isActive) 2.dp else 1.dp,
                                 color = when {
-                                    isActive -> Color(0xFF00796B) // High contrast teal border for active focus
-                                    isFilled -> Color(0xFF059669) // Emerald border for filled inputs
-                                    else -> Color(0xFFCBD5E1)     // Slate-300 border for empty slots
+                                    isActive -> SecondaryTealLight
+                                    isFilled -> PosCashGreenFill
+                                    else -> OutlineLight
                                 },
                                 shape = RoundedCornerShape(10.dp)
                             ),
@@ -104,7 +103,7 @@ fun OtpInputField(
                                 text = digit,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F172A) // Rich deep charcoal
+                                color = OnSurfaceLight
                             )
                         } else if (isActive) {
                             // Sleek vertical cursor indicator to show active focus position
@@ -112,7 +111,7 @@ fun OtpInputField(
                                 modifier = Modifier
                                     .width(2.dp)
                                     .height(18.dp)
-                                    .background(Color(0xFF00796B))
+                                    .background(SecondaryTealLight)
                             )
                         }
                     }

@@ -386,11 +386,11 @@ fun RechartsBarChartCanvas(
                 path = barPath,
                 brush = Brush.verticalGradient(
                     colors = if (isSelected) {
-                        listOf(PrimaryBlue, Color(0xFF1D4ED8))
+                        listOf(PrimaryBlue, PrimaryIndigoDark)
                     } else if (d.totalRevenue > 0) {
-                        listOf(Color(0xFF3B82F6), Color(0xFF60A5FA).copy(alpha = 0.7f))
+                        listOf(PrimaryLight, PrimaryLight.copy(alpha = 0.7f))
                     } else {
-                        listOf(Color(0xFFCBD5E1), Color(0xFFE2E8F0))
+                        listOf(OutlineLight, OutlineVariantLight)
                     },
                     startY = top,
                     endY = paddingTop + chartHeight

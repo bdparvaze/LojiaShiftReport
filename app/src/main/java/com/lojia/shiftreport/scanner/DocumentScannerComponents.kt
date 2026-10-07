@@ -119,7 +119,7 @@ fun DocumentScannerHeaderCard(
 
                 Button(
                     onClick = onCameraFallbackClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                    colors = ButtonDefaults.buttonColors(containerColor = OnBackgroundLight),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .defaultMinSize(minHeight = 44.dp)
@@ -241,7 +241,7 @@ fun ScannedDocumentItemCard(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFF1F5F9)),
+                    .background(SurfaceVariantLight),
                 contentAlignment = Alignment.Center
             ) {
                 if (thumbnailBitmap != null) {
@@ -255,7 +255,7 @@ fun ScannedDocumentItemCard(
                     Icon(
                         imageVector = Icons.Outlined.PictureAsPdf,
                         contentDescription = null,
-                        tint = Color(0xFFE11D48),
+                        tint = ErrorRedLight,
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -274,8 +274,9 @@ fun ScannedDocumentItemCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(3.dp))
+                val pageStr = if (document.pageCount == 1) stringResource(R.string.doc_page_count_single, document.pageCount) else stringResource(R.string.doc_page_count_plural, document.pageCount)
                 Text(
-                    text = "$sizeStr • ${document.pageCount} ${if (document.pageCount == 1) "page" else "pages"} • $dateStr",
+                    text = "$sizeStr • $pageStr • $dateStr",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = TextSecondaryLight,
                         fontSize = 11.sp
@@ -295,7 +296,7 @@ fun ScannedDocumentItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.MoreVert,
-                            contentDescription = "Options",
+                            contentDescription = stringResource(R.string.cd_options),
                             tint = TextSecondaryLight
                         )
                     }
@@ -306,54 +307,54 @@ fun ScannedDocumentItemCard(
                         containerColor = Color.White
                     ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_view_pdf), color = Color(0xFF0F172A)) },
-                            leadingIcon = { Icon(Icons.Outlined.Visibility, contentDescription = null, tint = Color(0xFF334155)) },
+                            text = { Text(stringResource(R.string.doc_btn_view_pdf), color = OnSurfaceLight) },
+                            leadingIcon = { Icon(Icons.Outlined.Visibility, contentDescription = null, tint = OnSurfaceVariantLight) },
                             onClick = {
                                 menuExpanded = false
                                 onViewClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_share_pdf), color = Color(0xFF0F172A)) },
-                            leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null, tint = Color(0xFF334155)) },
+                            text = { Text(stringResource(R.string.doc_btn_share_pdf), color = OnSurfaceLight) },
+                            leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null, tint = OnSurfaceVariantLight) },
                             onClick = {
                                 menuExpanded = false
                                 onSharePdfClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_extract_text), color = Color(0xFF0F172A)) },
-                            leadingIcon = { Icon(Icons.Outlined.TextFields, contentDescription = null, tint = Color(0xFF334155)) },
+                            text = { Text(stringResource(R.string.doc_btn_extract_text), color = OnSurfaceLight) },
+                            leadingIcon = { Icon(Icons.Outlined.TextFields, contentDescription = null, tint = OnSurfaceVariantLight) },
                             onClick = {
                                 menuExpanded = false
                                 onExtractTextClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_share_docx), color = Color(0xFF0F172A)) },
-                            leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null, tint = Color(0xFF334155)) },
+                            text = { Text(stringResource(R.string.doc_btn_share_docx), color = OnSurfaceLight) },
+                            leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null, tint = OnSurfaceVariantLight) },
                             onClick = {
                                 menuExpanded = false
                                 onShareDocxClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_protect_pdf), color = Color(0xFF0F172A)) },
-                            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = Color(0xFF334155)) },
+                            text = { Text(stringResource(R.string.doc_btn_protect_pdf), color = OnSurfaceLight) },
+                            leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = OnSurfaceVariantLight) },
                             onClick = {
                                 menuExpanded = false
                                 onPasswordProtectClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.doc_btn_rename), color = Color(0xFF0F172A)) },
-                            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null, tint = Color(0xFF334155)) },
+                            text = { Text(stringResource(R.string.doc_btn_rename), color = OnSurfaceLight) },
+                            leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null, tint = OnSurfaceVariantLight) },
                             onClick = {
                                 menuExpanded = false
                                 onRenameClick()
                             }
                         )
-                        HorizontalDivider(color = Color(0xFFE2E8F0))
+                        HorizontalDivider(color = OutlineVariantLight)
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.doc_btn_delete), color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
@@ -385,7 +386,7 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEDE9FE)),
+                    .background(PrimaryContainerLight),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

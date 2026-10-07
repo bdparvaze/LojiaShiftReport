@@ -31,8 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.lojia.shiftreport.ui.theme.AccentEmerald
-import com.lojia.shiftreport.ui.theme.PrimaryBlue
+import androidx.compose.ui.res.stringResource
+import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.theme.*
 
 /**
  * Supported features that require runtime dangerous permissions.
@@ -266,7 +267,7 @@ fun PermissionRationaleDialog(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFECFDF5)),
+                    .background(SuccessContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -282,7 +283,7 @@ fun PermissionRationaleDialog(
                 text = feature.title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A),
+                color = OnBackgroundLight,
                 textAlign = TextAlign.Center
             )
         },
@@ -295,14 +296,14 @@ fun PermissionRationaleDialog(
                     text = feature.description,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
-                    color = Color(0xFF475569),
+                    color = OnSurfaceVariantLight,
                     textAlign = TextAlign.Center
                 )
 
                 if (isPermanentlyDenied) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Surface(
-                        color = Color(0xFFFEF2F2),
+                        color = ErrorContainerLight,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -313,15 +314,15 @@ fun PermissionRationaleDialog(
                             Icon(
                                 imageVector = Icons.Outlined.Info,
                                 contentDescription = null,
-                                tint = Color(0xFFDC2626),
+                                tint = ErrorRedLight,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Permission was previously declined. Please enable it manually in App Settings to use this feature.",
+                                text = stringResource(R.string.permission_permanently_denied_desc),
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp,
-                                color = Color(0xFF991B1B)
+                                color = ErrorRedLight
                             )
                         }
                     }
@@ -341,7 +342,7 @@ fun PermissionRationaleDialog(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = if (isPermanentlyDenied) "Open Settings" else "Grant Permission",
+                    text = if (isPermanentlyDenied) stringResource(R.string.btn_open_settings) else stringResource(R.string.btn_grant_permission),
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -350,9 +351,9 @@ fun PermissionRationaleDialog(
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF64748B))
+                colors = ButtonDefaults.textButtonColors(contentColor = TextHintColor)
             ) {
-                Text("Not Now")
+                Text(stringResource(R.string.btn_not_now))
             }
         }
     )

@@ -90,7 +90,7 @@ fun LojiaHeader(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Filled.Assessment,
-                        contentDescription = "Lojia Logo",
+                        contentDescription = stringResource(R.string.cd_lojia_logo),
                         tint = LojiaColors.P500,
                         modifier = Modifier.size(28.dp)
                     )
@@ -99,9 +99,9 @@ fun LojiaHeader(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Main Branding Title: "Lojia Report" with prominent headlineMedium typography
+            // Main Branding Title with prominent headlineMedium typography
             Text(
-                text = "Lojia Report",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp
@@ -702,7 +702,7 @@ fun LojiaCountryPickerDialog(
                     IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = LojiaColors.N500
                         )
                     }

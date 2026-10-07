@@ -468,7 +468,7 @@ fun PosReconciliationSummary(
                     ) {
                         Column {
                             Text(stringResource(R.string.pdf_staff_meals), fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-                            Text("Complimentary • Non-revenue metric", fontSize = 9.5.sp, color = ShiftColors.TextMuted)
+                            Text(stringResource(R.string.complimentary_non_revenue_metric), fontSize = 9.5.sp, color = ShiftColors.TextMuted)
                         }
                         Text(stringResource(R.string.people_count, staffMealsCount), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Text)
                     }

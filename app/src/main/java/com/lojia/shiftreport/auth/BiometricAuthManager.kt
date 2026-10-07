@@ -61,20 +61,20 @@ object BiometricAuthManager {
         }
     }
 
-    fun getStatusDescription(status: BiometricStatus): String {
+    fun getStatusDescription(context: Context, status: BiometricStatus): String {
         return when (status) {
-            BiometricStatus.AVAILABLE -> "Fingerprint & Face Recognition Ready"
-            BiometricStatus.NOT_ENROLLED -> "No Biometrics Enrolled on Device"
-            BiometricStatus.NO_HARDWARE -> "Biometric Sensor Not Detected"
-            BiometricStatus.UNAVAILABLE -> "Biometrics Currently Unavailable"
+            BiometricStatus.AVAILABLE -> context.getString(R.string.biometric_auth)
+            BiometricStatus.NOT_ENROLLED -> context.getString(R.string.biometric_disabled_desc)
+            BiometricStatus.NO_HARDWARE -> context.getString(R.string.biometric_not_supported_window)
+            BiometricStatus.UNAVAILABLE -> context.getString(R.string.biometric_disabled_desc)
         }
     }
 
     fun showBiometricPrompt(
         activity: FragmentActivity,
-        title: String = "App Privacy & Security",
-        subtitle: String = "Verify your fingerprint or face to unlock",
-        description: String = "Biometric authentication secures your shift reports, sales data, and business configuration.",
+        title: String = activity.getString(R.string.biometric_prompt_default_title),
+        subtitle: String = activity.getString(R.string.biometric_prompt_default_subtitle),
+        description: String = activity.getString(R.string.biometric_auth_description),
         onResult: (BiometricAuthResult) -> Unit
     ) {
         val executor = ContextCompat.getMainExecutor(activity)

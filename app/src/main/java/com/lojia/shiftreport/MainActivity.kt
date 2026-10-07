@@ -151,7 +151,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             val msg = context.getString(R.string.data_restored_success, count)
                             android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
                         }.onFailure { err ->
-                            android.widget.Toast.makeText(context, err.localizedMessage ?: "Restore failed", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -376,7 +376,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                                 val msg = context.getString(R.string.data_restored_success, count)
                                                                 android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
                                                             }.onFailure { err ->
-                                                                android.widget.Toast.makeText(context, err.localizedMessage ?: "Restore failed", android.widget.Toast.LENGTH_SHORT).show()
+                                                                android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
                                                             }
                                                         }
                                                     }

@@ -60,7 +60,7 @@ object PdfShareUtils {
                 }
                 context.startActivity(intent)
             } catch (ex: Exception) {
-                Toast.makeText(context, "Could not open folder: ${ex.localizedMessage}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.could_not_open_folder, ex.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }

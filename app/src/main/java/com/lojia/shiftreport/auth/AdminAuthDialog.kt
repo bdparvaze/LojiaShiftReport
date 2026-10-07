@@ -67,8 +67,8 @@ import com.lojia.shiftreport.ui.theme.*
  */
 @Composable
 fun AdminAuthDialog(
-    actionTitle: String = "Delete Cashier",
-    actionDescription: String = "Admin re-authentication required to complete this critical operation.",
+    actionTitle: String = stringResource(R.string.admin_reauth_default_title),
+    actionDescription: String = stringResource(R.string.admin_reauth_default_desc),
     onDismissRequest: () -> Unit,
     onAuthSuccess: () -> Unit
 ) {
@@ -124,7 +124,7 @@ fun AdminAuthDialog(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Admin Re-Authentication",
+                            text = stringResource(R.string.admin_reauth_title),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = OnBackgroundLight,
@@ -180,7 +180,7 @@ fun AdminAuthDialog(
                     Text(
                         text = actionDescription,
                         fontSize = 11.5.sp,
-                        color = Color(0xFF78350F), // High contrast dark amber (passes WCAG AAA)
+                        color = WarningText,
                         lineHeight = 15.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f)
@@ -191,7 +191,7 @@ fun AdminAuthDialog(
             // PIN / Password Input
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "Enter Admin Security PIN or Password",
+                    text = stringResource(R.string.enter_admin_security_pin),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = OnSurfaceVariantLight
@@ -247,26 +247,26 @@ fun AdminAuthDialog(
                     if (activity != null) {
                         BiometricAuthManager.showBiometricPrompt(
                             activity = activity,
-                            title = "Admin Authentication",
-                            subtitle = "Verify fingerprint or face to authorize",
+                            title = context.getString(R.string.biometric_authentication),
+                            subtitle = context.getString(R.string.biometric_prompt_default_subtitle),
                             description = actionDescription
                         ) { result ->
                             when (result) {
                                 is BiometricAuthResult.Success -> {
-                                    Toast.makeText(context, "Admin authenticated via biometrics.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_admin_authenticated), Toast.LENGTH_SHORT).show()
                                     onAuthSuccess()
                                 }
                                 is BiometricAuthResult.Error -> {
-                                    authError = "Biometric error: ${result.errString}"
+                                    authError = result.errString.toString()
                                 }
                                 is BiometricAuthResult.Failed -> {
-                                    authError = "Biometric verification failed"
+                                    authError = context.getString(R.string.biometric_verification_failed)
                                 }
                                 else -> {}
                             }
                         }
                     } else {
-                        authError = "Biometric authentication not supported in this window"
+                        authError = context.getString(R.string.biometric_not_supported_window)
                     }
                 },
                 shape = RoundedCornerShape(10.dp),
@@ -291,7 +291,7 @@ fun AdminAuthDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
-                        text = "Authenticate with Biometrics",
+                        text = stringResource(R.string.btn_auth_with_biometrics),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -336,7 +336,7 @@ fun AdminAuthDialog(
                     onClick = {
                         val trimmedPin = adminPinInput.trim()
                         if (trimmedPin.isBlank()) {
-                            authError = "Admin PIN or Password is required"
+                            authError = context.getString(R.string.admin_pin_or_password_required)
                         } else {
                             isAuthenticating = true
                             coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -346,10 +346,10 @@ fun AdminAuthDialog(
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                     isAuthenticating = false
                                     if (isMatch) {
-                                        Toast.makeText(context, "Admin authenticated. Audit log generated.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.toast_admin_authenticated), Toast.LENGTH_SHORT).show()
                                         onAuthSuccess()
                                     } else {
-                                        authError = "Invalid Admin Credentials"
+                                        authError = context.getString(R.string.invalid_admin_credentials)
                                     }
                                 }
                             }
@@ -375,7 +375,7 @@ fun AdminAuthDialog(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Confirm",
+                            text = stringResource(R.string.confirm),
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )

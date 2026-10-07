@@ -177,7 +177,7 @@ fun BusinessLogoPickerCard(
                                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                     )
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, e.localizedMessage ?: "Gallery error", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, e.localizedMessage ?: context.getString(R.string.gallery_error), Toast.LENGTH_SHORT).show()
                                 }
                             },
                         color = SurfaceVariantLight
@@ -342,7 +342,7 @@ fun BusinessLogoPickerCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.PhotoCamera,
-                    contentDescription = "Change photo",
+                    contentDescription = stringResource(R.string.cd_change_photo),
                     tint = PureWhite,
                     modifier = Modifier.size(40.dp)
                 )
@@ -532,7 +532,7 @@ fun ProfileDetailItemRow(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit $label",
+                        contentDescription = stringResource(R.string.cd_edit),
                         tint = OnSurfaceVariantLight,
                         modifier = Modifier.size(14.dp)
                     )

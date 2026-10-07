@@ -274,7 +274,7 @@ fun ProfileScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Edit photo",
+                                contentDescription = stringResource(R.string.cd_edit_photo),
                                 tint = PureWhite,
                                 modifier = Modifier.size(14.dp)
                             )
@@ -450,7 +450,7 @@ fun ProfileScreen(
                                     reportViewModel.saveBusinessProfile(bProfile.copy(email = cleanMail))
                                     reportViewModel.updateBusiness(UpdateBusinessRequest(email = cleanMail))
                                     expandedSection = null
-                                    Toast.makeText(context, "Email updated successfully!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_email_updated), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -511,7 +511,7 @@ fun ProfileScreen(
                                     reportViewModel.saveBusinessProfile(bProfile.copy(businessName = cleanName))
                                     reportViewModel.updateBusiness(UpdateBusinessRequest(businessName = cleanName))
                                     expandedSection = null
-                                    Toast.makeText(context, "Store name updated!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_store_name_updated), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -566,7 +566,7 @@ fun ProfileScreen(
                                     val cleanVat = tempVat.trim()
                                     reportViewModel.saveBusinessProfile(bProfile.copy(vatNumber = cleanVat))
                                     expandedSection = null
-                                    Toast.makeText(context, "Tax Registration ID updated!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_vat_id_updated), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -628,7 +628,7 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(Icons.Outlined.Map, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(18.dp))
-                                Text("Select Location on Google Maps", fontWeight = FontWeight.SemiBold, color = PrimaryIndigoLight, fontSize = 13.sp)
+                                Text(stringResource(R.string.select_location_on_map), fontWeight = FontWeight.SemiBold, color = PrimaryIndigoLight, fontSize = 13.sp)
                             }
                         }
 
@@ -651,7 +651,7 @@ fun ProfileScreen(
                                     reportViewModel.saveBusinessProfile(bProfile.copy(address = cleanAddr))
                                     reportViewModel.updateBusiness(UpdateBusinessRequest(address = cleanAddr))
                                     expandedSection = null
-                                    Toast.makeText(context, "Store address saved!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_address_saved), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -719,7 +719,7 @@ fun ProfileScreen(
                                     )
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "Change country",
+                                        contentDescription = stringResource(R.string.cd_change_country),
                                         tint = OnSurfaceVariantLight,
                                         modifier = Modifier.size(16.dp)
                                     )
@@ -785,7 +785,7 @@ fun ProfileScreen(
                                     reportViewModel.saveBusinessProfile(bProfile.copy(phone = fullFormatted))
                                     reportViewModel.updateBusiness(UpdateBusinessRequest(phone = fullFormatted))
                                     expandedSection = null
-                                    Toast.makeText(context, "Phone number saved!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_phone_saved), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -879,7 +879,7 @@ fun ProfileScreen(
                                     IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
                                         Icon(
                                             imageVector = if (currentPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                            contentDescription = if (currentPasswordVisible) "Hide password" else "Show password",
+                                            contentDescription = if (currentPasswordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
                                             tint = OnSurfaceVariantLight
                                         )
                                     }
@@ -912,7 +912,7 @@ fun ProfileScreen(
                                 IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
                                     Icon(
                                         imageVector = if (newPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = if (newPasswordVisible) "Hide password" else "Show password",
+                                        contentDescription = if (newPasswordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
                                         tint = OnSurfaceVariantLight
                                     )
                                 }
@@ -927,7 +927,7 @@ fun ProfileScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Password Strength", style = MaterialTheme.typography.labelSmall.copy(color = OnSurfaceVariantLight, fontSize = 11.sp))
+                                    Text(stringResource(R.string.password_strength_label), style = MaterialTheme.typography.labelSmall.copy(color = OnSurfaceVariantLight, fontSize = 11.sp))
                                     Text(strengthLabel, style = MaterialTheme.typography.labelSmall.copy(color = strengthColor, fontWeight = FontWeight.Bold, fontSize = 11.sp))
                                 }
                                 Spacer(modifier = Modifier.height(3.dp))
@@ -963,7 +963,7 @@ fun ProfileScreen(
                                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                                     Icon(
                                         imageVector = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                                        contentDescription = if (confirmPasswordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
                                         tint = OnSurfaceVariantLight
                                     )
                                 }
@@ -1051,7 +1051,7 @@ fun ProfileScreen(
                         mapLng = newLng
                     )
                 )
-                Toast.makeText(context, "Store location saved from Google Maps!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_location_saved_maps), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showMapLocationPicker = false }
         )
@@ -1196,7 +1196,7 @@ fun InlineEditableProfileRow(
 
                 Icon(
                     imageVector = if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                     tint = if (isExpanded) PrimaryIndigoLight else TextHintColor,
                     modifier = Modifier.size(20.dp)
                 )
@@ -1381,7 +1381,7 @@ fun CountryCodePickerDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(20.dp)
                         )

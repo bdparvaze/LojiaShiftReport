@@ -454,7 +454,7 @@ fun SettingsReportSection(
                     LojiaSettingsCard {
                         Icon(
                             imageVector = Icons.Outlined.Pin,
-                            contentDescription = "Quick Login with PIN",
+                            contentDescription = stringResource(R.string.cd_quick_login_pin),
                             tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(24.dp)
                         )
@@ -480,7 +480,7 @@ fun SettingsReportSection(
                                     if (preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank()) {
                                         quickLoginEnabled = true
                                         preferencesRepository.setQuickLoginEnabled(true)
-                                        Toast.makeText(context, "Quick Login enabled", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.quick_login_enabled), Toast.LENGTH_SHORT).show()
                                     } else {
                                         showQuickPinDialog = true
                                     }
@@ -491,7 +491,7 @@ fun SettingsReportSection(
                                     biometricEnabled = false
                                     preferencesRepository.setBiometricEnabled(false)
                                     persistProfile(bio = false)
-                                    Toast.makeText(context, "Quick Login disabled", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.quick_login_disabled), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = SwitchDefaults.colors(
@@ -507,7 +507,7 @@ fun SettingsReportSection(
                     LojiaSettingsCard(onClick = { showQuickPinDialog = true }) {
                         Icon(
                             imageVector = Icons.Outlined.Key,
-                            contentDescription = "Change 4-Digit PIN",
+                            contentDescription = stringResource(R.string.cd_change_pin),
                             tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(24.dp)
                         )
@@ -565,7 +565,7 @@ fun SettingsReportSection(
                                 if (enable) {
                                     // 3. First check that Quick Login is already enabled and a PIN exists (as fallback)
                                     if (!quickLoginEnabled || !preferencesRepository.hasPinConfigured()) {
-                                        Toast.makeText(context, "Please enable Quick Login with a PIN first before activating Biometric.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, context.getString(R.string.settings_enable_pin_first_biometric), Toast.LENGTH_LONG).show()
                                         showQuickPinDialog = true
                                         return@Switch
                                     }
@@ -575,9 +575,9 @@ fun SettingsReportSection(
                                     if (fragActivity != null && bioStatus == BiometricStatus.AVAILABLE) {
                                         BiometricAuthManager.showBiometricPrompt(
                                             activity = fragActivity,
-                                            title = "Biometric Verification",
-                                            subtitle = "Touch sensor to activate Biometric Login",
-                                            description = "Verifying biometric security for your account.",
+                                            title = context.getString(R.string.admin_reauth_default_title),
+                                            subtitle = context.getString(R.string.biometric_touch_to_activate),
+                                            description = context.getString(R.string.biometric_verifying_security),
                                             onResult = { result ->
                                                 when (result) {
                                                     is BiometricAuthResult.Success -> {
@@ -587,7 +587,7 @@ fun SettingsReportSection(
                                                         Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
                                                     }
                                                     is BiometricAuthResult.Failed -> {
-                                                        Toast.makeText(context, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, context.getString(R.string.fingerprint_not_recognized), Toast.LENGTH_SHORT).show()
                                                     }
                                                     is BiometricAuthResult.Error -> {
                                                         Toast.makeText(context, result.errString.toString(), Toast.LENGTH_SHORT).show()
@@ -890,7 +890,7 @@ fun SettingsReportSection(
                                     )
                                 }
                                 IconButton(onClick = { lastCreatedBackupInfo = null }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = SuccessGreen, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_dismiss), tint = SuccessGreen, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
@@ -1589,7 +1589,7 @@ fun SettingsReportSection(
                                 pinError = null
                             }
                         },
-                        label = { Text("4-Digit PIN") },
+                        label = { Text(stringResource(R.string.four_digit_pin_label)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
@@ -1622,7 +1622,7 @@ fun SettingsReportSection(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)
                 ) {
-                    Text("Save PIN")
+                    Text(stringResource(R.string.save_pin_btn))
                 }
             },
             dismissButton = {
@@ -1635,7 +1635,7 @@ fun SettingsReportSection(
                         }
                     }
                 ) {
-                    Text("Cancel", color = OnSurfaceVariantLight)
+                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
                 }
             }
         )
@@ -1722,7 +1722,7 @@ fun SettingsReportSection(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = WarningOrange)
                 ) {
-                    Text("Restore Now", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_restore_now), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1886,7 +1886,7 @@ fun SettingsReportSection(
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = PrimaryIndigoLight)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Reading backup details...", fontSize = 12.sp, color = PrimaryIndigoLight)
+                            Text(stringResource(R.string.reading_backup_details), fontSize = 12.sp, color = PrimaryIndigoLight)
                         }
                     }
                 }
@@ -1992,7 +1992,7 @@ fun SettingsReportSection(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = WarningOrange)
                 ) {
-                    Text("Restore Now", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_restore_now), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {

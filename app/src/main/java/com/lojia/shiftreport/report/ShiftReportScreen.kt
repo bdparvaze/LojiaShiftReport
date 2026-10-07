@@ -602,7 +602,7 @@ private fun ReportEntryTab(
                                             .defaultMinSize(minHeight = 40.dp)
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(Color.White)
-                                            .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(8.dp))
+                                            .border(1.dp, OutlineLight, RoundedCornerShape(8.dp))
                                             .clickable { showDatePicker = true }
                                             .padding(horizontal = 10.dp, vertical = 6.dp),
                                         contentAlignment = Alignment.CenterStart
@@ -967,15 +967,15 @@ private fun ReportEntryTab(
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
             containerColor = Color.White,
-            titleContentColor = Color(0xFF0F172A),
-            textContentColor = Color(0xFF1E293B),
-            title = { Text(stringResource(R.string.clean_data), color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.confirm_clean_data), color = Color(0xFF1E293B)) },
+            titleContentColor = OnBackgroundLight,
+            textContentColor = OnSurfaceVariantLight,
+            title = { Text(stringResource(R.string.clean_data), color = OnBackgroundLight, fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.confirm_clean_data), color = OnSurfaceVariantLight) },
             confirmButton = {
                 TextButton(onClick = { resetAll(); showResetConfirm = false }) { Text(stringResource(R.string.yes), color = ShiftColors.Danger, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.cancel), color = Color(0xFF475569), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         )
     }
@@ -992,17 +992,17 @@ private fun ReportEntryTab(
                     showDatePicker = false
                 }) { Text(stringResource(R.string.ok), color = ShiftColors.Primary, fontWeight = FontWeight.Bold) }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel), color = Color(0xFF475569), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight, maxLines = 1, overflow = TextOverflow.Ellipsis) } }
         ) {
             DatePicker(
                 state = state,
                 colors = DatePickerDefaults.colors(
                     containerColor = Color.White,
-                    titleContentColor = Color(0xFF0F172A),
-                    headlineContentColor = Color(0xFF0F172A),
-                    weekdayContentColor = Color(0xFF475569),
-                    subheadContentColor = Color(0xFF0F172A),
-                    dayContentColor = Color(0xFF0F172A),
+                    titleContentColor = OnBackgroundLight,
+                    headlineContentColor = OnBackgroundLight,
+                    weekdayContentColor = OnSurfaceVariantLight,
+                    subheadContentColor = OnBackgroundLight,
+                    dayContentColor = OnBackgroundLight,
                     selectedDayContainerColor = ShiftColors.Primary,
                     selectedDayContentColor = Color.White
                 )
@@ -1053,13 +1053,13 @@ private fun ReportEntryTab(
         AlertDialog(
             onDismissRequest = { showManagerLockDialog = false },
             containerColor = Color.White,
-            titleContentColor = Color(0xFF0F172A),
-            textContentColor = Color(0xFF1E293B),
+            titleContentColor = OnBackgroundLight,
+            textContentColor = OnSurfaceVariantLight,
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("🛡️", fontSize = 18.sp)
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.manager_sign_off_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF0F172A))
+                    Text(stringResource(R.string.manager_sign_off_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
                 }
             },
             text = {
@@ -1171,10 +1171,10 @@ private fun LiveCashflowTab(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = if (activeSession != null) Color(0xFFECFDF5) else ShiftColors.DangerLight,
+                            color = if (activeSession != null) SuccessContainer else ShiftColors.DangerLight,
                             border = androidx.compose.foundation.BorderStroke(
                                 1.dp,
-                                if (activeSession != null) Color(0xFFA7F3D0) else Color(0xFFFECACA)
+                                if (activeSession != null) PosCashGreen.copy(alpha = 0.3f) else ErrorContainerLight
                             )
                         ) {
                             Row(
@@ -1393,7 +1393,7 @@ private fun LiveCashflowTab(
                 amount = "0.00 $currentCurrency",
                 icon = Icons.Default.TrendingUp,
                 color = ShiftColors.NetCashGreen,
-                bgColor = Color(0xFFECFDF5),
+                bgColor = SuccessContainer,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
@@ -1445,7 +1445,7 @@ private fun LiveCashflowTab(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(10.dp),
-                                    color = if (move.type == "PAY_IN") Color(0xFFECFDF5) else ShiftColors.DangerLight,
+                                    color = if (move.type == "PAY_IN") SuccessContainer else ShiftColors.DangerLight,
                                     modifier = Modifier.size(36.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -1475,7 +1475,7 @@ private fun LiveCashflowTab(
                             }
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (move.type == "PAY_IN") Color(0xFFECFDF5) else ShiftColors.DangerLight
+                                color = if (move.type == "PAY_IN") SuccessContainer else ShiftColors.DangerLight
                             ) {
                                 Text(
                                     text = "${if (move.type == "PAY_IN") "+" else "-"}%.2f $currentCurrency".format(move.amount),
@@ -1503,8 +1503,8 @@ private fun LiveCashflowTab(
         AlertDialog(
             onDismissRequest = { showOpenShiftModal = false },
             containerColor = Color.White,
-            titleContentColor = Color(0xFF0F172A),
-            textContentColor = Color(0xFF1E293B),
+            titleContentColor = OnBackgroundLight,
+            textContentColor = OnSurfaceVariantLight,
             shape = RoundedCornerShape(18.dp),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1513,7 +1513,7 @@ private fun LiveCashflowTab(
                         text = stringResource(R.string.open_shift_session),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF0F172A)
+                        color = OnBackgroundLight
                     )
                 }
             },
@@ -1590,8 +1590,8 @@ private fun LiveCashflowTab(
         AlertDialog(
             onDismissRequest = { showCloseShiftModal = false },
             containerColor = Color.White,
-            titleContentColor = Color(0xFF0F172A),
-            textContentColor = Color(0xFF1E293B),
+            titleContentColor = OnBackgroundLight,
+            textContentColor = OnSurfaceVariantLight,
             shape = RoundedCornerShape(18.dp),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1600,7 +1600,7 @@ private fun LiveCashflowTab(
                         text = stringResource(R.string.close_shift_session),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF0F172A)
+                        color = OnBackgroundLight
                     )
                 }
             },
@@ -1612,8 +1612,8 @@ private fun LiveCashflowTab(
                     // 1. Sales Summary Card
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF8FAFC),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        color = BackgroundLight,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariantLight),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1637,7 +1637,7 @@ private fun LiveCashflowTab(
                                     Text("%.2f %s".format(activeSession.digitalSales, currency), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
-                            HorizontalDivider(color = Color(0xFFE2E8F0), modifier = Modifier.padding(vertical = 2.dp))
+                            HorizontalDivider(color = OutlineVariantLight, modifier = Modifier.padding(vertical = 2.dp))
                             val totalSales = activeSession.cashSales + activeSession.cardSales + activeSession.digitalSales
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(stringResource(R.string.total_sales), fontSize = 12.sp, fontWeight = FontWeight.Bold)

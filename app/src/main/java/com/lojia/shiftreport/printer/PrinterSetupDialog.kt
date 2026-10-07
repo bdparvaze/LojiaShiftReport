@@ -35,9 +35,7 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.permission.AppFeaturePermission
 import com.lojia.shiftreport.permission.rememberPermissionRequester
 import com.lojia.shiftreport.ui.common.LojiaTextField
-import com.lojia.shiftreport.ui.theme.AccentEmerald
-import com.lojia.shiftreport.ui.theme.PrimaryBlue
-import com.lojia.shiftreport.ui.theme.PureWhite
+import com.lojia.shiftreport.ui.theme.*
 import kotlinx.coroutines.launch
 
 /**
@@ -152,7 +150,7 @@ fun PrinterSetupDialog(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFECFDF5)),
+                                .background(SuccessContainer),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -168,12 +166,12 @@ fun PrinterSetupDialog(
                                 text = stringResource(R.string.printer_setup_title),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F172A)
+                                color = OnBackgroundLight
                             )
                             Text(
                                 text = stringResource(R.string.printer_setup_subtitle),
                                 fontSize = 12.sp,
-                                color = Color(0xFF64748B)
+                                color = TextHintColor
                             )
                         }
                     }
@@ -182,7 +180,7 @@ fun PrinterSetupDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.close),
-                            tint = Color(0xFF94A3B8)
+                            tint = TextDisabledColor
                         )
                     }
                 }
@@ -194,14 +192,14 @@ fun PrinterSetupDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF1F5F9))
+                        .background(SurfaceVariantLight)
                         .padding(4.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(if (connectionType == "bluetooth") Color.White else Color.Transparent)
+                            .background(if (connectionType == "bluetooth") PureWhite else Color.Transparent)
                             .clickable {
                                 connectionType = "bluetooth"
                                 statusMessage = null
@@ -213,7 +211,7 @@ fun PrinterSetupDialog(
                             text = stringResource(R.string.printer_conn_bluetooth),
                             fontSize = 13.sp,
                             fontWeight = if (connectionType == "bluetooth") FontWeight.Bold else FontWeight.Medium,
-                            color = if (connectionType == "bluetooth") AccentEmerald else Color(0xFF64748B)
+                            color = if (connectionType == "bluetooth") AccentEmerald else TextHintColor
                         )
                     }
 
@@ -221,7 +219,7 @@ fun PrinterSetupDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(if (connectionType == "network") Color.White else Color.Transparent)
+                            .background(if (connectionType == "network") PureWhite else Color.Transparent)
                             .clickable {
                                 connectionType = "network"
                                 statusMessage = null
@@ -233,7 +231,7 @@ fun PrinterSetupDialog(
                             text = stringResource(R.string.printer_conn_network),
                             fontSize = 13.sp,
                             fontWeight = if (connectionType == "network") FontWeight.Bold else FontWeight.Medium,
-                            color = if (connectionType == "network") AccentEmerald else Color(0xFF64748B)
+                            color = if (connectionType == "network") AccentEmerald else TextHintColor
                         )
                     }
                 }
@@ -251,7 +249,7 @@ fun PrinterSetupDialog(
                             text = stringResource(R.string.printer_paired_devices),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF334155)
+                            color = OnSurfaceVariantLight
                         )
 
                         TextButton(
@@ -277,14 +275,14 @@ fun PrinterSetupDialog(
                                 .fillMaxWidth()
                                 .height(90.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF8FAFC))
-                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp)),
+                                .background(BackgroundLight)
+                                .border(1.dp, OutlineVariantLight, RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = if (isScanning) stringResource(R.string.printer_searching) else stringResource(R.string.printer_no_devices_hint),
                                 fontSize = 12.sp,
-                                color = Color(0xFF64748B),
+                                color = TextHintColor,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -305,10 +303,10 @@ fun PrinterSetupDialog(
                                             selectedAddress = device.address
                                             statusMessage = null
                                         },
-                                    color = if (isSelected) Color(0xFFECFDF5) else Color(0xFFF8FAFC),
+                                    color = if (isSelected) SuccessContainer else BackgroundLight,
                                     border = BorderStroke(
                                         1.dp,
-                                        if (isSelected) AccentEmerald else Color(0xFFE2E8F0)
+                                        if (isSelected) AccentEmerald else OutlineVariantLight
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
@@ -322,12 +320,12 @@ fun PrinterSetupDialog(
                                                 text = device.name,
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF0F172A)
+                                                color = OnBackgroundLight
                                             )
                                             Text(
                                                 text = device.address,
                                                 fontSize = 11.sp,
-                                                color = Color(0xFF64748B)
+                                                color = TextHintColor
                                             )
                                         }
 
@@ -351,7 +349,7 @@ fun PrinterSetupDialog(
                                 statusMessage = null
                             },
                             label = { Text(stringResource(R.string.printer_ip_label)) },
-                            placeholder = { Text("e.g. 192.168.1.100") },
+                            placeholder = { Text(stringResource(R.string.printer_network_ip_placeholder)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
@@ -378,7 +376,7 @@ fun PrinterSetupDialog(
                     text = stringResource(R.string.printer_paper_width_label),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF334155)
+                    color = OnSurfaceVariantLight
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -408,7 +406,7 @@ fun PrinterSetupDialog(
                     Text(
                         text = statusMessage!!,
                         fontSize = 12.sp,
-                        color = if (isErrorMessage) Color(0xFFDC2626) else AccentEmerald,
+                        color = if (isErrorMessage) ErrorRedLight else AccentEmerald,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()

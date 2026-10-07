@@ -393,8 +393,8 @@ fun MonthlySalesSummaryView(
                     if (isCurrentCalendarMonth) {
                         Surface(
                             shape = RoundedCornerShape(20.dp),
-                            color = Color(0xFFEFF6FF),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE))
+                            color = InfoContainer,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryContainerLight)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -791,7 +791,7 @@ fun MonthlySalesSummaryView(
                         Spacer(modifier = Modifier.height(12.dp))
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFF0F172A),
+                            color = OnBackgroundLight,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .shadow(6.dp, RoundedCornerShape(12.dp))
@@ -812,7 +812,7 @@ fun MonthlySalesSummaryView(
                                     )
                                     Text(
                                         text = stringResource(R.string.day_x_of_y_fmt, d.dayNumber, daysInMonth),
-                                        color = Color(0xFF94A3B8),
+                                        color = TextDisabledColor,
                                         fontSize = 11.sp
                                     )
                                 }
@@ -841,7 +841,7 @@ fun MonthlySalesSummaryView(
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.total_revenue_1),
-                                                color = Color(0xFF93C5FD),
+                                                color = PrimaryLight,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -981,9 +981,9 @@ fun MonthlySalesSummaryView(
                                 Surface(
                                     shape = CircleShape,
                                     color = when (rank) {
-                                        0 -> Color(0xFFFEF3C7)
-                                        1 -> Color(0xFFF1F5F9)
-                                        2 -> Color(0xFFFFEDD5)
+                                        0 -> WarningContainer
+                                        1 -> SurfaceVariantLight
+                                        2 -> WarningContainer
                                         else -> BgLightGrey
                                     },
                                     modifier = Modifier.size(26.dp)
@@ -994,9 +994,9 @@ fun MonthlySalesSummaryView(
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = when (rank) {
-                                                0 -> Color(0xFFB45309)
-                                                1 -> Color(0xFF475569)
-                                                2 -> Color(0xFFC2410C)
+                                                0 -> WarningOrange
+                                                1 -> OnSurfaceVariantLight
+                                                2 -> PosDueOrange
                                                 else -> TextSecondaryLight
                                             }
                                         )

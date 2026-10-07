@@ -261,8 +261,8 @@ fun SecureDeleteModal(
                     OutlinedTextField(
                         value = passwordInput,
                         onValueChange = { passwordInput = it; errorMsg = null },
-                        label = { Text("Password", fontSize = 12.sp, color = OnSurfaceVariantLight) },
-                        placeholder = { Text("Enter your password", fontSize = 12.sp, color = TextHintColor) },
+                        label = { Text(stringResource(R.string.password), fontSize = 12.sp, color = OnSurfaceVariantLight) },
+                        placeholder = { Text(stringResource(R.string.auth_ph_password), fontSize = 12.sp, color = TextHintColor) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Lock,
@@ -292,8 +292,8 @@ fun SecureDeleteModal(
                     OutlinedTextField(
                         value = answerInput,
                         onValueChange = { answerInput = it; errorMsg = null },
-                        label = { Text("Security Answer", fontSize = 12.sp, color = OnSurfaceVariantLight) },
-                        placeholder = { Text("Enter answer", fontSize = 12.sp, color = TextHintColor) },
+                        label = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp, color = OnSurfaceVariantLight) },
+                        placeholder = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp, color = TextHintColor) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.HelpOutline,

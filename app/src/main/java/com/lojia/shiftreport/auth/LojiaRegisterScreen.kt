@@ -1,6 +1,7 @@
 package com.lojia.shiftreport.auth
 
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.telephony.TelephonyManager
@@ -223,7 +224,7 @@ fun LojiaRegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FA))
+            .background(BackgroundLight)
             .padding(horizontal = 32.dp)
             .imePadding(),
         contentAlignment = Alignment.Center
@@ -413,7 +414,7 @@ fun LojiaRegisterScreen(
                         ) {
                             Icon(
                                 imageVector = if (rPwVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                                contentDescription = "Toggle password",
+                                contentDescription = stringResource(R.string.cd_toggle_password),
                                 tint = if (rPwVisible) LojiaColors.P500 else LojiaColors.N400,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -447,7 +448,7 @@ fun LojiaRegisterScreen(
                         ) {
                             Icon(
                                 imageVector = if (rCpVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                                contentDescription = "Toggle password",
+                                contentDescription = stringResource(R.string.cd_toggle_password),
                                 tint = if (rCpVisible) LojiaColors.P500 else LojiaColors.N400,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -722,7 +723,7 @@ fun LojiaRegisterSuccessScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FA))
+            .background(BackgroundLight)
             .padding(horizontal = 32.dp)
             .testTag("pgSuccess"),
         contentAlignment = Alignment.Center
@@ -750,7 +751,7 @@ fun LojiaRegisterSuccessScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
-                        contentDescription = "Success",
+                        contentDescription = stringResource(R.string.cd_success),
                         tint = LojiaColors.G500,
                         modifier = Modifier.size(40.dp)
                     )

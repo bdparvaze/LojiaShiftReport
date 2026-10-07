@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.res.stringResource
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -235,7 +237,7 @@ fun GoogleMapsLocationPickerModal(
                 areaTitle = data.third.split(",").firstOrNull()?.trim() ?: q
                 addressText = data.third
                 performReverseGeocode(currentLat, currentLng)
-                Toast.makeText(context, "Moved map to $q", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_map_moved, q), Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -258,12 +260,12 @@ fun GoogleMapsLocationPickerModal(
                     currentLat = addr.latitude
                     currentLng = addr.longitude
                     performReverseGeocode(currentLat, currentLng)
-                    Toast.makeText(context, "Location found!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_location_found), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Location '$q' not found. Drag pin on map.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_location_not_found, q), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Search unavailable. Drag pin directly on map.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_search_unavailable), Toast.LENGTH_SHORT).show()
             } finally {
                 isGeocoding = false
             }
@@ -280,7 +282,7 @@ fun GoogleMapsLocationPickerModal(
 
             if (!hasFine && !hasCoarse) {
                 isDetectingGps = false
-                Toast.makeText(context, "Location permission required for Live GPS", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_gps_permission_required), Toast.LENGTH_SHORT).show()
                 return
             }
 
@@ -298,7 +300,7 @@ fun GoogleMapsLocationPickerModal(
                 currentLat = bestLocation.latitude
                 currentLng = bestLocation.longitude
                 performReverseGeocode(currentLat, currentLng)
-                Toast.makeText(context, "🎯 Live GPS location locked!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_gps_locked), Toast.LENGTH_SHORT).show()
                 isDetectingGps = false
             } else {
                 // Request a fresh update
@@ -309,7 +311,7 @@ fun GoogleMapsLocationPickerModal(
                         performReverseGeocode(currentLat, currentLng)
                         isDetectingGps = false
                         locationManager.removeUpdates(this)
-                        Toast.makeText(context, "🎯 Live GPS position acquired!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.toast_gps_acquired), Toast.LENGTH_SHORT).show()
                     }
                     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
                     override fun onProviderEnabled(provider: String) {}
@@ -320,7 +322,7 @@ fun GoogleMapsLocationPickerModal(
             }
         } catch (e: Exception) {
             isDetectingGps = false
-            Toast.makeText(context, "Could not acquire GPS: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.toast_gps_error, e.message ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -333,7 +335,7 @@ fun GoogleMapsLocationPickerModal(
         if (granted) {
             acquireLiveGpsFix()
         } else {
-            Toast.makeText(context, "Location permission denied. You can manually drag the pin on map.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.toast_gps_permission_denied), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -598,7 +600,7 @@ fun GoogleMapsLocationPickerModal(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Close,
-                                    contentDescription = "Close",
+                                    contentDescription = stringResource(R.string.cd_close),
                                     tint = OnSurfaceVariantLight,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -632,7 +634,7 @@ fun GoogleMapsLocationPickerModal(
                                 onValueChange = { searchQuery = it },
                                 placeholder = {
                                     Text(
-                                        text = "Search city, street, or landmark...",
+                                        text = stringResource(R.string.search),
                                         fontSize = 13.sp,
                                         color = TextHintColor
                                     )
@@ -654,7 +656,7 @@ fun GoogleMapsLocationPickerModal(
                                     onClick = { searchQuery = "" },
                                     modifier = Modifier.size(26.dp)
                                 ) {
-                                    Icon(Icons.Outlined.Clear, contentDescription = "Clear", tint = TextHintColor, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Outlined.Clear, contentDescription = stringResource(R.string.cd_clear), tint = TextHintColor, modifier = Modifier.size(16.dp))
                                 }
                             }
 
@@ -668,7 +670,7 @@ fun GoogleMapsLocationPickerModal(
                                 ),
                                 modifier = Modifier.defaultMinSize(minWidth = 56.dp, minHeight = 34.dp)
                             ) {
-                                Text("Search", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.search), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -690,7 +692,7 @@ fun GoogleMapsLocationPickerModal(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(Icons.Outlined.MyLocation, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(14.dp))
-                                Text("My Location", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = PrimaryIndigoLight)
+                                Text(stringResource(R.string.btn_my_location), fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = PrimaryIndigoLight)
                             }
                         }
 
@@ -743,7 +745,7 @@ fun GoogleMapsLocationPickerModal(
                             } else {
                                 Icon(
                                     imageVector = Icons.Outlined.MyLocation,
-                                    contentDescription = "My GPS Location",
+                                    contentDescription = stringResource(R.string.cd_my_gps_location),
                                     tint = PrimaryIndigoLight,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -763,14 +765,14 @@ fun GoogleMapsLocationPickerModal(
                                 onClick = { zoomLevel = (zoomLevel + 0.3f).coerceAtMost(2.5f) },
                                 modifier = Modifier.size(40.dp)
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = "Zoom In", tint = OnSurfaceLight)
+                                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_zoom_in), tint = OnSurfaceLight)
                             }
                             HorizontalDivider(color = OutlineLight, thickness = 1.dp)
                             IconButton(
                                 onClick = { zoomLevel = (zoomLevel - 0.3f).coerceAtLeast(0.6f) },
                                 modifier = Modifier.size(40.dp)
                             ) {
-                                Icon(Icons.Default.Remove, contentDescription = "Zoom Out", tint = OnSurfaceLight)
+                                Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.cd_zoom_out), tint = OnSurfaceLight)
                             }
                         }
                     }
@@ -789,7 +791,7 @@ fun GoogleMapsLocationPickerModal(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Outlined.OpenInNew,
-                                contentDescription = "Open in Google Maps App",
+                                contentDescription = stringResource(R.string.cd_open_google_maps),
                                 tint = PrimaryIndigoLight,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -890,8 +892,8 @@ fun GoogleMapsLocationPickerModal(
                         OutlinedTextField(
                             value = addressText,
                             onValueChange = { addressText = it },
-                            label = { Text("Permanent Store / Branch Address") },
-                            placeholder = { Text("e.g. Shop #4, Avenue 12, Commercial Area") },
+                            label = { Text(stringResource(R.string.permanent_store_address_label)) },
+                            placeholder = { Text(stringResource(R.string.permanent_store_address_placeholder)) },
                             leadingIcon = {
                                 Icon(Icons.Outlined.Business, contentDescription = null, tint = OnSurfaceVariantLight, modifier = Modifier.size(18.dp))
                             },
@@ -919,7 +921,7 @@ fun GoogleMapsLocationPickerModal(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Tag as:", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariantLight)
+                            Text(stringResource(R.string.tag_as_label), fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariantLight)
 
                             listOf("Store", "Warehouse", "Office", "Branch").forEach { type ->
                                 val isSelected = selectedAddressType == type
@@ -961,7 +963,7 @@ fun GoogleMapsLocationPickerModal(
                                     .height(48.dp)
                                     .testTag("btn_cancel_maps_modal")
                             ) {
-                                Text("Cancel", color = PrimaryIndigoLight, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.cancel), color = PrimaryIndigoLight, fontWeight = FontWeight.SemiBold)
                             }
 
                             Button(
@@ -983,7 +985,7 @@ fun GoogleMapsLocationPickerModal(
                             ) {
                                 Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = PureWhite, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Set as Permanent Address", color = PureWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(stringResource(R.string.set_as_permanent_address_btn), color = PureWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             }
                         }
                     }

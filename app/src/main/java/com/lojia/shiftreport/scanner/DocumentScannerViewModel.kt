@@ -11,6 +11,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -435,12 +436,12 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
         try {
             val file = File(document.docxUriPath)
             if (!file.exists()) {
-                Toast.makeText(context, "Word file not generated yet. Extracting text first...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_word_generating), Toast.LENGTH_SHORT).show()
                 extractTextAndGenerateDocx(document) { text, path ->
                     if (path.isNotBlank() && File(path).exists()) {
                         shareDocxFileInternal(context, File(path))
                     } else {
-                        Toast.makeText(context, "Could not generate Word document.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.doc_word_error), Toast.LENGTH_SHORT).show()
                     }
                 }
                 return
@@ -448,7 +449,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             shareDocxFileInternal(context, file)
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error sharing docx", e)
-            Toast.makeText(context, "Could not share Word file: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.doc_word_share_error, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -566,7 +567,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
     fun shareProtectedPdf(context: Context, file: File) {
         try {
             if (!file.exists()) {
-                Toast.makeText(context, "Protected PDF file not found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_protected_not_found), Toast.LENGTH_SHORT).show()
                 return
             }
             val uri: Uri = FileProvider.getUriForFile(
@@ -585,14 +586,14 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             context.startActivity(chooser)
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error sharing protected PDF", e)
-            Toast.makeText(context, "Could not share protected PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
     fun viewProtectedPdf(context: Context, file: File) {
         try {
             if (!file.exists()) {
-                Toast.makeText(context, "Protected PDF file not found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_protected_not_found), Toast.LENGTH_SHORT).show()
                 return
             }
             val uri: Uri = FileProvider.getUriForFile(
@@ -611,10 +612,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             context.startActivity(chooser)
         } catch (e: ActivityNotFoundException) {
             Log.e("DocumentScannerVM", "No PDF viewer app found", e)
-            Toast.makeText(context, "No PDF viewer app found on device", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.doc_no_pdf_viewer), Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error opening protected PDF", e)
-            Toast.makeText(context, "Could not open protected PDF: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -622,7 +623,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
         try {
             val file = File(document.pdfUriPath)
             if (!file.exists()) {
-                Toast.makeText(context, "Document file not found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_protected_not_found), Toast.LENGTH_SHORT).show()
                 return
             }
 
@@ -644,7 +645,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             context.startActivity(chooser)
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error sharing document", e)
-            Toast.makeText(context, "Could not share document: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -652,7 +653,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
         try {
             val file = File(document.pdfUriPath)
             if (!file.exists()) {
-                Toast.makeText(context, "Document file not found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.doc_toast_protected_not_found), Toast.LENGTH_SHORT).show()
                 return
             }
 
@@ -674,10 +675,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             context.startActivity(chooser)
         } catch (e: ActivityNotFoundException) {
             Log.e("DocumentScannerVM", "No PDF viewer app installed", e)
-            Toast.makeText(context, "No PDF viewer app found on device", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.doc_no_pdf_viewer), Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Log.e("DocumentScannerVM", "Error opening document", e)
-            Toast.makeText(context, "Could not open document: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 }

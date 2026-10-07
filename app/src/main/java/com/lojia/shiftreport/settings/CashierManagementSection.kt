@@ -352,7 +352,7 @@ fun CashierManagementSection(
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = "Add Cashier"
+                contentDescription = stringResource(R.string.add_cashier)
             )
         }
     }

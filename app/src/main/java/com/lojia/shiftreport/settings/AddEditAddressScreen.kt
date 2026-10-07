@@ -68,10 +68,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppCountry
 import com.lojia.shiftreport.data.SavedAddress
 import com.lojia.shiftreport.report.ReportViewModel
@@ -215,7 +217,7 @@ fun AddEditAddressScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_back),
                             tint = PureWhite
                         )
                     }
@@ -350,7 +352,7 @@ fun AddEditAddressScreen(
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Outlined.ChevronRight,
-                                    contentDescription = "Select country",
+                                    contentDescription = stringResource(R.string.cd_select_country),
                                     tint = OnSurfaceVariantLight
                                 )
                             },
@@ -416,7 +418,7 @@ fun AddEditAddressScreen(
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Outlined.Map,
-                                            contentDescription = "Select on Map",
+                                            contentDescription = stringResource(R.string.cd_select_on_map),
                                             tint = PrimaryIndigoLight,
                                             modifier = Modifier.size(32.dp)
                                         )
@@ -616,7 +618,7 @@ fun AddEditAddressScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.AutoAwesome,
-                                        contentDescription = "Auto-fill phone number",
+                                        contentDescription = stringResource(R.string.cd_autofill_phone),
                                         tint = PrimaryIndigoLight,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -726,7 +728,7 @@ fun AddEditAddressScreen(
                     IconButton(onClick = { showCountrySheet = false }) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight
                         )
                     }
@@ -801,7 +803,7 @@ fun AddEditAddressScreen(
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Filled.Check,
-                                    contentDescription = "Selected",
+                                    contentDescription = stringResource(R.string.cd_selected),
                                     tint = PrimaryIndigoLight,
                                     modifier = Modifier.size(18.dp)
                                 )

@@ -209,14 +209,14 @@ fun AddEntryDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Optional details (for better tracking)",
+                                text = stringResource(R.string.optional_details_label),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = PrimaryIndigoLight
                             )
                             Icon(
                                 imageVector = if (showOptionalDetails) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (showOptionalDetails) "Collapse optional details" else "Expand optional details",
+                                contentDescription = if (showOptionalDetails) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                                 tint = PrimaryIndigoLight,
                                 modifier = Modifier.size(18.dp)
                             )

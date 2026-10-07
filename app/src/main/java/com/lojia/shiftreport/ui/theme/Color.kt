@@ -41,6 +41,7 @@ val OnSuccessLight = Color(0xFFFFFFFF)
 val WarningOrange = Color(0xFFB45309)
 val WarningContainer = Color(0xFFFEF3C7)
 val OnWarningLight = Color(0xFFFFFFFF)
+val WarningText = Color(0xFF78350F)
 
 val ErrorRedLight = Color(0xFFB91C1C)
 val ErrorContainerLight = Color(0xFFFEE2E2)

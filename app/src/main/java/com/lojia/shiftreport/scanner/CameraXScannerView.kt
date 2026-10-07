@@ -1,5 +1,8 @@
 package com.lojia.shiftreport.scanner
 
+import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.theme.*
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -51,9 +54,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
-private val CamScannerGreen = Color(0xFF10B981)
-private val CamScannerDark = Color(0xFF000000)
-private val CamScannerControlBg = Color(0xCC090D16)
+import com.lojia.shiftreport.ui.theme.*
+
+private val CamScannerGreen = PosCashGreenFill
+private val CamScannerDark = PureBlack
+private val CamScannerControlBg = OverlayScrim
 
 enum class ScanCaptureMode {
     SINGLE,
@@ -368,7 +373,7 @@ fun CameraXScannerView(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.cd_close),
                     tint = Color.White
                 )
             }
@@ -394,8 +399,8 @@ fun CameraXScannerView(
                 ) {
                     Icon(
                         imageVector = if (torchState == TorchState.ON) Icons.Outlined.FlashOn else Icons.Outlined.FlashOff,
-                        contentDescription = "Flash",
-                        tint = if (torchState == TorchState.ON) Color(0xFFFBBF24) else Color.White
+                        contentDescription = stringResource(R.string.cd_flash),
+                        tint = if (torchState == TorchState.ON) WarningOrange else PureWhite
                     )
                 }
 
@@ -418,7 +423,7 @@ fun CameraXScannerView(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = if (isAutoDetectEnabled) "Auto Crop ON" else "Auto Crop OFF",
+                            text = if (isAutoDetectEnabled) stringResource(R.string.camera_crop_on) else stringResource(R.string.camera_crop_off),
                             color = Color.White,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -435,7 +440,7 @@ fun CameraXScannerView(
                 ) {
                     Icon(
                         imageVector = if (showGrid) Icons.Outlined.GridOn else Icons.Outlined.GridOff,
-                        contentDescription = "Grid",
+                        contentDescription = stringResource(R.string.cd_grid),
                         tint = if (showGrid) CamScannerGreen else Color.White
                     )
                 }
@@ -477,7 +482,7 @@ fun CameraXScannerView(
                         .padding(horizontal = 18.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "Single",
+                        text = stringResource(R.string.camera_mode_single),
                         color = Color.White,
                         fontSize = 13.sp,
                         fontWeight = if (captureMode == ScanCaptureMode.SINGLE) FontWeight.Bold else FontWeight.Normal
@@ -496,7 +501,7 @@ fun CameraXScannerView(
                         .padding(horizontal = 18.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "Batch",
+                        text = stringResource(R.string.camera_mode_batch),
                         color = Color.White,
                         fontSize = 13.sp,
                         fontWeight = if (captureMode == ScanCaptureMode.BATCH) FontWeight.Bold else FontWeight.Normal
@@ -521,7 +526,7 @@ fun CameraXScannerView(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PhotoLibrary,
-                        contentDescription = "Gallery Import",
+                        contentDescription = stringResource(R.string.cd_gallery_import),
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -576,12 +581,12 @@ fun CameraXScannerView(
                                         batchList.add(bitmap)
                                         Toast.makeText(
                                             context,
-                                            "Page ${batchList.size} captured",
+                                            context.getString(R.string.batch_page_captured, batchList.size),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
                                 } else {
-                                    Toast.makeText(context, "Failed to capture photo", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.failed_to_capture_photo), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
@@ -616,7 +621,7 @@ fun CameraXScannerView(
                                     fontSize = 15.sp
                                 )
                                 Text(
-                                    text = "Done",
+                                    text = stringResource(R.string.done),
                                     color = Color.White,
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -625,7 +630,7 @@ fun CameraXScannerView(
                         } else {
                             Icon(
                                 imageVector = Icons.Outlined.Layers,
-                                contentDescription = "Batch Mode",
+                                contentDescription = stringResource(R.string.cd_batch_mode),
                                 tint = Color.White.copy(alpha = 0.5f),
                                 modifier = Modifier.size(24.dp)
                             )
@@ -640,7 +645,7 @@ fun CameraXScannerView(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Auto",
+                            text = stringResource(R.string.camera_auto),
                             color = CamScannerGreen,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold

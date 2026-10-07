@@ -1,8 +1,10 @@
 package com.lojia.shiftreport.auth
 
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.theme.*
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -96,16 +98,13 @@ fun BiometricLockScreen(
         preferencesRepository.hasPinConfigured() || preferencesRepository.isBiometricEnabled()
     )
 
-    var currentPage by remember(userProfile, isQuickSecurityEnabled) {
+    var currentPage by remember(isUserRegistered, isQuickSecurityEnabled) {
         mutableStateOf(
-            if (userProfile != null && !userProfile.isRegistered && preferencesRepository.getSavedUsername().isBlank()) {
-                // New user / unregistered -> Registration flow
-                AuthScreenPage.REGISTER
-            } else if (isUserRegistered && isQuickSecurityEnabled) {
+            if (isUserRegistered && isQuickSecurityEnabled) {
                 // Returning user with Quick Login explicitly configured in Settings -> Quick PIN screen
                 AuthScreenPage.QUICK_PIN
             } else {
-                // First launch / no security enabled / standard credentials -> Clean Username + Password Login
+                // Always open LOGIN first when user is not authenticated or on fresh install
                 AuthScreenPage.LOGIN
             }
         )
@@ -188,7 +187,7 @@ fun BiometricLockScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF9F9FF))
+            .background(BackgroundLight)
             .statusBarsPadding()
             .navigationBarsPadding()
             .testTag("lojiaAuthRoot")
@@ -233,7 +232,7 @@ fun BiometricLockScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF9F9FF))
+                        .background(BackgroundLight)
                         .padding(horizontal = 32.dp)
                         .imePadding(),
                     contentAlignment = Alignment.Center
@@ -294,6 +293,9 @@ fun BiometricLockScreen(
             }
 
             AuthScreenPage.REGISTER -> {
+                BackHandler {
+                    currentPage = AuthScreenPage.LOGIN
+                }
                 LojiaRegisterScreen(
                     userProfile = userProfile,
                     isBn = isBn,
@@ -350,12 +352,12 @@ private fun LojiaPasswordLoginContent(
     onRegisterClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    val primaryIndigo = Color(0xFF415F91)
-    val charcoalText = Color(0xFF191C20)
-    val mediumGray = Color(0xFF44474E)
-    val hintGray = Color(0xFF74777F)
-    val borderGray = Color(0xFFCAC4D0)
-    val errorRed = Color(0xFFBA1A1A)
+    val primaryIndigo = PrimaryIndigoLight
+    val charcoalText = OnSurfaceLight
+    val mediumGray = TextSecondaryLight
+    val hintGray = TextHintColor
+    val borderGray = OutlineLight
+    val errorRed = ErrorRedLight
 
     Text(
         text = stringResource(R.string.auth_username_or_email),
@@ -571,8 +573,8 @@ private fun LojiaPasswordLoginContent(
     if (!loginErrorMessage.isNullOrBlank()) {
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = Color(0xFFFCEEEE),
-            border = BorderStroke(1.dp, Color(0xFFF9DEDC)),
+            color = ErrorContainerLight,
+            border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.3f)),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)

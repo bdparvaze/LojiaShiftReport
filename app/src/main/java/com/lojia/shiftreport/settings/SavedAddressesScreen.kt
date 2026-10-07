@@ -48,11 +48,13 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.SavedAddress
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.theme.BackgroundLight
@@ -103,7 +105,7 @@ fun SavedAddressesScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_back),
                             tint = PureWhite
                         )
                     }
@@ -327,12 +329,12 @@ private fun AddressCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = "Default",
+                            contentDescription = stringResource(R.string.cd_default),
                             tint = PrimaryIndigoDark,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Default",
+                            text = stringResource(R.string.cd_default),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = PrimaryIndigoDark
@@ -340,7 +342,7 @@ private fun AddressCard(
                     }
                 } else {
                     Text(
-                        text = "Set as default",
+                        text = stringResource(R.string.set_as_permanent_address_btn),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryIndigoLight,
@@ -361,7 +363,7 @@ private fun AddressCard(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.cd_delete),
                             tint = ErrorRedLight,
                             modifier = Modifier.size(20.dp)
                         )
@@ -374,7 +376,7 @@ private fun AddressCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = stringResource(R.string.cd_edit),
                             tint = PrimaryIndigoLight,
                             modifier = Modifier.size(20.dp)
                         )

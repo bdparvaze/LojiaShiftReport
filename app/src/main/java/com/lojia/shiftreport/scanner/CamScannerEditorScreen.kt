@@ -1,5 +1,8 @@
 package com.lojia.shiftreport.scanner
 
+import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.theme.*
+import androidx.compose.ui.res.stringResource
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -43,9 +46,9 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val CamScannerGreen = Color(0xFF10B981)
-private val CamScannerEditorBg = Color(0xFF0F172A)
-private val CamScannerCardBg = Color(0xFF1E293B)
+private val CamScannerGreen = PosCashGreenFill
+private val CamScannerEditorBg = OnBackgroundLight
+private val CamScannerCardBg = OnSurfaceVariantLight
 
 enum class EditorStep {
     CROP_BOUNDARIES,
@@ -226,7 +229,7 @@ fun CamScannerEditorScreen(
                             IconButton(onClick = { currentStep = EditorStep.CROP_BOUNDARIES }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                    contentDescription = "Back to Crop",
+                                    contentDescription = stringResource(R.string.cd_back_to_crop),
                                     tint = Color.White
                                 )
                             }
@@ -251,8 +254,8 @@ fun CamScannerEditorScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Rename",
-                                    tint = Color(0xFF94A3B8),
+                                    contentDescription = stringResource(R.string.cd_rename),
+                                    tint = TextDisabledColor,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -271,7 +274,7 @@ fun CamScannerEditorScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.TextFields,
-                                    contentDescription = "OCR Text",
+                                    contentDescription = stringResource(R.string.cd_ocr_text),
                                     tint = Color.White
                                 )
                             }
@@ -287,7 +290,7 @@ fun CamScannerEditorScreen(
                                         preExtractedOcr = if (ocrExtractedText.isNotBlank()) ocrExtractedText else null
                                     ) {
                                         isSaving = false
-                                        Toast.makeText(context, "Document saved as PDF!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.doc_saved_as_pdf), Toast.LENGTH_SHORT).show()
                                         onFinish()
                                     }
                                 },
@@ -305,13 +308,13 @@ fun CamScannerEditorScreen(
                                 } else {
                                     Icon(
                                         imageVector = Icons.Outlined.Check,
-                                        contentDescription = "Save",
+                                        contentDescription = stringResource(R.string.cd_save),
                                         tint = Color.White,
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Done",
+                                        text = stringResource(R.string.done),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
                                         color = Color.White
@@ -343,10 +346,10 @@ fun CamScannerEditorScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = if (showAdjustSliders) "Manual Fine-Tuning" else "Enhancement Filters",
+                                    text = if (showAdjustSliders) stringResource(R.string.manual_fine_tuning) else stringResource(R.string.enhancement_filters),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF94A3B8)
+                                    color = TextDisabledColor
                                 )
 
                                 // Sliders Toggle Button
@@ -364,7 +367,7 @@ fun CamScannerEditorScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = if (showAdjustSliders) "Filters" else "Adjust",
+                                        text = if (showAdjustSliders) stringResource(R.string.btn_filters) else stringResource(R.string.btn_adjust),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -388,7 +391,7 @@ fun CamScannerEditorScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
-                                            text = "Brightness",
+                                            text = stringResource(R.string.brightness_label),
                                             fontSize = 12.sp,
                                             color = Color.White,
                                             modifier = Modifier.width(76.dp)
@@ -411,7 +414,7 @@ fun CamScannerEditorScreen(
                                         Text(
                                             text = "${adjustments.brightness.toInt()}",
                                             fontSize = 11.sp,
-                                            color = Color(0xFF94A3B8),
+                                            color = TextDisabledColor,
                                             modifier = Modifier.width(32.dp)
                                         )
                                     }
@@ -422,7 +425,7 @@ fun CamScannerEditorScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
-                                            text = "Contrast",
+                                            text = stringResource(R.string.contrast_label),
                                             fontSize = 12.sp,
                                             color = Color.White,
                                             modifier = Modifier.width(76.dp)
@@ -445,7 +448,7 @@ fun CamScannerEditorScreen(
                                         Text(
                                             text = String.format(Locale.US, "%.1fx", adjustments.contrast),
                                             fontSize = 11.sp,
-                                            color = Color(0xFF94A3B8),
+                                            color = TextDisabledColor,
                                             modifier = Modifier.width(32.dp)
                                         )
                                     }
@@ -456,7 +459,7 @@ fun CamScannerEditorScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
-                                            text = "Detail",
+                                            text = stringResource(R.string.detail_label),
                                             fontSize = 12.sp,
                                             color = Color.White,
                                             modifier = Modifier.width(76.dp)
@@ -479,7 +482,7 @@ fun CamScannerEditorScreen(
                                         Text(
                                             text = "${(adjustments.detail * 100).toInt()}%",
                                             fontSize = 11.sp,
-                                            color = Color(0xFF94A3B8),
+                                            color = TextDisabledColor,
                                             modifier = Modifier.width(32.dp)
                                         )
                                     }
@@ -496,7 +499,7 @@ fun CamScannerEditorScreen(
                                                 updatePreview(base, selectedFilter, adjustments)
                                             }
                                         ) {
-                                            Text("Reset", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                            Text(stringResource(R.string.btn_reset), color = TextDisabledColor, fontSize = 12.sp)
                                         }
                                     }
                                 }
@@ -531,7 +534,7 @@ fun CamScannerEditorScreen(
                                             modifier = Modifier
                                                 .size(64.dp)
                                                 .clip(RoundedCornerShape(12.dp))
-                                                .background(Color(0xFF334155))
+                                                .background(OnSurfaceVariantLight)
                                                 .border(
                                                     width = if (isSelected) 2.5.dp else 1.dp,
                                                     color = if (isSelected) CamScannerGreen else Color.White.copy(alpha = 0.15f),
@@ -579,7 +582,7 @@ fun CamScannerEditorScreen(
                                             text = filter.label,
                                             fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isSelected) CamScannerGreen else Color(0xFFCBD5E1),
+                                            color = if (isSelected) CamScannerGreen else OutlineLight,
                                             maxLines = 1
                                         )
                                     }
@@ -609,7 +612,7 @@ fun CamScannerEditorScreen(
                         ) {
                             Image(
                                 bitmap = previewBitmap.asImageBitmap(),
-                                contentDescription = "Enhanced Document",
+                                contentDescription = stringResource(R.string.share_shift_report_title),
                                 contentScale = ContentScale.Fit,
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -640,12 +643,12 @@ fun CamScannerEditorScreen(
         var tempTitle by remember { mutableStateOf(documentTitle) }
         AlertDialog(
             onDismissRequest = { isEditingTitle = false },
-            title = { Text("Rename Document", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.doc_rename_title), fontWeight = FontWeight.Bold) },
             text = {
                 LojiaTextField(
                     value = tempTitle,
                     onValueChange = { tempTitle = it },
-                    label = { Text("Document Title") }
+                    label = { Text(stringResource(R.string.doc_title_label)) }
                 )
             },
             confirmButton = {
@@ -658,12 +661,12 @@ fun CamScannerEditorScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = CamScannerGreen)
                 ) {
-                    Text("OK", color = Color.White)
+                    Text(stringResource(R.string.ok), color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isEditingTitle = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -694,7 +697,7 @@ fun CamScannerEditorScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Extracted Text (OCR)",
+                            text = stringResource(R.string.cd_ocr_text),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -706,10 +709,10 @@ fun CamScannerEditorScreen(
                                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("Scanned Text", ocrExtractedText)
                                 cm.setPrimaryClip(clip)
-                                Toast.makeText(context, "Text copied to clipboard", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.doc_toast_text_copied), Toast.LENGTH_SHORT).show()
                             }
                         ) {
-                            Icon(Icons.Outlined.ContentCopy, contentDescription = "Copy")
+                            Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
                         }
                     }
                 }
@@ -726,7 +729,7 @@ fun CamScannerEditorScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = CamScannerGreen)
                             Spacer(modifier = Modifier.height(10.dp))
-                            Text("Extracting text via Google ML Kit...", color = Color.Gray, fontSize = 13.sp)
+                            Text(stringResource(R.string.extracting_text_progress), color = Color.Gray, fontSize = 13.sp)
                         }
                     }
                 } else if (ocrExtractedText.isBlank()) {
@@ -737,7 +740,7 @@ fun CamScannerEditorScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No readable text detected in this document",
+                            text = stringResource(R.string.no_readable_text_detected),
                             color = Color.Gray,
                             fontSize = 14.sp
                         )
@@ -747,7 +750,7 @@ fun CamScannerEditorScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 280.dp)
-                            .background(Color(0xFFF1F5F9), RoundedCornerShape(10.dp))
+                            .background(SurfaceVariantLight, RoundedCornerShape(10.dp))
                             .padding(14.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
@@ -755,7 +758,7 @@ fun CamScannerEditorScreen(
                             text = ocrExtractedText,
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
-                            color = Color(0xFF1E293B)
+                            color = OnBackgroundLight
                         )
                     }
 
@@ -771,13 +774,13 @@ fun CamScannerEditorScreen(
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, ocrExtractedText)
                                 }
-                                context.startActivity(Intent.createChooser(intent, "Share Extracted Text"))
+                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_extracted_text_title)))
                             },
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Share Text")
+                            Text(stringResource(R.string.btn_share_text))
                         }
 
                         Button(
@@ -785,7 +788,7 @@ fun CamScannerEditorScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = CamScannerGreen),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Done", color = Color.White)
+                            Text(stringResource(R.string.done), color = Color.White)
                         }
                     }
                 }

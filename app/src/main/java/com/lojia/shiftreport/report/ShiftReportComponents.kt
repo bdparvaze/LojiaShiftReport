@@ -103,7 +103,7 @@ fun EntryRow(left: String, right: String, onRemove: () -> Unit) {
                 .size(24.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(ShiftColors.DangerLight)
-                .border(1.dp, Color(0xFFFECACA), RoundedCornerShape(6.dp)),
+                .border(1.dp, ErrorContainerLight, RoundedCornerShape(6.dp)),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {

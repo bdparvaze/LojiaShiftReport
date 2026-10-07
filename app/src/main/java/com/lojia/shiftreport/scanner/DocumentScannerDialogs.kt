@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -18,8 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
-import com.lojia.shiftreport.ui.theme.PrimaryIndigo
-import com.lojia.shiftreport.ui.theme.PureWhite
+import com.lojia.shiftreport.ui.theme.*
 
 @Composable
 fun SaveDocumentTitleDialog(
@@ -47,7 +47,7 @@ fun SaveDocumentTitleDialog(
                 Text(
                     text = stringResource(R.string.doc_enter_title_desc),
                     fontSize = 13.sp,
-                    color = Color(0xFF64748B)
+                    color = TextHintColor
                 )
                 OutlinedTextField(
                     value = title,
@@ -107,7 +107,7 @@ fun ScannerFallbackPromptDialog(
             Text(
                 text = stringResource(R.string.doc_capture_desc),
                 fontSize = 13.5.sp,
-                color = Color(0xFF475569)
+                color = OnSurfaceVariantLight
             )
         },
         confirmButton = {
@@ -220,7 +220,7 @@ fun DeleteDocumentConfirmDialog(
             Text(
                 text = stringResource(R.string.doc_delete_confirm, documentTitle),
                 fontSize = 13.5.sp,
-                color = Color(0xFF475569)
+                color = OnSurfaceVariantLight
             )
         },
         confirmButton = {
@@ -269,7 +269,7 @@ fun BatchDeleteConfirmDialog(
             Text(
                 text = stringResource(R.string.doc_batch_delete_confirm, count),
                 fontSize = 13.5.sp,
-                color = Color(0xFF475569)
+                color = OnSurfaceVariantLight
             )
         },
         confirmButton = {
@@ -342,7 +342,7 @@ fun OcrTextPreviewDialog(
                     ) {
                         Text(
                             text = stringResource(R.string.doc_no_text_found),
-                            color = Color(0xFF64748B),
+                            color = TextHintColor,
                             fontSize = 13.sp
                         )
                     }
@@ -357,7 +357,7 @@ fun OcrTextPreviewDialog(
                             text = extractedText,
                             fontSize = 13.sp,
                             lineHeight = 19.sp,
-                            color = Color(0xFF1E293B)
+                            color = OnBackgroundLight
                         )
                     }
                 }
@@ -412,6 +412,7 @@ fun PasswordProtectDialog(
     onProtect: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -435,7 +436,7 @@ fun PasswordProtectDialog(
                 Text(
                     text = stringResource(R.string.doc_protect_pdf_desc, documentTitle),
                     fontSize = 13.sp,
-                    color = Color(0xFF64748B)
+                    color = TextHintColor
                 )
 
                 OutlinedTextField(
@@ -475,9 +476,9 @@ fun PasswordProtectDialog(
             Button(
                 onClick = {
                     if (password.length < 4) {
-                        errorMessage = "Password must be at least 4 characters"
+                        errorMessage = context.getString(R.string.doc_password_min_length)
                     } else if (password != confirmPassword) {
-                        errorMessage = "Passwords do not match"
+                        errorMessage = context.getString(R.string.doc_passwords_do_not_match)
                     } else {
                         onProtect(password)
                     }
