@@ -249,12 +249,6 @@ fun LojiaRegisterScreen(
             ) {
             // Card 1: Personal Profile
             LojiaCard(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                LojiaSectionHeader(
-                    icon = Icons.Outlined.Person,
-                    title = stringResource(R.string.auth_profile_title),
-                    subtitle = stringResource(R.string.auth_profile_sub)
-                )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)

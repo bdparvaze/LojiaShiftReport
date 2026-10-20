@@ -255,14 +255,6 @@ fun BiometricLockScreen(
                                 .fillMaxWidth()
                                 .padding(top = 4.dp)
                         ) {
-                            LojiaSectionHeader(
-                                icon = Icons.Outlined.Lock,
-                                title = stringResource(R.string.auth_sign_in_title),
-                                subtitle = stringResource(R.string.auth_sign_in_subtitle)
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
                             LojiaPasswordLoginContent(
                                 loginUser = loginUser,
                                 onLoginUserChange = {
