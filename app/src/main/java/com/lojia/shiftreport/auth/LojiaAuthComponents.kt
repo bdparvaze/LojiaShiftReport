@@ -69,56 +69,56 @@ fun LojiaHeader(
             .fillMaxWidth()
             .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.wrapContentHeight())
             .background(Color.Transparent)
-            .padding(vertical = 12.dp)
+            .padding(vertical = 4.dp)
             .testTag("lojiaHeader"),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             // Modern Fintech Branding Icon Badge
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = LojiaColors.P500.copy(alpha = 0.08f),
-                border = BorderStroke(1.dp, LojiaColors.P500.copy(alpha = 0.20f)),
-                modifier = Modifier.size(54.dp)
+                border = BorderStroke(1.dp, LojiaColors.P500.copy(alpha = 0.18f)),
+                modifier = Modifier.size(46.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Filled.Assessment,
                         contentDescription = stringResource(R.string.cd_lojia_logo),
                         tint = LojiaColors.P500,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Main Branding Title with prominent headlineMedium typography
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 24.sp
+                    fontSize = 22.sp
                 ),
                 color = LojiaColors.P500,
                 letterSpacing = 0.2.sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = stringResource(R.string.auth_tagline),
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                fontSize = 11.sp,
+                fontSize = 10.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = LojiaColors.N600,
-                letterSpacing = 2.sp
+                letterSpacing = 1.5.sp
             )
         }
     }
@@ -133,16 +133,17 @@ fun LojiaCard(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 3.dp,
+                elevation = 2.dp,
                 shape = RoundedCornerShape(16.dp),
-                spotColor = Color.Black.copy(alpha = 0.08f),
-                ambientColor = Color.Black.copy(alpha = 0.04f)
+                spotColor = Color.Black.copy(alpha = 0.05f),
+                ambientColor = Color.Black.copy(alpha = 0.03f)
             ),
         shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
         color = Color.White
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
             content = content
         )
     }
@@ -329,7 +330,7 @@ fun LojiaInputField(
                     Icon(
                         imageVector = leadingIcon,
                         contentDescription = null,
-                        tint = if (isFocused) LojiaColors.P500 else LojiaColors.N500,
+                        tint = if (isFocused) LojiaColors.P500 else LojiaColors.N400,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -412,30 +413,49 @@ fun LojiaGradientButton(
     isLoading: Boolean = false,
     testTag: String = ""
 ) {
-    val primaryBlue = PrimaryIndigo
-    val backgroundColor = if (enabled) primaryBlue else primaryBlue.copy(alpha = 0.45f)
+    val gradientBrush = if (enabled) {
+        Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF4F46E5), // Indigo 600
+                Color(0xFF4338CA)  // Indigo 700
+            )
+        )
+    } else {
+        Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF4F46E5).copy(alpha = 0.45f),
+                Color(0xFF4338CA).copy(alpha = 0.45f)
+            )
+        )
+    }
 
     Surface(
         onClick = onClick,
         enabled = enabled && !isLoading,
         shape = RoundedCornerShape(12.dp),
-        shadowElevation = if (enabled) 2.dp else 0.dp,
-        tonalElevation = 0.dp,
-        color = backgroundColor,
+        color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(48.dp)
+            .shadow(
+                elevation = if (enabled) 4.dp else 0.dp,
+                shape = RoundedCornerShape(12.dp),
+                spotColor = Color(0xFF4F46E5).copy(alpha = 0.35f),
+                ambientColor = Color(0xFF4F46E5).copy(alpha = 0.15f)
+            )
             .testTag(testTag)
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(gradientBrush),
             contentAlignment = Alignment.Center
         ) {
             if (isLoading) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(
                         color = Color.White,
-                        strokeWidth = 2.5.dp,
+                        strokeWidth = 2.dp,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -443,7 +463,7 @@ fun LojiaGradientButton(
                         text = text,
                         color = Color.White,
                         fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                        fontSize = 15.sp,
+                        fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -463,9 +483,9 @@ fun LojiaGradientButton(
                         text = text,
                         color = Color.White,
                         fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                        fontSize = 15.sp,
+                        fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.3.sp
+                        letterSpacing = 0.2.sp
                     )
                 }
             }
@@ -480,109 +500,39 @@ fun LojiaPasswordStrengthMeter(
 ) {
     if (password.isEmpty()) return
 
-    val hasLen = password.length >= 8
-    val hasCase = password.any { it.isUpperCase() } && password.any { it.isLowerCase() }
-    val hasNum = password.any { it.isDigit() }
-    val hasSym = password.any { !it.isLetterOrDigit() }
+    val length = password.length
+    val hasDigits = password.any { it.isDigit() }
+    val hasMixedCase = password.any { it.isUpperCase() } && password.any { it.isLowerCase() }
+    val hasSymbols = password.any { !it.isLetterOrDigit() }
 
-    var score = 0
-    if (hasLen) score++
-    if (hasCase) score++
-    if (hasNum) score++
-    if (hasSym) score++
-    score = score.coerceIn(1, 4)
-
-    val (badgeText, badgeColor, badgeBg) = when (score) {
-        1 -> Triple(stringResource(R.string.auth_weak), ErrorRedLight, ErrorContainerLight)
-        2 -> Triple(stringResource(R.string.auth_fair), WarningOrange, WarningContainer)
-        3 -> Triple(stringResource(R.string.auth_good), PrimaryIndigoLight, PrimaryContainerLight)
-        else -> Triple(stringResource(R.string.auth_strong), SuccessGreen, SuccessContainer)
+    val strengthLevel = when {
+        length >= 8 && ((hasDigits && hasMixedCase) || (hasDigits && hasSymbols) || (hasMixedCase && hasSymbols) || length >= 12) -> 3
+        length >= 6 && (hasDigits || hasMixedCase || hasSymbols) -> 2
+        else -> 1
     }
 
-    Column(
+    val activeColor = when (strengthLevel) {
+        1 -> Color(0xFFEF4444) // Error Red
+        2 -> Color(0xFFF59E0B) // Amber
+        else -> Color(0xFF10B981) // Emerald Green
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 6.dp)
+            .padding(top = 5.dp, bottom = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // 4-segment bars
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            for (i in 1..4) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(99.dp))
-                        .background(if (i <= score) badgeColor else LojiaColors.N300)
-                )
-            }
-        }
-
-        // Strength label & Badge
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.auth_pw_strength_label),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
-                color = LojiaColors.N500
+        for (i in 1..3) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(99.dp))
+                    .background(if (i <= strengthLevel) activeColor else LojiaColors.N200)
             )
-            Surface(
-                shape = RoundedCornerShape(99.dp),
-                color = badgeBg
-            ) {
-                Text(
-                    text = badgeText,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = badgeColor,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                )
-            }
         }
-
-        // Checklist Requirements
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ReqIndicator(label = stringResource(R.string.auth_req_len), isMet = hasLen)
-            ReqIndicator(label = stringResource(R.string.auth_req_case), isMet = hasCase)
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ReqIndicator(label = stringResource(R.string.auth_req_num), isMet = hasNum)
-            ReqIndicator(label = stringResource(R.string.auth_req_sym), isMet = hasSym)
-        }
-    }
-}
-
-@Composable
-private fun ReqIndicator(label: String, isMet: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = if (isMet) "✓ " else "✗ ",
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isMet) LojiaColors.G500 else LojiaColors.N400
-        )
-        Text(
-            text = label,
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 10.sp,
-            color = if (isMet) LojiaColors.G500 else LojiaColors.N400
-        )
     }
 }
 

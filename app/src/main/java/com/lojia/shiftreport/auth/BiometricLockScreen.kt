@@ -248,7 +248,7 @@ fun BiometricLockScreen(
                     ) {
                         LojiaHeader(isBn = isBn)
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         LojiaCard(
                             modifier = Modifier
@@ -351,27 +351,21 @@ private fun LojiaPasswordLoginContent(
     val borderGray = OutlineLight
     val errorRed = ErrorRedLight
 
-    Text(
-        text = stringResource(R.string.auth_username_or_email),
-        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = mediumGray,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 6.dp)
-    )
-
     OutlinedTextField(
         value = loginUser,
         onValueChange = onLoginUserChange,
+        label = {
+            Text(
+                text = stringResource(R.string.auth_username_or_email),
+                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontSize = 13.sp
+            )
+        },
         placeholder = {
             Text(
                 text = stringResource(R.string.auth_username_or_email),
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                fontSize = 14.sp,
+                fontSize = 13.5.sp,
                 color = hintGray
             )
         },
@@ -379,7 +373,6 @@ private fun LojiaPasswordLoginContent(
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                tint = mediumGray,
                 modifier = Modifier.size(20.dp)
             )
         },
@@ -405,6 +398,8 @@ private fun LojiaPasswordLoginContent(
             unfocusedBorderColor = borderGray,
             focusedTextColor = charcoalText,
             unfocusedTextColor = charcoalText,
+            focusedLabelColor = primaryIndigo,
+            unfocusedLabelColor = mediumGray,
             focusedLeadingIconColor = primaryIndigo,
             unfocusedLeadingIconColor = mediumGray,
             cursorColor = primaryIndigo
@@ -414,29 +409,23 @@ private fun LojiaPasswordLoginContent(
             .testTag("etLoginUser")
     )
 
-    Spacer(modifier = Modifier.height(16.dp))
-
-    Text(
-        text = stringResource(R.string.password),
-        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = mediumGray,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 6.dp)
-    )
+    Spacer(modifier = Modifier.height(12.dp))
 
     OutlinedTextField(
         value = loginPass,
         onValueChange = onLoginPassChange,
+        label = {
+            Text(
+                text = stringResource(R.string.password),
+                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontSize = 13.sp
+            )
+        },
         placeholder = {
             Text(
                 text = stringResource(R.string.password),
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                fontSize = 14.sp,
+                fontSize = 13.5.sp,
                 color = hintGray
             )
         },
@@ -444,7 +433,6 @@ private fun LojiaPasswordLoginContent(
             Icon(
                 imageVector = Icons.Outlined.Lock,
                 contentDescription = null,
-                tint = mediumGray,
                 modifier = Modifier.size(20.dp)
             )
         },
@@ -456,7 +444,6 @@ private fun LojiaPasswordLoginContent(
                 Icon(
                     imageVector = if (loginPassVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(R.string.password),
-                    tint = mediumGray,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -487,6 +474,8 @@ private fun LojiaPasswordLoginContent(
             unfocusedBorderColor = borderGray,
             focusedTextColor = charcoalText,
             unfocusedTextColor = charcoalText,
+            focusedLabelColor = primaryIndigo,
+            unfocusedLabelColor = mediumGray,
             focusedLeadingIconColor = primaryIndigo,
             unfocusedLeadingIconColor = mediumGray,
             focusedTrailingIconColor = primaryIndigo,
@@ -498,7 +487,7 @@ private fun LojiaPasswordLoginContent(
             .testTag("etLoginPass")
     )
 
-    Spacer(modifier = Modifier.height(14.dp))
+    Spacer(modifier = Modifier.height(10.dp))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -508,20 +497,20 @@ private fun LojiaPasswordLoginContent(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .weight(1f)
                 .clickable { onRememberMeChange(!rememberMe) }
                 .padding(end = 8.dp)
+                .padding(vertical = 4.dp)
                 .testTag("cbRemember")
         ) {
             Box(
                 modifier = Modifier
-                    .size(20.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                    .size(18.dp)
+                    .clip(RoundedCornerShape(5.dp))
                     .background(if (rememberMe) primaryIndigo else Color.Transparent)
                     .border(
                         width = 1.5.dp,
                         color = if (rememberMe) primaryIndigo else borderGray,
-                        shape = RoundedCornerShape(6.dp)
+                        shape = RoundedCornerShape(5.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -530,15 +519,15 @@ private fun LojiaPasswordLoginContent(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(13.dp)
+                        modifier = Modifier.size(12.dp)
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(7.dp))
             Text(
                 text = stringResource(R.string.auth_remember_me),
                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                fontSize = 13.sp,
+                fontSize = 12.5.sp,
                 fontWeight = FontWeight.Medium,
                 color = mediumGray,
                 maxLines = 1,
@@ -549,18 +538,19 @@ private fun LojiaPasswordLoginContent(
         Text(
             text = stringResource(R.string.auth_forgot_password),
             fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-            fontSize = 13.sp,
+            fontSize = 12.5.sp,
             fontWeight = FontWeight.SemiBold,
             color = primaryIndigo,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .clickable { onForgotPassword() }
+                .padding(vertical = 4.dp)
                 .testTag("tvForgot")
         )
     }
 
-    Spacer(modifier = Modifier.height(18.dp))
+    Spacer(modifier = Modifier.height(14.dp))
 
     if (!loginErrorMessage.isNullOrBlank()) {
         Surface(
@@ -569,7 +559,7 @@ private fun LojiaPasswordLoginContent(
             border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.3f)),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp)
+                .padding(bottom = 10.dp)
         ) {
             Text(
                 text = loginErrorMessage,
@@ -582,65 +572,15 @@ private fun LojiaPasswordLoginContent(
         }
     }
 
-    Button(
+    LojiaGradientButton(
+        text = stringResource(R.string.auth_sign_in_btn),
         onClick = onSignIn,
         enabled = !isSigningIn,
-        shape = RoundedCornerShape(12.dp),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 4.dp
-        ),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = primaryIndigo,
-            contentColor = Color.White,
-            disabledContainerColor = primaryIndigo.copy(alpha = 0.5f),
-            disabledContentColor = Color.White.copy(alpha = 0.7f)
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .testTag("btnLogin")
-    ) {
-        if (isSigningIn) {
-            CircularProgressIndicator(
-                color = Color.White,
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp
-            )
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.25f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.auth_sign_in_btn),
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
+        isLoading = isSigningIn,
+        testTag = "btnLogin"
+    )
 
-    Spacer(modifier = Modifier.height(18.dp))
+    Spacer(modifier = Modifier.height(14.dp))
 
     Row(
         modifier = Modifier.fillMaxWidth(),

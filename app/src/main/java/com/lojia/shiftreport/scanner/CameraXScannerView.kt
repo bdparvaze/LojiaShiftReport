@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import org.opencv.core.Point
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
@@ -102,8 +101,8 @@ fun CameraXScannerView(
     var camera by remember { mutableStateOf<Camera?>(null) }
     var cameraProviderRef by remember { mutableStateOf<ProcessCameraProvider?>(null) }
 
-    // Real-time OpenCV document corner detection state (stored from every 3rd frame)
-    var lastDetectedCorners by remember { mutableStateOf<List<Point>?>(null) }
+    // Real-time native document corner detection state (stored from every 3rd frame)
+    var lastDetectedCorners by remember { mutableStateOf<List<DocumentPoint>?>(null) }
     var analysisFrameWidth by remember { mutableIntStateOf(0) }
     var analysisFrameHeight by remember { mutableIntStateOf(0) }
     val frameCounter = remember { AtomicInteger(0) }

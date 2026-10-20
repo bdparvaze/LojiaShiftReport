@@ -5,23 +5,16 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Typeface
 import android.os.Build
 import android.util.Log
-import com.dantsu.escposprinter.EscPosPrinter
-import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
-import com.dantsu.escposprinter.connection.bluetooth.BluetoothPrintersConnections
-import com.dantsu.escposprinter.connection.tcp.TcpConnection
-import com.dantsu.escposprinter.textparser.PrinterTextParserImg
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.MoneyFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.*
@@ -50,14 +43,181 @@ enum class PrinterPaperWidth(val widthMm: Int, val dpi: Int, val charsPerLine: I
     }
 }
 
+/**
+ * 100% Native Google / Android ESC/POS Thermal Printer Protocol Encoder.
+ * Replaces third-party printer libraries with standard Android Bluetooth RFCOMM sockets
+ * and standard ESC/POS binary command streams.
+ */
+object EscPosNativeProtocol {
+    val INIT = byteArrayOf(0x1B, 0x40)
+    val ALIGN_LEFT = byteArrayOf(0x1B, 0x61, 0x00)
+    val ALIGN_CENTER = byteArrayOf(0x1B, 0x61, 0x01)
+    val ALIGN_RIGHT = byteArrayOf(0x1B, 0x61, 0x02)
+    val BOLD_ON = byteArrayOf(0x1B, 0x45, 0x01)
+    val BOLD_OFF = byteArrayOf(0x1B, 0x45, 0x00)
+    val DOUBLE_SIZE_ON = byteArrayOf(0x1D, 0x21, 0x11)
+    val DOUBLE_SIZE_OFF = byteArrayOf(0x1D, 0x21, 0x00)
+    val LINE_FEED = byteArrayOf(0x0A)
+    val PAPER_CUT = byteArrayOf(0x1D, 0x56, 0x42, 0x00)
+    val OPEN_DRAWER = byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte())
 
+    // Standard Bluetooth Serial Port Profile (SPP) UUID
+    val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
+    /**
+     * Converts a monochrome [Bitmap] into an ESC/POS raster bit-image command (GS v 0).
+     */
+    fun bitmapToRasterEscPos(bitmap: Bitmap): ByteArray {
+        val width = bitmap.width
+        val height = bitmap.height
+        val widthBytes = (width + 7) / 8
+        val out = ByteArrayOutputStream()
+
+        out.write(ALIGN_CENTER)
+        // GS v 0 m xL xH yL yH
+        out.write(
+            byteArrayOf(
+                0x1D, 0x76, 0x30, 0x00,
+                (widthBytes and 0xFF).toByte(),
+                ((widthBytes shr 8) and 0xFF).toByte(),
+                (height and 0xFF).toByte(),
+                ((height shr 8) and 0xFF).toByte()
+            )
+        )
+
+        for (y in 0 until height) {
+            for (x in 0 until widthBytes) {
+                var b = 0
+                for (bit in 0 until 8) {
+                    val px = x * 8 + bit
+                    if (px < width) {
+                        val pixel = bitmap.getPixel(px, y)
+                        val r = (pixel shr 16) and 0xFF
+                        val g = (pixel shr 8) and 0xFF
+                        val bl = pixel and 0xFF
+                        val lum = (299 * r + 587 * g + 114 * bl) / 1000
+                        if (lum < 160) {
+                            b = b or (1 shl (7 - bit))
+                        }
+                    }
+                }
+                out.write(b)
+            }
+        }
+        out.write(LINE_FEED)
+        return out.toByteArray()
+    }
+
+    /**
+     * Encodes a receipt text formatted with [L], [C], [R], <b>, <font> tags into native ESC/POS bytes.
+     */
+    fun encodeFormattedText(text: String, charsPerLine: Int, widthPx: Int): ByteArray {
+        val out = ByteArrayOutputStream()
+        out.write(INIT)
+
+        val lines = text.split("\n")
+        for (rawLine in lines) {
+            val line = rawLine.trimEnd('\r')
+            if (line.isBlank()) {
+                out.write(LINE_FEED)
+                continue
+            }
+
+            // Check if line contains non-Latin text requiring bitmap rendering
+            if (ThermalBitmapRenderer.containsNonLatin(line)) {
+                try {
+                    val bmp = ThermalBitmapRenderer.renderLineToBitmap(line, widthPx = widthPx)
+                    out.write(bitmapToRasterEscPos(bmp))
+                } catch (_: Exception) {
+                    writeFormattedTextLine(out, line, charsPerLine)
+                }
+            } else {
+                writeFormattedTextLine(out, line, charsPerLine)
+            }
+        }
+
+        // Final line feeds and paper cut
+        out.write(LINE_FEED)
+        out.write(LINE_FEED)
+        out.write(LINE_FEED)
+        out.write(PAPER_CUT)
+        return out.toByteArray()
+    }
+
+    private fun writeFormattedTextLine(out: ByteArrayOutputStream, line: String, charsPerLine: Int) {
+        var cleanLine = line
+        var isBold = false
+        var isBig = false
+
+        if (cleanLine.contains("<b>")) {
+            isBold = true
+            cleanLine = cleanLine.replace("<b>", "").replace("</b>", "")
+        }
+        if (cleanLine.contains("<font size='big'>") || cleanLine.contains("<font size=\"big\">")) {
+            isBig = true
+            cleanLine = cleanLine.replace(Regex("<font size=['\"]big['\"]>"), "").replace("</font>", "")
+        }
+
+        if (isBold) out.write(BOLD_ON)
+        if (isBig) out.write(DOUBLE_SIZE_ON)
+
+        when {
+            cleanLine.startsWith("[C]") -> {
+                out.write(ALIGN_CENTER)
+                val text = cleanLine.removePrefix("[C]")
+                out.write(text.toByteArray(Charsets.UTF_8))
+                out.write(LINE_FEED)
+            }
+            cleanLine.contains("[L]") && cleanLine.contains("[R]") && cleanLine.contains("[C]") -> {
+                out.write(ALIGN_LEFT)
+                val parts = cleanLine.split("[C]", "[R]")
+                val left = parts.getOrNull(0)?.removePrefix("[L]")?.trim().orEmpty()
+                val center = parts.getOrNull(1)?.trim().orEmpty()
+                val right = parts.getOrNull(2)?.trim().orEmpty()
+
+                val effectiveChars = if (isBig) charsPerLine / 2 else charsPerLine
+                val totalLen = left.length + center.length + right.length
+                val spaces = (effectiveChars - totalLen).coerceAtLeast(1)
+                val leftSpace = spaces / 2
+                val rightSpace = spaces - leftSpace
+                val combined = left + " ".repeat(leftSpace) + center + " ".repeat(rightSpace) + right
+                out.write(combined.toByteArray(Charsets.UTF_8))
+                out.write(LINE_FEED)
+            }
+            cleanLine.contains("[L]") && cleanLine.contains("[R]") -> {
+                out.write(ALIGN_LEFT)
+                val parts = cleanLine.split("[R]")
+                val left = parts.getOrNull(0)?.removePrefix("[L]")?.trim().orEmpty()
+                val right = parts.getOrNull(1)?.trim().orEmpty()
+
+                val effectiveChars = if (isBig) charsPerLine / 2 else charsPerLine
+                val spaces = (effectiveChars - (left.length + right.length)).coerceAtLeast(1)
+                val combined = left + " ".repeat(spaces) + right
+                out.write(combined.toByteArray(Charsets.UTF_8))
+                out.write(LINE_FEED)
+            }
+            cleanLine.startsWith("[R]") -> {
+                out.write(ALIGN_RIGHT)
+                val text = cleanLine.removePrefix("[R]")
+                out.write(text.toByteArray(Charsets.UTF_8))
+                out.write(LINE_FEED)
+            }
+            else -> {
+                out.write(ALIGN_LEFT)
+                val text = cleanLine.removePrefix("[L]")
+                out.write(text.toByteArray(Charsets.UTF_8))
+                out.write(LINE_FEED)
+            }
+        }
+
+        if (isBig) out.write(DOUBLE_SIZE_OFF)
+        if (isBold) out.write(BOLD_OFF)
+    }
+}
 
 /**
- * BluetoothPrinterManager handles:
- * 1. Discovering paired Bluetooth devices
- * 2. Connecting to selected ESC/POS Bluetooth Thermal Printer
- * 3. Generating formatted receipt text with DantSu ESCPOS-ThermalPrinter-Android syntax
- * 4. Exception handling ensuring POS operations are NEVER blocked if printer is offline or fails
+ * Native Bluetooth & Network ESC/POS Thermal Printer Manager.
+ * 100% Native Google / Android implementation replacing third-party DantSu ESCPOS library.
  */
 class BluetoothPrinterManager(private val context: Context) {
 
@@ -87,7 +247,6 @@ class BluetoothPrinterManager(private val context: Context) {
             return emptyList()
         }
         return try {
-            val connections = BluetoothPrintersConnections.selectFirstPaired()
             val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter() ?: return emptyList()
             if (!bluetoothAdapter.isEnabled) return emptyList()
 
@@ -107,29 +266,18 @@ class BluetoothPrinterManager(private val context: Context) {
         }
     }
 
-    /**
-     * Connection type management ("bluetooth" or "network")
-     */
-    fun getPrinterConnectionType(): String {
-        return prefsRepository.getPrinterConnectionType()
-    }
+    fun getPrinterConnectionType(): String = prefsRepository.getPrinterConnectionType()
 
     fun savePrinterConnectionType(type: String) {
         prefsRepository.savePrinterConnectionType(type)
     }
 
-    /**
-     * Saves selected printer hardware address and paper width setting in preferences.
-     */
     fun savePrinterConfig(address: String, widthMm: Int) {
         prefsRepository.savePrinterAddress(address)
         prefsRepository.savePrinterPaperWidth(widthMm)
         prefsRepository.savePrinterConnectionType("bluetooth")
     }
 
-    /**
-     * Saves network printer IP, port and paper width in preferences.
-     */
     fun saveNetworkPrinterConfig(ip: String, port: Int = 9100, widthMm: Int = 80) {
         prefsRepository.savePrinterNetworkIp(ip)
         prefsRepository.savePrinterNetworkPort(port)
@@ -137,31 +285,14 @@ class BluetoothPrinterManager(private val context: Context) {
         prefsRepository.savePrinterConnectionType("network")
     }
 
-    /**
-     * Gets currently saved printer address or empty string if unconfigured.
-     */
-    fun getSavedPrinterAddress(): String {
-        return prefsRepository.getSelectedPrinterAddress()
-    }
+    fun getSavedPrinterAddress(): String = prefsRepository.getSelectedPrinterAddress()
 
-    fun getSavedNetworkIp(): String {
-        return prefsRepository.getPrinterNetworkIp()
-    }
+    fun getSavedNetworkIp(): String = prefsRepository.getPrinterNetworkIp()
 
-    fun getSavedNetworkPort(): Int {
-        return prefsRepository.getPrinterNetworkPort()
-    }
+    fun getSavedNetworkPort(): Int = prefsRepository.getPrinterNetworkPort()
 
-    /**
-     * Gets currently saved printer paper width in mm (58 or 80).
-     */
-    fun getSavedPaperWidthMm(): Int {
-        return prefsRepository.getPrinterPaperWidth()
-    }
+    fun getSavedPaperWidthMm(): Int = prefsRepository.getPrinterPaperWidth()
 
-    /**
-     * Checks if a printer address or IP has been configured in settings.
-     */
     fun isPrinterConfigured(): Boolean {
         return if (getPrinterConnectionType() == "network") {
             getSavedNetworkIp().isNotBlank()
@@ -216,10 +347,11 @@ class BluetoothPrinterManager(private val context: Context) {
             val device = bluetoothAdapter.getRemoteDevice(address)
                 ?: return@withContext Result.failure(IllegalStateException("Device not found."))
 
-            val connection = BluetoothConnection(device)
-            connection.connect()
-            val connected = connection.isConnected
-            connection.disconnect()
+            val socket = device.createRfcommSocketToServiceRecord(EscPosNativeProtocol.SPP_UUID)
+            bluetoothAdapter.cancelDiscovery()
+            socket.connect()
+            val connected = socket.isConnected
+            socket.close()
 
             if (connected) {
                 Result.success(true)
@@ -233,64 +365,13 @@ class BluetoothPrinterManager(private val context: Context) {
     }
 
     /**
-     * Prepares raw receipt text for the ESC/POS thermal printer.
-     * If the text contains Bengali, Arabic, or other non-Latin characters, those specific lines
-     * are rendered into high-contrast monochrome bitmaps and embedded via DantSu <img> tags,
-     * ensuring 100% correct glyph and RTL rendering without '????' question mark artifacts.
-     */
-    fun prepareTextForPrinter(
-        formattedText: String,
-        printer: EscPosPrinter,
-        paperWidth: PrinterPaperWidth
-    ): String {
-        if (!ThermalBitmapRenderer.containsNonLatin(formattedText)) {
-            return formattedText
-        }
-
-        val widthPx = if (paperWidth == PrinterPaperWidth.MM_80) 576 else 384
-        val lines = formattedText.split("\n")
-        val resultSb = StringBuilder()
-
-        for (line in lines) {
-            if (line.isBlank()) {
-                resultSb.append("\n")
-                continue
-            }
-
-            // Keep separators and existing images as-is
-            if (line.startsWith("[C]---") || line.startsWith("[C]===") || line.startsWith("---") || line.startsWith("===") || line.contains("<img>")) {
-                resultSb.append(line).append("\n")
-                continue
-            }
-
-            // If this line contains non-Latin text, render it cleanly to a bitmap
-            if (ThermalBitmapRenderer.containsNonLatin(line)) {
-                try {
-                    val bitmap = ThermalBitmapRenderer.renderLineToBitmap(line, widthPx = widthPx)
-                    val hexImg = PrinterTextParserImg.bitmapToHexadecimalString(printer, bitmap)
-                    resultSb.append("[C]<img>$hexImg</img>\n")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Bitmap render fallback for non-Latin line: $line", e)
-                    resultSb.append(line).append("\n")
-                }
-            } else {
-                resultSb.append(line).append("\n")
-            }
-        }
-
-        return resultSb.toString()
-    }
-
-    /**
-     * Prints formatted ESC/POS text asynchronously over Bluetooth or Network TCP.
-     * Guaranteed NOT to block POS sales if printing fails or printer is disconnected.
-     *
-     * @param formattedText Raw ESC/POS formatted string using DantSu printer formatting tags.
-     * @return Result.success(Unit) or Result.failure(Throwable)
+     * Prints formatted ESC/POS text asynchronously over native Android Bluetooth socket or Network TCP.
      */
     suspend fun printFormattedText(formattedText: String): Result<Unit> = withContext(Dispatchers.IO) {
         val connectionType = getPrinterConnectionType()
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
+        val widthPx = if (paperWidth == PrinterPaperWidth.MM_80) 576 else 384
+        val bytesToSend = EscPosNativeProtocol.encodeFormattedText(formattedText, paperWidth.charsPerLine, widthPx)
 
         if (connectionType == "network") {
             val ip = getSavedNetworkIp()
@@ -300,21 +381,17 @@ class BluetoothPrinterManager(private val context: Context) {
             }
 
             return@withContext try {
-                val tcpConnection = TcpConnection(ip, port, 4000)
-                val printer = EscPosPrinter(
-                    tcpConnection,
-                    paperWidth.dpi,
-                    paperWidth.widthMm.toFloat(),
-                    paperWidth.charsPerLine
-                )
-
-                val processedText = prepareTextForPrinter(formattedText, printer, paperWidth)
-                printer.printFormattedText(processedText)
-                printer.disconnectPrinter()
-                Log.d(TAG, "Receipt successfully printed over TCP to $ip:$port")
+                val socket = Socket()
+                socket.connect(InetSocketAddress(ip, port), 4000)
+                socket.outputStream.use { out ->
+                    out.write(bytesToSend)
+                    out.flush()
+                }
+                socket.close()
+                Log.d(TAG, "Receipt successfully printed over native TCP to $ip:$port")
                 Result.success(Unit)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to print to Network ESC/POS thermal printer ($ip:$port): ${e.message}", e)
+                Log.e(TAG, "Failed to print to Network ESC/POS printer ($ip:$port): ${e.message}", e)
                 Result.failure(e)
             }
         }
@@ -331,37 +408,30 @@ class BluetoothPrinterManager(private val context: Context) {
         }
 
         try {
-            val connection = BluetoothPrintersConnections.selectFirstPaired()
-                ?: return@withContext Result.failure(IllegalStateException("No paired Bluetooth printer found."))
-
-            // Search for connection matching target address
-            var targetConnection: BluetoothConnection? = null
             val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
-                @SuppressLint("MissingPermission")
-                val device = bluetoothAdapter.getRemoteDevice(printerAddress)
-                if (device != null) {
-                    targetConnection = BluetoothConnection(device)
-                }
+                ?: return@withContext Result.failure(IllegalStateException("Bluetooth adapter unavailable."))
+            if (!bluetoothAdapter.isEnabled) {
+                return@withContext Result.failure(IllegalStateException("Bluetooth is disabled."))
             }
 
-            val activeConnection = targetConnection ?: connection
+            @SuppressLint("MissingPermission")
+            val device = bluetoothAdapter.getRemoteDevice(printerAddress)
+                ?: return@withContext Result.failure(IllegalStateException("Device not found at $printerAddress"))
 
-            // Initialize ESC/POS Printer with selected DPI, width, and characters per line
-            val printer = EscPosPrinter(
-                activeConnection,
-                paperWidth.dpi,
-                paperWidth.widthMm.toFloat(),
-                paperWidth.charsPerLine
-            )
+            bluetoothAdapter.cancelDiscovery()
+            val socket = device.createRfcommSocketToServiceRecord(EscPosNativeProtocol.SPP_UUID)
+            socket.connect()
 
-            val processedText = prepareTextForPrinter(formattedText, printer, paperWidth)
-            printer.printFormattedText(processedText)
-            printer.disconnectPrinter()
-            Log.d(TAG, "Receipt successfully printed to $printerAddress")
+            socket.outputStream.use { out ->
+                out.write(bytesToSend)
+                out.flush()
+            }
+            socket.close()
+
+            Log.d(TAG, "Receipt successfully printed over native Bluetooth to $printerAddress")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to print to ESC/POS thermal printer: ${e.message}", e)
+            Log.e(TAG, "Failed to print to Bluetooth ESC/POS printer: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -382,7 +452,7 @@ class BluetoothPrinterManager(private val context: Context) {
         dateTimeStr: String,
         cashierName: String,
         customerName: String = "",
-        items: List<Pair<String, Pair<Double, Double>>>, // Name, Quantity, LineTotal
+        items: List<Pair<String, Pair<Double, Double>>>,
         subtotal: Double,
         discount: Double = 0.0,
         tax: Double = 0.0,
@@ -458,37 +528,34 @@ class BluetoothPrinterManager(private val context: Context) {
                 sb.append("[L]$name\n")
                 sb.append("[L]  x$qtyStr[R]$currencySymbol$formattedTotal\n")
             } else {
-                sb.append("[L]$name[C]x$qtyStr[R]$currencySymbol$formattedTotal\n")
+                sb.append("[L]$name[C]$qtyStr[R]$currencySymbol$formattedTotal\n")
             }
         }
         sb.append("[C]$lineSeparator\n")
 
-        // Totals (Formatted with Locale.US for column alignment)
+        // Totals
         sb.append("[L]$labelSubtotal[R]$currencySymbol${String.format(Locale.US, "%.2f", subtotal)}\n")
-        if (discount > 0) {
+        if (discount > 0.0) {
             sb.append("[L]$labelDiscount[R]-$currencySymbol${String.format(Locale.US, "%.2f", discount)}\n")
         }
-        if (tax > 0) {
+        if (tax > 0.0) {
             sb.append("[L]$labelTaxVat[R]$currencySymbol${String.format(Locale.US, "%.2f", tax)}\n")
         }
+        sb.append("[C]$lineSeparator\n")
         sb.append("[L]<b>$labelTotal</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", grandTotal)}</b>\n")
         sb.append("[L]$labelPaymentMethod[R]$paymentMethod\n")
         sb.append("[C]$lineSeparator\n")
 
         // Footer
-        val footerText = customFooterText.ifBlank { defaultFooter }
-        footerText.split("\n").forEach { line ->
-            if (line.isNotBlank()) {
-                sb.append("[C]$line\n")
-            }
-        }
+        val footer = if (customFooterText.isNotBlank()) customFooterText else defaultFooter
+        sb.append("[C]<b>$footer</b>\n")
         sb.append("\n\n\n")
 
         return sb.toString()
     }
 
     /**
-     * Builds international Z-Report / Shift Close thermal receipt string with localized labels.
+     * Builds standard ESC/POS formatted string for an End-of-Shift Z-Report.
      */
     fun buildZReportText(
         businessName: String,
@@ -500,32 +567,40 @@ class BluetoothPrinterManager(private val context: Context) {
         vatRate: Double = 15.0,
         isTaxEnabled: Boolean = true,
         isTaxIncluded: Boolean = true
+    ): String = buildShiftReportText(
+        businessName, businessAddress, businessPhone, vatNumber, report, currencySymbol, vatRate, isTaxEnabled, isTaxIncluded
+    )
+
+    fun buildShiftReportText(
+        businessName: String,
+        businessAddress: String = "",
+        businessPhone: String = "",
+        vatNumber: String = "",
+        report: com.lojia.shiftreport.data.ShiftReport,
+        currencySymbol: String = "$",
+        vatRate: Double = 15.0,
+        isTaxEnabled: Boolean = true,
+        isTaxIncluded: Boolean = true
     ): String {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
-        val is58 = paperWidth == PrinterPaperWidth.MM_58
         val lineSeparator = "-".repeat(paperWidth.charsPerLine)
         val formattedDate = DateTimeFormatUtils.formatDateTime(report.dateInMillis)
 
         val startingCash = com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashFromNotes(report)
         val actualCashCount = com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashFromNotes(report)
-        val cashIn = report.totalDueCollectedCash
-        val cashOut = report.totalCashOut
-        val expectedCash = startingCash + report.grossCash + cashIn - cashOut
+        val cashIn = MoneyFormat.toMajorUnits(report.totalDueCollectedCash)
+        val cashOut = MoneyFormat.toMajorUnits(report.totalCashOut)
+        val grossCash = MoneyFormat.toMajorUnits(report.grossCash)
+        val expectedCash = startingCash + grossCash + cashIn - cashOut
         val variance = actualCashCount?.let { it - expectedCash }
 
         val sb = StringBuilder()
 
         // Header
         sb.append("[C]<b><font size='big'>$businessName</font></b>\n")
-        if (businessAddress.isNotBlank()) {
-            sb.append("[C]$businessAddress\n")
-        }
-        if (businessPhone.isNotBlank()) {
-            sb.append("[C]Tel: $businessPhone\n")
-        }
-        if (vatNumber.isNotBlank()) {
-            sb.append("[C]VAT ID: $vatNumber\n")
-        }
+        if (businessAddress.isNotBlank()) sb.append("[C]$businessAddress\n")
+        if (businessPhone.isNotBlank()) sb.append("[C]Tel: $businessPhone\n")
+        if (vatNumber.isNotBlank()) sb.append("[C]VAT ID: $vatNumber\n")
         sb.append("[C]$lineSeparator\n")
         sb.append("[C]<b><font size='big'>${context.getString(R.string.zreport_title)}</font></b>\n")
         sb.append("[C]$lineSeparator\n")
@@ -536,26 +611,30 @@ class BluetoothPrinterManager(private val context: Context) {
         sb.append("[L]${context.getString(R.string.zreport_cashier)}[R]${report.cashierName}\n")
         sb.append("[C]$lineSeparator\n")
 
+        val madaPayments = MoneyFormat.toMajorUnits(report.madaPayments)
+        val digitalWallet = MoneyFormat.toMajorUnits(report.digitalWallet)
+        val totalSales = MoneyFormat.toMajorUnits(report.totalSales)
+
         // 1. SALES BY PAYMENT METHOD
         sb.append("[L]<b>${context.getString(R.string.zreport_sec_sales)}</b>\n")
-        sb.append("[L]${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.grossCash)}\n")
-        sb.append("[L]${context.getString(R.string.zreport_card_mada)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.madaPayments)}\n")
-        if (report.digitalWallet > 0) {
-            sb.append("[L]${context.getString(R.string.zreport_digital_wallet)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.digitalWallet)}\n")
+        sb.append("[L]${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", grossCash)}\n")
+        sb.append("[L]${context.getString(R.string.zreport_card_mada)}[R]$currencySymbol${String.format(Locale.US, "%.2f", madaPayments)}\n")
+        if (digitalWallet > 0.0) {
+            sb.append("[L]${context.getString(R.string.zreport_digital_wallet)}[R]$currencySymbol${String.format(Locale.US, "%.2f", digitalWallet)}\n")
         }
-        sb.append("[L]<b>${context.getString(R.string.zreport_total_revenue)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", report.totalSales)}</b>\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_total_revenue)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", totalSales)}</b>\n")
         sb.append("[C]$lineSeparator\n")
 
         // 2. CASH DRAWER RECONCILIATION
         sb.append("[L]<b>${context.getString(R.string.zreport_sec_cash_recon)}</b>\n")
-        if (startingCash > 0) {
+        if (startingCash > 0.0) {
             sb.append("[L]${context.getString(R.string.zreport_starting_float)}[R]$currencySymbol${String.format(Locale.US, "%.2f", startingCash)}\n")
         }
-        sb.append("[L](+) ${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.grossCash)}\n")
-        if (cashIn > 0) {
+        sb.append("[L](+) ${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", grossCash)}\n")
+        if (cashIn > 0.0) {
             sb.append("[L]${context.getString(R.string.zreport_cash_in_dues)}[R]$currencySymbol${String.format(Locale.US, "%.2f", cashIn)}\n")
         }
-        if (cashOut > 0) {
+        if (cashOut > 0.0) {
             sb.append("[L]${context.getString(R.string.zreport_cash_out)}[R]$currencySymbol${String.format(Locale.US, "%.2f", cashOut)}\n")
         }
         sb.append("[L]<b>${context.getString(R.string.zreport_expected_cash)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", expectedCash)}</b>\n")
@@ -563,10 +642,9 @@ class BluetoothPrinterManager(private val context: Context) {
         if (actualCashCount != null) {
             sb.append("[L]<b>${context.getString(R.string.zreport_actual_cash)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", actualCashCount)}</b>\n")
             val varFormatted = when {
-                variance == null -> "N/A"
-                Math.abs(variance) < 0.01 -> "${currencySymbol}0.00 (${context.getString(R.string.zreport_balanced)})"
-                variance > 0 -> "+$currencySymbol${String.format(Locale.US, "%.2f", variance)} (${context.getString(R.string.zreport_over)})"
-                else -> "-$currencySymbol${String.format(Locale.US, "%.2f", Math.abs(variance))} (${context.getString(R.string.zreport_short)})"
+                Math.abs(variance ?: 0.0) < 0.01 -> "${currencySymbol}0.00 (${context.getString(R.string.zreport_balanced)})"
+                (variance ?: 0.0) > 0 -> "+$currencySymbol${String.format(Locale.US, "%.2f", variance)} (${context.getString(R.string.zreport_over)})"
+                else -> "-$currencySymbol${String.format(Locale.US, "%.2f", Math.abs(variance ?: 0.0))} (${context.getString(R.string.zreport_short)})"
             }
             sb.append("[L]<b>${context.getString(R.string.zreport_variance)}</b>[R]<b>$varFormatted</b>\n")
         }
@@ -576,16 +654,16 @@ class BluetoothPrinterManager(private val context: Context) {
         val (netTaxable, vatAmount, grossTotal) = if (isTaxEnabled && vatRate > 0.0) {
             if (isTaxIncluded) {
                 val divisor = 1.0 + (vatRate / 100.0)
-                val net = report.totalSales / divisor
-                val vat = report.totalSales - net
-                Triple(net, vat, report.totalSales)
+                val net = totalSales / divisor
+                val vat = totalSales - net
+                Triple(net, vat, totalSales)
             } else {
-                val net = report.totalSales
+                val net = totalSales
                 val vat = net * (vatRate / 100.0)
                 Triple(net, vat, net + vat)
             }
         } else {
-            Triple(report.totalSales, 0.0, report.totalSales)
+            Triple(totalSales, 0.0, totalSales)
         }
         sb.append("[L]<b>${context.getString(R.string.zreport_sec_tax_summary)}</b>\n")
         if (isTaxEnabled && vatRate > 0.0) {
@@ -599,15 +677,16 @@ class BluetoothPrinterManager(private val context: Context) {
             sb.append("[L]$grossLabel[R]$currencySymbol${String.format(Locale.US, "%.2f", grossTotal)}\n")
         } else {
             sb.append("[L]${context.getString(R.string.zreport_tax_status)}[R]${context.getString(R.string.zreport_non_taxable)}\n")
-            sb.append("[L]${context.getString(R.string.zreport_net_total)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.totalSales)}\n")
+            sb.append("[L]${context.getString(R.string.zreport_net_total)}[R]$currencySymbol${String.format(Locale.US, "%.2f", totalSales)}\n")
         }
         sb.append("[C]$lineSeparator\n")
 
         // 4. OTHER TRACKING
-        if (report.totalDueCredit > 0 || report.staffMealsCount > 0) {
+        val totalDueCredit = MoneyFormat.toMajorUnits(report.totalDueCredit)
+        if (totalDueCredit > 0.0 || report.staffMealsCount > 0) {
             sb.append("[L]<b>${context.getString(R.string.zreport_sec_other)}</b>\n")
-            if (report.totalDueCredit > 0) {
-                sb.append("[L]${context.getString(R.string.zreport_credit_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", report.totalDueCredit)}\n")
+            if (totalDueCredit > 0.0) {
+                sb.append("[L]${context.getString(R.string.zreport_credit_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", totalDueCredit)}\n")
             }
             if (report.staffMealsCount > 0) {
                 sb.append("[L]${context.getString(R.string.zreport_staff_meals)}[R]${report.staffMealsCount}\n")
@@ -636,11 +715,31 @@ class BluetoothPrinterManager(private val context: Context) {
     }
 
     /**
+     * Builds a quick test receipt to verify thermal printer connectivity and formatting.
+     */
+    fun buildTestReceiptText(): String {
+        val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
+        val lineSeparator = "-".repeat(paperWidth.charsPerLine)
+        val nowFormatted = DateTimeFormatUtils.formatDateTime(System.currentTimeMillis())
+
+        return buildString {
+            append("[C]<b><font size='big'>${context.getString(R.string.printer_test_receipt_title)}</font></b>\n")
+            append("[C]${context.getString(R.string.printer_test_receipt_subtitle)}\n")
+            append("[C]$lineSeparator\n")
+            append("[L]Status:[R]CONNECTED\n")
+            append("[L]Time:[R]$nowFormatted\n")
+            append("[L]Paper:[R]${paperWidth.widthMm}mm (${paperWidth.charsPerLine} CPL)\n")
+            append("[C]$lineSeparator\n")
+            append("[C]<b>${context.getString(R.string.printer_test_receipt_operational)}</b>\n")
+            append("[C]English / বাংলা / العربية\n")
+            append("\n\n\n")
+        }
+    }
+
+    /**
      * Sends ESC/POS pulse signal (ESC p 0 25 250) over Bluetooth or TCP Network connection to kick open cash drawer.
      */
     suspend fun openCashDrawer(): Result<Unit> = withContext(Dispatchers.IO) {
-        val openDrawerBytes = byteArrayOf(0x1B.toByte(), 0x70.toByte(), 0x00.toByte(), 0x19.toByte(), 0xFA.toByte())
-
         if (getPrinterConnectionType() == "network") {
             val ip = getSavedNetworkIp()
             val port = getSavedNetworkPort()
@@ -648,16 +747,15 @@ class BluetoothPrinterManager(private val context: Context) {
                 return@withContext Result.failure(IllegalStateException("No Network printer IP configured."))
             }
             return@withContext try {
-                val tcpConnection = TcpConnection(ip, port, 3000)
-                tcpConnection.connect()
-                if (tcpConnection.isConnected) {
-                    tcpConnection.write(openDrawerBytes)
-                    tcpConnection.disconnect()
-                    Log.d(TAG, "Sent open cash drawer command over TCP to $ip:$port")
-                    Result.success(Unit)
-                } else {
-                    Result.failure(IllegalStateException("Could not connect to network printer at $ip:$port"))
+                val socket = Socket()
+                socket.connect(InetSocketAddress(ip, port), 3000)
+                socket.outputStream.use { out ->
+                    out.write(EscPosNativeProtocol.OPEN_DRAWER)
+                    out.flush()
                 }
+                socket.close()
+                Log.d(TAG, "Sent open cash drawer command over native TCP to $ip:$port")
+                Result.success(Unit)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to open cash drawer over network: ${e.message}", e)
                 Result.failure(e)
@@ -680,16 +778,16 @@ class BluetoothPrinterManager(private val context: Context) {
             val device = bluetoothAdapter.getRemoteDevice(printerAddress)
                 ?: return@withContext Result.failure(IllegalStateException("Device not found."))
 
-            val connection = BluetoothConnection(device)
-            connection.connect()
-            if (connection.isConnected) {
-                connection.write(openDrawerBytes)
-                connection.disconnect()
-                Log.d(TAG, "Sent open cash drawer command to $printerAddress")
-                Result.success(Unit)
-            } else {
-                Result.failure(IllegalStateException("Could not connect to printer for cash drawer kick."))
+            bluetoothAdapter.cancelDiscovery()
+            val socket = device.createRfcommSocketToServiceRecord(EscPosNativeProtocol.SPP_UUID)
+            socket.connect()
+            socket.outputStream.use { out ->
+                out.write(EscPosNativeProtocol.OPEN_DRAWER)
+                out.flush()
             }
+            socket.close()
+            Log.d(TAG, "Sent open cash drawer command to $printerAddress via native Bluetooth")
+            Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to open cash drawer: ${e.message}", e)
             Result.failure(e)
