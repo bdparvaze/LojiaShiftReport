@@ -56,8 +56,8 @@ com.lojia.shiftreport
 │   └── ShiftReportScreen.kt       # Active shift creation, cash counting & history list
 │
 ├── scanner/                       # 📄 Document Scanner & OCR Module
-│   ├── CamScannerCropView.kt      # Custom canvas view for perspective cropping handle adjustments
-│   ├── CamScannerEditorScreen.kt  # Manual edge alignment and cropping screen
+│   ├── DocumentCropCanvasView.kt  # Custom canvas view for perspective cropping handle adjustments
+│   ├── DocumentEditorScreen.kt    # Manual edge alignment, filter enhancement & OCR screen
 │   ├── CameraXScannerView.kt      # Edge-detecting custom camera scanner view
 │   ├── DocumentImageFilter.kt     # Image enhancement filters (B&W, high contrast, magic color)
 │   ├── DocumentScannerComponents.kt# Scan header card, document card & empty states

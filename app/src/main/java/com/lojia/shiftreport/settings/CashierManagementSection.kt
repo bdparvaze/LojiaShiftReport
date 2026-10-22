@@ -126,7 +126,7 @@ fun CashierManagementSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Team Overview",
+                            text = stringResource(R.string.team_overview),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
                             color = OnSurfaceLight
@@ -168,25 +168,25 @@ fun CashierManagementSection(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         KpiChip(
-                            label = "Total",
+                            label = stringResource(R.string.total),
                             value = totalCount.toString(),
                             color = PrimaryIndigoLight,
                             modifier = Modifier.weight(1f)
                         )
                         KpiChip(
-                            label = "Active",
+                            label = stringResource(R.string.active),
                             value = activeCount.toString(),
                             color = SuccessGreen,
                             modifier = Modifier.weight(1f)
                         )
                         KpiChip(
-                            label = "On-Shift",
+                            label = stringResource(R.string.cashier_status_on_shift),
                             value = onShiftCount.toString(),
                             color = InfoBlue,
                             modifier = Modifier.weight(1f)
                         )
                         KpiChip(
-                            label = "Inactive",
+                            label = stringResource(R.string.inactive),
                             value = inactiveCount.toString(),
                             color = OnSurfaceVariantLight,
                             modifier = Modifier.weight(1f)
@@ -204,7 +204,7 @@ fun CashierManagementSection(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Search cashiers...",
+                            text = stringResource(R.string.search_cashiers_placeholder),
                             fontSize = 13.sp,
                             color = TextHintColor
                         )
@@ -251,22 +251,22 @@ fun CashierManagementSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     StatusFilterChip(
-                        label = "All",
+                        label = stringResource(R.string.filter_status_all),
                         selected = selectedFilter == CashierStatusFilter.ALL,
                         onClick = { selectedFilter = CashierStatusFilter.ALL }
                     )
                     StatusFilterChip(
-                        label = "Active",
+                        label = stringResource(R.string.active),
                         selected = selectedFilter == CashierStatusFilter.ACTIVE,
                         onClick = { selectedFilter = CashierStatusFilter.ACTIVE }
                     )
                     StatusFilterChip(
-                        label = "On-Shift",
+                        label = stringResource(R.string.cashier_status_on_shift),
                         selected = selectedFilter == CashierStatusFilter.ON_SHIFT,
                         onClick = { selectedFilter = CashierStatusFilter.ON_SHIFT }
                     )
                     StatusFilterChip(
-                        label = "Inactive",
+                        label = stringResource(R.string.inactive),
                         selected = selectedFilter == CashierStatusFilter.INACTIVE,
                         onClick = { selectedFilter = CashierStatusFilter.INACTIVE }
                     )
@@ -362,12 +362,12 @@ fun CashierManagementSection(
     // =========================================================================
     cashierPendingDeletion?.let { cashier ->
         AdminAuthDialog(
-            actionTitle = "Delete Cashier: ${cashier.name}",
-            actionDescription = "Mandatory admin re-authentication required. An automated security audit log entry will be created.",
+            actionTitle = "${stringResource(R.string.delete_cashier)}: ${cashier.name}",
+            actionDescription = stringResource(R.string.admin_auth_audit_desc),
             onDismissRequest = { cashierPendingDeletion = null },
             onAuthSuccess = {
                 onDeleteCashierClick(cashier)
-                Toast.makeText(context, "Audit log generated: Cashier ${cashier.name} deleted.", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.settings_audit_cashier_deleted, cashier.name), Toast.LENGTH_LONG).show()
                 cashierPendingDeletion = null
             }
         )

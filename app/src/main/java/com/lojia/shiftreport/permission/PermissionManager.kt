@@ -39,20 +39,20 @@ import com.lojia.shiftreport.ui.theme.*
  * Supported features that require runtime dangerous permissions.
  */
 enum class AppFeaturePermission(
-    val title: String,
-    val description: String,
+    @androidx.annotation.StringRes val titleRes: Int,
+    @androidx.annotation.StringRes val descriptionRes: Int,
     val icon: ImageVector,
     val permissionsGetter: () -> List<String>
 ) {
     CAMERA(
-        title = "Camera Permission Required",
-        description = "To scan physical invoices, shift reports, and documents with auto-edge detection and OCR text extraction, Lojia needs access to your camera.",
+        titleRes = R.string.permission_camera_title,
+        descriptionRes = R.string.permission_camera_desc,
         icon = Icons.Outlined.CameraAlt,
         permissionsGetter = { listOf(Manifest.permission.CAMERA) }
     ),
     BLUETOOTH_PRINTER(
-        title = "Bluetooth & Nearby Devices",
-        description = "To discover, connect, and print receipts / Z-Reports directly to your Bluetooth ESC/POS thermal printer, Lojia needs Bluetooth permissions.",
+        titleRes = R.string.permission_bluetooth_title,
+        descriptionRes = R.string.permission_bluetooth_desc,
         icon = Icons.Outlined.Print,
         permissionsGetter = {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -68,8 +68,8 @@ enum class AppFeaturePermission(
         }
     ),
     NOTIFICATIONS(
-        title = "Notifications & Reminders",
-        description = "Stay informed when daily shift reports are generated, automated backups finish, or stock runs low.",
+        titleRes = R.string.permission_notifications_title,
+        descriptionRes = R.string.permission_notifications_desc,
         icon = Icons.Outlined.Notifications,
         permissionsGetter = {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -280,7 +280,7 @@ fun PermissionRationaleDialog(
         },
         title = {
             Text(
-                text = feature.title,
+                text = stringResource(feature.titleRes),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnBackgroundLight,
@@ -293,7 +293,7 @@ fun PermissionRationaleDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = feature.description,
+                    text = stringResource(feature.descriptionRes),
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
                     color = OnSurfaceVariantLight,

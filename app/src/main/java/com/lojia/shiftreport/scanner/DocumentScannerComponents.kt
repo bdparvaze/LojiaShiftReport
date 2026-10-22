@@ -109,7 +109,7 @@ fun DocumentScannerHeaderCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Scan",
+                        text = stringResource(R.string.btn_scan),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
                         maxLines = 1,
@@ -132,7 +132,7 @@ fun DocumentScannerHeaderCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Camera",
+                        text = stringResource(R.string.btn_camera),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.5.sp,
                         maxLines = 1,
@@ -155,7 +155,7 @@ fun DocumentScannerHeaderCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Gallery",
+                        text = stringResource(R.string.btn_gallery),
                         color = PrimaryIndigo,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.5.sp,
@@ -397,14 +397,14 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
                 )
             }
             Text(
-                text = "No documents yet",
+                text = stringResource(R.string.doc_no_documents_yet),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = TextPrimaryLight
                 )
             )
             Text(
-                text = "Scan or import receipts, bills, and reports",
+                text = stringResource(R.string.doc_empty_import_desc),
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextSecondaryLight,
                     fontSize = 12.sp
@@ -426,7 +426,7 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Scan Document",
+                    text = stringResource(R.string.btn_scan_document),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp
                 )

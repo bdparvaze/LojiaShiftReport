@@ -55,9 +55,9 @@ import kotlin.math.max
 
 import com.lojia.shiftreport.ui.theme.*
 
-private val CamScannerGreen = PosCashGreenFill
-private val CamScannerDark = PureBlack
-private val CamScannerControlBg = OverlayScrim
+private val ScannerEmerald = PosCashGreenFill
+private val ScannerDark = PureBlack
+private val ScannerControlBg = OverlayScrim
 
 enum class ScanCaptureMode {
     SINGLE,
@@ -71,11 +71,8 @@ enum class TorchState {
 }
 
 /**
- * 100% Visual Clone of CamScanner's Custom Camera Capture Screen.
- * Uses CameraX with high-resolution document capture, A4 alignment reticle,
- * real-time OpenCV edge detection every 3rd frame,
- * transparent top control bar (Flash, Auto-Detect, Grid), "Single" vs "Batch" text toggle,
- * and a prominent circular shutter button.
+ * CameraX High-Resolution Document Capture Viewfinder.
+ * Built using AndroidX CameraX and Google ML Kit on-device intelligence.
  */
 @Composable
 fun CameraXScannerView(
@@ -137,7 +134,7 @@ fun CameraXScannerView(
                 imageAnalysis.clearAnalyzer()
                 cameraProviderRef?.unbindAll()
             } catch (e: Exception) {
-                Log.e("CamScanner", "Error unbinding camera on dispose", e)
+                Log.e("CameraXScanner", "Error unbinding camera on dispose", e)
             }
             cameraExecutor.shutdown()
         }
@@ -153,7 +150,7 @@ fun CameraXScannerView(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(CamScannerDark)
+            .background(ScannerDark)
     ) {
         // CameraX Live Preview with TextureView implementation for rock-solid stability
         AndroidView(
@@ -198,7 +195,7 @@ fun CameraXScannerView(
                                     }
                                 }
                             } catch (e: Exception) {
-                                Log.e("CamScanner", "Frame analysis error", e)
+                                Log.e("CameraXScanner", "Frame analysis error", e)
                             } finally {
                                 imageProxy.close()
                             }
@@ -214,7 +211,7 @@ fun CameraXScannerView(
                                 imageAnalysis
                             )
                         } catch (e: Exception) {
-                            Log.w("CamScanner", "Fallback binding without imageAnalysis", e)
+                            Log.w("CameraXScanner", "Fallback binding without imageAnalysis", e)
                             cameraProvider.bindToLifecycle(
                                 lifecycleOwner,
                                 cameraSelector,
@@ -226,7 +223,7 @@ fun CameraXScannerView(
                         // Set initial torch
                         camera?.cameraControl?.enableTorch(torchState == TorchState.ON)
                     } catch (e: Exception) {
-                        Log.e("CamScanner", "Camera initialization failed", e)
+                        Log.e("CameraXScanner", "Camera initialization failed", e)
                     }
                 }, ctx.mainExecutor)
 
@@ -237,7 +234,7 @@ fun CameraXScannerView(
                     imageAnalysis.clearAnalyzer()
                     cameraProviderRef?.unbindAll()
                 } catch (e: Exception) {
-                    Log.e("CamScanner", "Error releasing camera provider", e)
+                    Log.e("CameraXScanner", "Error releasing camera provider", e)
                 }
             },
             modifier = Modifier.fillMaxSize()
@@ -276,17 +273,17 @@ fun CameraXScannerView(
 
             // Outer Document Frame
             drawRoundRect(
-                color = if (isAutoDetectEnabled) CamScannerGreen.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.6f),
+                color = if (isAutoDetectEnabled) ScannerEmerald.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.6f),
                 topLeft = Offset(left, top),
                 size = Size(targetW, targetH),
                 cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
                 style = Stroke(width = 1.8.dp.toPx())
             )
 
-            // High-Contrast CamScanner Corner Brackets
+            // High-Contrast Corner Brackets
             val bracketLength = 26.dp.toPx()
             val bracketStroke = 4.dp.toPx()
-            val bracketColor = if (isAutoDetectEnabled) CamScannerGreen else Color.White
+            val bracketColor = if (isAutoDetectEnabled) ScannerEmerald else Color.White
 
             // Top-Left
             drawLine(bracketColor, Offset(left, top), Offset(left + bracketLength, top), bracketStroke)
@@ -328,11 +325,11 @@ fun CameraXScannerView(
 
                 drawPath(
                     path = polyPath,
-                    color = CamScannerGreen.copy(alpha = 0.22f)
+                    color = ScannerEmerald.copy(alpha = 0.22f)
                 )
                 drawPath(
                     path = polyPath,
-                    color = CamScannerGreen,
+                    color = ScannerEmerald,
                     style = Stroke(width = 3.dp.toPx())
                 )
 
@@ -343,7 +340,7 @@ fun CameraXScannerView(
                         center = cornerOffset
                     )
                     drawCircle(
-                        color = CamScannerGreen,
+                        color = ScannerEmerald,
                         radius = 5.dp.toPx(),
                         center = cornerOffset
                     )
@@ -406,7 +403,7 @@ fun CameraXScannerView(
                 // Auto-Detect Toggle
                 Surface(
                     onClick = { isAutoDetectEnabled = !isAutoDetectEnabled },
-                    color = if (isAutoDetectEnabled) CamScannerGreen.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.45f),
+                    color = if (isAutoDetectEnabled) ScannerEmerald.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.45f),
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.height(38.dp)
                 ) {
@@ -440,7 +437,7 @@ fun CameraXScannerView(
                     Icon(
                         imageVector = if (showGrid) Icons.Outlined.GridOn else Icons.Outlined.GridOff,
                         contentDescription = stringResource(R.string.cd_grid),
-                        tint = if (showGrid) CamScannerGreen else Color.White
+                        tint = if (showGrid) ScannerEmerald else Color.White
                     )
                 }
             }
@@ -455,7 +452,7 @@ fun CameraXScannerView(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(CamScannerControlBg)
+                .background(ScannerControlBg)
                 .navigationBarsPadding()
                 .padding(bottom = 20.dp, top = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -473,7 +470,7 @@ fun CameraXScannerView(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (captureMode == ScanCaptureMode.SINGLE) CamScannerGreen else Color.Transparent)
+                        .background(if (captureMode == ScanCaptureMode.SINGLE) ScannerEmerald else Color.Transparent)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -492,7 +489,7 @@ fun CameraXScannerView(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (captureMode == ScanCaptureMode.BATCH) CamScannerGreen else Color.Transparent)
+                        .background(if (captureMode == ScanCaptureMode.BATCH) ScannerEmerald else Color.Transparent)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -531,13 +528,13 @@ fun CameraXScannerView(
                     )
                 }
 
-                // Center: CamScanner Prominent Circular Shutter Button
+                // Center: Prominent Circular Shutter Button
                 Box(
                     modifier = Modifier
                         .size(80.dp)
                         .scale(shutterScale)
                         .shadow(12.dp, CircleShape)
-                        .border(4.dp, CamScannerGreen, CircleShape)
+                        .border(4.dp, ScannerEmerald, CircleShape)
                         .background(Color.Transparent, CircleShape)
                         .clickable(enabled = !isCapturing) {
                             view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
@@ -605,7 +602,7 @@ fun CameraXScannerView(
                         modifier = Modifier
                             .size(52.dp)
                             .clip(CircleShape)
-                            .background(if (batchList.isNotEmpty()) CamScannerGreen else Color.White.copy(alpha = 0.12f))
+                            .background(if (batchList.isNotEmpty()) ScannerEmerald else Color.White.copy(alpha = 0.12f))
                             .clickable(enabled = batchList.isNotEmpty()) {
                                 onBatchCaptured(batchList.toList())
                             },
@@ -645,7 +642,7 @@ fun CameraXScannerView(
                     ) {
                         Text(
                             text = stringResource(R.string.camera_auto),
-                            color = CamScannerGreen,
+                            color = ScannerEmerald,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -679,7 +676,7 @@ private fun imageProxyToUprightBitmap(imageProxy: ImageProxy): Bitmap? {
             rawBitmap
         }
     } catch (t: Throwable) {
-        Log.e("CamScanner", "Failed to convert ImageProxy to Bitmap", t)
+        Log.e("CameraXScanner", "Failed to convert ImageProxy to Bitmap", t)
         null
     }
 }
@@ -747,7 +744,7 @@ private fun takePhoto(
             }
 
             override fun onError(exception: ImageCaptureException) {
-                Log.e("CamScanner", "Photo capture failed: ${exception.message}", exception)
+                Log.e("CameraXScanner", "Photo capture failed: ${exception.message}", exception)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
                     onResult(null)
                 }

@@ -102,7 +102,7 @@ object PerspectiveTransformHelper {
 
     /**
      * Automatically estimates document corner boundaries by detecting contrast transitions
-     * from edges toward the center (CamScanner smart auto-boundary detection).
+     * from edges toward the center (Smart auto-boundary detection).
      */
     suspend fun detectDocumentCorners(bitmap: Bitmap): DocumentCorners = withContext(Dispatchers.Default) {
         val w = bitmap.width

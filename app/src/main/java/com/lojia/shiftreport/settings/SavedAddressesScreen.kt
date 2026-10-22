@@ -92,7 +92,7 @@ fun SavedAddressesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Saved Addresses",
+                        text = stringResource(R.string.saved_addresses_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = PureWhite
@@ -141,7 +141,7 @@ fun SavedAddressesScreen(
                             .testTag("btn_add_new_address")
                     ) {
                         Text(
-                            text = "Add New Address",
+                            text = stringResource(R.string.add_new_address),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
@@ -176,7 +176,7 @@ fun SavedAddressesScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "All information is encrypted",
+                        text = stringResource(R.string.all_info_encrypted),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = SuccessGreen
@@ -213,14 +213,14 @@ fun SavedAddressesScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No addresses yet",
+                            text = stringResource(R.string.no_addresses_yet),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = OnSurfaceLight
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Add your first address to get started",
+                            text = stringResource(R.string.add_first_address_desc),
                             fontSize = 13.sp,
                             color = OnSurfaceVariantLight,
                             textAlign = TextAlign.Center
@@ -261,7 +261,7 @@ private fun AddressCard(
     onEdit: (String) -> Unit
 ) {
     val fullName = "${address.firstName} ${address.lastName}".trim().ifBlank {
-        address.addressLabel.ifBlank { "Store Address" }
+        address.addressLabel.ifBlank { stringResource(R.string.address) }
     }
     val displayPhone = if (address.phone.startsWith("+") || address.dialCode.isBlank()) {
         address.phone

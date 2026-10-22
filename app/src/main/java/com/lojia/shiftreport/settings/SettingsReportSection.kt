@@ -1609,7 +1609,7 @@ fun SettingsReportSection(
                 Button(
                     onClick = {
                         if (tempPin.length != 4) {
-                            pinError = "PIN must be exactly 4 digits"
+                            pinError = context.getString(R.string.pin_must_be_4_digits)
                         } else {
                             preferencesRepository.setQuickPin(tempPin)
                             preferencesRepository.setQuickLoginEnabled(true)
@@ -1617,7 +1617,7 @@ fun SettingsReportSection(
                             persistProfile(p = tempPin)
                             quickLoginEnabled = true
                             showQuickPinDialog = false
-                            Toast.makeText(context, "Quick PIN saved & Quick Login enabled!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.settings_quick_pin_saved), Toast.LENGTH_SHORT).show()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)

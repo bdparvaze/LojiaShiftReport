@@ -422,13 +422,7 @@ object PdfReportGenerator {
 
     private fun generateStyledQrCodeBitmap(text: String, targetPixelSize: Int = 400): Bitmap? {
         return try {
-            val hints = mapOf(
-                com.google.zxing.EncodeHintType.MARGIN to 1,
-                com.google.zxing.EncodeHintType.ERROR_CORRECTION to com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.H,
-                com.google.zxing.EncodeHintType.CHARACTER_SET to "UTF-8"
-            )
-            val writer = com.google.zxing.qrcode.QRCodeWriter()
-            val bitMatrix = writer.encode(text, com.google.zxing.BarcodeFormat.QR_CODE, 0, 0, hints)
+            val bitMatrix = NativeQrCodeEncoder.encode(text, NativeQrCodeEncoder.EcLevel.H)
             val matrixWidth = bitMatrix.width
             val matrixHeight = bitMatrix.height
 

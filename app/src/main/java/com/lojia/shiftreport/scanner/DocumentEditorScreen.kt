@@ -46,9 +46,9 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val CamScannerGreen = PosCashGreenFill
-private val CamScannerEditorBg = OnBackgroundLight
-private val CamScannerCardBg = OnSurfaceVariantLight
+private val ScannerEmerald = PosCashGreenFill
+private val ScannerEditorBg = OnBackgroundLight
+private val ScannerCardBg = OnSurfaceVariantLight
 
 enum class EditorStep {
     CROP_BOUNDARIES,
@@ -56,16 +56,16 @@ enum class EditorStep {
 }
 
 /**
- * 100% Visual Clone of CamScanner's Filter & Enhancement Screen.
+ * Document Filter & Enhancement Screen adhering to Material 3 design and Google ML Kit processing.
  * Features:
- * - Horizontally scrollable row containing filter thumbnails (Original, Lighten, Magic Color, Gray Mode, B&W)
+ * - Horizontally scrollable row containing filter thumbnails (Original, Lighten, Smart Color, Gray Mode, B&W)
  * - Intuitive top bar with "Back" icon and prominent "Save/Done" checkmark
  * - Manual Brightness, Contrast, and Detail adjustment sliders
- * - Built-in OCR text extraction and PDF generation
+ * - Built-in Google ML Kit OCR text extraction and PDF generation
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CamScannerEditorScreen(
+fun DocumentEditorScreen(
     initialBitmap: Bitmap,
     viewModel: DocumentScannerViewModel,
     onFinish: () -> Unit,
@@ -172,7 +172,7 @@ fun CamScannerEditorScreen(
                 workingBitmap.height.toFloat()
             )
 
-            CamScannerCropView(
+            DocumentCropCanvasView(
                 bitmap = workingBitmap,
                 initialCorners = corners,
                 onConfirmCrop = { confirmedCorners ->
@@ -211,10 +211,10 @@ fun CamScannerEditorScreen(
         // ==============================================================
         EditorStep.FILTER_AND_ADJUST -> {
             Scaffold(
-                containerColor = CamScannerEditorBg,
+                containerColor = ScannerEditorBg,
                 topBar = {
                     Surface(
-                        color = CamScannerCardBg,
+                        color = ScannerCardBg,
                         shadowElevation = 6.dp
                     ) {
                         Row(
@@ -295,7 +295,7 @@ fun CamScannerEditorScreen(
                                     }
                                 },
                                 enabled = !isSaving,
-                                colors = ButtonDefaults.buttonColors(containerColor = CamScannerGreen),
+                                colors = ButtonDefaults.buttonColors(containerColor = ScannerEmerald),
                                 shape = RoundedCornerShape(12.dp),
                                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                             ) {
@@ -326,7 +326,7 @@ fun CamScannerEditorScreen(
                 },
                 bottomBar = {
                     Surface(
-                        color = CamScannerCardBg,
+                        color = ScannerCardBg,
                         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                         shadowElevation = 12.dp,
                         modifier = Modifier.fillMaxWidth()
@@ -356,7 +356,7 @@ fun CamScannerEditorScreen(
                                 TextButton(
                                     onClick = { showAdjustSliders = !showAdjustSliders },
                                     colors = ButtonDefaults.textButtonColors(
-                                        contentColor = if (showAdjustSliders) CamScannerGreen else Color.White
+                                        contentColor = if (showAdjustSliders) ScannerEmerald else Color.White
                                     ),
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
@@ -405,8 +405,8 @@ fun CamScannerEditorScreen(
                                             },
                                             valueRange = -50f..50f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = CamScannerGreen,
-                                                activeTrackColor = CamScannerGreen,
+                                                thumbColor = ScannerEmerald,
+                                                activeTrackColor = ScannerEmerald,
                                                 inactiveTrackColor = Color.White.copy(alpha = 0.2f)
                                             ),
                                             modifier = Modifier.weight(1f)
@@ -439,8 +439,8 @@ fun CamScannerEditorScreen(
                                             },
                                             valueRange = 0.5f..2.0f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = CamScannerGreen,
-                                                activeTrackColor = CamScannerGreen,
+                                                thumbColor = ScannerEmerald,
+                                                activeTrackColor = ScannerEmerald,
                                                 inactiveTrackColor = Color.White.copy(alpha = 0.2f)
                                             ),
                                             modifier = Modifier.weight(1f)
@@ -473,8 +473,8 @@ fun CamScannerEditorScreen(
                                             },
                                             valueRange = 0f..1.0f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = CamScannerGreen,
-                                                activeTrackColor = CamScannerGreen,
+                                                thumbColor = ScannerEmerald,
+                                                activeTrackColor = ScannerEmerald,
                                                 inactiveTrackColor = Color.White.copy(alpha = 0.2f)
                                             ),
                                             modifier = Modifier.weight(1f)
@@ -537,7 +537,7 @@ fun CamScannerEditorScreen(
                                                 .background(OnSurfaceVariantLight)
                                                 .border(
                                                     width = if (isSelected) 2.5.dp else 1.dp,
-                                                    color = if (isSelected) CamScannerGreen else Color.White.copy(alpha = 0.15f),
+                                                    color = if (isSelected) ScannerEmerald else Color.White.copy(alpha = 0.15f),
                                                     shape = RoundedCornerShape(12.dp)
                                                 ),
                                             contentAlignment = Alignment.Center
@@ -545,7 +545,7 @@ fun CamScannerEditorScreen(
                                             if (thumbBitmap != null) {
                                                 Image(
                                                     bitmap = thumbBitmap.asImageBitmap(),
-                                                    contentDescription = filter.label,
+                                                    contentDescription = stringResource(filter.titleRes),
                                                     contentScale = ContentScale.Crop,
                                                     modifier = Modifier.fillMaxSize()
                                                 )
@@ -553,7 +553,7 @@ fun CamScannerEditorScreen(
                                                 CircularProgressIndicator(
                                                     modifier = Modifier.size(16.dp),
                                                     strokeWidth = 2.dp,
-                                                    color = CamScannerGreen
+                                                    color = ScannerEmerald
                                                 )
                                             }
 
@@ -563,7 +563,7 @@ fun CamScannerEditorScreen(
                                                         .align(Alignment.TopEnd)
                                                         .padding(4.dp)
                                                         .size(16.dp)
-                                                        .background(CamScannerGreen, CircleShape),
+                                                        .background(ScannerEmerald, CircleShape),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
@@ -579,10 +579,10 @@ fun CamScannerEditorScreen(
                                         Spacer(modifier = Modifier.height(6.dp))
 
                                         Text(
-                                            text = filter.label,
+                                            text = stringResource(filter.titleRes),
                                             fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isSelected) CamScannerGreen else OutlineLight,
+                                            color = if (isSelected) ScannerEmerald else OutlineLight,
                                             maxLines = 1
                                         )
                                     }
@@ -627,7 +627,7 @@ fun CamScannerEditorScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                color = CamScannerGreen,
+                                color = ScannerEmerald,
                                 strokeWidth = 3.dp,
                                 modifier = Modifier.size(28.dp)
                             )
@@ -659,7 +659,7 @@ fun CamScannerEditorScreen(
                         }
                         isEditingTitle = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = CamScannerGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = ScannerEmerald)
                 ) {
                     Text(stringResource(R.string.ok), color = Color.White)
                 }
@@ -692,7 +692,7 @@ fun CamScannerEditorScreen(
                         Icon(
                             imageVector = Icons.Outlined.TextFields,
                             contentDescription = null,
-                            tint = CamScannerGreen,
+                            tint = ScannerEmerald,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -727,7 +727,7 @@ fun CamScannerEditorScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(color = CamScannerGreen)
+                            CircularProgressIndicator(color = ScannerEmerald)
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(stringResource(R.string.extracting_text_progress), color = Color.Gray, fontSize = 13.sp)
                         }
@@ -785,7 +785,7 @@ fun CamScannerEditorScreen(
 
                         Button(
                             onClick = { showOcrSheet = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = CamScannerGreen),
+                            colors = ButtonDefaults.buttonColors(containerColor = ScannerEmerald),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(stringResource(R.string.done), color = Color.White)

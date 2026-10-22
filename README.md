@@ -94,8 +94,8 @@ com.lojia.shiftreport
 │   └── ShiftReportScreen.kt
 │
 ├── scanner/                       # 📄 Document Scanner, OCR, Word Export & PDF Security
-│   ├── CamScannerCropView.kt
-│   ├── CamScannerEditorScreen.kt
+│   ├── DocumentCropCanvasView.kt
+│   ├── DocumentEditorScreen.kt
 │   ├── CameraXScannerView.kt
 │   ├── DocumentImageFilter.kt
 │   ├── DocumentScannerComponents.kt

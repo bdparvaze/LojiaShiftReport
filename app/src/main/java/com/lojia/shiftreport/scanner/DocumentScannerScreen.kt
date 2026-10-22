@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.permission.AppFeaturePermission
 import com.lojia.shiftreport.permission.rememberPermissionRequester
@@ -54,10 +57,10 @@ fun DocumentScannerScreen(
 
     var searchQuery by remember { mutableStateOf("") }
 
-    // CamScanner Advanced Flow State
+    // Scanner & Editor State
     var isCameraXScannerOpen by rememberSaveable { mutableStateOf(false) }
-    var activeCamScannerBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var activeCamScannerCorners by remember { mutableStateOf<DocumentCorners?>(null) }
+    var activeEditorBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var activeEditorCorners by remember { mutableStateOf<DocumentCorners?>(null) }
     var autoCropOnStart by remember { mutableStateOf(false) }
 
     // Selection mode state
@@ -88,9 +91,23 @@ fun DocumentScannerScreen(
         if (uri != null) {
             val bitmap = decodeUriToBitmap(context, uri)
             if (bitmap != null) {
-                activeCamScannerBitmap = bitmap
+                activeEditorBitmap = bitmap
             } else {
                 Toast.makeText(context, context.getString(R.string.doc_toast_cannot_load_image), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Google Play Services ML Kit Document Scanner Result Launcher
+    val googleDocScannerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+            if (scanResult != null) {
+                viewModel.saveScannedResult(scanResult) {
+                    Toast.makeText(context, context.getString(R.string.doc_saved_as_pdf), Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -112,26 +129,50 @@ fun DocumentScannerScreen(
     }
 
     val startScannerFlow: () -> Unit = {
-        // Launch our fully-integrated native CamScanner studio (CameraX + A4 reticle + 4-corner perspective crop + filters + OCR).
-        launchFallbackCapture()
+        if (activity != null) {
+            try {
+                val options = GmsDocumentScannerOptions.Builder()
+                    .setGalleryImportAllowed(true)
+                    .setPageLimit(100)
+                    .setResultFormats(
+                        GmsDocumentScannerOptions.RESULT_FORMAT_JPEG,
+                        GmsDocumentScannerOptions.RESULT_FORMAT_PDF
+                    )
+                    .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+                    .build()
+
+                GmsDocumentScanning.getClient(options)
+                    .getStartScanIntent(activity)
+                    .addOnSuccessListener { intentSender ->
+                        googleDocScannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                    }
+                    .addOnFailureListener {
+                        launchFallbackCapture()
+                    }
+            } catch (e: Exception) {
+                launchFallbackCapture()
+            }
+        } else {
+            launchFallbackCapture()
+        }
     }
 
-    // CamScanner Studio Overlay
-    if (activeCamScannerBitmap != null) {
-        CamScannerEditorScreen(
-            initialBitmap = activeCamScannerBitmap!!,
+    // Document Editor Studio Overlay
+    if (activeEditorBitmap != null) {
+        DocumentEditorScreen(
+            initialBitmap = activeEditorBitmap!!,
             viewModel = viewModel,
             onFinish = {
-                activeCamScannerBitmap = null
-                activeCamScannerCorners = null
+                activeEditorBitmap = null
+                activeEditorCorners = null
                 autoCropOnStart = false
             },
             onCancel = {
-                activeCamScannerBitmap = null
-                activeCamScannerCorners = null
+                activeEditorBitmap = null
+                activeEditorCorners = null
                 autoCropOnStart = false
             },
-            initialDetectedCorners = activeCamScannerCorners,
+            initialDetectedCorners = activeEditorCorners,
             autoCropImmediately = autoCropOnStart
         )
         return
@@ -142,15 +183,15 @@ fun DocumentScannerScreen(
         CameraXScannerView(
             onImageCaptured = { capturedBitmap ->
                 isCameraXScannerOpen = false
-                activeCamScannerCorners = null
+                activeEditorCorners = null
                 autoCropOnStart = false
-                activeCamScannerBitmap = capturedBitmap
+                activeEditorBitmap = capturedBitmap
             },
             onImageCapturedWithCorners = { capturedBitmap, detectedCorners ->
                 isCameraXScannerOpen = false
-                activeCamScannerCorners = detectedCorners
+                activeEditorCorners = detectedCorners
                 autoCropOnStart = detectedCorners != null
-                activeCamScannerBitmap = capturedBitmap
+                activeEditorBitmap = capturedBitmap
             },
             onGalleryPick = {
                 isCameraXScannerOpen = false

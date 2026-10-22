@@ -8,15 +8,18 @@ import android.graphics.Paint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import androidx.annotation.StringRes
+import com.lojia.shiftreport.R
+
 /**
- * Standard CamScanner-style enhancement filters.
+ * Standard document enhancement filters.
  */
-enum class ScannerFilterType(val label: String) {
-    ORIGINAL("Original"),
-    LIGHTEN("Lighten"),
-    MAGIC_COLOR("Magic Color"),
-    GRAY_MODE("Gray Mode"),
-    BW("B&W")
+enum class ScannerFilterType(@StringRes val titleRes: Int) {
+    ORIGINAL(R.string.filter_original),
+    LIGHTEN(R.string.filter_lighten),
+    MAGIC_COLOR(R.string.filter_magic_color),
+    GRAY_MODE(R.string.filter_gray_mode),
+    BW(R.string.filter_bw)
 }
 
 data class FilterAdjustments(
@@ -51,7 +54,7 @@ object DocumentImageFilter {
     }
 
     /**
-     * CamScanner "Lighten" filter:
+     * Document "Lighten" filter:
      * Gentle brightness and highlight expansion to lighten shadows on document page.
      */
     private fun applyLighten(source: Bitmap): Bitmap {
@@ -77,7 +80,7 @@ object DocumentImageFilter {
     }
 
     /**
-     * CamScanner "Magic Color" filter:
+     * Smart Color filter:
      * Lifts paper background to crisp white, deepens text contrast, and preserves ink/stamp colors.
      */
     private fun applyMagicColor(source: Bitmap): Bitmap {
@@ -139,7 +142,7 @@ object DocumentImageFilter {
     }
 
     /**
-     * CamScanner B&W (Thresholding/Binarization):
+     * High-Contrast B&W (Thresholding/Binarization):
      * Converts the document into pure high-contrast black text on pure white paper.
      */
     private fun applyBlackAndWhite(source: Bitmap): Bitmap {

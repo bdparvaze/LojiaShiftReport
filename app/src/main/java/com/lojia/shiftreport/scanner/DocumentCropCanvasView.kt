@@ -50,16 +50,16 @@ enum class HandleType {
     MID_LEFT
 }
 
-private val CamScannerGreen = PosCashGreenFill
-private val CamScannerDarkBg = OnBackgroundLight
-private val CamScannerSurfaceDark = OnSurfaceVariantLight
+private val ScannerAccentGreen = PosCashGreenFill
+private val ScannerDarkBg = OnBackgroundLight
+private val ScannerSurfaceDark = OnSurfaceVariantLight
 
 /**
- * Custom Magnetic 8-Point Crop Canvas mimicking CamScanner's exact UI and UX.
+ * Custom Magnetic 8-Point Crop Canvas for document boundary adjustment.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CamScannerCropView(
+fun DocumentCropCanvasView(
     bitmap: Bitmap,
     initialCorners: DocumentCorners?,
     onConfirmCrop: (DocumentCorners) -> Unit,
@@ -85,7 +85,7 @@ fun CamScannerCropView(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(CamScannerDarkBg)
+            .background(ScannerDarkBg)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Top Bar
@@ -107,7 +107,7 @@ fun CamScannerCropView(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = CamScannerDarkBg)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScannerDarkBg)
             )
 
             // Interactive Crop Canvas Area
@@ -245,7 +245,7 @@ fun CamScannerCropView(
                         // Quad lines
                         drawPath(
                             path = polyPath,
-                            color = CamScannerGreen,
+                            color = ScannerAccentGreen,
                             style = Stroke(width = 2.5.dp.toPx())
                         )
 
@@ -263,7 +263,7 @@ fun CamScannerCropView(
 
                             drawCircle(color = Color.White, radius = radius, center = pos)
                             drawCircle(
-                                color = if (isCurrent) PosCashGreen else CamScannerGreen,
+                                color = if (isCurrent) PosCashGreen else ScannerAccentGreen,
                                 radius = radius - 3.5.dp.toPx(),
                                 center = pos
                             )
@@ -276,7 +276,7 @@ fun CamScannerCropView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(CamScannerDarkBg)
+                    .background(ScannerDarkBg)
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -301,7 +301,7 @@ fun CamScannerCropView(
                     Icon(
                         imageVector = Icons.Outlined.AutoAwesome,
                         contentDescription = null,
-                        tint = CamScannerGreen,
+                        tint = ScannerAccentGreen,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -347,7 +347,7 @@ fun CamScannerCropView(
                         )
                         onConfirmCrop(finalCorners)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = CamScannerGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ScannerAccentGreen),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(stringResource(R.string.btn_next), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)

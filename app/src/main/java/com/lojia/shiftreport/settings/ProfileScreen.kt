@@ -325,7 +325,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Change Photo",
+                        text = stringResource(R.string.change_photo),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = PrimaryIndigoLight
@@ -342,7 +342,7 @@ fun ProfileScreen(
                 // =============================================================
                 // GROUP 1: PERSONAL INFORMATION
                 // =============================================================
-                ProfileSectionHeader(title = "PERSONAL INFORMATION")
+                ProfileSectionHeader(title = stringResource(R.string.personal_information_section))
 
                 // -------------------------------------------------------------
                 // ROW 1: Owner / Admin Name
@@ -350,7 +350,7 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Person,
                     iconTint = PrimaryIndigoLight,
-                    title = "Owner / Admin Name",
+                    title = stringResource(R.string.owner_admin_name_label),
                     value = userProfile?.fullName?.ifBlank { "Demo Owner" } ?: "Demo Owner",
                     valueColor = OnSurfaceLight,
                     valueFontSize = 13.sp,
@@ -371,7 +371,7 @@ fun ProfileScreen(
                         ProfileDialogTextField(
                             value = tempName,
                             onValueChange = { tempName = it },
-                            label = "Owner / Admin Full Name",
+                            label = stringResource(R.string.owner_admin_full_name_label),
                             placeholder = "e.g. Demo Owner",
                             testTag = "input_edit_full_name"
                         )
@@ -381,17 +381,17 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     val current = userProfile ?: UserProfile()
                                     reportViewModel.saveUserProfile(current.copy(fullName = tempName.trim()))
                                     expandedSection = null
-                                    Toast.makeText(context, "Owner name updated!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_owner_name_updated), Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.weight(1f)
                             )
@@ -405,7 +405,7 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Email,
                     iconTint = PrimaryIndigoLight,
-                    title = "Store Contact Email",
+                    title = stringResource(R.string.store_contact_email_label),
                     value = bProfile.email.ifBlank { userProfile?.email.orEmpty() }.ifBlank { "store@example.com" },
                     valueColor = PrimaryIndigoLight,
                     valueFontSize = 13.sp,
@@ -426,7 +426,7 @@ fun ProfileScreen(
                         ProfileDialogTextField(
                             value = tempEmail,
                             onValueChange = { tempEmail = it },
-                            label = "Contact Email Address",
+                            label = stringResource(R.string.contact_email_address_label),
                             placeholder = "e.g. store@example.com",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             testTag = "input_edit_email"
@@ -437,12 +437,12 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     val cleanMail = tempEmail.trim()
                                     val current = userProfile ?: UserProfile()
@@ -461,7 +461,7 @@ fun ProfileScreen(
                 // =============================================================
                 // GROUP 2: STORE DETAILS
                 // =============================================================
-                ProfileSectionHeader(title = "STORE DETAILS")
+                ProfileSectionHeader(title = stringResource(R.string.store_details_section))
 
                 // -------------------------------------------------------------
                 // ROW 3: Store / Business Name
@@ -469,7 +469,7 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Store,
                     iconTint = OnSurfaceVariantLight,
-                    title = "Store / Business Name",
+                    title = stringResource(R.string.store_business_name),
                     value = bProfile.businessName.ifBlank { "Demo Store (Debug)" },
                     valueColor = OnSurfaceLight,
                     valueFontSize = 13.sp,
@@ -490,7 +490,7 @@ fun ProfileScreen(
                         ProfileDialogTextField(
                             value = tempStoreName,
                             onValueChange = { tempStoreName = it },
-                            label = "Store / Business Name",
+                            label = stringResource(R.string.store_business_name),
                             placeholder = "e.g. Demo Store (Debug)",
                             testTag = "input_edit_store_name"
                         )
@@ -500,12 +500,12 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     val cleanName = tempStoreName.trim()
                                     reportViewModel.saveBusinessProfile(bProfile.copy(businessName = cleanName))
@@ -525,8 +525,8 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.ReceiptLong,
                     iconTint = OnSurfaceVariantLight,
-                    title = "Tax Registration / VAT ID",
-                    value = bProfile.vatNumber.ifBlank { "Not set" },
+                    title = stringResource(R.string.tax_vat_registration_number),
+                    value = bProfile.vatNumber.ifBlank { stringResource(R.string.not_set) },
                     valueColor = OnSurfaceVariantLight,
                     valueFontSize = 12.sp,
                     valueFontFamily = FontFamily.Monospace,
@@ -546,7 +546,7 @@ fun ProfileScreen(
                         ProfileDialogTextField(
                             value = tempVat,
                             onValueChange = { tempVat = it },
-                            label = "Tax Registration / VAT ID",
+                            label = stringResource(R.string.tax_vat_registration_number),
                             placeholder = "e.g. 310000000000003",
                             testTag = "input_edit_vat_id"
                         )
@@ -556,12 +556,12 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     val cleanVat = tempVat.trim()
                                     reportViewModel.saveBusinessProfile(bProfile.copy(vatNumber = cleanVat))
@@ -579,8 +579,8 @@ fun ProfileScreen(
                 // -------------------------------------------------------------
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.LocationOn,
-                    label = "Saved Addresses",
-                    currentValue = "${addressCount} address${if (addressCount != 1) "es" else ""} saved",
+                    label = stringResource(R.string.saved_addresses_title),
+                    currentValue = stringResource(R.string.saved_addresses_count_format, addressCount),
                     onEditClick = { navTo("settings/profile/addresses") }
                 )
 
@@ -590,7 +590,7 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Filled.Place,
                     iconTint = OnSurfaceVariantLight,
-                    title = "Permanent Store Address",
+                    title = stringResource(R.string.permanent_store_address_label),
                     value = if (permanentAddress.isNotBlank()) permanentAddress else "5000 Vista Del Lago Rd, Ukia...",
                     valueColor = OnSurfaceVariantLight,
                     valueFontSize = 12.sp,
@@ -609,8 +609,8 @@ fun ProfileScreen(
                         ProfileDialogTextField(
                             value = tempAddr,
                             onValueChange = { tempAddr = it },
-                            label = "Store Address",
-                            placeholder = "Enter street address or choose from map",
+                            label = stringResource(R.string.address),
+                            placeholder = stringResource(R.string.permanent_store_address_placeholder),
                             testTag = "txt_permanent_address_field"
                         )
 
@@ -638,12 +638,12 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     val cleanAddr = tempAddr.trim()
                                     val current = userProfile ?: UserProfile()
@@ -665,7 +665,7 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Phone,
                     iconTint = OnSurfaceVariantLight,
-                    title = "Store Contact Phone",
+                    title = stringResource(R.string.store_contact_phone_label),
                     value = storePhoneDisplay,
                     valueColor = OnSurfaceVariantLight,
                     valueFontSize = 13.sp,
@@ -732,7 +732,7 @@ fun ProfileScreen(
                                 onValueChange = { input ->
                                     tempPhoneDigits = input.filter { it.isDigit() || it == ' ' || it == '-' }
                                 },
-                                label = "Phone Digits",
+                                label = stringResource(R.string.phone_digits_label),
                                 placeholder = "500360360",
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 modifier = Modifier.weight(1f),
@@ -749,7 +749,7 @@ fun ProfileScreen(
                             ) {
                                 val previewPrefix = if (hasUserSelectedCountry) "${tempPhoneCountry.dialCode} " else ""
                                 Text(
-                                    text = "Preview: $previewPrefix${tempPhoneDigits.trim()}",
+                                    text = stringResource(R.string.phone_preview_format, "$previewPrefix${tempPhoneDigits.trim()}"),
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryIndigoLight,
@@ -764,12 +764,12 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     val fullFormatted = if (tempPhoneDigits.isNotBlank()) {
                                         if (hasUserSelectedCountry) {
@@ -808,7 +808,7 @@ fun ProfileScreen(
                 // =============================================================
                 // GROUP 3: SECURITY
                 // =============================================================
-                ProfileSectionHeader(title = "SECURITY")
+                ProfileSectionHeader(title = stringResource(R.string.nav_security))
 
                 // -------------------------------------------------------------
                 // ROW 7: Change Password
@@ -816,8 +816,8 @@ fun ProfileScreen(
                 InlineEditableProfileRow(
                     icon = Icons.Outlined.Key,
                     iconTint = ErrorRedLight,
-                    title = "Change Password",
-                    value = "Change administrator master pass...",
+                    title = stringResource(R.string.change_password_title),
+                    value = stringResource(R.string.change_password_desc),
                     valueColor = OnSurfaceVariantLight,
                     valueFontSize = 13.sp,
                     isExpanded = expandedSection == "password",
@@ -849,10 +849,10 @@ fun ProfileScreen(
                     val strengthScore = listOf(hasMinLength, hasUpper, hasDigit, hasSpecial).count { it }
                     val (strengthLabel, strengthColor, strengthProgress) = when {
                         newPassword.isEmpty() -> Triple("", OutlineVariantLight, 0f)
-                        strengthScore <= 1 -> Triple("Weak", ErrorRedLight, 0.25f)
-                        strengthScore == 2 -> Triple("Fair", WarningOrange, 0.5f)
-                        strengthScore == 3 -> Triple("Good", InfoBlue, 0.75f)
-                        else -> Triple("Strong", SuccessGreen, 1f)
+                        strengthScore <= 1 -> Triple(stringResource(R.string.auth_weak), ErrorRedLight, 0.25f)
+                        strengthScore == 2 -> Triple(stringResource(R.string.auth_fair), WarningOrange, 0.5f)
+                        strengthScore == 3 -> Triple(stringResource(R.string.auth_good), InfoBlue, 0.75f)
+                        else -> Triple(stringResource(R.string.auth_strong), SuccessGreen, 1f)
                     }
 
                     Column(
@@ -867,7 +867,7 @@ fun ProfileScreen(
                                     currentPasswordError = null
                                 },
                                 label = stringResource(R.string.current_password_label),
-                                placeholder = "Enter current password",
+                                placeholder = stringResource(R.string.placeholder_enter_current_password),
                                 isError = currentPasswordError != null,
                                 supportingText = {
                                     currentPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
@@ -894,13 +894,13 @@ fun ProfileScreen(
                                 newPassword = it
                                 newPasswordError = null
                                 if (confirmPassword.isNotEmpty() && it != confirmPassword) {
-                                    confirmPasswordError = "Passwords do not match"
+                                    confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
                                 } else {
                                     confirmPasswordError = null
                                 }
                             },
                             label = stringResource(R.string.new_password_label),
-                            placeholder = "Enter new strong password",
+                            placeholder = stringResource(R.string.placeholder_enter_new_password),
                             isError = newPasswordError != null,
                             supportingText = {
                                 newPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
@@ -945,13 +945,13 @@ fun ProfileScreen(
                             onValueChange = {
                                 confirmPassword = it
                                 if (it.isNotEmpty() && it != newPassword) {
-                                    confirmPasswordError = "Passwords do not match"
+                                    confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
                                 } else {
                                     confirmPasswordError = null
                                 }
                             },
                             label = stringResource(R.string.confirm_password_label),
-                            placeholder = "Re-enter new password",
+                            placeholder = stringResource(R.string.placeholder_reenter_new_password),
                             isError = confirmPasswordError != null,
                             supportingText = {
                                 confirmPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
@@ -977,29 +977,29 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             LojiaOutlinedButton(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 onClick = { expandedSection = null },
                                 modifier = Modifier.weight(1f)
                             )
                             LojiaPrimaryButton(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 onClick = {
                                     var hasError = false
                                     if (currentPasswordHash.isNotBlank()) {
                                         if (currentPassword.isBlank()) {
-                                            currentPasswordError = "Current password is required"
+                                            currentPasswordError = context.getString(R.string.error_current_password_required)
                                             hasError = true
                                         } else if (!SecurityUtils.verifySecret(currentPassword, currentPasswordHash)) {
-                                            currentPasswordError = "Incorrect current password"
+                                            currentPasswordError = context.getString(R.string.error_incorrect_current_password)
                                             hasError = true
                                         }
                                     }
                                     if (newPassword.length < 6) {
-                                        newPasswordError = "Password must be at least 6 characters"
+                                        newPasswordError = context.getString(R.string.error_password_min_6_chars)
                                         hasError = true
                                     }
                                     if (newPassword != confirmPassword) {
-                                        confirmPasswordError = "Passwords do not match"
+                                        confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
                                         hasError = true
                                     }
                                     if (!hasError) {
