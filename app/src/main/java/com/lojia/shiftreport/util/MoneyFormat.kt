@@ -26,6 +26,16 @@ object MoneyFormat {
     }
 
     /**
+     * Converts major BigDecimal unit to minor unit (e.g. Long 1025)
+     */
+    fun toMinorUnits(major: java.math.BigDecimal): Long {
+        return major
+            .multiply(java.math.BigDecimal.valueOf(100))
+            .setScale(0, java.math.RoundingMode.HALF_UP)
+            .toLong()
+    }
+
+    /**
      * Converts minor unit (e.g. Long 1025) to major unit (e.g. Double 10.25)
      */
     fun toMajorUnits(minor: Long): Double {
@@ -102,15 +112,15 @@ object MoneyFormat {
     }
 
     /**
-     * Formats a monetary BigDecimal value with exact financial precision into a locale-aware display string.
+     * Formats a monetary BigDecimal value with exact financial precision using CurrencyFormatter.
      */
     fun format(
         amount: java.math.BigDecimal,
         currencyCodeOrSymbol: String? = null,
         locale: Locale = Locale.getDefault()
     ): String {
-        val rounded = amount.setScale(2, java.math.RoundingMode.HALF_UP)
-        return format(rounded.toDouble(), currencyCodeOrSymbol, locale)
+        val curr = resolveCurrency(currencyCodeOrSymbol)
+        return CurrencyFormatter.formatMoney(amount, curr)
     }
 
     /**
@@ -223,8 +233,7 @@ object MoneyFormat {
     }
 
     /**
-     * Formats a monetary double value into a locale-aware display string.
-     * E.g. "$1,234.50" or "1,234.50 USD" or "1,234.50 BDT" based on the currency and system locale.
+     * Formats a monetary double value into a locale-aware display string using CurrencyFormatter.
      */
     fun format(
         amount: Double,
@@ -232,20 +241,7 @@ object MoneyFormat {
         locale: Locale = Locale.getDefault()
     ): String {
         val curr = resolveCurrency(currencyCodeOrSymbol)
-        val symbol = resolveSymbol(curr)
-
-        val numberFormat = NumberFormat.getNumberInstance(locale).apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
-        }
-        val formattedNumber = numberFormat.format(amount)
-
-        return when {
-            symbol == "$" || symbol == "€" || symbol == "£" || symbol == "¥" -> "$symbol$formattedNumber"
-            symbol.length <= 2 && symbol.any { !it.isLetter() } -> "$symbol $formattedNumber"
-            symbol.equals(curr, ignoreCase = true) -> "$formattedNumber $curr"
-            else -> "$symbol $formattedNumber"
-        }
+        return CurrencyFormatter.formatMoney(amount, curr)
     }
 
     /**

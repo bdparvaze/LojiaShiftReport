@@ -315,6 +315,28 @@ data class ShiftReport(
 
     val netCardAndDigital: Long
         get() = MoneyFormat.addMinor(madaPayments, digitalWallet, totalPreviousDueBank)
+
+    // High-Precision BigDecimal Computations
+    val grossSalesBigDecimal: java.math.BigDecimal
+        get() = java.math.BigDecimal.valueOf(grossCash)
+            .add(java.math.BigDecimal.valueOf(madaPayments))
+            .add(java.math.BigDecimal.valueOf(digitalWallet))
+            .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+
+    val netSalesBigDecimal: java.math.BigDecimal
+        get() {
+            val discounts = java.math.BigDecimal.valueOf(totalDiscounts).divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+            val returns = java.math.BigDecimal.valueOf(salesReturns).divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+            val net = grossSalesBigDecimal.subtract(discounts).subtract(returns)
+            return if (net < java.math.BigDecimal.ZERO) java.math.BigDecimal.ZERO else net
+        }
+
+    val expectedCashInDrawerBigDecimal: java.math.BigDecimal
+        get() = java.math.BigDecimal.valueOf(expectedCashInDrawer)
+            .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+
+    fun varianceBigDecimal(actualCash: java.math.BigDecimal): java.math.BigDecimal =
+        actualCash.subtract(expectedCashInDrawerBigDecimal)
 }
 
 @Entity(tableName = "draft_reports")

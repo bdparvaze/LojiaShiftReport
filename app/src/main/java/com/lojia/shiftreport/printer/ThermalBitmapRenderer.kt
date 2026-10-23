@@ -194,4 +194,27 @@ object ThermalBitmapRenderer {
 
         return bitmap
     }
+
+    /**
+     * Resizes bitmap before printing to prevent OutOfMemory (OOM) crashes:
+     * - 58mm printer: max width 384px
+     * - 80mm printer: max width 576px
+     * Uses Bitmap.createScaledBitmap and recycles the original bitmap if scaled.
+     */
+    fun resizeBitmapForPrinter(
+        original: Bitmap,
+        is58mm: Boolean = true
+    ): Bitmap {
+        val maxWidth = if (is58mm) 384 else 576
+        if (original.width <= maxWidth) {
+            return original
+        }
+        val aspectRatio = original.height.toFloat() / original.width.toFloat()
+        val targetHeight = (maxWidth * aspectRatio).toInt().coerceAtLeast(1)
+        val scaled = Bitmap.createScaledBitmap(original, maxWidth, targetHeight, true)
+        if (scaled != original && !original.isRecycled) {
+            original.recycle()
+        }
+        return scaled
+    }
 }

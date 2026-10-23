@@ -495,10 +495,19 @@ class ConfigurationSyncManager private constructor(private val context: Context)
 
     /**
      * Import configuration bundle to sync settings.
+     * Enforces Room Database as the single source of truth:
+     * Discards older imports if local settings have a newer timestamp.
      */
     suspend fun importConfigurationJson(jsonStr: String): Boolean {
         return try {
             val root = JSONObject(jsonStr)
+            val incomingTs = root.optLong("timestamp", 0L)
+            val localTs = _syncState.value.lastSyncTime
+            if (incomingTs > 0 && incomingTs < localTs && _syncState.value.totalCashiers > 0) {
+                Log.d(TAG, "Incoming configuration timestamp ($incomingTs) is older than local Room state ($localTs). Preserving Room as single source of truth.")
+                return true
+            }
+
             if (root.has("language")) {
                 val langCode = root.getString("language")
                 val lang = AppLanguage.fromCode(langCode)

@@ -206,13 +206,52 @@ object OfflineBackupManager {
         Pair(rootJson.toString(2), totalRecords)
     }
 
+    const val BACKUP_MAGIC_HEADER = "LOJIA_ENC_V1"
+    private const val DEFAULT_BACKUP_SECRET = "LojiaSecureMasterKey@2026#Aes256"
+
+    fun encryptPayload(plainJson: String, password: String = DEFAULT_BACKUP_SECRET): ByteArray {
+        val salt = ByteArray(16).apply { java.security.SecureRandom().nextBytes(this) }
+        val iv = ByteArray(12).apply { java.security.SecureRandom().nextBytes(this) }
+        val keySpec = javax.crypto.spec.PBEKeySpec(password.toCharArray(), salt, 10000, 256)
+        val secretKey = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(keySpec)
+        val aesKey = javax.crypto.spec.SecretKeySpec(secretKey.encoded, "AES")
+        val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, aesKey, javax.crypto.spec.GCMParameterSpec(128, iv))
+        val ciphertext = cipher.doFinal(plainJson.toByteArray(Charsets.UTF_8))
+        val headerBytes = BACKUP_MAGIC_HEADER.toByteArray(Charsets.UTF_8)
+        val output = ByteArray(headerBytes.size + salt.size + iv.size + ciphertext.size)
+        System.arraycopy(headerBytes, 0, output, 0, headerBytes.size)
+        System.arraycopy(salt, 0, output, headerBytes.size, salt.size)
+        System.arraycopy(iv, 0, output, headerBytes.size + salt.size, iv.size)
+        System.arraycopy(ciphertext, 0, output, headerBytes.size + salt.size + iv.size, ciphertext.size)
+        return output
+    }
+
+    fun decryptPayload(payloadBytes: ByteArray, password: String = DEFAULT_BACKUP_SECRET): String {
+        val headerBytes = BACKUP_MAGIC_HEADER.toByteArray(Charsets.UTF_8)
+        if (payloadBytes.size >= headerBytes.size + 16 + 12 &&
+            payloadBytes.take(headerBytes.size).toByteArray().contentEquals(headerBytes)) {
+            val salt = payloadBytes.copyOfRange(headerBytes.size, headerBytes.size + 16)
+            val iv = payloadBytes.copyOfRange(headerBytes.size + 16, headerBytes.size + 16 + 12)
+            val ciphertext = payloadBytes.copyOfRange(headerBytes.size + 16 + 12, payloadBytes.size)
+            val keySpec = javax.crypto.spec.PBEKeySpec(password.toCharArray(), salt, 10000, 256)
+            val secretKey = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(keySpec)
+            val aesKey = javax.crypto.spec.SecretKeySpec(secretKey.encoded, "AES")
+            val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, aesKey, javax.crypto.spec.GCMParameterSpec(128, iv))
+            return String(cipher.doFinal(ciphertext), Charsets.UTF_8)
+        }
+        return String(payloadBytes, Charsets.UTF_8)
+    }
+
     suspend fun createBackup(
         context: Context,
-        database: AppDatabase
+        database: AppDatabase,
+        password: String? = null
     ): Result<BackupInfo> = withContext(Dispatchers.IO) {
         try {
             val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = false)
-            val jsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+            val jsonBytes = encryptPayload(jsonString, password ?: DEFAULT_BACKUP_SECRET)
 
             val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
             val fileName = "Lojia_ShiftReport_Backup_$timeStampStr.json"
@@ -404,10 +443,12 @@ object OfflineBackupManager {
     suspend fun restoreBackupFromFile(
         context: Context,
         database: AppDatabase,
-        backupFile: File
+        backupFile: File,
+        password: String? = null
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val jsonString = backupFile.readText(Charsets.UTF_8)
+            val bytes = backupFile.readBytes()
+            val jsonString = decryptPayload(bytes, password ?: DEFAULT_BACKUP_SECRET)
             restoreBackupFromString(jsonString, database, backupFile.name)
         } catch (e: Exception) {
             Result.failure(e)
@@ -828,11 +869,13 @@ object OfflineBackupManager {
         context: Context,
         uri: Uri,
         database: AppDatabase,
-        adminUser: String = "Admin"
+        adminUser: String = "Admin",
+        password: String? = null
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-            val jsonString = inputStream?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException("Could not read backup file")
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: throw IllegalArgumentException("Could not read backup file")
+            val jsonString = decryptPayload(bytes, password ?: DEFAULT_BACKUP_SECRET)
             restoreBackupFromString(jsonString, database, uri.lastPathSegment ?: "backup.json", adminUser)
         } catch (e: Exception) {
             Result.failure(e)

@@ -32,13 +32,11 @@ import com.lojia.shiftreport.util.ShiftReportSyncWorker
 
 
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-
-
 import kotlinx.coroutines.flow.*
-
-
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ReportViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
@@ -167,22 +165,22 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "ADMIN")
 
     fun switchUserRole(role: String, enteredPin: String? = null, onSuccess: () -> Unit = {}, onFailure: () -> Unit = {}) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val profile = userProfile.value ?: UserProfile()
             if (role == "ADMIN" && profile.currentRole == "CASHIER") {
                 // Switching from Cashier to Admin requires Admin PIN check
                 if (enteredPin != null && SecurityUtils.verifySecret(enteredPin, profile.pin)) {
                     reportDao.saveUserProfile(profile.copy(currentRole = "ADMIN"))
                     _uiMessage.emit(UiText.StringResource(R.string.authenticated_as_administrator))
-                    onSuccess()
+                    withContext(Dispatchers.Main) { onSuccess() }
                 } else {
                     _uiMessage.emit(UiText.StringResource(R.string.invalid_admin_pin))
-                    onFailure()
+                    withContext(Dispatchers.Main) { onFailure() }
                 }
             } else {
                 reportDao.saveUserProfile(profile.copy(currentRole = role))
                 _uiMessage.emit(UiText.StringResource(R.string.toast_role_switched, role))
-                onSuccess()
+                withContext(Dispatchers.Main) { onSuccess() }
             }
         }
     }
@@ -235,14 +233,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun handleDriveAuthRedirect(uri: android.net.Uri, state: String? = null, onComplete: (Boolean) -> Unit = {}) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val code = uri.getQueryParameter("code")
             val resolvedState = state ?: uri.getQueryParameter("state")
             if (code.isNullOrEmpty()) {
                 GoogleDriveManager.clearOAuthState(context)
                 val error = uri.getQueryParameter("error") ?: "Authorization cancelled or failed"
                 _uiMessage.emit(UiText.DynamicString(error))
-                onComplete(false)
+                withContext(Dispatchers.Main) { onComplete(false) }
                 return@launch
             }
             val result = GoogleDriveManager.handleOAuthCallback(context, code, resolvedState)
@@ -251,11 +249,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 val emailStr = account.email ?: "Google Account"
                 _uiMessage.emit(UiText.StringResource(R.string.drive_connected_as, emailStr))
                 fetchGoogleDriveBackups()
-                onComplete(true)
+                withContext(Dispatchers.Main) { onComplete(true) }
             }.onFailure { err ->
                 val msg = err.localizedMessage ?: "Drive authentication failed"
                 _uiMessage.emit(UiText.DynamicString(msg))
-                onComplete(false)
+                withContext(Dispatchers.Main) { onComplete(false) }
             }
         }
     }
@@ -265,7 +263,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onFailure: (String) -> Unit = {}
     ) {
         if (_isDriveUploading.value || _isBackingUp.value) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isDriveUploading.value = true
             _isBackingUp.value = true
             _backupProgress.value = 0.2f
@@ -289,11 +287,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                     "Uploaded ${item.name} (${item.description}) to Google Drive App Folder."
                 )
                 fetchGoogleDriveBackups()
-                onSuccess(item)
+                withContext(Dispatchers.Main) { onSuccess(item) }
             }.onFailure { error ->
                 val msg = error.localizedMessage ?: "Failed to upload to Google Drive"
                 _uiMessage.emit(UiText.DynamicString(msg))
-                onFailure(msg)
+                withContext(Dispatchers.Main) { onFailure(msg) }
             }
         }
     }
@@ -302,13 +300,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onResult: (List<DriveBackupItem>) -> Unit = {}
     ) {
         if (!GoogleDriveManager.isConnected(context)) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isDriveLoadingList.value = true
             val result = GoogleDriveManager.listBackups(context)
             _isDriveLoadingList.value = false
             result.onSuccess { list ->
                 _driveBackupsList.value = list
-                onResult(list)
+                withContext(Dispatchers.Main) { onResult(list) }
             }.onFailure { error ->
                 val msg = error.localizedMessage ?: "Failed to fetch Drive backups"
                 _uiMessage.emit(UiText.DynamicString(msg))
@@ -322,7 +320,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onFailure: (String) -> Unit = {}
     ) {
         if (_isDriveDownloading.value || _isBackingUp.value) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isDriveDownloading.value = true
             _isBackingUp.value = true
             val downloadResult = GoogleDriveManager.downloadBackup(context, item.id)
@@ -346,18 +344,18 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                         "🔄 Google Drive Data Restored",
                         "Restored $count records from Google Drive (${item.name})."
                     )
-                    onSuccess(count)
+                    withContext(Dispatchers.Main) { onSuccess(count) }
                 }.onFailure { restoreErr ->
                     val msg = restoreErr.localizedMessage ?: "Failed to restore backup"
                     _uiMessage.emit(UiText.StringResource(R.string.invalid_backup_file))
-                    onFailure(msg)
+                    withContext(Dispatchers.Main) { onFailure(msg) }
                 }
             }.onFailure { downloadErr ->
                 _isDriveDownloading.value = false
                 _isBackingUp.value = false
                 val msg = downloadErr.localizedMessage ?: "Failed to download backup from Google Drive"
                 _uiMessage.emit(UiText.DynamicString(msg))
-                onFailure(msg)
+                withContext(Dispatchers.Main) { onFailure(msg) }
             }
         }
     }
@@ -366,13 +364,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         item: DriveBackupItem,
         onResult: (BackupSummary?) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val downloadResult = GoogleDriveManager.downloadBackup(context, item.id)
             downloadResult.onSuccess { jsonString ->
                 val summaryResult = OfflineBackupManager.parseBackupSummaryFromString(jsonString)
-                onResult(summaryResult.getOrNull())
+                withContext(Dispatchers.Main) { onResult(summaryResult.getOrNull()) }
             }.onFailure {
-                onResult(null)
+                withContext(Dispatchers.Main) { onResult(null) }
             }
         }
     }
@@ -404,14 +402,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             }
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val result = FirebaseCloudSyncManager.performSync(context, isManual = true)
             if (result.success) {
                 _uiMessage.emit(UiText.StringResource(R.string.firebase_sync_success))
             } else {
                 _uiMessage.emit(UiText.DynamicString(result.message))
             }
-            onComplete(result.success, result.message)
+            withContext(Dispatchers.Main) { onComplete(result.success, result.message) }
         }
     }
 
@@ -455,7 +453,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun triggerCloudBackup() {
         if (_isBackingUp.value) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isBackingUp.value = true
             _backupProgress.value = 0.1f
             delay(400)
@@ -482,7 +480,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onFailure: (String) -> Unit = {}
     ) {
         if (_isBackingUp.value) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isBackingUp.value = true
             _backupProgress.value = 0.2f
             delay(200)
@@ -503,11 +501,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                     "📦 Offline Backup Created",
                     "Saved to Downloads: ${info.fileName} (${info.totalRecords} records)"
                 )
-                onSuccess(info)
+                withContext(Dispatchers.Main) { onSuccess(info) }
             }.onFailure { error ->
                 val msg = error.localizedMessage ?: "Failed to create backup"
                 _uiMessage.emit(UiText.DynamicString(msg))
-                onFailure(msg)
+                withContext(Dispatchers.Main) { onFailure(msg) }
             }
         }
     }
@@ -516,9 +514,9 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         uri: android.net.Uri,
         onResult: (BackupSummary?) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val result = OfflineBackupManager.parseBackupSummary(context, uri)
-            onResult(result.getOrNull())
+            withContext(Dispatchers.Main) { onResult(result.getOrNull()) }
         }
     }
 
@@ -527,7 +525,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onSuccess: (Int) -> Unit = {},
         onFailure: (String) -> Unit = {}
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _isBackingUp.value = true
             val activeUser = userProfile.value?.fullName ?: "Admin"
             val result = OfflineBackupManager.restoreBackup(context, uri, db, activeUser)
@@ -541,11 +539,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                     "🔄 Data Restored Successfully",
                     "Restored $count records into your local store database."
                 )
-                onSuccess(count)
+                withContext(Dispatchers.Main) { onSuccess(count) }
             }.onFailure { error ->
                 val msg = error.localizedMessage ?: "Failed to restore backup"
                 _uiMessage.emit(UiText.StringResource(R.string.invalid_backup_file))
-                onFailure(msg)
+                withContext(Dispatchers.Main) { onFailure(msg) }
             }
         }
     }
@@ -554,7 +552,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onSuccess: () -> Unit = {},
         onFailure: (String) -> Unit = {}
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     db.clearAllTables()
@@ -1053,7 +1051,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun loadDraft() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val draft = repository.getDraft()
             if (draft != null) {
                 selectedCashier.value = draft.cashierName
@@ -1101,7 +1099,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             }
             return
         }
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val draft = DraftReport(
                 id = 1,
                 cashierName = selectedCashier.value,
@@ -1156,7 +1154,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         staffAdvances.value = emptyList()
         unpaidBills.value = emptyList()
         purchasedItems.value = emptyList()
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.clearDraft()
         }
     }
@@ -1192,7 +1190,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val cashier = if (selectedCashier.value.isBlank()) "Standard Cashier" else selectedCashier.value
             val actualCountVal = if (closingVal > 0.0) closingVal else actualCashCountInput.value.toDoubleOrNull()
             val noteParts = mutableListOf<String>()
@@ -1257,12 +1255,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
             clearForm()
             _uiMessage.emit(UiText.StringResource(R.string.shift_report_submitted_successfully))
-            onSuccess(report)
+            withContext(Dispatchers.Main) { onSuccess(report) }
         }
     }
 
     fun saveShiftReportDirect(report: ShiftReport, onSuccess: (ShiftReport) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.insertReport(report)
             reportDao.insertAuditLog(
                 AuditLog(
@@ -1292,12 +1290,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 } catch (_: Exception) {}
             }
 
-            onSuccess(report)
+            withContext(Dispatchers.Main) { onSuccess(report) }
         }
     }
 
     fun deleteReport(report: ShiftReport) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.deleteReport(report)
             reportDao.insertAuditLog(
                 AuditLog(
@@ -1312,7 +1310,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     // Shift Drawer Operations (Open Shift / Close Shift / Pay In / Pay Out)
     fun openShift(cashierName: String, shiftName: String, startingCash: Double) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
             val newSession = ShiftSession(
                 cashierName = cashierName.ifBlank { "Cashier" },
@@ -1337,7 +1335,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun closeShift(session: ShiftSession, actualCashCount: Double, notes: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount)
             val varianceMinor = MoneyFormat.calculateVarianceMinor(actualCashCountMinor, session.expectedCash)
             val varianceMajor = MoneyFormat.toMajorUnits(varianceMinor)
@@ -1383,7 +1381,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         notes: String,
         onReportCreated: (ShiftReport) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount)
             val varianceMinor = MoneyFormat.calculateVarianceMinor(actualCashCountMinor, session.expectedCash)
             val varianceMajor = MoneyFormat.toMajorUnits(varianceMinor)
@@ -1441,7 +1439,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 } catch (_: Exception) {}
             }
 
-            onReportCreated(finalReport)
+            withContext(Dispatchers.Main) { onReportCreated(finalReport) }
         }
     }
 
@@ -1451,7 +1449,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         reason: String,
         onSuccess: () -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.insertReport(report)
             reportDao.insertAuditLog(
                 AuditLog(
@@ -1461,7 +1459,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 )
             )
             _uiMessage.emit(UiText.StringResource(R.string.shift_report_submitted_successfully))
-            onSuccess()
+            withContext(Dispatchers.Main) { onSuccess() }
         }
     }
 
@@ -1471,7 +1469,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         reason: String,
         onSuccess: () -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.deleteReport(report)
             reportDao.insertAuditLog(
                 AuditLog(
@@ -1481,12 +1479,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 )
             )
             _uiMessage.emit(UiText.StringResource(R.string.report_deleted))
-            onSuccess()
+            withContext(Dispatchers.Main) { onSuccess() }
         }
     }
 
     fun addCashMovement(type: String, amount: Double, reason: String, cashierName: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val active = activeShiftSession.value
             val sessionId = active?.id ?: 0
             val amountMinor = MoneyFormat.toMinorUnits(amount)
@@ -1541,14 +1539,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun saveBusinessProfile(profile: BusinessProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             reportDao.saveBusinessProfile(profile)
             _uiMessage.emit(UiText.StringResource(R.string.business_settings_updated))
         }
     }
 
     fun updateBusiness(request: UpdateBusinessRequest) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val currentBp = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
             val updatedBp = currentBp.copy(
                 businessName = request.businessName ?: currentBp.businessName,
@@ -1573,7 +1571,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun saveUserProfile(profile: UserProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             reportDao.saveUserProfile(profile)
             preferencesRepository.syncWithUserProfile(profile)
             reportDao.insertAuditLog(
@@ -1588,7 +1586,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun saveReceiptConfig(config: ShopReceiptConfig) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             reportDao.saveReceiptConfig(config)
             _uiMessage.emit(UiText.StringResource(R.string.receipt_customization_updated))
         }
@@ -1615,19 +1613,19 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setAsDefault(id: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             setDefaultAddress(id)
         }
     }
 
     fun saveAddress(address: SavedAddress) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             saveSavedAddress(address)
         }
     }
 
     fun upsertSavedAddress(address: SavedAddress) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             saveSavedAddress(address)
         }
     }

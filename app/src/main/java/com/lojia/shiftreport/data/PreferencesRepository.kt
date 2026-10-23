@@ -37,7 +37,7 @@ class PreferencesRepository private constructor(context: Context) {
 
     private val appContext: Context = context.applicationContext
     private val prefs: SharedPreferences =
-        appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        com.lojia.shiftreport.auth.SecurityHelper.getEncryptedPrefs(appContext)
 
     private val _isQuickLoginActive = MutableStateFlow(shouldDefaultToQuickLogin())
     val isQuickLoginActive: StateFlow<Boolean> = _isQuickLoginActive.asStateFlow()

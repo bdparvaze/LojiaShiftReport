@@ -337,6 +337,7 @@ object FirebaseCloudSyncManager {
 
                 val local = localReportMap[repId]
                 val rDate = repObj.optLong("dateInMillis", 0L)
+                val rLastUpdated = repObj.optLong("lastUpdated", rDate)
 
                 val rawDueCredit = repObj.optString("dueCreditEntriesJson", local?.dueCreditEntriesJson ?: "[]")
                 val rawPrevDue = repObj.optString("previousDueCollectionsJson", local?.previousDueCollectionsJson ?: "[]")
@@ -379,7 +380,13 @@ object FirebaseCloudSyncManager {
                     )
                     reportsToUpdateInRoom.add(newReport)
                     downloadedReports++
-                } else if (rDate > local.dateInMillis) {
+                } else if (local.isLocked) {
+                    // ROOM IS SINGLE SOURCE OF TRUTH:
+                    // If local shift was closed/locked offline, do NOT overwrite with older/remote Firebase data.
+                    Log.d(TAG, "Local shift #${local.id} is closed/locked offline. Preserving local Room record as source of truth.")
+                    uploadedReports++
+                } else if (rLastUpdated > local.dateInMillis) {
+                    // Timestamp conflict resolution: only update if remote timestamp is strictly newer
                     val updatedReport = local.copy(
                         cashierName = repObj.optString("cashierName", local.cashierName),
                         shift = repObj.optString("shift", local.shift),
@@ -462,6 +469,7 @@ object FirebaseCloudSyncManager {
                     put("cashierName", r.cashierName)
                     put("shift", r.shift)
                     put("dateInMillis", r.dateInMillis)
+                    put("lastUpdated", r.dateInMillis)
                     put("openingCash", r.openingCash)
                     put("closingCash", r.closingCash)
                     put("grossCash", r.grossCash)

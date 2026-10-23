@@ -225,11 +225,11 @@ fun ShiftReportScreen(
             }.toString()
 
             val noteParts = mutableListOf<String>()
-            if (data.startingCash > 0) {
-                noteParts.add("Starting Float: %.2f".format(Locale.US, data.startingCash))
+            if (data.startingCash > java.math.BigDecimal.ZERO) {
+                noteParts.add("Starting Float: %.2f".format(Locale.US, data.startingCash.toDouble()))
             }
             if (data.actualCash != null) {
-                noteParts.add("Actual Cash Count: %.2f".format(Locale.US, data.actualCash))
+                noteParts.add("Actual Cash Count: %.2f".format(Locale.US, data.actualCash.toDouble()))
             }
             if (data.notes.isNotBlank() && data.notes != "Saved from Shift Closing Ledger") {
                 noteParts.add(data.notes)
@@ -240,8 +240,8 @@ fun ShiftReportScreen(
                 cashierName = data.cashier.ifBlank { "Standard Cashier" },
                 shift = data.shift,
                 dateInMillis = data.dateMillis,
-                openingCash = MoneyFormat.toMinorUnits(if (data.openingCash > 0) data.openingCash else data.startingCash),
-                closingCash = MoneyFormat.toMinorUnits(if (data.closingCash > 0) data.closingCash else (data.actualCash ?: 0.0)),
+                openingCash = MoneyFormat.toMinorUnits(if (data.openingCash > java.math.BigDecimal.ZERO) data.openingCash else data.startingCash),
+                closingCash = MoneyFormat.toMinorUnits(if (data.closingCash > java.math.BigDecimal.ZERO) data.closingCash else (data.actualCash ?: java.math.BigDecimal.ZERO)),
                 grossCash = MoneyFormat.toMinorUnits(data.cashReceipts),
                 madaPayments = MoneyFormat.toMinorUnits(data.madaPayments),
                 digitalWallet = MoneyFormat.toMinorUnits(data.digitalWallet),
@@ -490,13 +490,13 @@ private fun ReportEntryTab(
     val actualCashVal = actualCashCountInput.toDoubleOrNull()
     val expenses = d(totalExpenses)
 
-    val totalCredit = creditEntries.sumOf { it.amount }
-    val totalOldDueCash = oldDueEntries.filter { it.type == PayType.CASH }.sumOf { it.amount }
-    val totalOldDueBank = oldDueEntries.filter { it.type == PayType.BANK }.sumOf { it.amount }
-    val totalStaffCash = staffEntries.filter { it.type == PayType.CASH }.sumOf { it.amount }
-    val totalStaffBank = staffEntries.filter { it.type == PayType.BANK }.sumOf { it.amount }
-    val totalWalkout = walkoutEntries.sumOf { it.amount }
-    val totalItems = itemEntries.sumOf { it.total }
+    val totalCredit = creditEntries.sumOf { it.amountDouble }
+    val totalOldDueCash = oldDueEntries.filter { it.type == PayType.CASH }.sumOf { it.amountDouble }
+    val totalOldDueBank = oldDueEntries.filter { it.type == PayType.BANK }.sumOf { it.amountDouble }
+    val totalStaffCash = staffEntries.filter { it.type == PayType.CASH }.sumOf { it.amountDouble }
+    val totalStaffBank = staffEntries.filter { it.type == PayType.BANK }.sumOf { it.amountDouble }
+    val totalWalkout = walkoutEntries.sumOf { it.amountDouble }
+    val totalItems = itemEntries.sumOf { it.totalDouble }
 
     // International Standard Formulas
     val totalSales = cash + mada + digitalWallet
@@ -1032,8 +1032,8 @@ private fun ReportEntryTab(
                         ItemEntry(
                             name = result.name,
                             qty = result.qty,
-                            unitPrice = result.unitPrice,
-                            total = result.amount
+                            unitPriceDouble = result.unitPrice,
+                            totalDouble = result.amount
                         )
                     )
                     ModalType.NONE -> {}

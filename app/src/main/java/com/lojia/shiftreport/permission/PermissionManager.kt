@@ -100,6 +100,30 @@ object PermissionUtils {
         return permissions.all { hasPermission(context, it) }
     }
 
+    /**
+     * Returns true if Android 12+ (SDK 31+) Bluetooth Scan & Connect permissions are granted.
+     */
+    fun hasBluetoothPermissions(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            hasPermission(context, Manifest.permission.BLUETOOTH_SCAN) &&
+                hasPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ||
+                hasPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+    }
+
+    /**
+     * Returns true if Android 13+ (SDK 33+) POST_NOTIFICATIONS permission is granted or not required.
+     */
+    fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            true
+        }
+    }
+
     fun findActivity(context: Context): Activity? {
         var currentContext = context
         while (currentContext is ContextWrapper) {

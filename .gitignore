@@ -24,30 +24,14 @@ gen/
 *.iml
 *.iws
 
-# Local configuration files
+# Local configuration and credentials
 local.properties
 .env
+google-services.json
 *.keystore.properties
-# gradle.properties # Optional: Uncomment to ignore global gradle properties
-
-# Python artifacts
-__pycache__/
-*.py[cod]
-*$py.class
-
-# OS-specific files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*.log
-
-# Keystores (Uncomment to ignore release keystores)
-# *.jks
-# *.keystore
+*.jks
+*.keystore
+metadata.json
 /tmp
 /captures
 .externalNativeBuild
