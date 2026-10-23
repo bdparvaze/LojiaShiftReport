@@ -108,11 +108,12 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
         enableEdgeToEdge()
 
         // Schedule periodic background shift report sync via WorkManager
-        com.lojia.shiftreport.util.ShiftReportSyncScheduler.schedulePeriodicSync(
-            context = applicationContext,
-            intervalMinutes = 60L,
-            requireWifiOnly = false
-        )
+        if (com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
+            com.lojia.shiftreport.sync.FirebaseCloudSyncScheduler.schedulePeriodicSync(
+                context = applicationContext,
+                intervalMinutes = 60L
+            )
+        }
 
         handleAuthIntent(intent)
 

@@ -8,10 +8,15 @@ import androidx.security.crypto.MasterKey
 import com.lojia.shiftreport.util.SecurityUtils
 
 /**
- * Enterprise Security Helper providing hardware-backed EncryptedSharedPreferences
- * utilizing Android MasterKey with AES-256-GCM encryption.
+ * ══════════════════════════════════════════════════════════════════════════════
+ * HARDWARE STORAGE & INTEGRATION LAYER: SecurityHelper
+ * ══════════════════════════════════════════════════════════════════════════════
+ * Responsibility: Android OS integration for hardware-backed secure storage.
+ * - Manages Android KeyStore MasterKey (AES-256-GCM).
+ * - Manages EncryptedSharedPreferences lifecycle and hardware fallback.
+ * - Encrypts and persists PIN hashes (derived via [SecurityUtils]) and cashier data.
  *
- * Ensures PINs and sensitive cashier records are never stored in plaintext.
+ * NOTE: Algorithmic hashing logic is delegated to [SecurityUtils].
  */
 object SecurityHelper {
     private const val TAG = "SecurityHelper"

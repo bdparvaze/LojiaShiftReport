@@ -12,8 +12,8 @@ import java.util.Locale
  * Default store currency is ISO 4217 "USD" ($).
  */
 object MoneyFormat {
-    const val DEFAULT_CURRENCY_CODE = "USD"
-    const val DEFAULT_CURRENCY_SYMBOL = "$"
+    const val DEFAULT_CURRENCY_CODE = AppConstants.DEFAULT_CURRENCY_CODE
+    const val DEFAULT_CURRENCY_SYMBOL = AppConstants.DEFAULT_CURRENCY_SYMBOL
 
     /**
      * Converts major unit (e.g. Double 10.25) to minor unit (e.g. Long 1025)

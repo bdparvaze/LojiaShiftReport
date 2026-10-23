@@ -6,8 +6,16 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
 /**
- * Enterprise Security Utility providing PBKDF2WithHmacSHA256 password/PIN hashing,
- * constant-time verification, and backwards compatibility with legacy SHA-256 hashes.
+ * ══════════════════════════════════════════════════════════════════════════════
+ * CRYPTOGRAPHY ENGINE LAYER: SecurityUtils
+ * ══════════════════════════════════════════════════════════════════════════════
+ * Responsibility: Pure, stateless cryptographic mathematical operations.
+ * - PBKDF2WithHmacSHA256 password and PIN hashing (210,000 iterations).
+ * - Constant-time byte/string comparison to eliminate side-channel timing attacks.
+ * - Cryptographic salt generation and hash algorithm migration/upgrading.
+ *
+ * NOTE: SecurityUtils has NO Android UI or SharedPreferences dependencies.
+ * For persistent hardware-backed keystore encryption, use [com.lojia.shiftreport.auth.SecurityHelper].
  */
 object SecurityUtils {
     private const val DEFAULT_SALT = "lojia_pos_salt_v1"

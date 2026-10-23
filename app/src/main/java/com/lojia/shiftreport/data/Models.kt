@@ -67,7 +67,7 @@ data class ShiftSession(
     val status: String = "OPEN", // OPEN, CLOSED, LOCKED
     val openedAt: Long = System.currentTimeMillis(),
     val closedAt: Long? = null,
-    val startingCash: Long = 50000L,
+    val startingCash: Long = 0L,
     val cashSales: Long = 0L,
     val cardSales: Long = 0L,
     val digitalSales: Long = 0L,
@@ -75,7 +75,7 @@ data class ShiftSession(
     val salesReturns: Long = 0L,
     val totalPayIn: Long = 0L,
     val totalPayOut: Long = 0L,
-    val expectedCash: Long = 50000L,
+    val expectedCash: Long = 0L,
     val actualCashCount: Long = 0L,
     val variance: Long = 0L,
     val notes: String = "",

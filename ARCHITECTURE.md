@@ -69,7 +69,7 @@ com.lojia.shiftreport
 │   ├── OcrImagePreprocessor.kt    # Grayscale, binarization and threshold helper for OCR
 │   ├── OcrTextExtractor.kt        # Google ML Kit on-device text recognition
 │   ├── PdfProtector.kt            # PDF password protection and encryption
-│   ├── PerspectiveTransformHelper.kt# Mathematical perspective correction using OpenCV/native matrices
+│   ├── PerspectiveTransformHelper.kt# Mathematical perspective correction using native Android 2D matrix transformation
 │   └── ScannedDocument.kt         # Room entity & DAO for scanned documents
 │
 ├── settings/                      # ⚙️ Settings & Configuration Module
@@ -110,8 +110,9 @@ com.lojia.shiftreport
 │
 └── util/                          # 🛠️ Utility Functions & Helpers
     ├── AppLanguageManager.kt      # Internal language setup and configuration helper
+    ├── AppLogger.kt               # Centralized logger with release build logcat protection
     ├── CountryDetector.kt         # System configuration-based country detector
-    ├── CurrencyUtils.kt           # Formatting patterns and symbols per currency
+    ├── CurrencyFormatter.kt       # Unified high-precision currency formatting (formatMoney)
     ├── DateTimeFormatUtils.kt     # Locale-aware date and time formatting
     ├── ExportHelper.kt            # Saves files to local scoped folders
     ├── GoogleDriveManager.kt      # Handles backup transfers to remote cloud drive
@@ -124,8 +125,6 @@ com.lojia.shiftreport
     ├── PdfReportGenerator.kt      # Vector-based PDF receipt & shift summary builder
     ├── PdfShareUtils.kt           # Native Android document sharing & opening utility
     ├── SecurityUtils.kt           # PBKDF2/SHA-256 secret hashing & cryptographic helpers
-    ├── ShiftReportSyncScheduler.kt# Triggers local notification or periodic sync workers
-    ├── ShiftReportSyncWorker.kt   # Background worker for offline-safe tasks
     └── UiText.kt                  # UI text wrapper supporting translatable strings
 ```
 

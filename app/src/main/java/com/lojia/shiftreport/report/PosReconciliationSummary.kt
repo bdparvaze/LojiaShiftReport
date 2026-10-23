@@ -28,20 +28,20 @@ import java.util.Locale
  * ---------------------------------------------------------------------- */
 @Composable
 fun PosReconciliationSummary(
-    startingCash: Double,
-    cashSales: Double,
-    madaSales: Double,
-    digitalWalletSales: Double,
-    totalDiscounts: Double = 0.0,
-    salesReturns: Double = 0.0,
-    totalExpenses: Double,
-    totalDueCredit: Double,
-    totalDueCollectedCash: Double,
-    totalDueCollectedBank: Double,
-    totalStaffAdvanceCash: Double,
-    totalStaffAdvanceBank: Double,
-    totalWalkout: Double,
-    totalPurchasesCash: Double,
+    startingCash: Long,
+    cashSales: Long,
+    madaSales: Long,
+    digitalWalletSales: Long,
+    totalDiscounts: Long = 0L,
+    salesReturns: Long = 0L,
+    totalExpenses: Long,
+    totalDueCredit: Long,
+    totalDueCollectedCash: Long,
+    totalDueCollectedBank: Long,
+    totalStaffAdvanceCash: Long,
+    totalStaffAdvanceBank: Long,
+    totalWalkout: Long,
+    totalPurchasesCash: Long,
     staffMealsCount: Int,
     muasselCount: Int,
     outdoorMuasselCount: Int,
@@ -52,13 +52,13 @@ fun PosReconciliationSummary(
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
 ) {
     val currency = currentCurrency
-    val totalSales = MoneyFormat.add(cashSales, madaSales, digitalWalletSales)
-    val netSales = MoneyFormat.subtract(MoneyFormat.subtract(totalSales, totalDiscounts), salesReturns).coerceAtLeast(0.0)
-    val totalCashIn = MoneyFormat.add(startingCash, cashSales, totalDueCollectedCash)
-    val totalCashOut = MoneyFormat.add(totalExpenses, totalStaffAdvanceCash, totalPurchasesCash)
-    val expectedCash = MoneyFormat.subtract(totalCashIn, totalCashOut)
-    val actualCountVal = actualCashCount.toDoubleOrNull()
-    val variance = actualCountVal?.let { MoneyFormat.calculateVariance(it, expectedCash) }
+    val totalSales = MoneyFormat.addMinor(cashSales, madaSales, digitalWalletSales)
+    val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0L)
+    val totalCashIn = MoneyFormat.addMinor(startingCash, cashSales, totalDueCollectedCash)
+    val totalCashOut = MoneyFormat.addMinor(totalExpenses, totalStaffAdvanceCash, totalPurchasesCash)
+    val expectedCash = totalCashIn - totalCashOut
+    val actualCountVal = actualCashCount.toDoubleOrNull()?.let { MoneyFormat.toMinorUnits(it) }
+    val variance = actualCountVal?.let { MoneyFormat.calculateVarianceMinor(it, expectedCash) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -133,16 +133,16 @@ fun PosReconciliationSummary(
                         color = WarningOrange
                     )
                     Text(
-                        "%.2f %s".format(totalSales, currency),
+                        MoneyFormat.formatMinor(totalSales, currency),
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 15.sp,
                         color = WarningOrange
                     )
                 }
 
-                if (totalDiscounts > 0 || salesReturns > 0) {
+                if (totalDiscounts > 0L || salesReturns > 0L) {
                     Spacer(Modifier.height(8.dp))
-                    if (totalDiscounts > 0) {
+                    if (totalDiscounts > 0L) {
                         ReconciliationRow(
                             label = "- ${stringResource(R.string.total_discounts_label)}",
                             value = totalDiscounts,
@@ -150,7 +150,7 @@ fun PosReconciliationSummary(
                             valueColor = ShiftColors.Danger
                         )
                     }
-                    if (salesReturns > 0) {
+                    if (salesReturns > 0L) {
                         ReconciliationRow(
                             label = "- ${stringResource(R.string.sales_returns_label)}",
                             value = salesReturns,
@@ -176,7 +176,7 @@ fun PosReconciliationSummary(
                             color = PosCashGreen
                         )
                         Text(
-                            "%.2f %s".format(netSales, currency),
+                            MoneyFormat.formatMinor(netSales, currency),
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 14.5.sp,
                             color = PosCashGreen
@@ -218,11 +218,11 @@ fun PosReconciliationSummary(
                 DashedDivider(Modifier.padding(vertical = 10.dp))
 
                 // Float / Inflow
-                if (startingCash > 0) {
+                if (startingCash > 0L) {
                     ReconciliationRow(stringResource(R.string.starting_cash), startingCash, currency)
                 }
                 ReconciliationRow("+ ${stringResource(R.string.cash_sales)}", cashSales, currency, valueColor = PosCashGreen)
-                if (totalDueCollectedCash > 0) {
+                if (totalDueCollectedCash > 0L) {
                     ReconciliationRow("+ ${stringResource(R.string.due_collected_cash)}", totalDueCollectedCash, currency, valueColor = PosCashGreen)
                 }
 
@@ -234,19 +234,19 @@ fun PosReconciliationSummary(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(stringResource(R.string.total_cash_in), fontSize = 11.5.sp, color = PosCashGreen, fontWeight = FontWeight.SemiBold)
-                    Text("+ %.2f %s".format(totalCashIn, currency), fontSize = 12.sp, color = PosCashGreen, fontWeight = FontWeight.Bold)
+                    Text("+ ${MoneyFormat.formatMinor(totalCashIn, currency)}", fontSize = 12.sp, color = PosCashGreen, fontWeight = FontWeight.Bold)
                 }
 
                 DashedDivider(Modifier.padding(vertical = 6.dp))
 
                 // Outflow
-                if (totalExpenses > 0) {
+                if (totalExpenses > 0L) {
                     ReconciliationRow("- ${stringResource(R.string.op_expenses)}", totalExpenses, currency, valueColor = ShiftColors.Danger)
                 }
-                if (totalStaffAdvanceCash > 0) {
+                if (totalStaffAdvanceCash > 0L) {
                     ReconciliationRow("- ${stringResource(R.string.employer_cash)}", totalStaffAdvanceCash, currency, valueColor = ShiftColors.Danger)
                 }
-                if (totalPurchasesCash > 0) {
+                if (totalPurchasesCash > 0L) {
                     ReconciliationRow("- ${stringResource(R.string.paid_out)}", totalPurchasesCash, currency, valueColor = ShiftColors.Danger)
                 }
 
@@ -258,7 +258,7 @@ fun PosReconciliationSummary(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(stringResource(R.string.total_cash_out), fontSize = 11.5.sp, color = PosExpenseRed, fontWeight = FontWeight.SemiBold)
-                    Text("- %.2f %s".format(totalCashOut, currency), fontSize = 12.sp, color = PosExpenseRed, fontWeight = FontWeight.Bold)
+                    Text("- ${MoneyFormat.formatMinor(totalCashOut, currency)}", fontSize = 12.sp, color = PosExpenseRed, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -291,7 +291,7 @@ fun PosReconciliationSummary(
                             )
                         }
                         Text(
-                            "%.2f %s".format(expectedCash, currency),
+                            MoneyFormat.formatMinor(expectedCash, currency),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = PosCashGreen
@@ -358,8 +358,8 @@ fun PosReconciliationSummary(
                         }
                     }
                 } else {
-                    val isBalanced = Math.abs(variance) < 0.001
-                    val isOver = variance > 0
+                    val isBalanced = variance == 0L
+                    val isOver = variance > 0L
                     val bgColor = when {
                         isBalanced -> SuccessContainer
                         isOver -> SuccessContainer
@@ -409,7 +409,7 @@ fun PosReconciliationSummary(
                                     )
                                 }
                                 Text(
-                                    "${if (variance > 0) "+" else ""}${String.format(Locale.US, "%.2f", variance)} $currency",
+                                    "${if (variance > 0L) "+" else ""}${MoneyFormat.formatMinor(variance, currency)}",
                                     fontWeight = FontWeight.ExtraBold,
                                     fontSize = 15.sp,
                                     color = textColor
@@ -417,9 +417,7 @@ fun PosReconciliationSummary(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Expected: %.2f %s • Actual: %.2f %s".format(
-                                    expectedCash, currency, actualCountVal ?: 0.0, currency
-                                ),
+                                text = "Expected: ${MoneyFormat.formatMinor(expectedCash, currency)} • Actual: ${MoneyFormat.formatMinor(actualCountVal ?: 0L, currency)}",
                                 fontSize = 10.5.sp,
                                 color = textColor.copy(alpha = 0.85f)
                             )
@@ -474,7 +472,7 @@ fun PosReconciliationSummary(
                     }
                 }
 
-                if (totalWalkout > 0) {
+                if (totalWalkout > 0L) {
                     ReconciliationRow(
                         label = stringResource(R.string.walk_out),
                         value = totalWalkout,
@@ -508,16 +506,71 @@ fun PosReconciliationSummary(
     }
 }
 
+/**
+ * Backward compatibility overload for PosReconciliationSummary accepting Double parameters.
+ */
+@Deprecated("Use Long-based minor unit API instead", ReplaceWith("PosReconciliationSummary(...)"))
+@Composable
+fun PosReconciliationSummary(
+    startingCash: Double,
+    cashSales: Double,
+    madaSales: Double,
+    digitalWalletSales: Double,
+    totalDiscounts: Double = 0.0,
+    salesReturns: Double = 0.0,
+    totalExpenses: Double,
+    totalDueCredit: Double,
+    totalDueCollectedCash: Double,
+    totalDueCollectedBank: Double,
+    totalStaffAdvanceCash: Double,
+    totalStaffAdvanceBank: Double,
+    totalWalkout: Double,
+    totalPurchasesCash: Double,
+    staffMealsCount: Int,
+    muasselCount: Int,
+    outdoorMuasselCount: Int,
+    actualCashCount: String,
+    onActualCashCountChange: (String) -> Unit,
+    notes: String,
+    onNotesChange: (String) -> Unit,
+    currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
+) {
+    PosReconciliationSummary(
+        startingCash = MoneyFormat.toMinorUnits(startingCash),
+        cashSales = MoneyFormat.toMinorUnits(cashSales),
+        madaSales = MoneyFormat.toMinorUnits(madaSales),
+        digitalWalletSales = MoneyFormat.toMinorUnits(digitalWalletSales),
+        totalDiscounts = MoneyFormat.toMinorUnits(totalDiscounts),
+        salesReturns = MoneyFormat.toMinorUnits(salesReturns),
+        totalExpenses = MoneyFormat.toMinorUnits(totalExpenses),
+        totalDueCredit = MoneyFormat.toMinorUnits(totalDueCredit),
+        totalDueCollectedCash = MoneyFormat.toMinorUnits(totalDueCollectedCash),
+        totalDueCollectedBank = MoneyFormat.toMinorUnits(totalDueCollectedBank),
+        totalStaffAdvanceCash = MoneyFormat.toMinorUnits(totalStaffAdvanceCash),
+        totalStaffAdvanceBank = MoneyFormat.toMinorUnits(totalStaffAdvanceBank),
+        totalWalkout = MoneyFormat.toMinorUnits(totalWalkout),
+        totalPurchasesCash = MoneyFormat.toMinorUnits(totalPurchasesCash),
+        staffMealsCount = staffMealsCount,
+        muasselCount = muasselCount,
+        outdoorMuasselCount = outdoorMuasselCount,
+        actualCashCount = actualCashCount,
+        onActualCashCountChange = onActualCashCountChange,
+        notes = notes,
+        onNotesChange = onNotesChange,
+        currentCurrency = currentCurrency
+    )
+}
+
 @Composable
 fun ReconciliationRow(
     label: String,
-    value: Double,
+    value: Long,
     currency: String,
     bold: Boolean = false,
     valueColor: Color = ShiftColors.Text,
     note: String? = null
 ) {
-    if (value <= 0) return
+    if (value <= 0L) return
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -532,12 +585,32 @@ fun ReconciliationRow(
             }
         }
         Text(
-            "%.2f %s".format(value, currency),
+            MoneyFormat.formatMinor(value, currency),
             fontSize = 13.sp,
             fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold,
             color = valueColor
         )
     }
+}
+
+@Deprecated("Use Long-based minor unit API", ReplaceWith("ReconciliationRow(label, MoneyFormat.toMinorUnits(value), currency, bold, valueColor, note)"))
+@Composable
+fun ReconciliationRow(
+    label: String,
+    value: Double,
+    currency: String,
+    bold: Boolean = false,
+    valueColor: Color = ShiftColors.Text,
+    note: String? = null
+) {
+    ReconciliationRow(
+        label = label,
+        value = MoneyFormat.toMinorUnits(value),
+        currency = currency,
+        bold = bold,
+        valueColor = valueColor,
+        note = note
+    )
 }
 
 @Composable

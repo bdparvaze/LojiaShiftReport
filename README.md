@@ -34,7 +34,7 @@
 
 ## 🛠️ Tech Stack
 
-* **Platform:** Android (minSdk 24, targetSdk 36)
+* **Platform:** Android (minSdk 24, targetSdk 35)
 * **Language:** Kotlin
 * **UI Framework:** Jetpack Compose (Material Design 3)
 * **Local Database:** Room Database (SQLite) with KSP
@@ -148,8 +148,9 @@ com.lojia.shiftreport
 │
 └── util/                          # 🛠️ Utilities (PDF Generator, Sharing, Locale, Security)
     ├── AppLanguageManager.kt
+    ├── AppLogger.kt
     ├── CountryDetector.kt
-    ├── CurrencyUtils.kt
+    ├── CurrencyFormatter.kt
     ├── DateTimeFormatUtils.kt
     ├── ExportHelper.kt
     ├── GoogleDriveManager.kt
@@ -162,8 +163,6 @@ com.lojia.shiftreport
     ├── PdfReportGenerator.kt
     ├── PdfShareUtils.kt
     ├── SecurityUtils.kt
-    ├── ShiftReportSyncScheduler.kt
-    ├── ShiftReportSyncWorker.kt
     └── UiText.kt
 ```
 
