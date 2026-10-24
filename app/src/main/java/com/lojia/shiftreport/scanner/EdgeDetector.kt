@@ -2,7 +2,7 @@ package com.lojia.shiftreport.scanner
 
 import android.graphics.Bitmap
 import android.graphics.PointF
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -156,7 +156,7 @@ object EdgeDetector {
                 )
             }
         } catch (t: Throwable) {
-            Log.e(TAG, "Native document corner detection error", t)
+            AppLogger.e(TAG, "Native document corner detection error", t)
             return null
         }
     }

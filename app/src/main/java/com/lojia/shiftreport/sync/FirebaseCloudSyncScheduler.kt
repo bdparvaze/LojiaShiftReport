@@ -1,8 +1,8 @@
 package com.lojia.shiftreport.sync
 
 import android.content.Context
-import android.util.Log
 import androidx.work.*
+import com.lojia.shiftreport.util.AppLogger
 import java.util.concurrent.TimeUnit
 
 /**
@@ -22,7 +22,7 @@ object FirebaseCloudSyncScheduler {
         intervalMinutes: Long = 30L
     ) {
         if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
-            Log.i(TAG, "Cloud sync is disabled in BuildConfig. Skipping periodic sync scheduling.")
+            AppLogger.i(TAG, "Cloud sync is disabled in BuildConfig. Skipping periodic sync scheduling.")
             return
         }
 
@@ -52,7 +52,7 @@ object FirebaseCloudSyncScheduler {
             periodicWorkRequest
         )
 
-        Log.i(TAG, "Periodic Firebase Cloud Sync scheduled every $effectiveInterval minutes (requires network).")
+        AppLogger.i(TAG, "Periodic Firebase Cloud Sync scheduled every $effectiveInterval minutes (requires network).")
     }
 
     /**
@@ -61,7 +61,7 @@ object FirebaseCloudSyncScheduler {
      */
     fun cancelPeriodicSync(context: Context) {
         WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_PERIODIC_WORK_NAME)
-        Log.i(TAG, "Periodic Firebase Cloud Sync cancelled.")
+        AppLogger.i(TAG, "Periodic Firebase Cloud Sync cancelled.")
     }
 
     /**
@@ -69,7 +69,7 @@ object FirebaseCloudSyncScheduler {
      */
     fun triggerImmediateSync(context: Context): Operation? {
         if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
-            Log.i(TAG, "Cloud sync is disabled in BuildConfig. Skipping immediate sync.")
+            AppLogger.i(TAG, "Cloud sync is disabled in BuildConfig. Skipping immediate sync.")
             return null
         }
 
@@ -89,7 +89,7 @@ object FirebaseCloudSyncScheduler {
             oneTimeWorkRequest
         )
 
-        Log.i(TAG, "Immediate Firebase Cloud Sync triggered.")
+        AppLogger.i(TAG, "Immediate Firebase Cloud Sync triggered.")
         return operation
     }
 }

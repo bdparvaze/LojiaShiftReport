@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import java.io.File
 import kotlin.math.max
 
@@ -57,7 +57,7 @@ object OcrImagePreprocessor {
             // 2. Enhance contrast for OCR
             return enhanceContrastForOcr(baseBitmap)
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading/preprocessing bitmap for OCR", e)
+            AppLogger.e(TAG, "Error loading/preprocessing bitmap for OCR", e)
             return null
         }
     }
@@ -91,7 +91,7 @@ object OcrImagePreprocessor {
             canvas.drawBitmap(source, 0f, 0f, paint)
             enhancedBitmap
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to apply contrast filter, returning base bitmap", e)
+            AppLogger.w(TAG, "Failed to apply contrast filter, returning base bitmap", e)
             source
         }
     }

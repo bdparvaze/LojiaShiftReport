@@ -7,7 +7,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import android.view.HapticFeedbackConstants
 import android.widget.Toast
 import androidx.camera.core.*
@@ -134,7 +134,7 @@ fun CameraXScannerView(
                 imageAnalysis.clearAnalyzer()
                 cameraProviderRef?.unbindAll()
             } catch (e: Exception) {
-                Log.e("CameraXScanner", "Error unbinding camera on dispose", e)
+                AppLogger.e("CameraXScanner", "Error unbinding camera on dispose", e)
             }
             cameraExecutor.shutdown()
         }
@@ -195,7 +195,7 @@ fun CameraXScannerView(
                                     }
                                 }
                             } catch (e: Exception) {
-                                Log.e("CameraXScanner", "Frame analysis error", e)
+                                AppLogger.e("CameraXScanner", "Frame analysis error", e)
                             } finally {
                                 imageProxy.close()
                             }
@@ -211,7 +211,7 @@ fun CameraXScannerView(
                                 imageAnalysis
                             )
                         } catch (e: Exception) {
-                            Log.w("CameraXScanner", "Fallback binding without imageAnalysis", e)
+                            AppLogger.w("CameraXScanner", "Fallback binding without imageAnalysis", e)
                             cameraProvider.bindToLifecycle(
                                 lifecycleOwner,
                                 cameraSelector,
@@ -223,7 +223,7 @@ fun CameraXScannerView(
                         // Set initial torch
                         camera?.cameraControl?.enableTorch(torchState == TorchState.ON)
                     } catch (e: Exception) {
-                        Log.e("CameraXScanner", "Camera initialization failed", e)
+                        AppLogger.e("CameraXScanner", "Camera initialization failed", e)
                     }
                 }, ctx.mainExecutor)
 
@@ -234,7 +234,7 @@ fun CameraXScannerView(
                     imageAnalysis.clearAnalyzer()
                     cameraProviderRef?.unbindAll()
                 } catch (e: Exception) {
-                    Log.e("CameraXScanner", "Error releasing camera provider", e)
+                    AppLogger.e("CameraXScanner", "Error releasing camera provider", e)
                 }
             },
             modifier = Modifier.fillMaxSize()
@@ -676,7 +676,7 @@ private fun imageProxyToUprightBitmap(imageProxy: ImageProxy): Bitmap? {
             rawBitmap
         }
     } catch (t: Throwable) {
-        Log.e("CameraXScanner", "Failed to convert ImageProxy to Bitmap", t)
+        AppLogger.e("CameraXScanner", "Failed to convert ImageProxy to Bitmap", t)
         null
     }
 }
@@ -731,12 +731,12 @@ private fun takePhoto(
                         onResult(bmp)
                     }
                 } catch (e: OutOfMemoryError) {
-                    Log.e("CameraXScannerView", "OOM during capture", e)
+                    AppLogger.e("CameraXScannerView", "OOM during capture", e)
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         onErrorClose()
                     }
                 } catch (e: Exception) {
-                    Log.e("CameraXScannerView", "Capture failed", e)
+                    AppLogger.e("CameraXScannerView", "Capture failed", e)
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         onErrorClose()
                     }
@@ -744,7 +744,7 @@ private fun takePhoto(
             }
 
             override fun onError(exception: ImageCaptureException) {
-                Log.e("CameraXScanner", "Photo capture failed: ${exception.message}", exception)
+                AppLogger.e("CameraXScanner", "Photo capture failed: ${exception.message}", exception)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
                     onResult(null)
                 }

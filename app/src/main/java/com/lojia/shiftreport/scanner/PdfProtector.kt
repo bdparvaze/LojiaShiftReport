@@ -1,7 +1,7 @@
 package com.lojia.shiftreport.scanner
 
 import android.content.Context
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -86,7 +86,7 @@ object PdfProtector {
                 Result.failure(IllegalStateException("Failed to write protected PDF output file"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error generating password protected PDF", e)
+            AppLogger.e(TAG, "Error generating password protected PDF", e)
             Result.failure(e)
         }
     }

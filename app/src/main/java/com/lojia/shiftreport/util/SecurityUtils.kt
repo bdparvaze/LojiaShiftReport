@@ -179,3 +179,9 @@ object SecurityUtils {
         return true
     }
 }
+
+/**
+ * Domain alias for [SecurityUtils] clearly identifying it as the pure cryptographic calculation utility.
+ */
+typealias CryptoUtils = SecurityUtils
+

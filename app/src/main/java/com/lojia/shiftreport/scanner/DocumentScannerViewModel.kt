@@ -5,7 +5,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
@@ -93,7 +93,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                                 pageImagePaths.add(pageFile.absolutePath)
                             }
                         } catch (e: Exception) {
-                            Log.e("DocumentScannerVM", "Failed to save page image $index", e)
+                            AppLogger.e("DocumentScannerVM", "Failed to save page image $index", e)
                         }
                     }
                 }
@@ -108,7 +108,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                             thumbPath = thumbFile.absolutePath
                         }
                     } catch (e: Exception) {
-                        Log.e("DocumentScannerVM", "Failed to copy thumbnail", e)
+                        AppLogger.e("DocumentScannerVM", "Failed to copy thumbnail", e)
                     }
                 }
 
@@ -150,10 +150,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                         dao.updateOcrAndDocx(newId.toInt(), extractedText, docxPath)
                     }
                 } catch (e: Exception) {
-                    Log.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
+                    AppLogger.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
                 }
             } catch (e: Exception) {
-                Log.e("DocumentScannerVM", "Error saving scanned document", e)
+                AppLogger.e("DocumentScannerVM", "Error saving scanned document", e)
                 withContext(Dispatchers.Main) {
                     onComplete?.invoke(ScannedDocument(title = "error"))
                 }
@@ -191,7 +191,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 }
 
                 if (!pageFile.exists() || pageFile.length() == 0L) {
-                    Log.e("DocumentScannerVM", "Failed to save captured photo")
+                    AppLogger.e("DocumentScannerVM", "Failed to save captured photo")
                     withContext(Dispatchers.Main) {
                         onComplete?.invoke(ScannedDocument(title = "error"))
                     }
@@ -227,7 +227,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                         thumbPath = thumbFile.absolutePath
                     }
                 } catch (e: Exception) {
-                    Log.e("DocumentScannerVM", "Failed to copy thumbnail", e)
+                    AppLogger.e("DocumentScannerVM", "Failed to copy thumbnail", e)
                 }
 
                 // Build doc with empty OCR
@@ -266,10 +266,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                         dao.updateOcrAndDocx(newId.toInt(), extractedText, docxPath)
                     }
                 } catch (e: Exception) {
-                    Log.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
+                    AppLogger.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
                 }
             } catch (e: Exception) {
-                Log.e("DocumentScannerVM", "Error saving photo as document", e)
+                AppLogger.e("DocumentScannerVM", "Error saving photo as document", e)
                 withContext(Dispatchers.Main) {
                     onComplete?.invoke(ScannedDocument(title = "error"))
                 }
@@ -338,7 +338,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                         thumbPath = thumbFile.absolutePath
                     }
                 } catch (e: Exception) {
-                    Log.e("DocumentScannerVM", "Failed to create thumbnail", e)
+                    AppLogger.e("DocumentScannerVM", "Failed to create thumbnail", e)
                 }
 
                 // Build doc with empty OCR
@@ -381,10 +381,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                         dao.updateOcrAndDocx(newId.toInt(), extractedText, docxPath)
                     }
                 } catch (e: Exception) {
-                    Log.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
+                    AppLogger.e("DocumentScannerVM", "Background OCR failed (non-fatal)", e)
                 }
             } catch (e: Exception) {
-                Log.e("DocumentScannerVM", "Error", e)
+                AppLogger.e("DocumentScannerVM", "Error", e)
                 withContext(Dispatchers.Main) {
                     onComplete?.invoke(ScannedDocument(title = "error"))
                 }
@@ -448,7 +448,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
             shareDocxFileInternal(context, file)
         } catch (e: Exception) {
-            Log.e("DocumentScannerVM", "Error sharing docx", e)
+            AppLogger.e("DocumentScannerVM", "Error sharing docx", e)
             Toast.makeText(context, context.getString(R.string.doc_word_share_error, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
@@ -478,7 +478,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             try {
                 dao.updateDocumentTitle(document.id, newTitle.trim())
             } catch (e: Exception) {
-                Log.e("DocumentScannerVM", "Error renaming document", e)
+                AppLogger.e("DocumentScannerVM", "Error renaming document", e)
             }
         }
     }
@@ -525,14 +525,14 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                         pagesDir.deleteRecursively()
                     }
                 } catch (e: Exception) {
-                    Log.e("DocumentScannerVM", "Error deleting files for doc ${document.id}", e)
+                    AppLogger.e("DocumentScannerVM", "Error deleting files for doc ${document.id}", e)
                 }
             }
 
             try {
                 dao.deleteDocumentsByIds(documents.map { it.id })
             } catch (e: Exception) {
-                Log.e("DocumentScannerVM", "Error deleting documents from database", e)
+                AppLogger.e("DocumentScannerVM", "Error deleting documents from database", e)
             }
         }
     }
@@ -585,7 +585,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
             context.startActivity(chooser)
         } catch (e: Exception) {
-            Log.e("DocumentScannerVM", "Error sharing protected PDF", e)
+            AppLogger.e("DocumentScannerVM", "Error sharing protected PDF", e)
             Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
@@ -611,10 +611,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
             context.startActivity(chooser)
         } catch (e: ActivityNotFoundException) {
-            Log.e("DocumentScannerVM", "No PDF viewer app found", e)
+            AppLogger.e("DocumentScannerVM", "No PDF viewer app found", e)
             Toast.makeText(context, context.getString(R.string.doc_no_pdf_viewer), Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
-            Log.e("DocumentScannerVM", "Error opening protected PDF", e)
+            AppLogger.e("DocumentScannerVM", "Error opening protected PDF", e)
             Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
@@ -644,7 +644,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
             context.startActivity(chooser)
         } catch (e: Exception) {
-            Log.e("DocumentScannerVM", "Error sharing document", e)
+            AppLogger.e("DocumentScannerVM", "Error sharing document", e)
             Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
@@ -674,10 +674,10 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
             context.startActivity(chooser)
         } catch (e: ActivityNotFoundException) {
-            Log.e("DocumentScannerVM", "No PDF viewer app installed", e)
+            AppLogger.e("DocumentScannerVM", "No PDF viewer app installed", e)
             Toast.makeText(context, context.getString(R.string.doc_no_pdf_viewer), Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
-            Log.e("DocumentScannerVM", "Error opening document", e)
+            AppLogger.e("DocumentScannerVM", "Error opening document", e)
             Toast.makeText(context, context.getString(R.string.doc_toast_share_protected_failed, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
     }

@@ -1,10 +1,10 @@
 package com.lojia.shiftreport.sync
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.lojia.shiftreport.util.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -22,15 +22,15 @@ class FirebaseCloudSyncWorker(
 
         // Only proceed if cloud sync is enabled in BuildConfig and by the user in Settings
         if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED || !FirebaseCloudSyncManager.isSyncEnabled(appContext)) {
-            Log.d(TAG, "Cloud sync is disabled. Worker exiting early.")
+            AppLogger.d(TAG, "Cloud sync is disabled. Worker exiting early.")
             return@withContext Result.success(workDataOf("status" to "DISABLED"))
         }
 
         try {
-            Log.d(TAG, "Starting periodic background Firebase Cloud Sync...")
+            AppLogger.d(TAG, "Starting periodic background Firebase Cloud Sync...")
             val syncResult = FirebaseCloudSyncManager.performSync(appContext, isManual = false)
 
-            Log.i(TAG, "Background Firebase Cloud Sync completed: ${syncResult.message}")
+            AppLogger.i(TAG, "Background Firebase Cloud Sync completed: ${syncResult.message}")
 
             Result.success(
                 workDataOf(
@@ -41,7 +41,7 @@ class FirebaseCloudSyncWorker(
                 )
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error in FirebaseCloudSyncWorker: ${e.message}", e)
+            AppLogger.e(TAG, "Error in FirebaseCloudSyncWorker: ${e.message}", e)
             if (runAttemptCount < 2) {
                 Result.retry()
             } else {

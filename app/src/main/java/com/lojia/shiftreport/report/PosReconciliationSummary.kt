@@ -506,61 +506,6 @@ fun PosReconciliationSummary(
     }
 }
 
-/**
- * Backward compatibility overload for PosReconciliationSummary accepting Double parameters.
- */
-@Deprecated("Use Long-based minor unit API instead", ReplaceWith("PosReconciliationSummary(...)"))
-@Composable
-fun PosReconciliationSummary(
-    startingCash: Double,
-    cashSales: Double,
-    madaSales: Double,
-    digitalWalletSales: Double,
-    totalDiscounts: Double = 0.0,
-    salesReturns: Double = 0.0,
-    totalExpenses: Double,
-    totalDueCredit: Double,
-    totalDueCollectedCash: Double,
-    totalDueCollectedBank: Double,
-    totalStaffAdvanceCash: Double,
-    totalStaffAdvanceBank: Double,
-    totalWalkout: Double,
-    totalPurchasesCash: Double,
-    staffMealsCount: Int,
-    muasselCount: Int,
-    outdoorMuasselCount: Int,
-    actualCashCount: String,
-    onActualCashCountChange: (String) -> Unit,
-    notes: String,
-    onNotesChange: (String) -> Unit,
-    currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
-) {
-    PosReconciliationSummary(
-        startingCash = MoneyFormat.toMinorUnits(startingCash),
-        cashSales = MoneyFormat.toMinorUnits(cashSales),
-        madaSales = MoneyFormat.toMinorUnits(madaSales),
-        digitalWalletSales = MoneyFormat.toMinorUnits(digitalWalletSales),
-        totalDiscounts = MoneyFormat.toMinorUnits(totalDiscounts),
-        salesReturns = MoneyFormat.toMinorUnits(salesReturns),
-        totalExpenses = MoneyFormat.toMinorUnits(totalExpenses),
-        totalDueCredit = MoneyFormat.toMinorUnits(totalDueCredit),
-        totalDueCollectedCash = MoneyFormat.toMinorUnits(totalDueCollectedCash),
-        totalDueCollectedBank = MoneyFormat.toMinorUnits(totalDueCollectedBank),
-        totalStaffAdvanceCash = MoneyFormat.toMinorUnits(totalStaffAdvanceCash),
-        totalStaffAdvanceBank = MoneyFormat.toMinorUnits(totalStaffAdvanceBank),
-        totalWalkout = MoneyFormat.toMinorUnits(totalWalkout),
-        totalPurchasesCash = MoneyFormat.toMinorUnits(totalPurchasesCash),
-        staffMealsCount = staffMealsCount,
-        muasselCount = muasselCount,
-        outdoorMuasselCount = outdoorMuasselCount,
-        actualCashCount = actualCashCount,
-        onActualCashCountChange = onActualCashCountChange,
-        notes = notes,
-        onNotesChange = onNotesChange,
-        currentCurrency = currentCurrency
-    )
-}
-
 @Composable
 fun ReconciliationRow(
     label: String,
@@ -591,26 +536,6 @@ fun ReconciliationRow(
             color = valueColor
         )
     }
-}
-
-@Deprecated("Use Long-based minor unit API", ReplaceWith("ReconciliationRow(label, MoneyFormat.toMinorUnits(value), currency, bold, valueColor, note)"))
-@Composable
-fun ReconciliationRow(
-    label: String,
-    value: Double,
-    currency: String,
-    bold: Boolean = false,
-    valueColor: Color = ShiftColors.Text,
-    note: String? = null
-) {
-    ReconciliationRow(
-        label = label,
-        value = MoneyFormat.toMinorUnits(value),
-        currency = currency,
-        bold = bold,
-        valueColor = valueColor,
-        note = note
-    )
 }
 
 @Composable

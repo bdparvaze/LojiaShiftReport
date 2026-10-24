@@ -8,7 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -493,7 +493,7 @@ fun decodeUriToBitmap(context: Context, uri: Uri): Bitmap? {
             bitmap
         }
     } catch (e: Exception) {
-        Log.e("DocScanner", "Failed to decode uri to bitmap", e)
+        AppLogger.e("DocScanner", "Failed to decode uri to bitmap", e)
         null
     }
 }

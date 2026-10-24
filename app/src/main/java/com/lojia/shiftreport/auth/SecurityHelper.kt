@@ -2,24 +2,24 @@ package com.lojia.shiftreport.auth
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.lojia.shiftreport.util.AppLogger
 import com.lojia.shiftreport.util.SecurityUtils
 
 /**
  * ══════════════════════════════════════════════════════════════════════════════
- * HARDWARE STORAGE & INTEGRATION LAYER: SecurityHelper
+ * HARDWARE STORAGE & INTEGRATION LAYER: SecureStorageManager
  * ══════════════════════════════════════════════════════════════════════════════
  * Responsibility: Android OS integration for hardware-backed secure storage.
  * - Manages Android KeyStore MasterKey (AES-256-GCM).
  * - Manages EncryptedSharedPreferences lifecycle and hardware fallback.
- * - Encrypts and persists PIN hashes (derived via [SecurityUtils]) and cashier data.
+ * - Encrypts and persists PIN hashes (derived via [CryptoUtils]) and cashier data.
  *
- * NOTE: Algorithmic hashing logic is delegated to [SecurityUtils].
+ * NOTE: Algorithmic hashing logic is delegated to [CryptoUtils].
  */
-object SecurityHelper {
-    private const val TAG = "SecurityHelper"
+object SecureStorageManager {
+    private const val TAG = "SecureStorageManager"
     private const val SECURE_PREFS_NAME = "lojia_encrypted_auth_prefs"
     private const val KEY_ENCRYPTED_PIN_HASH = "sec_enc_pin_hash"
     private const val KEY_CASHIER_PREFIX = "sec_cashier_data_"
@@ -47,7 +47,7 @@ object SecurityHelper {
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
                 ).also { cachedEncryptedPrefs = it }
             } catch (e: Exception) {
-                Log.e(TAG, "KeyStore EncryptedSharedPreferences initialization failed, using sandboxed fallback: ${e.message}", e)
+                AppLogger.e(TAG, "KeyStore EncryptedSharedPreferences initialization failed, using sandboxed fallback: ${e.message}", e)
                 context.applicationContext.getSharedPreferences(SECURE_PREFS_NAME + "_fallback", Context.MODE_PRIVATE)
             }
         }
@@ -114,3 +114,8 @@ object SecurityHelper {
         return getEncryptedPrefs(context).getString("$KEY_CASHIER_PREFIX$cashierId", null)
     }
 }
+
+/**
+ * Backward compatibility typealias for [SecureStorageManager].
+ */
+typealias SecurityHelper = SecureStorageManager

@@ -7,7 +7,7 @@ import android.content.Context
 
 import android.content.SharedPreferences
 
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 
 
 import kotlinx.coroutines.CoroutineScope
@@ -202,7 +202,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                 reportDao.setSetting(AppSetting(KEY_ACTIVE_MODULE, _currentModule.value.name))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error syncing stored settings from DB", e)
+            AppLogger.e(TAG, "Error syncing stored settings from DB", e)
         }
     }
 
@@ -504,7 +504,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             val incomingTs = root.optLong("timestamp", 0L)
             val localTs = _syncState.value.lastSyncTime
             if (incomingTs > 0 && incomingTs < localTs && _syncState.value.totalCashiers > 0) {
-                Log.d(TAG, "Incoming configuration timestamp ($incomingTs) is older than local Room state ($localTs). Preserving Room as single source of truth.")
+                AppLogger.d(TAG, "Incoming configuration timestamp ($incomingTs) is older than local Room state ($localTs). Preserving Room as single source of truth.")
                 return true
             }
 
@@ -531,7 +531,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             forceSync()
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to import configuration", e)
+            AppLogger.e(TAG, "Failed to import configuration", e)
             false
         }
     }

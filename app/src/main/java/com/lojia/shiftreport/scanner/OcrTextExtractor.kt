@@ -3,7 +3,7 @@ package com.lojia.shiftreport.scanner
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
@@ -43,12 +43,12 @@ object OcrTextExtractor {
                         try {
                             recognizer.close()
                         } catch (e: Exception) {
-                            Log.e(TAG, "Error closing recognizer", e)
+                            AppLogger.e(TAG, "Error closing recognizer", e)
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "OCR failed", e)
+                AppLogger.e(TAG, "OCR failed", e)
                 ""
             }
         } ?: ""
@@ -73,7 +73,7 @@ object OcrTextExtractor {
                     visionText = processImage(recognizer, inputImage)
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Preprocessed recognition attempt failed for $path, falling back to raw file", e)
+                AppLogger.w(TAG, "Preprocessed recognition attempt failed for $path, falling back to raw file", e)
             } finally {
                 processedBitmap?.recycle()
             }
@@ -89,7 +89,7 @@ object OcrTextExtractor {
                 ""
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error extracting text from image $path", e)
+            AppLogger.e(TAG, "Error extracting text from image $path", e)
             ""
         }
     }
@@ -138,7 +138,7 @@ object OcrTextExtractor {
             }
             .addOnFailureListener { exception ->
                 if (continuation.isActive) {
-                    Log.e(TAG, "Process image failed", exception)
+                    AppLogger.e(TAG, "Process image failed", exception)
                     continuation.resume(null)
                 }
             }

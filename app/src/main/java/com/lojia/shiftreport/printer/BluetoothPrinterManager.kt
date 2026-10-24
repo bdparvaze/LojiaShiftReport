@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.util.DateTimeFormatUtils
@@ -243,7 +243,7 @@ class BluetoothPrinterManager(private val context: Context) {
     @SuppressLint("MissingPermission")
     fun getPairedPrinters(): List<BluetoothPrinterDevice> {
         if (!hasBluetoothPermissions()) {
-            Log.w(TAG, "Bluetooth permissions not granted when querying paired devices.")
+            AppLogger.w(TAG, "Bluetooth permissions not granted when querying paired devices.")
             return emptyList()
         }
         return try {
@@ -261,7 +261,7 @@ class BluetoothPrinterManager(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching paired Bluetooth printers", e)
+            AppLogger.e(TAG, "Error fetching paired Bluetooth printers", e)
             emptyList()
         }
     }
@@ -320,7 +320,7 @@ class BluetoothPrinterManager(private val context: Context) {
                 Result.failure(IllegalStateException("Could not connect to printer at $ip:$port"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Network printer test connection failed ($ip:$port): ${e.message}", e)
+            AppLogger.e(TAG, "Network printer test connection failed ($ip:$port): ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -359,7 +359,7 @@ class BluetoothPrinterManager(private val context: Context) {
                 Result.failure(IllegalStateException("Could not establish Bluetooth socket connection."))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Test connection failed to $address: ${e.message}", e)
+            AppLogger.e(TAG, "Test connection failed to $address: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -388,10 +388,10 @@ class BluetoothPrinterManager(private val context: Context) {
                     out.flush()
                 }
                 socket.close()
-                Log.d(TAG, "Receipt successfully printed over native TCP to $ip:$port")
+                AppLogger.d(TAG, "Receipt successfully printed over native TCP to $ip:$port")
                 Result.success(Unit)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to print to Network ESC/POS printer ($ip:$port): ${e.message}", e)
+                AppLogger.e(TAG, "Failed to print to Network ESC/POS printer ($ip:$port): ${e.message}", e)
                 Result.failure(e)
             }
         }
@@ -428,10 +428,10 @@ class BluetoothPrinterManager(private val context: Context) {
             }
             socket.close()
 
-            Log.d(TAG, "Receipt successfully printed over native Bluetooth to $printerAddress")
+            AppLogger.d(TAG, "Receipt successfully printed over native Bluetooth to $printerAddress")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to print to Bluetooth ESC/POS printer: ${e.message}", e)
+            AppLogger.e(TAG, "Failed to print to Bluetooth ESC/POS printer: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -754,10 +754,10 @@ class BluetoothPrinterManager(private val context: Context) {
                     out.flush()
                 }
                 socket.close()
-                Log.d(TAG, "Sent open cash drawer command over native TCP to $ip:$port")
+                AppLogger.d(TAG, "Sent open cash drawer command over native TCP to $ip:$port")
                 Result.success(Unit)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to open cash drawer over network: ${e.message}", e)
+                AppLogger.e(TAG, "Failed to open cash drawer over network: ${e.message}", e)
                 Result.failure(e)
             }
         }
@@ -786,10 +786,10 @@ class BluetoothPrinterManager(private val context: Context) {
                 out.flush()
             }
             socket.close()
-            Log.d(TAG, "Sent open cash drawer command to $printerAddress via native Bluetooth")
+            AppLogger.d(TAG, "Sent open cash drawer command to $printerAddress via native Bluetooth")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to open cash drawer: ${e.message}", e)
+            AppLogger.e(TAG, "Failed to open cash drawer: ${e.message}", e)
             Result.failure(e)
         }
     }

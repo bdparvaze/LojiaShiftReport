@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import com.lojia.shiftreport.data.*
 import com.lojia.shiftreport.util.MoneyFormat
 import kotlinx.coroutines.CoroutineScope
@@ -183,7 +183,7 @@ object FirebaseCloudSyncManager {
                 token.ifEmpty { null }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to parse user uid from auth token: ${e.message}")
+            AppLogger.w(TAG, "Failed to parse user uid from auth token: ${e.message}")
             null
         }
     }
@@ -258,7 +258,7 @@ object FirebaseCloudSyncManager {
 
         val uid = getAuthUserUid()
         if (uid.isNullOrBlank()) {
-            Log.d(TAG, "No authenticated user available. Skipping cloud sync.")
+            AppLogger.d(TAG, "No authenticated user available. Skipping cloud sync.")
             _syncState.value = _syncState.value.copy(
                 isSyncing = false,
                 statusMessage = "Cloud sync unavailable — sign-in required",
@@ -383,7 +383,7 @@ object FirebaseCloudSyncManager {
                 } else if (local.isLocked) {
                     // ROOM IS SINGLE SOURCE OF TRUTH:
                     // If local shift was closed/locked offline, do NOT overwrite with older/remote Firebase data.
-                    Log.d(TAG, "Local shift #${local.id} is closed/locked offline. Preserving local Room record as source of truth.")
+                    AppLogger.d(TAG, "Local shift #${local.id} is closed/locked offline. Preserving local Room record as source of truth.")
                     uploadedReports++
                 } else if (rLastUpdated > local.dateInMillis) {
                     // Timestamp conflict resolution: only update if remote timestamp is strictly newer
@@ -548,7 +548,7 @@ object FirebaseCloudSyncManager {
                 lastErrorMessage = null
             )
 
-            Log.i(TAG, "Firebase Cloud Sync completed: $summaryStr (cloudReachable=$cloudReachable)")
+            AppLogger.i(TAG, "Firebase Cloud Sync completed: $summaryStr (cloudReachable=$cloudReachable)")
 
             return@withContext FirebaseSyncResult(
                 success = true,
@@ -557,7 +557,7 @@ object FirebaseCloudSyncManager {
                 isCloudReachable = cloudReachable
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error during Firebase Cloud Sync: ${e.message}", e)
+            AppLogger.e(TAG, "Error during Firebase Cloud Sync: ${e.message}", e)
             failureReason = e.localizedMessage ?: "Unknown sync error"
 
             _syncState.value = _syncState.value.copy(
@@ -630,7 +630,7 @@ object FirebaseCloudSyncManager {
                 }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Network attempt to Firebase failed (${e.message}). Reading from local buffer.")
+            AppLogger.w(TAG, "Network attempt to Firebase failed (${e.message}). Reading from local buffer.")
         }
 
         val bufferObj = loadLocalCloudBuffer(context)
@@ -687,7 +687,7 @@ object FirebaseCloudSyncManager {
             val responseCode = conn.responseCode
             responseCode in 200..299
         } catch (e: Exception) {
-            Log.w(TAG, "Upload to Firebase failed (${e.message}). Local buffer updated successfully.")
+            AppLogger.w(TAG, "Upload to Firebase failed (${e.message}). Local buffer updated successfully.")
             false
         }
     }
@@ -703,7 +703,7 @@ object FirebaseCloudSyncManager {
             val file = getBufferFile(context)
             file.writeText(data.toString(2), Charsets.UTF_8)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to write local cloud buffer: ${e.message}")
+            AppLogger.e(TAG, "Failed to write local cloud buffer: ${e.message}")
         }
     }
 
@@ -716,7 +716,7 @@ object FirebaseCloudSyncManager {
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to read local cloud buffer: ${e.message}")
+            AppLogger.e(TAG, "Failed to read local cloud buffer: ${e.message}")
             null
         }
     }

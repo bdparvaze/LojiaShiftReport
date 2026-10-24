@@ -490,8 +490,8 @@ fun ShiftReportArchivesTab(
  * ---------------------------------------------------------------------- */
 @Composable
 fun StickySummaryBar(
-    expectedCash: Double,
-    variance: Double? = null,
+    expectedCash: Long,
+    variance: Long? = null,
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
 ) {
     val currency = currentCurrency
@@ -506,11 +506,11 @@ fun StickySummaryBar(
     ) {
         Column {
             Text(stringResource(R.string.cash_in_drawer), fontSize = 11.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-            Text("%.2f %s".format(expectedCash, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = ShiftColors.NetCashGreen)
+            Text(MoneyFormat.formatMinor(expectedCash, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = ShiftColors.NetCashGreen)
         }
         if (variance != null) {
-            val isOver = variance > 0
-            val isBalanced = Math.abs(variance) < 0.001
+            val isOver = variance > 0L
+            val isBalanced = variance == 0L
             val textColor = when {
                 isBalanced -> PosCashGreen
                 isOver -> PosCashGreen
@@ -531,7 +531,7 @@ fun StickySummaryBar(
                 border = BorderStroke(1.dp, textColor.copy(alpha = 0.3f))
             ) {
                 Text(
-                    text = "$label: ${if (variance > 0) "+" else ""}${String.format(Locale.US, "%.2f", variance)} $currency",
+                    text = "$label: ${if (variance > 0L) "+" else ""}${MoneyFormat.formatMinor(variance, currency)}",
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = textColor,

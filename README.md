@@ -61,7 +61,7 @@ com.lojia.shiftreport
 │   ├── LojiaAuthModels.kt
 │   ├── LojiaRegisterScreen.kt
 │   ├── QuickPinScreen.kt
-│   └── SecurityHelper.kt
+│   └── SecurityHelper.kt          # SecureStorageManager (MasterKey AES-256-GCM hardware storage)
 │
 ├── data/                          # 💾 Room Database, Entities, DAOs & Repositories
 │   ├── AppDatabase.kt
@@ -75,23 +75,28 @@ com.lojia.shiftreport
 ├── permission/                    # 🛂 Runtime Permission Handling
 │   └── PermissionManager.kt
 │
-├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps
+├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps (Pure Native Sockets)
 │   ├── BluetoothPrinterManager.kt
+│   ├── EscPosNativeProtocol.kt
 │   ├── PrinterSetupDialog.kt
 │   └── ThermalBitmapRenderer.kt
 │
 ├── report/                        # 📊 Shift Reports, Analytics, Ledgers & Summaries
 │   ├── AddEntryDialog.kt
 │   ├── DashboardScreen.kt
+│   ├── LiveCashflowTab.kt
+│   ├── MonthlyBreakdownComponents.kt
 │   ├── MonthlySalesCharts.kt
 │   ├── MonthlySalesSummaryView.kt
 │   ├── PosReconciliationSummary.kt
 │   ├── ReportViewModel.kt
+│   ├── SecondaryLedgerTabs.kt
 │   ├── ShiftReportArchivesTab.kt
 │   ├── ShiftReportComponents.kt
 │   ├── ShiftReportLedgerTabs.kt
 │   ├── ShiftReportModels.kt
-│   └── ShiftReportScreen.kt
+│   ├── ShiftReportScreen.kt
+│   └── ShiftReportSerializer.kt
 │
 ├── scanner/                       # 📄 Document Scanner, OCR, Word Export & PDF Security
 │   ├── DocumentCropCanvasView.kt
@@ -125,7 +130,7 @@ com.lojia.shiftreport
 │   ├── SettingsReportSection.kt
 │   └── SettingsScreen.kt
 │
-├── sync/                          # 🔄 Cloud Data Synchronization
+├── sync/                          # 🔄 Cloud Data Synchronization (Offline-first REST HTTP)
 │   ├── FirebaseCloudSyncManager.kt
 │   ├── FirebaseCloudSyncScheduler.kt
 │   └── FirebaseCloudSyncWorker.kt
@@ -159,10 +164,12 @@ com.lojia.shiftreport
     ├── MoneyFormat.kt
     ├── NotificationHelper.kt
     ├── OfflineBackupManager.kt
+    ├── PdfLogoRenderer.kt
+    ├── PdfNotesParser.kt
     ├── PdfPalette.kt
     ├── PdfReportGenerator.kt
     ├── PdfShareUtils.kt
-    ├── SecurityUtils.kt
+    ├── SecurityUtils.kt          # CryptoUtils (PBKDF2 SHA-256 210,000 iterations)
     └── UiText.kt
 ```
 

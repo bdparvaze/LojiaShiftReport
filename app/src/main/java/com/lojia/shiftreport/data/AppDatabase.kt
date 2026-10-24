@@ -448,7 +448,7 @@ abstract class AppDatabase : RoomDatabase() {
             return try {
                 INSTANCE ?: getDatabase(context, CoroutineScope(Dispatchers.IO + SupervisorJob()))
             } catch (e: Exception) {
-                android.util.Log.e("AppDatabase", "Database initialization or downgrade failure (data preserved): ${e.message}", e)
+                com.lojia.shiftreport.util.AppLogger.e("AppDatabase", "Database initialization or downgrade failure (data preserved): ${e.message}", e)
                 throw e
             }
         }

@@ -1,6 +1,6 @@
 package com.lojia.shiftreport.scanner
 
-import android.util.Log
+import com.lojia.shiftreport.util.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -35,10 +35,10 @@ object DocxExporter {
                 addZipEntry(zos, "word/document.xml", getDocumentXml(title, content))
             }
 
-            Log.d(TAG, "Docx file successfully created at ${outputFile.absolutePath}")
+            AppLogger.d(TAG, "Docx file successfully created at ${outputFile.absolutePath}")
             return@withContext true
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to create docx file", e)
+            AppLogger.e(TAG, "Failed to create docx file", e)
             return@withContext false
         }
     }
