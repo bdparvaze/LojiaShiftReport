@@ -181,401 +181,68 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    // Backup State & Progress
-    private val _isBackingUp = MutableStateFlow(false)
-    val isBackingUp: StateFlow<Boolean> = _isBackingUp.asStateFlow()
+    var googleAccount: MutableStateFlow<String> = MutableStateFlow(
+        prefs.getString("google_account", "Not Connected") ?: "Not Connected"
+    )
 
-    private val _backupProgress = MutableStateFlow(0f)
-    val backupProgress: StateFlow<Float> = _backupProgress.asStateFlow()
+    val backupManager = ReportBackupManager(
+        application = getApplication(),
+        scope = viewModelScope,
+        db = db,
+        reportDao = reportDao,
+        syncManager = syncManager,
+        prefs = prefs,
+        googleAccount = googleAccount,
+        emitUiMessage = { _uiMessage.emit(it) }
+    )
+
+    // Backup State & Progress
+    val isBackingUp: StateFlow<Boolean> = backupManager.isBackingUp
+    val backupProgress: StateFlow<Float> = backupManager.backupProgress
 
     // Google Drive Cloud Backup State
-    private val _driveAccountInfo = MutableStateFlow(GoogleDriveManager.getAccountInfo(context))
-    val driveAccountInfo: StateFlow<DriveAccountInfo> = _driveAccountInfo.asStateFlow()
+    val driveAccountInfo: StateFlow<DriveAccountInfo> = backupManager.driveAccountInfo
+    val isDriveUploading: StateFlow<Boolean> = backupManager.isDriveUploading
+    val isDriveDownloading: StateFlow<Boolean> = backupManager.isDriveDownloading
+    val isDriveLoadingList: StateFlow<Boolean> = backupManager.isDriveLoadingList
+    val driveBackupsList: StateFlow<List<DriveBackupItem>> = backupManager.driveBackupsList
+    val firebaseSyncState: StateFlow<com.lojia.shiftreport.sync.FirebaseSyncStatusState> = backupManager.firebaseSyncState
 
-    private val _isDriveUploading = MutableStateFlow(false)
-    val isDriveUploading: StateFlow<Boolean> = _isDriveUploading.asStateFlow()
+    val autoBackupFrequency: MutableStateFlow<String> get() = backupManager.autoBackupFrequency
+    val backupUsingCellular: MutableStateFlow<Boolean> get() = backupManager.backupUsingCellular
+    val lastBackupTime: MutableStateFlow<Long> get() = backupManager.lastBackupTime
+    val lastServerSyncTime: MutableStateFlow<Long> get() = backupManager.lastServerSyncTime
+    val lastServerSyncStatus: MutableStateFlow<String> get() = backupManager.lastServerSyncStatus
 
-    private val _isDriveDownloading = MutableStateFlow(false)
-    val isDriveDownloading: StateFlow<Boolean> = _isDriveDownloading.asStateFlow()
-
-    private val _isDriveLoadingList = MutableStateFlow(false)
-    val isDriveLoadingList: StateFlow<Boolean> = _isDriveLoadingList.asStateFlow()
-
-    private val _driveBackupsList = MutableStateFlow<List<DriveBackupItem>>(emptyList())
-    val driveBackupsList: StateFlow<List<DriveBackupItem>> = _driveBackupsList.asStateFlow()
-
-    fun refreshDriveAccount() {
-        _driveAccountInfo.value = GoogleDriveManager.getAccountInfo(context)
-        if (_driveAccountInfo.value.isConnected) {
-            fetchGoogleDriveBackups()
-        }
-    }
-
-    fun connectGoogleDrive(activityContext: android.content.Context) {
-        val authUrl = GoogleDriveManager.buildAuthUrl(activityContext)
-        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(authUrl)).apply {
-            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        activityContext.startActivity(intent)
-    }
-
-    fun disconnectGoogleDrive() {
-        GoogleDriveManager.disconnect(context)
-        _driveAccountInfo.value = GoogleDriveManager.getAccountInfo(context)
-        _driveBackupsList.value = emptyList()
-        viewModelScope.launch {
-            _uiMessage.emit(UiText.StringResource(R.string.drive_not_connected))
-        }
-    }
-
-    fun handleDriveAuthRedirect(uri: android.net.Uri, state: String? = null, onComplete: (Boolean) -> Unit = {}) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val code = uri.getQueryParameter("code")
-            val resolvedState = state ?: uri.getQueryParameter("state")
-            if (code.isNullOrEmpty()) {
-                GoogleDriveManager.clearOAuthState(context)
-                val error = uri.getQueryParameter("error") ?: "Authorization cancelled or failed"
-                _uiMessage.emit(UiText.DynamicString(error))
-                withContext(Dispatchers.Main) { onComplete(false) }
-                return@launch
-            }
-            val result = GoogleDriveManager.handleOAuthCallback(context, code, resolvedState)
-            result.onSuccess { account: DriveAccountInfo ->
-                _driveAccountInfo.value = account
-                val emailStr = account.email ?: "Google Account"
-                _uiMessage.emit(UiText.StringResource(R.string.drive_connected_as, emailStr))
-                fetchGoogleDriveBackups()
-                withContext(Dispatchers.Main) { onComplete(true) }
-            }.onFailure { err ->
-                val msg = err.localizedMessage ?: "Drive authentication failed"
-                _uiMessage.emit(UiText.DynamicString(msg))
-                withContext(Dispatchers.Main) { onComplete(false) }
-            }
-        }
-    }
-
-    fun backupToGoogleDrive(
-        onSuccess: (DriveBackupItem) -> Unit = {},
-        onFailure: (String) -> Unit = {}
-    ) {
-        if (_isDriveUploading.value || _isBackingUp.value) return
-        viewModelScope.launch(Dispatchers.IO) {
-            _isDriveUploading.value = true
-            _isBackingUp.value = true
-            _backupProgress.value = 0.2f
-            delay(150)
-            _backupProgress.value = 0.5f
-
-            val result = GoogleDriveManager.uploadBackup(context, db)
-            _backupProgress.value = 1.0f
-            _isDriveUploading.value = false
-            _isBackingUp.value = false
-
-            result.onSuccess { item ->
-                val now = System.currentTimeMillis()
-                lastBackupTime.value = now
-                prefs.edit().putLong("last_backup_time", now).apply()
-
-                _uiMessage.emit(UiText.StringResource(R.string.drive_backup_success, item.name))
-                NotificationHelper.sendTestPushNotification(
-                    context,
-                    "☁️ Google Drive Backup",
-                    "Uploaded ${item.name} (${item.description}) to Google Drive App Folder."
-                )
-                fetchGoogleDriveBackups()
-                withContext(Dispatchers.Main) { onSuccess(item) }
-            }.onFailure { error ->
-                val msg = error.localizedMessage ?: "Failed to upload to Google Drive"
-                _uiMessage.emit(UiText.DynamicString(msg))
-                withContext(Dispatchers.Main) { onFailure(msg) }
-            }
-        }
-    }
-
-    fun fetchGoogleDriveBackups(
-        onResult: (List<DriveBackupItem>) -> Unit = {}
-    ) {
-        if (!GoogleDriveManager.isConnected(context)) return
-        viewModelScope.launch(Dispatchers.IO) {
-            _isDriveLoadingList.value = true
-            val result = GoogleDriveManager.listBackups(context)
-            _isDriveLoadingList.value = false
-            result.onSuccess { list ->
-                _driveBackupsList.value = list
-                withContext(Dispatchers.Main) { onResult(list) }
-            }.onFailure { error ->
-                val msg = error.localizedMessage ?: "Failed to fetch Drive backups"
-                _uiMessage.emit(UiText.DynamicString(msg))
-            }
-        }
-    }
-
-    fun restoreFromGoogleDrive(
-        item: DriveBackupItem,
-        onSuccess: (Int) -> Unit = {},
-        onFailure: (String) -> Unit = {}
-    ) {
-        if (_isDriveDownloading.value || _isBackingUp.value) return
-        viewModelScope.launch(Dispatchers.IO) {
-            _isDriveDownloading.value = true
-            _isBackingUp.value = true
-            val downloadResult = GoogleDriveManager.downloadBackup(context, item.id)
-
-            downloadResult.onSuccess { jsonString ->
-                val activeUser = userProfile.value?.fullName ?: "Admin"
-                val restoreResult = OfflineBackupManager.restoreBackupFromString(
-                    jsonString,
-                    db,
-                    sourceDescription = "Google Drive (${item.name})",
-                    adminUser = activeUser
-                )
-                _isDriveDownloading.value = false
-                _isBackingUp.value = false
-
-                restoreResult.onSuccess { count ->
-                    syncManager.forceSync { _: Boolean, _: String -> }
-                    _uiMessage.emit(UiText.StringResource(R.string.restore_success_msg, count))
-                    NotificationHelper.sendTestPushNotification(
-                        context,
-                        "🔄 Google Drive Data Restored",
-                        "Restored $count records from Google Drive (${item.name})."
-                    )
-                    withContext(Dispatchers.Main) { onSuccess(count) }
-                }.onFailure { restoreErr ->
-                    val msg = restoreErr.localizedMessage ?: "Failed to restore backup"
-                    _uiMessage.emit(UiText.StringResource(R.string.invalid_backup_file))
-                    withContext(Dispatchers.Main) { onFailure(msg) }
-                }
-            }.onFailure { downloadErr ->
-                _isDriveDownloading.value = false
-                _isBackingUp.value = false
-                val msg = downloadErr.localizedMessage ?: "Failed to download backup from Google Drive"
-                _uiMessage.emit(UiText.DynamicString(msg))
-                withContext(Dispatchers.Main) { onFailure(msg) }
-            }
-        }
-    }
-
-    fun parseDriveBackupSummary(
-        item: DriveBackupItem,
-        onResult: (BackupSummary?) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val downloadResult = GoogleDriveManager.downloadBackup(context, item.id)
-            downloadResult.onSuccess { jsonString ->
-                val summaryResult = OfflineBackupManager.parseBackupSummaryFromString(jsonString)
-                withContext(Dispatchers.Main) { onResult(summaryResult.getOrNull()) }
-            }.onFailure {
-                withContext(Dispatchers.Main) { onResult(null) }
-            }
-        }
-    }
-
-    // =========================================================================
-    // Firebase Cloud Sync (Offline-First multi-device sync with Room primary)
-    // =========================================================================
-    val firebaseSyncState: StateFlow<FirebaseSyncStatusState> = FirebaseCloudSyncManager.syncState
-
-    fun toggleFirebaseCloudSync(enabled: Boolean) {
-        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) return
-        FirebaseCloudSyncManager.setSyncEnabled(context, enabled)
-        viewModelScope.launch {
-            if (enabled) {
-                _uiMessage.emit(UiText.StringResource(R.string.firebase_sync_enable))
-            } else {
-                _uiMessage.emit(UiText.StringResource(R.string.firebase_sync_disabled))
-            }
-        }
-    }
-
-    fun syncFirebaseNow(
-        onComplete: (Boolean, String) -> Unit = { _, _ -> }
-    ) {
-        if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
-            viewModelScope.launch {
-                _uiMessage.emit(UiText.StringResource(R.string.cloud_sync_not_available))
-                onComplete(false, "Cloud sync is not available in this version")
-            }
-            return
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = FirebaseCloudSyncManager.performSync(context, isManual = true)
-            if (result.success) {
-                _uiMessage.emit(UiText.StringResource(R.string.firebase_sync_success))
-            } else {
-                _uiMessage.emit(UiText.DynamicString(result.message))
-            }
-            withContext(Dispatchers.Main) { onComplete(result.success, result.message) }
-        }
-    }
-
-    fun updateFirebaseCustomUrl(url: String) {
-        FirebaseCloudSyncManager.setCustomFirebaseUrl(context, url)
-    }
-
-    var googleAccount: MutableStateFlow<String> = MutableStateFlow(prefs.getString("google_account", "") ?: "")
-    var autoBackupFrequency: MutableStateFlow<String> = MutableStateFlow(prefs.getString("auto_backup_freq", "Daily") ?: "Daily")
-    var backupUsingCellular: MutableStateFlow<Boolean> = MutableStateFlow(prefs.getBoolean("backup_cellular", true))
-    var lastBackupTime: MutableStateFlow<Long> = MutableStateFlow(prefs.getLong("last_backup_time", System.currentTimeMillis() - 3600000L))
-
-    // WorkManager Background Server Sync State (Firebase Cloud Sync)
-    var lastServerSyncTime: MutableStateFlow<Long> = MutableStateFlow(
-        prefs.getLong("firebase_last_sync_time", System.currentTimeMillis() - 1800000L)
-    )
-    var lastServerSyncStatus: MutableStateFlow<String> = MutableStateFlow(
-        prefs.getString("firebase_last_sync_summary", "Active Periodic Sync (WorkManager)") ?: "Active Periodic Sync (WorkManager)"
-    )
-
-    fun triggerServerSyncNow() {
-        FirebaseCloudSyncScheduler.triggerImmediateSync(getApplication())
-        viewModelScope.launch {
-            _uiMessage.emit(UiText.StringResource(R.string.background_sync_task_enqueued))
-            delay(1200)
-            lastServerSyncTime.value = System.currentTimeMillis()
-            lastServerSyncStatus.value = "Synced via WorkManager"
-        }
-    }
-
-    fun updatePeriodicSyncInterval(intervalMinutes: Long, wifiOnly: Boolean = false) {
-        FirebaseCloudSyncScheduler.schedulePeriodicSync(
-            getApplication(),
-            intervalMinutes = intervalMinutes
-        )
-        viewModelScope.launch {
-            _uiMessage.emit(UiText.StringResource(R.string.toast_sync_interval_set, intervalMinutes.toInt()))
-        }
-    }
-
-    fun triggerCloudBackup() {
-        if (_isBackingUp.value) return
-        viewModelScope.launch(Dispatchers.IO) {
-            _isBackingUp.value = true
-            _backupProgress.value = 0.1f
-            delay(400)
-            _backupProgress.value = 0.35f
-            delay(500)
-            _backupProgress.value = 0.7f
-            delay(400)
-            _backupProgress.value = 1.0f
-            val now = System.currentTimeMillis()
-            lastBackupTime.value = now
-            prefs.edit().putLong("last_backup_time", now).apply()
-            _isBackingUp.value = false
-            _uiMessage.emit(UiText.StringResource(R.string.toast_cloud_backup_success, googleAccount.value))
-            NotificationHelper.sendTestPushNotification(
-                context,
-                "☁️ Cloud Backup Successful",
-                "Your store database and shift ledgers were backed up to Google Drive at ${java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(now))}."
-            )
-        }
-    }
-
-    fun createOfflineBackup(
-        onSuccess: (BackupInfo) -> Unit = {},
-        onFailure: (String) -> Unit = {}
-    ) {
-        if (_isBackingUp.value) return
-        viewModelScope.launch(Dispatchers.IO) {
-            _isBackingUp.value = true
-            _backupProgress.value = 0.2f
-            delay(200)
-            _backupProgress.value = 0.6f
-
-            val result = OfflineBackupManager.createBackup(context, db)
-            _backupProgress.value = 1.0f
-            _isBackingUp.value = false
-
-            result.onSuccess { info ->
-                val now = System.currentTimeMillis()
-                lastBackupTime.value = now
-                prefs.edit().putLong("last_backup_time", now).apply()
-
-                _uiMessage.emit(UiText.StringResource(R.string.backup_created_success, info.fileName))
-                NotificationHelper.sendTestPushNotification(
-                    context,
-                    "📦 Offline Backup Created",
-                    "Saved to Downloads: ${info.fileName} (${info.totalRecords} records)"
-                )
-                withContext(Dispatchers.Main) { onSuccess(info) }
-            }.onFailure { error ->
-                val msg = error.localizedMessage ?: "Failed to create backup"
-                _uiMessage.emit(UiText.DynamicString(msg))
-                withContext(Dispatchers.Main) { onFailure(msg) }
-            }
-        }
-    }
-
-    fun parseBackupSummary(
-        uri: android.net.Uri,
-        onResult: (BackupSummary?) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = OfflineBackupManager.parseBackupSummary(context, uri)
-            withContext(Dispatchers.Main) { onResult(result.getOrNull()) }
-        }
-    }
-
-    fun restoreOfflineBackup(
-        uri: android.net.Uri,
-        onSuccess: (Int) -> Unit = {},
-        onFailure: (String) -> Unit = {}
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isBackingUp.value = true
-            val activeUser = userProfile.value?.fullName ?: "Admin"
-            val result = OfflineBackupManager.restoreBackup(context, uri, db, activeUser)
-            _isBackingUp.value = false
-
-            result.onSuccess { count ->
-                syncManager.forceSync { _: Boolean, _: String -> }
-                _uiMessage.emit(UiText.StringResource(R.string.restore_success_msg, count))
-                NotificationHelper.sendTestPushNotification(
-                    context,
-                    "🔄 Data Restored Successfully",
-                    "Restored $count records into your local store database."
-                )
-                withContext(Dispatchers.Main) { onSuccess(count) }
-            }.onFailure { error ->
-                val msg = error.localizedMessage ?: "Failed to restore backup"
-                _uiMessage.emit(UiText.StringResource(R.string.invalid_backup_file))
-                withContext(Dispatchers.Main) { onFailure(msg) }
-            }
-        }
-    }
-
-    fun clearAllBusinessData(
-        onSuccess: () -> Unit = {},
-        onFailure: (String) -> Unit = {}
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    db.clearAllTables()
-                    val defaultCashier = Cashier(
-                        id = 0,
-                        name = "Lojia Admin",
-                        role = "ADMIN",
-                        active = true
-                    )
-                    reportDao.insertCashiers(listOf(defaultCashier))
-                    
-                    val defaultProfile = UserProfile(
-                        id = 1,
-                        fullName = "Store Owner",
-                        currentRole = "ADMIN"
-                    )
-                    reportDao.saveUserProfile(defaultProfile)
-                }
-                syncManager.forceSync { _: Boolean, _: String -> }
-                _uiMessage.emit(UiText.StringResource(R.string.all_data_cleared_success))
-                onSuccess()
-            } catch (e: Exception) {
-                val err = e.localizedMessage ?: "Failed to clear data"
-                _uiMessage.emit(UiText.DynamicString(err))
-                onFailure(err)
-            }
-        }
-    }
+    fun refreshDriveAccount() = backupManager.refreshDriveAccount()
+    fun connectGoogleDrive(activityContext: android.content.Context) = backupManager.connectGoogleDrive(activityContext)
+    fun disconnectGoogleDrive() = backupManager.disconnectGoogleDrive()
+    fun handleDriveAuthRedirect(uri: android.net.Uri, state: String? = null, onComplete: (Boolean) -> Unit = {}) =
+        backupManager.handleDriveAuthRedirect(uri, state, onComplete)
+    fun backupToGoogleDrive(onSuccess: (DriveBackupItem) -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.backupToGoogleDrive(onSuccess, onFailure)
+    fun fetchGoogleDriveBackups(onSuccess: (List<DriveBackupItem>) -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.fetchGoogleDriveBackups(onSuccess, onFailure)
+    fun restoreFromGoogleDrive(item: DriveBackupItem, onSuccess: (Int) -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.restoreFromGoogleDrive(item, onSuccess, onFailure)
+    fun parseDriveBackupSummary(item: DriveBackupItem, onResult: (BackupSummary?) -> Unit) =
+        backupManager.parseDriveBackupSummary(item, onResult)
+    fun toggleFirebaseCloudSync(enabled: Boolean) = backupManager.toggleFirebaseCloudSync(enabled)
+    fun syncFirebaseNow(onSuccess: () -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.syncFirebaseNow(onSuccess, onFailure)
+    fun updateFirebaseCustomUrl(url: String) = backupManager.updateFirebaseCustomUrl(url)
+    fun triggerServerSyncNow() = backupManager.triggerServerSyncNow()
+    fun updatePeriodicSyncInterval(intervalMinutes: Long, wifiOnly: Boolean = false) =
+        backupManager.updatePeriodicSyncInterval(intervalMinutes, wifiOnly)
+    fun triggerCloudBackup() = backupManager.triggerCloudBackup()
+    fun createOfflineBackup(onSuccess: (BackupInfo) -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.createOfflineBackup(onSuccess, onFailure)
+    fun parseBackupSummary(uri: android.net.Uri, onResult: (BackupSummary?) -> Unit) =
+        backupManager.parseBackupSummary(uri, onResult)
+    fun restoreOfflineBackup(uri: android.net.Uri, onSuccess: (Int) -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.restoreOfflineBackup(uri, onSuccess, onFailure)
+    fun clearAllBusinessData(onSuccess: () -> Unit = {}, onFailure: (String) -> Unit = {}) =
+        backupManager.clearAllBusinessData(onSuccess, onFailure)
 
     // Shift Form State
     var selectedCashier = MutableStateFlow("")

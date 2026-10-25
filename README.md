@@ -88,6 +88,7 @@ com.lojia.shiftreport
 │   ├── MonthlySalesCharts.kt
 │   ├── MonthlySalesSummaryView.kt
 │   ├── PosReconciliationSummary.kt
+│   ├── ReportBackupManager.kt      # Google Drive, Firebase and offline backup orchestrator
 │   ├── ReportEntryTab.kt
 │   ├── ReportViewModel.kt
 │   ├── SecondaryLedgerTabs.kt
@@ -123,6 +124,7 @@ com.lojia.shiftreport
 │   ├── DataPreservationDialogs.kt
 │   ├── GoogleMapsLocationPickerModal.kt
 │   ├── LanguageSettingsComponent.kt
+│   ├── ProfileComponents.kt        # Accordion profile rows, dialog text fields, phone picker
 │   ├── ProfileScreen.kt
 │   ├── RegionalPreferencesSection.kt
 │   ├── SavedAddressesScreen.kt
