@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.lojia.shiftreport.util.AppLogger
-import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.CryptoUtils
 
 /**
  * ══════════════════════════════════════════════════════════════════════════════
@@ -61,7 +61,7 @@ object SecureStorageManager {
     fun storeEncryptedPin(context: Context, pin: String) {
         val trimmed = pin.trim()
         if (trimmed.isEmpty()) return
-        val hashedPin = SecurityUtils.hashSecret(trimmed)
+        val hashedPin = CryptoUtils.hashSecret(trimmed)
         getEncryptedPrefs(context).edit()
             .putString(KEY_ENCRYPTED_PIN_HASH, hashedPin)
             .apply()
@@ -72,7 +72,7 @@ object SecureStorageManager {
      */
     fun verifyEncryptedPin(context: Context, enteredPin: String): Boolean {
         val storedHash = getEncryptedPrefs(context).getString(KEY_ENCRYPTED_PIN_HASH, null) ?: return false
-        val verifyResult = SecurityUtils.verifySecretWithUpgrade(enteredPin.trim(), storedHash)
+        val verifyResult = CryptoUtils.verifySecretWithUpgrade(enteredPin.trim(), storedHash)
         if (verifyResult.isMatch && verifyResult.newHashToStore != null) {
             getEncryptedPrefs(context).edit()
                 .putString(KEY_ENCRYPTED_PIN_HASH, verifyResult.newHashToStore)

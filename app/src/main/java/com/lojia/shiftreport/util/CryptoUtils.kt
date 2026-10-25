@@ -7,7 +7,7 @@ import javax.crypto.spec.PBEKeySpec
 
 /**
  * ══════════════════════════════════════════════════════════════════════════════
- * CRYPTOGRAPHY ENGINE LAYER: SecurityUtils
+ * CRYPTOGRAPHY ENGINE LAYER: CryptoUtils
  * ══════════════════════════════════════════════════════════════════════════════
  * Responsibility: Pure, stateless cryptographic mathematical operations.
  * - PBKDF2WithHmacSHA256 password and PIN hashing (210,000 iterations).
@@ -15,9 +15,9 @@ import javax.crypto.spec.PBEKeySpec
  * - Cryptographic salt generation and hash algorithm migration/upgrading.
  *
  * NOTE: SecurityUtils has NO Android UI or SharedPreferences dependencies.
- * For persistent hardware-backed keystore encryption, use [com.lojia.shiftreport.auth.SecurityHelper].
+ * For persistent hardware-backed keystore encryption, use [com.lojia.shiftreport.auth.SecureStorageManager].
  */
-object SecurityUtils {
+object CryptoUtils {
     private const val DEFAULT_SALT = "lojia_pos_salt_v1"
     private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
     const val PBKDF2_ITERATIONS = 210000
@@ -181,7 +181,7 @@ object SecurityUtils {
 }
 
 /**
- * Domain alias for [SecurityUtils] clearly identifying it as the pure cryptographic calculation utility.
+ * Backward compatibility typealias for [CryptoUtils].
  */
-typealias CryptoUtils = SecurityUtils
+typealias SecurityUtils = CryptoUtils
 

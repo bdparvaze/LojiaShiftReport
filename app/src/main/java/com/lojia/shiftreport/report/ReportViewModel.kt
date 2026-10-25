@@ -711,7 +711,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         madaPayments,
         digitalWallet
     ) { cash, mada, wallet ->
-        com.lojia.shiftreport.util.MoneyFormat.add(cash, mada, wallet)
+        val sumMinor = MoneyFormat.addMinor(
+            MoneyFormat.toMinorUnits(cash),
+            MoneyFormat.toMinorUnits(mada),
+            MoneyFormat.toMinorUnits(wallet)
+        )
+        MoneyFormat.toMajorUnits(sumMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedTotalGrossSales: StateFlow<Double> = totalSales
@@ -723,7 +728,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalDiscounts,
         salesReturns
     ) { sales, disc, ret ->
-        com.lojia.shiftreport.util.MoneyFormat.subtract(com.lojia.shiftreport.util.MoneyFormat.subtract(sales, disc), ret).coerceAtLeast(0.0)
+        val s = MoneyFormat.toMinorUnits(sales)
+        val d = MoneyFormat.toMinorUnits(disc)
+        val r = MoneyFormat.toMinorUnits(ret)
+        val netMinor = (s - d - r).coerceAtLeast(0L)
+        MoneyFormat.toMajorUnits(netMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     // 2. Cash In & Outflows
@@ -732,7 +741,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         grossCash,
         totalPreviousDueCash
     ) { open, cashSales, prevDueCash ->
-        com.lojia.shiftreport.util.MoneyFormat.add(open, cashSales, prevDueCash)
+        val sumMinor = MoneyFormat.addMinor(
+            MoneyFormat.toMinorUnits(open),
+            MoneyFormat.toMinorUnits(cashSales),
+            MoneyFormat.toMinorUnits(prevDueCash)
+        )
+        MoneyFormat.toMajorUnits(sumMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalCashOut: StateFlow<Double> = combine(
@@ -740,7 +754,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalStaffAdvances,
         totalPurchasedCash
     ) { exp, adv, purchCash ->
-        com.lojia.shiftreport.util.MoneyFormat.add(exp, adv, purchCash)
+        val sumMinor = MoneyFormat.addMinor(
+            MoneyFormat.toMinorUnits(exp),
+            MoneyFormat.toMinorUnits(adv),
+            MoneyFormat.toMinorUnits(purchCash)
+        )
+        MoneyFormat.toMajorUnits(sumMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedTotalExpenses: StateFlow<Double> = totalCashOut
@@ -751,7 +770,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalCashIn,
         totalCashOut
     ) { cin, cout ->
-        com.lojia.shiftreport.util.MoneyFormat.subtract(cin, cout)
+        val diffMinor = MoneyFormat.subtractMinor(
+            MoneyFormat.toMinorUnits(cin),
+            MoneyFormat.toMinorUnits(cout)
+        )
+        MoneyFormat.toMajorUnits(diffMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedCashInDrawer: StateFlow<Double> = expectedCashInDrawer
@@ -762,7 +785,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         actualCashCount,
         expectedCashInDrawer
     ) { actual, expected ->
-        com.lojia.shiftreport.util.MoneyFormat.calculateVariance(actual, expected)
+        val varMinor = MoneyFormat.calculateVarianceMinor(
+            MoneyFormat.toMinorUnits(actual),
+            MoneyFormat.toMinorUnits(expected)
+        )
+        MoneyFormat.toMajorUnits(varMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedCardAndDigital: StateFlow<Double> = combine(
@@ -770,7 +797,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalPreviousDueCard,
         digitalWallet
     ) { mada, prevCard, wallet ->
-        com.lojia.shiftreport.util.MoneyFormat.add(mada, prevCard, wallet)
+        val sumMinor = MoneyFormat.addMinor(
+            MoneyFormat.toMinorUnits(mada),
+            MoneyFormat.toMinorUnits(prevCard),
+            MoneyFormat.toMinorUnits(wallet)
+        )
+        MoneyFormat.toMajorUnits(sumMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedNetBalance: StateFlow<Double> = combine(
@@ -778,7 +810,10 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalCashOut,
         totalUnpaidLoss
     ) { sales, exp, unpaid ->
-        com.lojia.shiftreport.util.MoneyFormat.subtract(com.lojia.shiftreport.util.MoneyFormat.subtract(sales, exp), unpaid)
+        val s = MoneyFormat.toMinorUnits(sales)
+        val e = MoneyFormat.toMinorUnits(exp)
+        val u = MoneyFormat.toMinorUnits(unpaid)
+        MoneyFormat.toMajorUnits(s - e - u)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     private val _uiMessage = MutableSharedFlow<com.lojia.shiftreport.util.UiText>()

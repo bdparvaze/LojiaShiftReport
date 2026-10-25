@@ -24,11 +24,11 @@ object BiometricHelper {
     }
 
     fun isBiometricEnabled(context: Context): Boolean {
-        return SecurityHelper.getEncryptedPrefs(context).getBoolean(KEY_BIOMETRIC_PREF_ENABLED, false)
+        return SecureStorageManager.getEncryptedPrefs(context).getBoolean(KEY_BIOMETRIC_PREF_ENABLED, false)
     }
 
     fun setBiometricEnabled(context: Context, enabled: Boolean) {
-        SecurityHelper.getEncryptedPrefs(context).edit()
+        SecureStorageManager.getEncryptedPrefs(context).edit()
             .putBoolean(KEY_BIOMETRIC_PREF_ENABLED, enabled)
             .apply()
     }
