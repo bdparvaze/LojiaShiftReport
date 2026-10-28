@@ -73,10 +73,15 @@ com.lojia.shiftreport
 ├── permission/                    # 🛂 Runtime Permission Handling
 │   └── PermissionManager.kt
 │
-├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps (Pure Native Sockets)
-│   ├── BluetoothPrinterManager.kt
-│   ├── PrinterSetupDialog.kt
-│   └── ThermalBitmapRenderer.kt
+├── printer/                       # 🖨️ ESC/POS Thermal Printing & Bitmaps (WiFi Port 9100 & Bluetooth)
+│   ├── BluetoothPrinterManager.kt  # Clean RFCOMM Bluetooth thermal printer manager
+│   ├── PrinterDiscoveryManager.kt  # Local network printer discovery via mDNS / NSD
+│   ├── PrinterManager.kt           # Common printer abstraction interface
+│   ├── PrinterModels.kt            # PrinterDevice, PrinterType & PrinterConnectionStatus
+│   ├── PrinterSetupDialog.kt       # Modal dialog host
+│   ├── PrinterSetupScreen.kt       # Dual-tab (WiFi & Bluetooth) setup, discovery & test print UI
+│   ├── ThermalBitmapRenderer.kt    # Non-Latin (Bengali/Arabic) monochrome bitmap rasterizer
+│   └── WifiPrinterManager.kt       # Primary Foodics-style TCP socket printer manager (Port 9100)
 │
 ├── report/                        # 📊 Shift Reports, Analytics, Ledgers & Summaries
 │   ├── AddEntryDialog.kt

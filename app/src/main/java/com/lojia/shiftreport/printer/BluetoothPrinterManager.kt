@@ -3,6 +3,7 @@ package com.lojia.shiftreport.printer
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
@@ -219,12 +220,94 @@ object EscPosNativeProtocol {
  * Native Bluetooth & Network ESC/POS Thermal Printer Manager.
  * 100% Native Google / Android implementation replacing third-party DantSu ESCPOS library.
  */
-class BluetoothPrinterManager(private val context: Context) {
+class BluetoothPrinterManager(private val context: Context) : PrinterManager {
 
     private val prefsRepository = PreferencesRepository.getInstance(context)
 
     companion object {
         private const val TAG = "BluetoothPrinterManager"
+    }
+
+    private var activeSocket: BluetoothSocket? = null
+    private var connectedBluetoothDevice: PrinterDevice? = null
+
+    override fun isConnected(): Boolean {
+        return activeSocket?.isConnected == true
+    }
+
+    override fun getConnectedDevice(): PrinterDevice? = connectedBluetoothDevice
+
+    @SuppressLint("MissingPermission")
+    override suspend fun connect(device: PrinterDevice): Result<Unit> = withContext(Dispatchers.IO) {
+        disconnect()
+        if (!hasBluetoothPermissions()) {
+            return@withContext Result.failure(SecurityException("Bluetooth permission required"))
+        }
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            ?: return@withContext Result.failure(IllegalStateException("Bluetooth adapter unavailable."))
+        if (!bluetoothAdapter.isEnabled) {
+            return@withContext Result.failure(IllegalStateException("Bluetooth is disabled."))
+        }
+        try {
+            val remoteDevice = bluetoothAdapter.getRemoteDevice(device.address)
+                ?: return@withContext Result.failure(IllegalStateException("Device not found at ${device.address}"))
+            bluetoothAdapter.cancelDiscovery()
+            val socket = remoteDevice.createRfcommSocketToServiceRecord(EscPosNativeProtocol.SPP_UUID)
+            socket.connect()
+            activeSocket = socket
+            connectedBluetoothDevice = device
+            prefsRepository.savePrinterAddress(device.address)
+            prefsRepository.savePrinterConnectionType("bluetooth")
+            AppLogger.i(TAG, "Connected to Bluetooth printer: ${device.name}")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to connect to Bluetooth printer ${device.address}", e)
+            disconnect()
+            Result.failure(e)
+        }
+    }
+
+    override fun disconnect() {
+        try {
+            activeSocket?.close()
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "Error closing Bluetooth socket: ${e.message}")
+        } finally {
+            activeSocket = null
+            connectedBluetoothDevice = null
+        }
+    }
+
+    override suspend fun printBitmap(bitmap: Bitmap): Result<Unit> = withContext(Dispatchers.IO) {
+        val bytes = EscPosNativeProtocol.bitmapToRasterEscPos(bitmap)
+        val socket = activeSocket
+        if (socket == null || !socket.isConnected) {
+            val printerAddress = getSavedPrinterAddress()
+            if (printerAddress.isBlank()) {
+                return@withContext Result.failure(IllegalStateException("No Bluetooth printer configured."))
+            }
+            val tempDevice = PrinterDevice("Bluetooth Printer", printerAddress, PrinterType.BLUETOOTH)
+            val connRes = connect(tempDevice)
+            if (connRes.isFailure) return@withContext connRes
+        }
+        try {
+            activeSocket?.outputStream?.let { out ->
+                out.write(EscPosNativeProtocol.INIT)
+                out.write(bytes)
+                out.write(EscPosNativeProtocol.LINE_FEED)
+                out.write(EscPosNativeProtocol.LINE_FEED)
+                out.write(EscPosNativeProtocol.PAPER_CUT)
+                out.flush()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to print bitmap over Bluetooth", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun printText(text: String): Result<Unit> = withContext(Dispatchers.IO) {
+        printFormattedText(text)
     }
 
     /**
@@ -374,26 +457,7 @@ class BluetoothPrinterManager(private val context: Context) {
         val bytesToSend = EscPosNativeProtocol.encodeFormattedText(formattedText, paperWidth.charsPerLine, widthPx)
 
         if (connectionType == "network") {
-            val ip = getSavedNetworkIp()
-            val port = getSavedNetworkPort()
-            if (ip.isBlank()) {
-                return@withContext Result.failure(IllegalStateException("No Network printer IP configured in settings."))
-            }
-
-            return@withContext try {
-                val socket = Socket()
-                socket.connect(InetSocketAddress(ip, port), 4000)
-                socket.outputStream.use { out ->
-                    out.write(bytesToSend)
-                    out.flush()
-                }
-                socket.close()
-                AppLogger.d(TAG, "Receipt successfully printed over native TCP to $ip:$port")
-                Result.success(Unit)
-            } catch (e: Exception) {
-                AppLogger.e(TAG, "Failed to print to Network ESC/POS printer ($ip:$port): ${e.message}", e)
-                Result.failure(e)
-            }
+            return@withContext WifiPrinterManager(context).printText(formattedText)
         }
 
         val printerAddress = getSavedPrinterAddress()
