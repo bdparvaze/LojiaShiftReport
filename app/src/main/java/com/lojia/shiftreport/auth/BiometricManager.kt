@@ -1,20 +1,21 @@
 package com.lojia.shiftreport.auth
 
-import com.lojia.shiftreport.R
-import com.lojia.shiftreport.ui.theme.*
 import android.content.Context
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
+import androidx.biometric.BiometricManager as AndroidXBiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -27,10 +28,9 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -45,27 +45,33 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import com.lojia.shiftreport.BuildConfig
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.SecurityUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * Authentication Screen Pages:
- * LOGIN, REGISTER, SUCCESS, QUICK_PIN
- *
- * International Standard Auth Flow:
- * 1. First launch / no security configured → Direct to standard Login (or Register for new accounts).
- *    No default Quick PIN or Biometric is forced on the user.
- * 2. Successful Registration / First Login → Directly navigates into the main app without forcing PIN setup.
- * 3. User enables Quick Login + PIN/Biometric in Settings → Next time (or post-logout), shows Quick PIN / Biometric lock screen.
- * 4. User can always fall back to standard password login using the "Use Password" action.
- */
+enum class BiometricStatus {
+    AVAILABLE,
+    NOT_ENROLLED,
+    NO_HARDWARE,
+    UNAVAILABLE
+}
+
+sealed class BiometricAuthResult {
+    object Success : BiometricAuthResult()
+    data class Error(val errorCode: Int, val errString: CharSequence) : BiometricAuthResult()
+    object Failed : BiometricAuthResult()
+    object UserCanceled : BiometricAuthResult()
+    object UsePinFallback : BiometricAuthResult()
+}
+
 enum class AuthScreenPage {
     LOGIN,
     REGISTER,
@@ -73,6 +79,217 @@ enum class AuthScreenPage {
     QUICK_PIN
 }
 
+/**
+ * Unified Biometric & Authentication Manager for Lojia POS.
+ * Combines BiometricAuthManager, BiometricHelper, and BiometricLockScreen into a single cohesive unit.
+ */
+object BiometricManager {
+
+    private const val KEY_BIOMETRIC_PREF_ENABLED = "biometric_auth_pref_enabled"
+
+    /**
+     * Checks if biometric hardware is present and ready for authentication.
+     */
+    fun isBiometricAvailable(context: Context): Boolean {
+        val manager = AndroidXBiometricManager.from(context)
+        return manager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == AndroidXBiometricManager.BIOMETRIC_SUCCESS
+    }
+
+    /**
+     * Alias for isBiometricAvailable.
+     */
+    fun isHardwareAvailable(context: Context): Boolean = isBiometricAvailable(context)
+
+    /**
+     * Returns raw AndroidX biometric authentication capability code.
+     */
+    fun canAuthenticate(context: Context): Int {
+        val manager = AndroidXBiometricManager.from(context)
+        return manager.canAuthenticate(BIOMETRIC_STRONG or BIOMETRIC_WEAK)
+    }
+
+    /**
+     * Checks status with categorized enum (AVAILABLE, NOT_ENROLLED, NO_HARDWARE, UNAVAILABLE).
+     */
+    fun checkBiometricAvailability(context: Context): BiometricStatus {
+        val biometricManager = AndroidXBiometricManager.from(context)
+        return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)) {
+            AndroidXBiometricManager.BIOMETRIC_SUCCESS -> BiometricStatus.AVAILABLE
+            AndroidXBiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricStatus.NOT_ENROLLED
+            AndroidXBiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> BiometricStatus.NO_HARDWARE
+            else -> BiometricStatus.UNAVAILABLE
+        }
+    }
+
+    fun getStatusDescription(context: Context, status: BiometricStatus): String {
+        return when (status) {
+            BiometricStatus.AVAILABLE -> context.getString(R.string.biometric_auth)
+            BiometricStatus.NOT_ENROLLED -> context.getString(R.string.biometric_disabled_desc)
+            BiometricStatus.NO_HARDWARE -> context.getString(R.string.biometric_not_supported_window)
+            BiometricStatus.UNAVAILABLE -> context.getString(R.string.biometric_disabled_desc)
+        }
+    }
+
+    fun isBiometricEnabled(context: Context): Boolean {
+        return SecureStorageManager.getEncryptedPrefs(context).getBoolean(KEY_BIOMETRIC_PREF_ENABLED, false)
+    }
+
+    fun setBiometricEnabled(context: Context, enabled: Boolean) {
+        SecureStorageManager.getEncryptedPrefs(context).edit()
+            .putBoolean(KEY_BIOMETRIC_PREF_ENABLED, enabled)
+            .apply()
+    }
+
+    /**
+     * Standard simplified biometric prompt helper.
+     */
+    fun showBiometricPrompt(
+        activity: FragmentActivity,
+        onSuccess: () -> Unit = {},
+        onError: (errorCode: Int, errString: CharSequence) -> Unit = { _, _ -> }
+    ) {
+        showBiometricPrompt(
+            activity = activity,
+            title = activity.getString(R.string.biometric_prompt_default_title),
+            subtitle = activity.getString(R.string.biometric_prompt_default_subtitle),
+            description = activity.getString(R.string.biometric_auth_description)
+        ) { result ->
+            when (result) {
+                is BiometricAuthResult.Success -> onSuccess()
+                is BiometricAuthResult.Error -> onError(result.errorCode, result.errString)
+                is BiometricAuthResult.Failed -> onError(-2, "Authentication failed")
+                is BiometricAuthResult.UserCanceled -> onError(-3, "Authentication cancelled")
+                else -> onError(-1, "Authentication error")
+            }
+        }
+    }
+
+    /**
+     * Full detailed biometric prompt launcher with custom text and result handler.
+     */
+    fun showBiometricPrompt(
+        activity: FragmentActivity,
+        title: String = activity.getString(R.string.biometric_prompt_default_title),
+        subtitle: String = activity.getString(R.string.biometric_prompt_default_subtitle),
+        description: String = activity.getString(R.string.biometric_auth_description),
+        onResult: (BiometricAuthResult) -> Unit
+    ) {
+        val executor = ContextCompat.getMainExecutor(activity)
+
+        val callback = object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onResult(BiometricAuthResult.Success)
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+                    errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                    errorCode == BiometricPrompt.ERROR_CANCELED) {
+                    onResult(BiometricAuthResult.UserCanceled)
+                } else {
+                    onResult(BiometricAuthResult.Error(errorCode, errString))
+                }
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                onResult(BiometricAuthResult.Failed)
+            }
+        }
+
+        val biometricPrompt = BiometricPrompt(activity, executor, callback)
+
+        val promptInfoBuilder = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(title)
+            .setSubtitle(subtitle)
+            .setDescription(description)
+
+        val biometricManager = AndroidXBiometricManager.from(activity)
+        val canDeviceCred = biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == AndroidXBiometricManager.BIOMETRIC_SUCCESS
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && canDeviceCred) {
+            promptInfoBuilder.setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+        } else {
+            promptInfoBuilder.setAllowedAuthenticators(BIOMETRIC_STRONG)
+            promptInfoBuilder.setNegativeButtonText(activity.getString(R.string.use_security_pin))
+        }
+
+        try {
+            biometricPrompt.authenticate(promptInfoBuilder.build())
+        } catch (e: Exception) {
+            onResult(BiometricAuthResult.Error(-1, e.message ?: "Authentication initialization error"))
+        }
+    }
+
+    /**
+     * Legacy authenticate helper from BiometricHelper.
+     */
+    fun authenticate(
+        activity: FragmentActivity,
+        title: String,
+        subtitle: String? = null,
+        negativeButtonText: String,
+        onSuccess: () -> Unit,
+        onError: (errorCode: Int, errString: CharSequence) -> Unit,
+        onFailed: () -> Unit
+    ) {
+        val executor = ContextCompat.getMainExecutor(activity)
+        val prompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onSuccess()
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                onError(errorCode, errString)
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                onFailed()
+            }
+        })
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder().apply {
+            setTitle(title)
+            subtitle?.let { setSubtitle(it) }
+            setNegativeButtonText(negativeButtonText)
+            setAllowedAuthenticators(BIOMETRIC_STRONG or BIOMETRIC_WEAK)
+        }.build()
+
+        prompt.authenticate(promptInfo)
+    }
+
+    /**
+     * Composable lock screen entry point on BiometricManager.
+     */
+    @Composable
+    fun BiometricLockScreen(onUnlocked: () -> Unit) {
+        val context = LocalContext.current
+        val activity = context as? FragmentActivity
+        if (activity != null) {
+            com.lojia.shiftreport.auth.BiometricLockScreen(
+                activity = activity,
+                userProfile = null,
+                businessProfile = null,
+                language = AppLanguage.ENGLISH,
+                onAuthenticated = onUnlocked
+            )
+        }
+    }
+}
+
+// Backward-compatibility aliases so existing modules continue to compile cleanly
+typealias BiometricAuthManager = BiometricManager
+typealias BiometricHelper = BiometricManager
+
+/**
+ * Top-level BiometricLockScreen for Lojia POS.
+ * Handles Quick PIN, Biometric prompt, and standard username/password login.
+ */
 @Composable
 fun BiometricLockScreen(
     activity: FragmentActivity,
@@ -101,10 +318,8 @@ fun BiometricLockScreen(
     var currentPage by remember(isUserRegistered, isQuickSecurityEnabled) {
         mutableStateOf(
             if (isUserRegistered && isQuickSecurityEnabled) {
-                // Returning user with Quick Login explicitly configured in Settings -> Quick PIN screen
                 AuthScreenPage.QUICK_PIN
             } else {
-                // Always open LOGIN first when user is not authenticated or on fresh install
                 AuthScreenPage.LOGIN
             }
         )
@@ -117,7 +332,6 @@ fun BiometricLockScreen(
     val prefs = remember(context) { context.getSharedPreferences("lojia", Context.MODE_PRIVATE) }
     val savedUser = remember { prefs.getString("lojiaUser", "") ?: "" }
     val sessionUser = remember(preferencesRepository) { preferencesRepository.getSavedUsername() }
-
     val isCashierRole = remember(userProfile) {
         val role = userProfile?.currentRole?.lowercase().orEmpty()
         val desig = userProfile?.designation?.lowercase().orEmpty()
@@ -136,7 +350,6 @@ fun BiometricLockScreen(
         focusManager.clearFocus()
         val u = loginUser.trim()
         val p = loginPass.trim()
-
         if (u.isEmpty() || p.isEmpty()) {
             loginErrorMessage = context.getString(R.string.auth_toast_please_enter_credentials)
             return
@@ -157,6 +370,7 @@ fun BiometricLockScreen(
 
             val profile = userProfile
             var isProfileValid = false
+
             if (profile != null && profile.username.isNotBlank()) {
                 val usernameMatch = (u.equals(profile.username, ignoreCase = true) || u.equals(profile.email, ignoreCase = true))
                 val verifyResult = SecurityUtils.verifySecretWithUpgrade(p, profile.passwordHash)
@@ -196,7 +410,7 @@ fun BiometricLockScreen(
             AuthScreenPage.QUICK_PIN -> {
                 LaunchedEffect(Unit) {
                     if (preferencesRepository.isBiometricEnabled()) {
-                        BiometricAuthManager.showBiometricPrompt(
+                        BiometricManager.showBiometricPrompt(
                             activity = activity,
                             onResult = { result ->
                                 if (result is BiometricAuthResult.Success) {
@@ -206,6 +420,7 @@ fun BiometricLockScreen(
                         )
                     }
                 }
+
                 QuickPinScreen(
                     isBn = isBn,
                     preferencesRepository = preferencesRepository,
@@ -217,7 +432,7 @@ fun BiometricLockScreen(
                         currentPage = AuthScreenPage.LOGIN
                     },
                     onTriggerBiometric = {
-                        BiometricAuthManager.showBiometricPrompt(
+                        BiometricManager.showBiometricPrompt(
                             activity = activity,
                             onResult = { result ->
                                 if (result is BiometricAuthResult.Success) {
@@ -228,6 +443,7 @@ fun BiometricLockScreen(
                     }
                 )
             }
+
             AuthScreenPage.LOGIN -> {
                 Box(
                     modifier = Modifier
@@ -327,6 +543,24 @@ fun BiometricLockScreen(
     }
 }
 
+/**
+ * Simplified single-argument lock screen overload.
+ */
+@Composable
+fun BiometricLockScreen(onUnlocked: () -> Unit) {
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
+    if (activity != null) {
+        BiometricLockScreen(
+            activity = activity,
+            userProfile = null,
+            businessProfile = null,
+            language = AppLanguage.ENGLISH,
+            onAuthenticated = onUnlocked
+        )
+    }
+}
+
 @Composable
 private fun LojiaPasswordLoginContent(
     loginUser: String,
@@ -357,14 +591,14 @@ private fun LojiaPasswordLoginContent(
         label = {
             Text(
                 text = stringResource(R.string.auth_username_or_email),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 13.sp
             )
         },
         placeholder = {
             Text(
                 text = stringResource(R.string.auth_username_or_email),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 13.5.sp,
                 color = hintGray
             )
@@ -387,7 +621,7 @@ private fun LojiaPasswordLoginContent(
         ),
         textStyle = TextStyle(
             color = charcoalText,
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+            fontFamily = PoppinsFontFamily,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
@@ -417,14 +651,14 @@ private fun LojiaPasswordLoginContent(
         label = {
             Text(
                 text = stringResource(R.string.password),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 13.sp
             )
         },
         placeholder = {
             Text(
                 text = stringResource(R.string.password),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 13.5.sp,
                 color = hintGray
             )
@@ -463,7 +697,7 @@ private fun LojiaPasswordLoginContent(
         ),
         textStyle = TextStyle(
             color = charcoalText,
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+            fontFamily = PoppinsFontFamily,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
@@ -526,7 +760,7 @@ private fun LojiaPasswordLoginContent(
             Spacer(modifier = Modifier.width(7.dp))
             Text(
                 text = stringResource(R.string.auth_remember_me),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Medium,
                 color = mediumGray,
@@ -537,7 +771,7 @@ private fun LojiaPasswordLoginContent(
 
         Text(
             text = stringResource(R.string.auth_forgot_password),
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+            fontFamily = PoppinsFontFamily,
             fontSize = 12.5.sp,
             fontWeight = FontWeight.SemiBold,
             color = primaryIndigo,
@@ -564,7 +798,7 @@ private fun LojiaPasswordLoginContent(
             Text(
                 text = loginErrorMessage,
                 color = errorRed,
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
@@ -589,7 +823,7 @@ private fun LojiaPasswordLoginContent(
     ) {
         Text(
             text = stringResource(R.string.auth_no_account) + " ",
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+            fontFamily = PoppinsFontFamily,
             fontSize = 13.sp,
             color = mediumGray,
             maxLines = 1,
@@ -597,7 +831,7 @@ private fun LojiaPasswordLoginContent(
         )
         Text(
             text = stringResource(R.string.auth_register_here),
-            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+            fontFamily = PoppinsFontFamily,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = primaryIndigo,
@@ -608,4 +842,137 @@ private fun LojiaPasswordLoginContent(
                 .testTag("goRegister")
         )
     }
+}
+
+/**
+ * Password Recovery Security Question Dialog
+ */
+@Composable
+fun LojiaPasswordRecoveryDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    userProfile: UserProfile?,
+    isBn: Boolean,
+    onAuthenticated: () -> Unit
+) {
+    if (!showDialog) return
+
+    var recoveryAnswer by remember { mutableStateOf("") }
+    var recoveryError by remember { mutableStateOf<String?>(null) }
+    var isAnswerCorrect by remember { mutableStateOf(false) }
+
+    val question = userProfile?.securityQuestion.orEmpty().ifEmpty {
+        stringResource(R.string.auth_sq4)
+    }
+    val actualAnswer = userProfile?.securityAnswer.orEmpty().ifEmpty { "School" }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.widthIn(max = Dimens.DialogMaxWidth),
+        title = {
+            Text(
+                text = stringResource(R.string.auth_password_recovery_title),
+                fontWeight = FontWeight.Bold,
+                color = LojiaColors.P600
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = stringResource(R.string.auth_answer_security_question),
+                    fontSize = 12.sp,
+                    color = LojiaColors.N600
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = LojiaColors.P50,
+                    border = BorderStroke(1.dp, LojiaColors.P100),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = stringResource(R.string.auth_question_label),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = LojiaColors.P600
+                        )
+                        Text(
+                            text = question,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = LojiaColors.N900
+                        )
+                    }
+                }
+
+                if (!isAnswerCorrect) {
+                    LojiaInputField(
+                        value = recoveryAnswer,
+                        onValueChange = {
+                            recoveryAnswer = it
+                            recoveryError = null
+                        },
+                        label = stringResource(R.string.auth_answer_label),
+                        placeholder = stringResource(R.string.auth_enter_answer_placeholder),
+                        errorMessage = recoveryError,
+                        validationState = if (recoveryError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
+                        testTag = "recoveryAnswer"
+                    )
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = LojiaColors.OkBg,
+                        border = BorderStroke(1.dp, LojiaColors.G200),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = stringResource(R.string.auth_identity_verified),
+                                fontSize = 12.sp,
+                                color = LojiaColors.G500,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = stringResource(R.string.auth_recovery_success_msg),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = LojiaColors.N900
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
+            if (!isAnswerCorrect) {
+                TextButton(
+                    onClick = {
+                        if (actualAnswer.isNotBlank() && recoveryAnswer.trim().equals(actualAnswer.trim(), ignoreCase = true)) {
+                            isAnswerCorrect = true
+                        } else {
+                            recoveryError = incorrectAnswerError
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.auth_verify_btn), color = LojiaColors.P500, fontWeight = FontWeight.Bold)
+                }
+            } else {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onAuthenticated()
+                    }
+                ) {
+                    Text(stringResource(R.string.auth_complete_login_btn), color = LojiaColors.G500, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel), color = LojiaColors.N500)
+            }
+        }
+    )
 }

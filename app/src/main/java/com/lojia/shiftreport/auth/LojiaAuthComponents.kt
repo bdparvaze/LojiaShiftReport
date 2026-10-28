@@ -1,4 +1,5 @@
 package com.lojia.shiftreport.auth
+import androidx.compose.ui.text.input.KeyboardType
 
 import com.lojia.shiftreport.R
 import androidx.compose.ui.res.stringResource
@@ -536,62 +537,87 @@ fun LojiaPasswordStrengthMeter(
     }
 }
 
+/**
+ * Reusable LojiaTextField adhering to standard M3 design and auth input patterns.
+ */
 @Composable
-fun LojiaSkeletonLoader() {
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val translateAnim by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1400, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer"
+fun LojiaTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String = "",
+    placeholder: String = "",
+    errorMessage: String? = null,
+    validationState: FieldValidationState = FieldValidationState.DEFAULT,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    testTag: String = ""
+) {
+    LojiaInputField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        placeholder = placeholder,
+        errorMessage = errorMessage,
+        validationState = validationState,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        testTag = testTag,
+        modifier = modifier
     )
+}
 
-    val shimmerBrush = Brush.linearGradient(
-        colors = listOf(
-            LojiaColors.N200,
-            LojiaColors.N100,
-            LojiaColors.N200
-        ),
-        start = Offset(translateAnim - 1000f, 0f),
-        end = Offset(translateAnim, 0f)
+/**
+ * Reusable LojiaPasswordField with password masking.
+ */
+@Composable
+fun LojiaPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String = "",
+    placeholder: String = "",
+    errorMessage: String? = null,
+    validationState: FieldValidationState = FieldValidationState.DEFAULT,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    testTag: String = ""
+) {
+    LojiaInputField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        placeholder = placeholder,
+        visualTransformation = PasswordVisualTransformation(),
+        errorMessage = errorMessage,
+        validationState = validationState,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        testTag = testTag,
+        modifier = modifier
     )
+}
 
-    LojiaCard(modifier = Modifier.padding(top = 12.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.4f)
-                .height(10.dp)
-                .clip(RoundedCornerShape(99.dp))
-                .background(shimmerBrush)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(42.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(shimmerBrush)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(42.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(shimmerBrush)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .height(10.dp)
-                .clip(RoundedCornerShape(99.dp))
-                .background(shimmerBrush)
-        )
-    }
+/**
+ * Primary reusable action button for authentication and dialog flows.
+ */
+@Composable
+fun PrimaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
+    testTag: String = ""
+) {
+    LojiaGradientButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        isLoading = isLoading,
+        testTag = testTag
+    )
 }
 
 @Composable

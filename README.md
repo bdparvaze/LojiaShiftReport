@@ -54,11 +54,8 @@ com.lojia.shiftreport
 ├── auth/                          # 🔐 Authentication, Biometrics, PIN Lock & Roles
 │   ├── AdminAuthDialog.kt
 │   ├── AppSessionManager.kt        # POS instant lock observer (ProcessLifecycleOwner & ACTION_SCREEN_OFF)
-│   ├── BiometricAuthManager.kt
-│   ├── BiometricHelper.kt
-│   ├── BiometricLockScreen.kt
-│   ├── LojiaAuthComponents.kt
-│   ├── LojiaAuthDialogs.kt
+│   ├── BiometricManager.kt         # Unified biometric auth, prompt launcher & lock screen
+│   ├── LojiaAuthComponents.kt      # Reusable auth components (LojiaTextField, LojiaPasswordField, PrimaryButton)
 │   ├── LojiaAuthModels.kt
 │   ├── LojiaRegisterScreen.kt
 │   ├── QuickPinScreen.kt
