@@ -53,6 +53,7 @@ com.lojia.shiftreport
 │
 ├── auth/                          # 🔐 Authentication, Biometrics, PIN Lock & Roles
 │   ├── AdminAuthDialog.kt
+│   ├── AppSessionManager.kt        # POS instant lock observer (ProcessLifecycleOwner & ACTION_SCREEN_OFF)
 │   ├── BiometricAuthManager.kt
 │   ├── BiometricHelper.kt
 │   ├── BiometricLockScreen.kt

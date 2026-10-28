@@ -98,6 +98,18 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // POS-style security: prevent screenshots in release builds.
+        // Disabled in DEBUG so development streaming emulator preview displays properly.
+        if (!BuildConfig.DEBUG) {
+            window.setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                android.view.WindowManager.LayoutParams.FLAG_SECURE
+            )
+        }
+
+        // Initialize POS session manager (screen-off & minimization instant lock)
+        AppSessionManager.init(applicationContext)
+
         // Initialize saved language
         val savedLang = com.lojia.shiftreport.util.LanguagePreferences.getLanguage(this)
         val currentLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
@@ -184,6 +196,16 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
             var isAuthenticated by rememberSaveable { 
                 mutableStateOf(reportViewModel.preferencesRepository.isLoggedIn()) 
+            }
+
+            // POS Instant Session Lock Observer (Screen-off and onStop/Minimization)
+            val shouldLockApp by AppSessionManager.shouldLockApp.collectAsState()
+            LaunchedEffect(shouldLockApp) {
+                if (shouldLockApp) {
+                    reportViewModel.preferencesRepository.recordLogout(keepQuickLoginState = true)
+                    isAuthenticated = false
+                    AppSessionManager.onAppLocked()
+                }
             }
             val lastInteractionTime by userInteractionTime.collectAsState()
 
@@ -459,6 +481,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             reportViewModel.handleDriveAuthRedirect(uri, state)
         }
     }
+
+    override fun onDestroy() {
+        AppSessionManager.cleanup(applicationContext)
+        super.onDestroy()
+    }
 }
 
 /**
@@ -567,4 +594,5 @@ private fun ShiftReportModuleNavHost(
             }
         }
     }
+
 }
