@@ -8,7 +8,8 @@ import com.lojia.shiftreport.util.PdfFontManager
 import com.lojia.shiftreport.util.PdfPalette
 
 /**
- * Renders the invoice line items table with RTL support for Arabic descriptions.
+ * Renders the invoice line items table with alternating row colors,
+ * PRIMARY_DARK header, Arabic RTL alignment support, and page overflow protection.
  * Columns: No, Description, Qty, Price, Total.
  */
 object InvoiceItemsRenderer {
@@ -26,11 +27,11 @@ object InvoiceItemsRenderer {
         val tableWidth = pageWidth - (margin * 2)
 
         val headerHeight = if (isThermal) 20f else 26f
-        val rowHeight = if (isThermal) 18f else 22f
+        val rowHeight = if (isThermal) 18f else 24f
 
-        // Table Header Background
+        // 1. Table Header Background (PRIMARY_DARK)
         val headerBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = PdfPalette.PRIMARY_CONTAINER
+            color = PdfPalette.PRIMARY_DARK
             style = Paint.Style.FILL
         }
         canvas.drawRoundRect(
@@ -38,8 +39,9 @@ object InvoiceItemsRenderer {
             4f, 4f, headerBgPaint
         )
 
+        // Header Text Paint (ON_PRIMARY White)
         val headerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = PdfPalette.PRIMARY_DARK
+            color = PdfPalette.ON_PRIMARY
             textSize = if (isThermal) 8.5f else 10.5f
         }
         PdfFontManager.applyTypeface(headerPaint, context, "Description", isBold = true)
@@ -65,12 +67,17 @@ object InvoiceItemsRenderer {
         canvas.drawText("Price", colPriceX, headerTextY, headerPaint)
         canvas.drawText("Total", colTotalX, headerTextY, headerPaint)
 
-        currentY += headerHeight + 6f
+        currentY += headerHeight + 2f
 
-        // Table Body Rows
+        // 2. Table Body Rows with Alternating Colors
         val rowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = PdfPalette.TEXT_PRIMARY
             textSize = if (isThermal) 8f else 10f
+        }
+
+        val altBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = PdfPalette.SURFACE_VARIANT
+            style = Paint.Style.FILL
         }
 
         val dividerPaint = Paint().apply {
@@ -84,11 +91,24 @@ object InvoiceItemsRenderer {
                 textSize = if (isThermal) 8.5f else 10.5f
             }
             PdfFontManager.applyTypeface(emptyPaint, context, "No individual line items registered", isBold = false)
-            canvas.drawText("Shift summary consolidation (No individual items)", colDescX, currentY + 12f, emptyPaint)
-            currentY += 22f
+            canvas.drawText("Shift summary consolidation (No individual items)", colDescX, currentY + 14f, emptyPaint)
+            currentY += 24f
         } else {
             data.items.forEachIndexed { index, item ->
-                val rowTextY = currentY + 13f
+                // Page overflow guard for A4
+                if (currentY > 700f && !isThermal) {
+                    return currentY
+                }
+
+                // Alternating row background
+                if (index % 2 == 1) {
+                    canvas.drawRect(
+                        RectF(margin, currentY, margin + tableWidth, currentY + rowHeight),
+                        altBgPaint
+                    )
+                }
+
+                val rowTextY = currentY + (rowHeight / 2f) - ((rowPaint.descent() + rowPaint.ascent()) / 2f)
 
                 // Item number
                 PdfFontManager.applyTypeface(rowPaint, context, "${index + 1}", isBold = false)
@@ -99,8 +119,18 @@ object InvoiceItemsRenderer {
                     item.descriptionArabic.isNotBlank() -> "${item.description} / ${item.descriptionArabic}"
                     else -> item.description
                 }
+                val isArabic = PdfFontManager.isArabic(desc)
                 PdfFontManager.applyTypeface(rowPaint, context, desc, isBold = false)
-                canvas.drawText(desc.take(if (isThermal) 16 else 32), colDescX, rowTextY, rowPaint)
+
+                val truncatedDesc = desc.take(if (isThermal) 16 else 32)
+                if (isArabic) {
+                    // RTL alignment towards right of description column
+                    val descWidth = rowPaint.measureText(truncatedDesc)
+                    val rtlStartX = (colDescX + colDescW - 8f - descWidth).coerceAtLeast(colDescX)
+                    canvas.drawText(truncatedDesc, rtlStartX, rowTextY, rowPaint)
+                } else {
+                    canvas.drawText(truncatedDesc, colDescX, rowTextY, rowPaint)
+                }
 
                 // Quantity
                 val qtyStr = if (item.qty % 1.0 == 0.0) "${item.qty.toInt()}" else String.format("%.1f", item.qty)
@@ -119,7 +149,6 @@ object InvoiceItemsRenderer {
 
                 currentY += rowHeight
                 canvas.drawLine(margin, currentY, margin + tableWidth, currentY, dividerPaint)
-                currentY += 2f
             }
         }
 

@@ -583,8 +583,8 @@ object PdfReportGenerator {
 
         return InvoiceData(
             storeName = businessProfile?.businessName?.ifBlank { "Lojia Retail Store" } ?: "Lojia Retail Store",
-            storeNameArabic = "",
-            storeNameBengali = "",
+            storeNameArabic = "تقرير الوردية والمبيعات",
+            storeNameBengali = "শিফট রিপোর্ট ও ইনভয়েস",
             vatNo = businessProfile?.vatNumber?.ifBlank { "300000000000003" } ?: "300000000000003",
             invoiceNo = "INV-$shiftId-${shiftDateStr.replace("-", "")}",
             date = "$shiftDateStr (${report.shift})",
