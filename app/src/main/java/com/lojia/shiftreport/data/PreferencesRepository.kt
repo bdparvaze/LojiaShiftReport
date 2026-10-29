@@ -66,6 +66,7 @@ class PreferencesRepository private constructor(context: Context) {
         private const val KEY_PRINTER_CONN_TYPE = "key_printer_conn_type" // "bluetooth" or "network"
         private const val KEY_PRINTER_NET_IP = "key_printer_net_ip"
         private const val KEY_PRINTER_NET_PORT = "key_printer_net_port"
+        private const val KEY_BUSINESS_LOGO_URI = "key_business_logo_uri"
 
         // Data preservation on uninstall keys
         private const val KEY_PRESERVE_DATA_ON_UNINSTALL = "key_preserve_data_on_uninstall"
@@ -353,6 +354,14 @@ class PreferencesRepository private constructor(context: Context) {
 
     fun getPrinterNetworkPort(): Int {
         return prefs.getInt(KEY_PRINTER_NET_PORT, 9100)
+    }
+
+    fun saveBusinessLogoUri(uri: String) {
+        prefs.edit().putString(KEY_BUSINESS_LOGO_URI, uri).apply()
+    }
+
+    fun getBusinessLogoUri(): String {
+        return prefs.getString(KEY_BUSINESS_LOGO_URI, "") ?: ""
     }
 
     fun isPreserveDataOnUninstall(): Boolean = prefs.getBoolean(KEY_PRESERVE_DATA_ON_UNINSTALL, true)

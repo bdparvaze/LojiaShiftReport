@@ -9,6 +9,8 @@ import com.lojia.shiftreport.auth.*
 import com.lojia.shiftreport.report.*
 import com.lojia.shiftreport.settings.*
 
+import androidx.core.content.FileProvider
+import com.lojia.shiftreport.settings.ProfileImageCropper.ProfileImageCropperDialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -114,27 +116,40 @@ fun BusinessLogoPickerCard(
         }
     }
 
+    var pendingCropUri by remember { mutableStateOf<Uri?>(null) }
+    var showCropperDialog by remember { mutableStateOf(false) }
+    var cameraTempUri by remember { mutableStateOf<Uri?>(null) }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            coroutineScope.launch(Dispatchers.IO) {
-                try {
-                    val stream = context.contentResolver.openInputStream(uri)
-                    if (stream != null) {
-                        val file = File(context.filesDir, "biz_logo_${System.currentTimeMillis()}.png")
-                        file.outputStream().use { out ->
-                            stream.copyTo(out)
-                        }
-                        withContext(Dispatchers.Main) {
-                            onSaveProfile(businessProfile.copy(logoUri = file.absolutePath))
-                            Toast.makeText(context, updatedMsg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
+            pendingCropUri = uri
+            showCropperDialog = true
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success && cameraTempUri != null) {
+            pendingCropUri = cameraTempUri
+            showCropperDialog = true
+        }
+    }
+
+    fun launchCamera() {
+        try {
+            val tempFile = File(context.cacheDir, "camera_capture_${System.currentTimeMillis()}.jpg")
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                tempFile
+            )
+            cameraTempUri = uri
+            cameraLauncher.launch(uri)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Camera error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -165,6 +180,39 @@ fun BusinessLogoPickerCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // Camera Option
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                showOptionSheet = false
+                                launchCamera()
+                            },
+                        color = SurfaceVariantLight
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = null,
+                                tint = primaryBrand,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                text = "Take photo with Camera",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = OnSurfaceLight,
+                                    fontSize = 15.sp
+                                )
+                            )
+                        }
+                    }
+
                     // Gallery Upload
                     Surface(
                         modifier = Modifier
@@ -294,6 +342,7 @@ fun BusinessLogoPickerCard(
                 .size(136.dp)
                 .clip(CircleShape)
                 .background(OutlineVariantLight)
+                .border(3.dp, primaryBrand, CircleShape)
                 .clickable {
                     try {
                         photoPickerLauncher.launch(
@@ -376,6 +425,24 @@ fun BusinessLogoPickerCard(
                 Toast.makeText(context, updatedMsg, Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showPresetDialog = false }
+        )
+    }
+
+    if (showCropperDialog && pendingCropUri != null) {
+        ProfileImageCropperDialog(
+            imageUri = pendingCropUri!!,
+            onCropSaved = { croppedUri ->
+                val path = croppedUri.path ?: croppedUri.toString()
+                onSaveProfile(businessProfile.copy(logoUri = path))
+                PreferencesRepository.getInstance(context).saveBusinessLogoUri(path)
+                Toast.makeText(context, updatedMsg, Toast.LENGTH_SHORT).show()
+                showCropperDialog = false
+                pendingCropUri = null
+            },
+            onDismiss = {
+                showCropperDialog = false
+                pendingCropUri = null
+            }
         )
     }
 }

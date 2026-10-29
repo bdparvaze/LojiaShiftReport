@@ -3,6 +3,7 @@
     <files-path name="scanned_docs" path="scanned_documents/" />
     <files-path name="reports_internal" path="reports/" />
     <cache-path name="cache_exports" path="exports/" />
+    <cache-path name="cache_root" path="." />
     <external-files-path name="external_docs" path="Documents/" />
     <external-files-path name="external_reports" path="." />
 </paths>

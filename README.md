@@ -127,6 +127,10 @@ com.lojia.shiftreport
 │   ├── DataPreservationDialogs.kt
 │   ├── GoogleMapsLocationPickerModal.kt
 │   ├── LanguageSettingsComponent.kt
+│   ├── ProfileImageCropper/        # 🖼️ 1:1 Circular avatar cropper (Zoom, Pan, 512x512 JPEG)
+│   │   ├── CropImageView.kt
+│   │   ├── ImageCropUtils.kt
+│   │   └── ProfileImageCropperDialog.kt
 │   ├── ProfileComponents.kt        # Accordion profile rows, dialog text fields, phone picker
 │   ├── ProfileScreen.kt
 │   ├── RegionalPreferencesSection.kt
