@@ -32,6 +32,7 @@ import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 
 import com.lojia.shiftreport.data.ShiftReport
+import com.lojia.shiftreport.report.invoice.*
 import org.json.JSONArray
 
 import java.io.File
@@ -419,9 +420,192 @@ object PdfReportGenerator {
     )
 
     /**
+     * Professional Foodics POS style invoice generator orchestrator.
+     * Sequentially executes Header -> Items -> Payment -> Footer renderers.
+     * Supports A4, 80mm thermal, and 58mm thermal paper formats with multi-currency
+     * and Noto Sans Bengali / Noto Naskh Arabic font rendering.
+     */
+    fun generateInvoicePdf(
+        context: Context,
+        invoiceData: InvoiceData
+    ): ExportResult {
+        PdfFontManager.init(context)
+
+        val paperSize = invoiceData.paperSize
+        val pageWidth = paperSize.widthPt
+        val pageHeight = paperSize.heightPt
+
+        val pdfDocument = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+        val canvas = page.canvas
+
+        canvas.drawColor(PdfPalette.SURFACE)
+
+        try {
+            // 1. Header (Logo, 3-language store names, VAT, metadata)
+            var currentY = InvoiceHeaderRenderer.drawHeader(
+                canvas = canvas,
+                context = context,
+                data = invoiceData,
+                pageWidth = pageWidth.toFloat(),
+                startY = 0f
+            )
+
+            // 2. Items Table (Columns, prices, Arabic RTL)
+            currentY = InvoiceItemsRenderer.drawItemsTable(
+                canvas = canvas,
+                context = context,
+                data = invoiceData,
+                pageWidth = pageWidth.toFloat(),
+                startY = currentY
+            )
+
+            // 3. Payment Reconciliation Breakdown (Gross cash, MADA, Digital, Expenses, Variance, Net, VAT 15%, Total)
+            currentY = InvoicePaymentRenderer.drawPaymentBreakdown(
+                canvas = canvas,
+                context = context,
+                data = invoiceData,
+                pageWidth = pageWidth.toFloat(),
+                startY = currentY
+            )
+
+            // 4. Footer (Styled QR code, 3-language thank you notes, page numbering)
+            InvoiceFooterRenderer.drawFooter(
+                canvas = canvas,
+                context = context,
+                data = invoiceData,
+                pageWidth = pageWidth.toFloat(),
+                pageHeight = pageHeight.toFloat(),
+                startY = currentY,
+                pageNumber = 1,
+                totalPages = 1
+            )
+
+            pdfDocument.finishPage(page)
+
+            val fileName = "Invoice_${invoiceData.invoiceNo}_${System.currentTimeMillis()}.pdf"
+            val file = File(context.cacheDir, fileName)
+            FileOutputStream(file).use { out ->
+                pdfDocument.writeTo(out)
+            }
+            pdfDocument.close()
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+
+            return ExportResult(
+                isSuccess = true,
+                file = file,
+                uri = uri,
+                displayPath = file.absolutePath
+            )
+        } catch (e: Exception) {
+            AppLogger.e("PdfReportGenerator", "Failed to generate invoice PDF", e)
+            try {
+                pdfDocument.close()
+            } catch (ex: Exception) {
+                // ignore
+            }
+            return ExportResult(
+                isSuccess = false,
+                file = null,
+                uri = null,
+                displayPath = "",
+                errorMessage = e.message ?: "Failed to generate invoice PDF"
+            )
+        }
+    }
+
+    /**
+     * Converts a domain ShiftReport into standardized POS InvoiceData with 15% VAT and multi-currency.
+     */
+    fun convertShiftReportToInvoiceData(
+        report: ShiftReport,
+        businessProfile: BusinessProfile?,
+        paperSize: InvoicePaperSize = InvoicePaperSize.A4
+    ): InvoiceData {
+        val currCode = businessProfile?.currency?.ifBlank { "SAR" } ?: "SAR"
+        val currSym = when (currCode.uppercase()) {
+            "SAR" -> "SAR"
+            "BDT" -> "৳"
+            "USD" -> "$"
+            else -> currCode
+        }
+
+        val parsedItems = parsePurchasedItems(report.purchasedItemsJson)
+        val invoiceItems = parsedItems.mapIndexed { idx, itm ->
+            InvoiceItem(
+                no = idx + 1,
+                description = itm.itemName,
+                qty = itm.quantity,
+                unitPrice = itm.unitPrice / 100.0,
+                total = itm.totalAmount / 100.0
+            )
+        }
+
+        val startingCash = extractStartingCashMinor(report)
+        val actualCashCount = extractActualCashMinor(report)
+        val calculatedVariance = if (actualCashCount != null) report.variance(actualCashCount) else 0L
+
+        val grossCashMajor = report.grossCash / 100.0
+        val madaCardMajor = report.madaPayments / 100.0
+        val digitalWalletMajor = report.digitalWallet / 100.0
+        val expensesMajor = report.totalExpenses / 100.0
+        val staffMealMajor = report.staffMealsCount.toDouble() * 15.0
+        val muasselMajor = report.muasselQty * 20.0
+        val varianceMajor = calculatedVariance / 100.0
+        val netSalesMajor = report.netSales / 100.0
+
+        val vatRate = 0.15
+        val vatAmount = netSalesMajor * vatRate
+        val totalPayable = netSalesMajor + vatAmount
+
+        val paymentSummary = PaymentSummary(
+            grossCash = grossCashMajor,
+            madaCard = madaCardMajor,
+            digitalWallet = digitalWalletMajor,
+            expenses = expensesMajor,
+            staffMeal = staffMealMajor,
+            muassel = muasselMajor,
+            variance = varianceMajor,
+            netSales = netSalesMajor,
+            vatRate = vatRate,
+            vatAmount = vatAmount,
+            totalPayable = totalPayable
+        )
+
+        val shiftId = if (report.id > 0) report.id.toString() else "1"
+        val shiftDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(report.dateInMillis))
+
+        return InvoiceData(
+            storeName = businessProfile?.businessName?.ifBlank { "Lojia Retail Store" } ?: "Lojia Retail Store",
+            storeNameArabic = "",
+            storeNameBengali = "",
+            vatNo = businessProfile?.vatNumber?.ifBlank { "300000000000003" } ?: "300000000000003",
+            invoiceNo = "INV-$shiftId-${shiftDateStr.replace("-", "")}",
+            date = "$shiftDateStr (${report.shift})",
+            cashier = report.cashierName.ifBlank { "Cashier 1" },
+            storeAddress = businessProfile?.address.orEmpty(),
+            logoUri = businessProfile?.logoUri,
+            shiftId = shiftId,
+            currencyCode = currCode,
+            currencySymbol = currSym,
+            items = invoiceItems,
+            payment = paymentSummary,
+            qrData = "Lojia POS | Shift #$shiftId | Cashier: ${report.cashierName} | Net: $netSalesMajor $currCode | Total: $totalPayable $currCode | VAT: ${businessProfile?.vatNumber}",
+            paperSize = paperSize
+        )
+    }
+
+    /**
      * Generates a comprehensive Multi-Entry Shift & Sales Summary PDF from database entries.
      */
     fun generateShiftSummaryPdf(
+
         context: Context,
         reports: List<ShiftReport>,
         businessProfile: BusinessProfile?,

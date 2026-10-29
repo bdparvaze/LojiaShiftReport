@@ -170,6 +170,7 @@ com.lojia.shiftreport
     ├── MoneyFormat.kt
     ├── NotificationHelper.kt
     ├── OfflineBackupManager.kt
+    ├── PdfFontManager.kt           # Embedded Noto Bengali/Arabic font loader for PDFs
     ├── PdfLogoRenderer.kt
     ├── PdfNotesParser.kt
     ├── PdfPalette.kt
