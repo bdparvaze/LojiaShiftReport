@@ -10,7 +10,6 @@ jobs:
   build-and-test:
     name: Build, Verify Localization & Run Unit Tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,6 +26,12 @@ jobs:
 
       - name: Verify String Localization
         run: gradle :app:verifyStringLocalization --no-daemon
+
+      # ========================================================
+      # ডিবাগ কিস্টোর তৈরি করার জন্য এই নতুন স্টেপটি এখানে যোগ করুন
+      # ========================================================
+      - name: Generate Debug Keystore
+        run: keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
       - name: Assemble Debug APK
         run: gradle :app:assembleDebug --no-daemon
