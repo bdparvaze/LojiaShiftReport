@@ -78,6 +78,27 @@ interface ReportDao {
     @Query("SELECT * FROM cashiers ORDER BY name ASC")
     suspend fun getAllCashiersList(): List<Cashier>
 
+    @Query("SELECT * FROM cashiers WHERE isArchived = 0 ORDER BY name ASC")
+    suspend fun getActiveCashiers(): List<Cashier>
+
+    @Query("SELECT * FROM cashiers WHERE isArchived = 0 ORDER BY name ASC")
+    fun observeActiveCashiers(): Flow<List<Cashier>>
+
+    @Query("SELECT * FROM cashiers WHERE isArchived = 1 ORDER BY archivedAt DESC")
+    suspend fun getArchivedCashiers(): List<Cashier>
+
+    @Query("SELECT * FROM cashiers WHERE isArchived = 1 ORDER BY archivedAt DESC")
+    fun observeArchivedCashiers(): Flow<List<Cashier>>
+
+    @Query("SELECT * FROM cashiers WHERE id = :id LIMIT 1")
+    suspend fun getCashierById(id: String): Cashier?
+
+    @Query("UPDATE cashiers SET isActive = 0, isArchived = 1, archivedAt = :timestamp WHERE id = :id")
+    suspend fun archiveCashier(id: String, timestamp: Long)
+
+    @Query("UPDATE cashiers SET isActive = 1, isArchived = 0, archivedAt = NULL WHERE id = :id")
+    suspend fun unarchiveCashier(id: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCashiers(cashiers: List<Cashier>)
 
@@ -86,6 +107,12 @@ interface ReportDao {
 
     @Delete
     suspend fun deleteCashier(cashier: Cashier)
+
+    @Query("SELECT COUNT(*) FROM shift_reports WHERE cashierId = :cashierId")
+    suspend fun getShiftCountByCashierId(cashierId: String): Int
+
+    @Query("SELECT COUNT(*) FROM shift_reports WHERE cashierId = :cashierId OR cashierName = :cashierName")
+    suspend fun getShiftCountByCashierIdOrName(cashierId: String, cashierName: String): Int
 
     // Users & Auth
     @Query("SELECT * FROM users ORDER BY username ASC")
@@ -170,6 +197,6 @@ interface ReportDao {
     @Query("SELECT * FROM cashiers WHERE name = :name LIMIT 1")
     suspend fun getCashierByName(name: String): Cashier?
 
-    @Query("SELECT COUNT(*) FROM cashiers WHERE active = 1")
+    @Query("SELECT COUNT(*) FROM cashiers WHERE isActive = 1 AND isArchived = 0")
     suspend fun getCashierCount(): Int
 }

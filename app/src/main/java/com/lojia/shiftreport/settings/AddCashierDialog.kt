@@ -1,378 +1,277 @@
 package com.lojia.shiftreport.settings
 
-import com.lojia.shiftreport.ui.common.LojiaTextField
-import com.lojia.shiftreport.R
-import com.lojia.shiftreport.data.*
-import com.lojia.shiftreport.util.*
-import com.lojia.shiftreport.ui.common.*
-import com.lojia.shiftreport.ui.theme.*
-import com.lojia.shiftreport.auth.*
-import com.lojia.shiftreport.report.*
-import com.lojia.shiftreport.settings.*
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PointOfSale
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.platform.testTag
+import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AuthPinConstants
+import com.lojia.shiftreport.auth.SixDigitPinInput
+import com.lojia.shiftreport.data.Cashier
+import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.theme.*
 
 /**
- * Standard Professional Add Cashier Modal Dialog - Confined with Admin Password verification
+ * Enterprise Add/Edit Cashier Modal Dialog (Foodics POS Standard)
+ * Material 3 AlertDialog with 28dp corner radius and SixDigitPinInput.
  */
 @Composable
 fun AddCashierDialog(
-    userProfile: UserProfile?,
+    userProfile: UserProfile? = null,
+    existingCashier: Cashier? = null,
     onDismissRequest: () -> Unit,
-    onConfirmAdd: (name: String) -> Unit
+    onConfirmAdd: (name: String) -> Unit,
+    onConfirmSave: ((name: String, pin: String, role: String) -> Unit)? = null
 ) {
-    var nameInput by remember { mutableStateOf("") }
-    var passwordInput by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var isError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
+    var nameInput by remember { mutableStateOf(existingCashier?.name.orEmpty()) }
+    var pinInput by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf(existingCashier?.role ?: "CASHIER") }
+    var isNameError by remember { mutableStateOf(false) }
 
-    val passwordRequiredMsg = stringResource(R.string.password_required)
-    val incorrectPasswordMsg = stringResource(R.string.incorrect_password)
+    val isEditing = existingCashier != null
 
-    LojiaDialog(
+    AlertDialog(
         onDismissRequest = onDismissRequest,
-        maxWidth = Dimens.DialogMaxWidth,
-        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
+        shape = RoundedCornerShape(28.dp),
         containerColor = SurfaceLight,
-        border = BorderStroke(1.dp, OutlineLight)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // =============================================================
-            // 1. HEADER (Solid PrimaryIndigoDark — no gradient)
-            // =============================================================
+        title = {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PrimaryIndigoDark)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(PrimaryContainerLight)
-                            .border(1.dp, OutlineLight, RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.PointOfSale,
-                            contentDescription = null,
-                            tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = stringResource(R.string.add_cashier_4),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PureWhite
-                        )
-                        Text(
-                            text = stringResource(R.string.add_cashiers_here_to),
-                            fontSize = 12.sp,
-                            color = PrimaryContainerLight
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = onDismissRequest,
+                Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
-                        .background(PrimaryContainerLight)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = stringResource(R.string.cancel_18),
-                        tint = PrimaryIndigoDark,
-                        modifier = Modifier.size(16.dp)
+                        imageVector = if (isEditing) Icons.Outlined.PointOfSale else Icons.Outlined.PersonAdd,
+                        contentDescription = null,
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = stringResource(if (isEditing) R.string.edit_cashier else R.string.add_cashier_4),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnBackgroundLight
+                    )
+                    Text(
+                        text = stringResource(R.string.cashier_management_desc),
+                        fontSize = 11.5.sp,
+                        color = OnSurfaceVariantLight
                     )
                 }
             }
-
+        },
+        text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // =============================================================
-                // 2. FORM FIELDS
-                // =============================================================
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // --- Cashier Name ---
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = stringResource(R.string.cashier_name),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = OnSurfaceLight
-                        )
-
-                        LojiaTextField(
-                            value = nameInput,
-                            onValueChange = {
-                                nameInput = it
-                                if (isError && it.isNotBlank()) isError = false
-                            },
-                            placeholder = {
-                                Text(
-                                    stringResource(R.string.eg_john_doe_sarah_1),
-                                    fontSize = 13.sp,
-                                    color = TextHintColor
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Person,
-                                    contentDescription = null,
-                                    tint = if (isError) ErrorRedLight else PrimaryIndigoLight,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            isError = isError,
-                            singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryIndigoLight,
-                                unfocusedBorderColor = OutlineLight,
-                                focusedContainerColor = BackgroundLight,
-                                unfocusedContainerColor = BackgroundLight,
-                                errorBorderColor = ErrorRedLight
-                            ),
-                            modifier = Modifier.fillMaxWidth().testTag("input_cashier_name")
-                        )
-
-                        if (isError) {
-                            Surface(
-                                color = ErrorContainer,
-                                shape = RoundedCornerShape(6.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.cashier_name_required),
-                                    fontSize = 11.sp,
-                                    color = ErrorRedLight,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // --- Password Confirmation ---
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Lock,
-                                contentDescription = null,
-                                tint = if (passwordError != null) ErrorRedLight else PrimaryIndigoLight,
-                                modifier = Modifier.size(14.dp)
-                            )
+                // Name Input
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.cashier_name),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+                    OutlinedTextField(
+                        value = nameInput,
+                        onValueChange = {
+                            nameInput = it
+                            if (isNameError && it.isNotBlank()) isNameError = false
+                        },
+                        placeholder = {
                             Text(
-                                text = stringResource(R.string.confirm_with_password),
-                                fontSize = 12.sp,
-                                  fontWeight = FontWeight.SemiBold,
-                                color = OnSurfaceLight
+                                stringResource(R.string.eg_john_doe_sarah_1),
+                                fontSize = 13.sp,
+                                color = TextHintColor
                             )
-                        }
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Person,
+                                contentDescription = null,
+                                tint = if (isNameError) ErrorRedLight else PrimaryIndigoLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        isError = isNameError,
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryIndigoLight,
+                            unfocusedBorderColor = OutlineLight,
+                            focusedContainerColor = BackgroundLight,
+                            unfocusedContainerColor = BackgroundLight,
+                            errorBorderColor = ErrorRedLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_cashier_name")
+                    )
 
-                        LojiaTextField(
-                            value = passwordInput,
-                            onValueChange = {
-                                passwordInput = it
-                                if (passwordError != null) passwordError = null
-                            },
-                            placeholder = {
-                                Text(
-                                    stringResource(R.string.confirm_with_password),
-                                    fontSize = 13.sp,
-                                    color = TextHintColor
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Lock,
-                                    contentDescription = null,
-                                    tint = if (passwordError != null) ErrorRedLight else PrimaryIndigoLight,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                                val desc = if (passwordVisible) "Hide password" else "Show password"
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(imageVector = icon, contentDescription = desc, modifier = Modifier.size(18.dp))
-                                }
-                            },
-                            isError = passwordError != null,
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryIndigoLight,
-                                unfocusedBorderColor = OutlineLight,
-                                focusedContainerColor = BackgroundLight,
-                                unfocusedContainerColor = BackgroundLight,
-                                errorBorderColor = ErrorRedLight
-                            ),
-                            modifier = Modifier.fillMaxWidth().testTag("input_confirm_password")
+                    if (isNameError) {
+                        Text(
+                            text = stringResource(R.string.cashier_name_required),
+                            fontSize = 11.sp,
+                            color = ErrorRedLight,
+                            fontWeight = FontWeight.Medium
                         )
+                    }
+                }
 
-                        if (passwordError != null) {
+                // Role Selection Chips
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.cashier_role),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("CASHIER" to R.string.cashier, "ADMIN" to R.string.administrator).forEach { (roleKey, strRes) ->
+                            val selected = selectedRole.equals(roleKey, ignoreCase = true)
                             Surface(
-                                color = ErrorContainer,
-                                shape = RoundedCornerShape(6.dp),
-                                modifier = Modifier.fillMaxWidth()
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (selected) PrimaryContainerLight else SurfaceVariantLight,
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (selected) PrimaryIndigoLight else OutlineLight
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { selectedRole = roleKey }
                             ) {
-                                Text(
-                                    text = passwordError ?: "",
-                                    fontSize = 11.sp,
-                                    color = ErrorRedLight,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
+                                Row(
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Badge,
+                                        contentDescription = null,
+                                        tint = if (selected) PrimaryIndigoLight else OnSurfaceVariantLight,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.size(6.dp))
+                                    Text(
+                                        text = stringResource(strRes),
+                                        fontSize = 12.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selected) PrimaryIndigoLight else OnSurfaceVariantLight
+                                    )
+                                }
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(2.dp))
+                // 6-digit PIN Configuration
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.cashier_pin),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                // =============================================================
-                // 3. ACTIONS
-                // =============================================================
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(
-                        onClick = onDismissRequest,
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = SurfaceLight,
-                            contentColor = PrimaryIndigoLight
-                        ),
+                    SixDigitPinInput(
+                        pin = pinInput,
+                        onPinChange = { pinInput = it },
+                        isMasked = true,
                         modifier = Modifier
-                            .weight(1f)
-                            .height(Dimens.ButtonHeightStandard)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.cancel_18),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            val cleanName = nameInput.trim()
-                            val cleanPassword = passwordInput
-                            var hasError = false
-                            if (cleanName.isBlank()) {
-                                isError = true
-                                hasError = true
-                            }
-                            if (cleanPassword.isBlank()) {
-                                passwordError = passwordRequiredMsg
-                                hasError = true
-                            } else {
-                                val verified = SecurityUtils.verifySecretWithUpgrade(cleanPassword, userProfile?.passwordHash.orEmpty()).isMatch
-                                if (!verified) {
-                                    passwordError = incorrectPasswordMsg
-                                    hasError = true
-                                }
-                            }
-                            if (!hasError) {
-                                onConfirmAdd(cleanName)
-                            }
-                        },
-                        enabled = nameInput.isNotBlank() && passwordInput.isNotBlank(),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryIndigoLight,
-                            contentColor = PureWhite
-                        ),
-                        modifier = Modifier
-                            .weight(1.2f)
-                            .height(Dimens.ButtonHeightStandard).testTag("btn_confirm_add_cashier")
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.PersonAdd,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.add_cashier_4),
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
+                            .fillMaxWidth()
+                            .testTag("cashier_six_digit_pin_input")
+                    )
                 }
             }
-        }
-    }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val clean = nameInput.trim()
+                    if (clean.isBlank()) {
+                        isNameError = true
+                    } else {
+                        if (onConfirmSave != null) {
+                            onConfirmSave(clean, pinInput.trim(), selectedRole)
+                        } else {
+                            onConfirmAdd(clean)
+                        }
+                        onDismissRequest()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.testTag("btnSaveCashier")
+            ) {
+                Text(stringResource(if (isEditing) R.string.save_5 else R.string.add_cashier))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismissRequest,
+                modifier = Modifier.testTag("btnCancelCashier")
+            ) {
+                Text(stringResource(R.string.cancel_18))
+            }
+        },
+        modifier = Modifier.testTag("addCashierDialog")
+    )
 }

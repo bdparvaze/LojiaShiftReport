@@ -2,6 +2,7 @@ package com.lojia.shiftreport.settings
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -13,8 +14,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.*
@@ -22,18 +23,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.report.ReportViewModel
-import com.lojia.shiftreport.sync.FirebaseCloudSyncManager
+import com.lojia.shiftreport.settings.backup.BackupLocation
+import com.lojia.shiftreport.settings.backup.BackupManager
 import com.lojia.shiftreport.ui.common.*
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.BackupInfo
@@ -41,53 +45,74 @@ import com.lojia.shiftreport.util.BackupSummary
 import com.lojia.shiftreport.util.DriveBackupItem
 import com.lojia.shiftreport.util.OfflineBackupManager
 import com.lojia.shiftreport.util.PdfShareUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun SettingsBackupSubSection(
     reportViewModel: ReportViewModel,
-    onRestrictedClick: (action: () -> Unit) -> Unit
+    onRestrictedClick: (action: () -> Unit) -> Unit,
+    onNavigateBack: () -> Unit = { reportViewModel.selectReportSettingsMenu("root") }
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var isUninstallBackingUp by remember { mutableStateOf(false) }
+    val backupManager = remember { BackupManager.getInstance(context) }
 
-    val isBackingUp by reportViewModel.isBackingUp.collectAsState()
-    val backupProgress by reportViewModel.backupProgress.collectAsState()
-    val lastBackupTime: Long by reportViewModel.lastBackupTime.collectAsState()
-    val autoBackupFreq: String by reportViewModel.autoBackupFrequency.collectAsState()
-    val driveAccount by reportViewModel.driveAccountInfo.collectAsState()
-    val isDriveUploading by reportViewModel.isDriveUploading.collectAsState()
-    val isDriveDownloading by reportViewModel.isDriveDownloading.collectAsState()
-    val isDriveLoadingList by reportViewModel.isDriveLoadingList.collectAsState()
-    val driveBackupsList by reportViewModel.driveBackupsList.collectAsState()
-    val firebaseSyncState by reportViewModel.firebaseSyncState.collectAsState()
-
-    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault()) }
-    val lastBackupFormatted = remember(lastBackupTime) {
-        if (lastBackupTime > 0L) dateFormatter.format(Date(lastBackupTime)) else "Never"
+    // Intercept back button to return to Settings root
+    BackHandler {
+        onNavigateBack()
     }
 
-    var showRestoreConfirmDialog by remember { mutableStateOf(false) }
-    var showClearAllDataConfirmDialog by remember { mutableStateOf(false) }
-    var showAutoBackupDialog by remember { mutableStateOf(false) }
-    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
-    var pendingBackupSummary by remember { mutableStateOf<BackupSummary?>(null) }
-    var lastCreatedBackupInfo by remember { mutableStateOf<BackupInfo?>(null) }
+    // Multi-cloud location state
+    var selectedLocation by remember { mutableStateOf(backupManager.getSelectedLocation()) }
+    var autoBackupEnabled by remember { mutableStateOf(backupManager.isAutoBackupEnabled()) }
+    var autoBackupFreq by remember { mutableStateOf(backupManager.getAutoBackupFrequency()) }
 
+    // Live provider metadata states
+    var localLastBackupTime by remember { mutableLongStateOf(backupManager.localProvider.getLastBackupTime()) }
+    var localTotalSize by remember { mutableLongStateOf(backupManager.localProvider.getTotalBackupSize()) }
+    var driveLastBackupTime by remember { mutableLongStateOf(backupManager.googleDriveProvider.getLastBackupTime()) }
+    var oneDriveLastBackupTime by remember { mutableLongStateOf(backupManager.oneDriveProvider.getLastBackupTime()) }
+    var isOneDriveConnected by remember { mutableStateOf(backupManager.oneDriveProvider.isConnected()) }
+    var oneDriveAccountEmail by remember { mutableStateOf(backupManager.oneDriveProvider.getConnectedAccountEmail()) }
+
+    // Cloud drive & viewmodel states
+    val isBackingUp by reportViewModel.isBackingUp.collectAsState()
+    val driveAccount by reportViewModel.driveAccountInfo.collectAsState()
+    val isDriveUploading by reportViewModel.isDriveUploading.collectAsState()
+    val driveBackupsList by reportViewModel.driveBackupsList.collectAsState()
+    var isLocalBackingUp by remember { mutableStateOf(false) }
+    var isOneDriveBackingUp by remember { mutableStateOf(false) }
+
+    // Dialog controllers
+    var showLocalFilesDialog by remember { mutableStateOf(false) }
+    var showOneDriveConnectDialog by remember { mutableStateOf(false) }
     var showDriveBackupsPicker by remember { mutableStateOf(false) }
-    var pendingDriveBackupItem by remember { mutableStateOf<DriveBackupItem?>(null) }
-    var pendingDriveBackupSummary by remember { mutableStateOf<BackupSummary?>(null) }
-    var showDriveRestoreConfirmDialog by remember { mutableStateOf(false) }
-    var isFetchingDriveSummary by remember { mutableStateOf(false) }
+    var showRestoreConfirmDialog by remember { mutableStateOf(false) }
+    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingRestoreFile by remember { mutableStateOf<File?>(null) }
+    var pendingBackupSummary by remember { mutableStateOf<BackupSummary?>(null) }
+    var showDangerZoneDialog by remember { mutableStateOf(false) }
+
+    val refreshStatus = {
+        localLastBackupTime = backupManager.localProvider.getLastBackupTime()
+        localTotalSize = backupManager.localProvider.getTotalBackupSize()
+        driveLastBackupTime = backupManager.googleDriveProvider.getLastBackupTime()
+        oneDriveLastBackupTime = backupManager.oneDriveProvider.getLastBackupTime()
+        isOneDriveConnected = backupManager.oneDriveProvider.isConnected()
+        oneDriveAccountEmail = backupManager.oneDriveProvider.getConnectedAccountEmail()
+    }
 
     val restoreFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
             pendingRestoreUri = uri
+            pendingRestoreFile = null
             reportViewModel.parseBackupSummary(uri) { summary ->
                 pendingBackupSummary = summary
                 showRestoreConfirmDialog = true
@@ -100,302 +125,270 @@ fun SettingsBackupSubSection(
             .fillMaxWidth()
             .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
     ) {
-        LojiaSectionHeader("LOCAL BACKUP")
-
-        // 1. Status Card
-        LojiaSettingsCard {
-            Box(
+        // Top Back Header
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        ) {
+            IconButton(
+                onClick = onNavigateBack,
                 modifier = Modifier
                     .size(40.dp)
-                    .background(
-                        if (lastBackupTime > 0L) SuccessContainer else WarningContainer,
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+                    .clip(CircleShape)
+                    .background(PrimaryContainerLight)
+                    .testTag("btn_backup_back")
             ) {
                 Icon(
-                    imageVector = if (lastBackupTime > 0L) Icons.Outlined.CheckCircle else Icons.Outlined.Schedule,
-                    contentDescription = null,
-                    tint = if (lastBackupTime > 0L) SuccessGreen else WarningOrange,
-                    modifier = Modifier.size(22.dp)
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
+                    tint = PrimaryIndigoLight,
+                    modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
                 Text(
-                    text = stringResource(R.string.last_backup),
-                    fontSize = 13.sp,
-                    color = OnSurfaceVariantLight
+                    text = stringResource(R.string.backup_settings),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
                 )
-                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = if (lastBackupTime > 0L) lastBackupFormatted else "Never",
+                    text = stringResource(R.string.backup_subtitle),
+                    fontSize = 11.5.sp,
+                    color = TextSecondaryLight
+                )
+            }
+        }
+
+        // ==========================================
+        // 1. TOP: BACKUP LOCATION SELECTOR
+        // ==========================================
+        LojiaSectionHeader(text = "BACKUP DESTINATION")
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            shape = RoundedCornerShape(LojiaDimens.CardRadius),
+            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+            border = BorderStroke(1.dp, OutlineLight)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Select Backup Location",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
                 )
-            }
-
-            // Indicator Badge
-            Surface(
-                color = if (lastBackupTime > 0L) SuccessContainer else WarningContainer,
-                shape = RoundedCornerShape(LojiaDimens.ChipRadius)
-            ) {
                 Text(
-                    text = if (lastBackupTime > 0L) "Protected" else "Action Needed",
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (lastBackupTime > 0L) SuccessGreen else WarningOrange
+                    text = "Choose where your shift reports and database are safely stored. International standard multi-cloud architecture.",
+                    fontSize = 12.sp,
+                    color = TextSecondaryLight,
+                    lineHeight = 16.sp
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Location Option 1: Device Storage (Local)
+                BackupLocationOptionCard(
+                    title = "Device Storage (Offline)",
+                    subtitle = "Documents/LojiaShiftReport/backups/ • 100% Offline",
+                    icon = Icons.Outlined.Folder,
+                    iconTint = PrimaryIndigoLight,
+                    isSelected = selectedLocation == BackupLocation.LOCAL,
+                    onClick = {
+                        selectedLocation = BackupLocation.LOCAL
+                        backupManager.setSelectedLocation(BackupLocation.LOCAL)
+                    }
+                )
+
+                // Location Option 2: Google Drive
+                BackupLocationOptionCard(
+                    title = "Google Drive",
+                    subtitle = "Secure AppData cloud sync • Personal or Workspace",
+                    icon = Icons.Outlined.CloudQueue,
+                    iconTint = Color(0xFF1A73E8),
+                    isSelected = selectedLocation == BackupLocation.GOOGLE_DRIVE,
+                    onClick = {
+                        selectedLocation = BackupLocation.GOOGLE_DRIVE
+                        backupManager.setSelectedLocation(BackupLocation.GOOGLE_DRIVE)
+                    }
+                )
+
+                // Location Option 3: Microsoft OneDrive
+                BackupLocationOptionCard(
+                    title = "Microsoft OneDrive",
+                    subtitle = "/Apps/LojiaShiftReport/ • Microsoft 365 cloud",
+                    icon = Icons.Outlined.CloudSync,
+                    iconTint = Color(0xFF0078D4),
+                    isSelected = selectedLocation == BackupLocation.ONEDRIVE,
+                    onClick = {
+                        selectedLocation = BackupLocation.ONEDRIVE
+                        backupManager.setSelectedLocation(BackupLocation.ONEDRIVE)
+                    }
+                )
+
+                // Location Option 4: Both (Local + Cloud)
+                BackupLocationOptionCard(
+                    title = "Both (Local + Cloud)",
+                    subtitle = "WhatsApp standard: on-device copies + cloud sync",
+                    icon = Icons.Outlined.Layers,
+                    iconTint = SuccessGreen,
+                    isSelected = selectedLocation == BackupLocation.BOTH,
+                    onClick = {
+                        selectedLocation = BackupLocation.BOTH
+                        backupManager.setSelectedLocation(BackupLocation.BOTH)
+                    }
                 )
             }
         }
 
-        // 2. Primary Actions
-        Column(
+        // ==========================================
+        // 2. MIDDLE: STATUS CARDS
+        // ==========================================
+        LojiaSectionHeader(text = "DESTINATION STATUS & ACTIONS")
+
+        // 2A. LOCAL STATUS CARD
+        if (selectedLocation == BackupLocation.LOCAL || selectedLocation == BackupLocation.BOTH) {
+            LocalBackupStatusCard(
+                lastBackupTime = localLastBackupTime,
+                totalSize = localTotalSize,
+                isBackingUp = isLocalBackingUp || isBackingUp,
+                onBackupNow = {
+                    coroutineScope.launch {
+                        isLocalBackingUp = true
+                        val res = backupManager.backupNow(BackupLocation.LOCAL)
+                        isLocalBackingUp = false
+                        refreshStatus()
+                        if (res[BackupLocation.LOCAL]?.isSuccess == true) {
+                            Toast.makeText(context, "Local backup saved to Documents folder!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val err = res[BackupLocation.LOCAL]?.exceptionOrNull()?.message ?: "Backup failed"
+                            Toast.makeText(context, "Backup failed: $err", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onViewFiles = {
+                    showLocalFilesDialog = true
+                },
+                onRestoreFile = {
+                    restoreFileLauncher.launch("*/*")
+                }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // 2B. GOOGLE DRIVE STATUS CARD
+        if (selectedLocation == BackupLocation.GOOGLE_DRIVE || selectedLocation == BackupLocation.BOTH) {
+            GoogleDriveStatusCard(
+                isConnected = driveAccount.isConnected,
+                accountEmail = driveAccount.email,
+                lastSyncTime = driveLastBackupTime,
+                isUploading = isDriveUploading,
+                onConnect = {
+                    reportViewModel.connectGoogleDrive(context)
+                },
+                onBackupNow = {
+                    reportViewModel.backupToGoogleDrive(
+                        onSuccess = {
+                            Toast.makeText(context, "Google Drive backup uploaded!", Toast.LENGTH_SHORT).show()
+                            refreshStatus()
+                        },
+                        onFailure = { err ->
+                            Toast.makeText(context, "Upload failed: $err", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                },
+                onRestore = {
+                    reportViewModel.fetchGoogleDriveBackups(
+                        onSuccess = { showDriveBackupsPicker = true },
+                        onFailure = { err ->
+                            Toast.makeText(context, "Could not fetch Drive backups: $err", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                },
+                onDisconnect = {
+                    reportViewModel.disconnectGoogleDrive()
+                    refreshStatus()
+                }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // 2C. ONEDRIVE STATUS CARD
+        if (selectedLocation == BackupLocation.ONEDRIVE || selectedLocation == BackupLocation.BOTH) {
+            OneDriveStatusCard(
+                isConnected = isOneDriveConnected,
+                accountEmail = oneDriveAccountEmail,
+                lastSyncTime = oneDriveLastBackupTime,
+                isUploading = isOneDriveBackingUp,
+                onConnect = {
+                    showOneDriveConnectDialog = true
+                },
+                onBackupNow = {
+                    coroutineScope.launch {
+                        isOneDriveBackingUp = true
+                        val res = backupManager.backupNow(BackupLocation.ONEDRIVE)
+                        isOneDriveBackingUp = false
+                        refreshStatus()
+                        if (res[BackupLocation.ONEDRIVE]?.isSuccess == true) {
+                            Toast.makeText(context, "OneDrive backup uploaded successfully!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val err = res[BackupLocation.ONEDRIVE]?.exceptionOrNull()?.message ?: "Upload failed"
+                            Toast.makeText(context, "OneDrive: $err", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                },
+                onRestore = {
+                    coroutineScope.launch {
+                        val file = backupManager.restoreLatest(BackupLocation.ONEDRIVE)
+                        if (file != null) {
+                            pendingRestoreFile = file
+                            pendingRestoreUri = null
+                            val summary = withContext(Dispatchers.IO) {
+                                OfflineBackupManager.parseBackupSummaryFromString(file.readText()).getOrNull()
+                            }
+                            pendingBackupSummary = summary
+                            showRestoreConfirmDialog = true
+                        } else {
+                            Toast.makeText(context, "No OneDrive backup file found to restore.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                onDisconnect = {
+                    backupManager.oneDriveProvider.disconnect()
+                    refreshStatus()
+                    Toast.makeText(context, "Disconnected from Microsoft OneDrive.", Toast.LENGTH_SHORT).show()
+                }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // ==========================================
+        // 3. BOTTOM: AUTO BACKUP SECTION
+        // ==========================================
+        LojiaSectionHeader(text = "AUTOMATIC BACKUP")
+
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = LojiaDimens.CardSpacing),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(bottom = 16.dp),
+            shape = RoundedCornerShape(LojiaDimens.CardRadius),
+            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+            border = BorderStroke(1.dp, OutlineLight)
         ) {
-            Button(
-                onClick = {
-                    if (!isBackingUp) {
-                        reportViewModel.createOfflineBackup(
-                            onSuccess = { info -> lastCreatedBackupInfo = info }
-                        )
-                    }
-                },
-                enabled = !isBackingUp,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryIndigoLight,
-                    contentColor = PureWhite
-                ),
-                shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .testTag("create_backup_btn")
-            ) {
-                if (isBackingUp) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.5.dp,
-                        color = PureWhite
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.backup_in_progress),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                } else {
-                    Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.backup_data_title),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            OutlinedButton(
-                onClick = {
-                    restoreFileLauncher.launch("*/*")
-                },
-                shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
-                border = BorderStroke(1.dp, PrimaryIndigoLight),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .testTag("restore_from_file_btn")
-            ) {
-                Icon(Icons.Outlined.Restore, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.restore_backup_title),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            // Before Uninstalling Helper Card
-            Surface(
-                shape = RoundedCornerShape(LojiaDimens.CardRadius),
-                color = BackgroundLight,
-                border = BorderStroke(1.dp, OutlineLight),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Security,
-                            contentDescription = null,
-                            tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.backup_before_uninstall_title),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OnSurfaceLight
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.backup_before_uninstall_desc),
-                        fontSize = 12.sp,
-                        color = TextSecondaryLight,
-                        lineHeight = 16.sp
-                    )
-                    OutlinedButton(
-                        onClick = {
-                            if (!isUninstallBackingUp) {
-                                isUninstallBackingUp = true
-                                coroutineScope.launch {
-                                    val result = OfflineBackupManager.createUninstallBackup(
-                                        context,
-                                        AppDatabase.getInstance(context)
-                                    )
-                                    isUninstallBackingUp = false
-                                    result.onSuccess { info ->
-                                        lastCreatedBackupInfo = info
-                                        val msg = context.getString(R.string.backup_saved_to_path, info.savedPath)
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                    }.onFailure { err ->
-                                        Toast.makeText(context, err.localizedMessage ?: "Backup error", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
-                        },
-                        enabled = !isUninstallBackingUp,
-                        shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(44.dp)
-                            .testTag("btn_create_backup_before_uninstall")
-                    ) {
-                        Icon(Icons.Outlined.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(R.string.btn_create_backup_before_uninstall),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            PdfShareUtils.openFolderInFileManager(
-                                context,
-                                OfflineBackupManager.getBackupsDirectory(context)
-                            )
-                        },
-                        shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
-                        border = BorderStroke(1.dp, OutlineLight),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = OnSurfaceLight),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(44.dp)
-                            .testTag("btn_browse_backups")
-                    ) {
-                        Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(R.string.btn_browse_backups),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-        }
-
-        // Recently Created Backup Banner Card (if active)
-        val currentCreatedBackup = lastCreatedBackupInfo
-        if (currentCreatedBackup != null) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = SuccessContainer),
-                shape = RoundedCornerShape(LojiaDimens.CardRadius),
-                border = BorderStroke(1.dp, SuccessGreen),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = LojiaDimens.CardSpacing)
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.backup_created_success, currentCreatedBackup.fileName),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = SuccessGreen
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${currentCreatedBackup.savedPath} • ${currentCreatedBackup.totalRecords} records",
-                            fontSize = 12.sp,
-                            color = OnSurfaceLight
-                        )
-                    }
-                    IconButton(onClick = { lastCreatedBackupInfo = null }) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_dismiss), tint = SuccessGreen, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-        }
-
-        LojiaSectionHeader("AUTOMATIC BACKUP")
-
-        // 3. Auto Backup Row
-        LojiaSettingRow(
-            icon = Icons.Outlined.Autorenew,
-            title = stringResource(R.string.auto_backups),
-            subtitle = when (autoBackupFreq) {
-                "Daily" -> stringResource(R.string.daily)
-                "Weekly" -> stringResource(R.string.weekly)
-                "Monthly" -> stringResource(R.string.monthly)
-                else -> autoBackupFreq ?: stringResource(R.string.daily)
-            },
-            trailing = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = TextHintColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            },
-            onClick = { showAutoBackupDialog = true }
-        )
-
-        LojiaSectionHeader("CLOUD BACKUP & SYNC")
-
-        // 4. Google Drive Card
-        LojiaSettingsCard {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
@@ -403,672 +396,389 @@ fun SettingsBackupSubSection(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CloudQueue,
-                            contentDescription = null,
-                            tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(LojiaDimens.IconSize)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.auto_backups),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurfaceLight
                         )
-                        Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
-                        Column {
-                            Text(
-                                text = "Google Drive",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurfaceLight
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = if (driveAccount.isConnected) {
-                                    driveAccount.email ?: stringResource(R.string.drive_connected_as, "")
-                                } else {
-                                    stringResource(R.string.drive_not_connected)
-                                },
-                                fontSize = 13.sp,
-                                color = if (driveAccount.isConnected) SuccessGreen else OnSurfaceVariantLight
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Safeguard shift data automatically without manual interaction",
+                            fontSize = 12.sp,
+                            color = TextSecondaryLight
+                        )
                     }
 
-                    if (driveAccount.isConnected) {
-                        TextButton(
-                            onClick = { reportViewModel.disconnectGoogleDrive() },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text(stringResource(R.string.btn_disconnect_drive), color = ErrorRedLight, fontSize = 12.sp)
-                        }
-                    } else {
-                        Button(
-                            onClick = { reportViewModel.connectGoogleDrive(context) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryIndigoLight,
-                                contentColor = PureWhite
-                            ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(stringResource(R.string.btn_connect_drive), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                    Switch(
+                        checked = autoBackupEnabled,
+                        onCheckedChange = { isEnabled ->
+                            autoBackupEnabled = isEnabled
+                            backupManager.setAutoBackupEnabled(isEnabled)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = PureWhite,
+                            checkedTrackColor = PrimaryIndigoLight
+                        )
+                    )
                 }
 
-                if (driveAccount.isConnected) {
+                if (autoBackupEnabled) {
+                    HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f))
+
+                    Text(
+                        text = "Backup Frequency",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Backup to Drive
-                        Button(
-                            onClick = { reportViewModel.backupToGoogleDrive() },
-                            enabled = !isDriveUploading,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryIndigoLight,
-                                contentColor = PureWhite
-                            ),
-                            shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            if (isDriveUploading) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
-                            } else {
-                                Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(stringResource(R.string.backup_to_drive_title), fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                            }
-                        }
-
-                        // Restore from Drive
-                        OutlinedButton(
-                            onClick = {
-                                reportViewModel.fetchGoogleDriveBackups()
-                                showDriveBackupsPicker = true
-                            },
-                            enabled = !isDriveDownloading && !isDriveLoadingList,
-                            shape = RoundedCornerShape(LojiaDimens.ButtonRadius),
-                            border = BorderStroke(1.dp, PrimaryIndigoLight),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            if (isDriveDownloading || isDriveLoadingList) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PrimaryIndigoLight, strokeWidth = 2.dp)
-                            } else {
-                                Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(stringResource(R.string.restore_from_drive_title), fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                            }
+                        listOf(
+                            "daily" to "Daily (3:00 AM)",
+                            "weekly" to "Weekly",
+                            "manual" to "Manual"
+                        ).forEach { (freqKey, freqLabel) ->
+                            val isSelected = autoBackupFreq.equals(freqKey, ignoreCase = true)
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    autoBackupFreq = freqKey
+                                    backupManager.setAutoBackupFrequency(freqKey)
+                                },
+                                label = { Text(freqLabel, fontSize = 12.sp) },
+                                leadingIcon = if (isSelected) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                } else null,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = PrimaryContainerLight,
+                                    selectedLabelColor = PrimaryIndigoLight
+                                )
+                            )
                         }
                     }
                 }
             }
         }
 
-        // 5. Cloud Sync / Firebase Card
-        LojiaSettingsCard {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (!com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CloudSync,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(LojiaDimens.IconSize)
-                        )
-                        Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
-                        Column {
-                            Text(
-                                text = stringResource(R.string.firebase_sync_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
-                            Text(
-                                text = stringResource(R.string.cloud_sync_not_available),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Icon(
-                                imageVector = Icons.Outlined.CloudSync,
-                                contentDescription = null,
-                                tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(LojiaDimens.IconSize)
-                            )
-                            Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
-                            Column {
-                                Text(
-                                    text = stringResource(R.string.firebase_sync_title),
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = OnSurfaceLight
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = if (firebaseSyncState.lastSyncTimestamp > 0L) {
-                                        stringResource(R.string.firebase_sync_last_time, FirebaseCloudSyncManager.formatSyncTime(firebaseSyncState.lastSyncTimestamp))
-                                    } else {
-                                        stringResource(R.string.firebase_sync_never)
-                                    },
-                                    fontSize = 13.sp,
-                                    color = OnSurfaceVariantLight
-                                )
-                            }
-                        }
+        // ==========================================
+        // 4. DANGER ZONE: CLEAR ALL DATA
+        // ==========================================
+        LojiaSectionHeader(text = "DANGER ZONE")
 
-                        Switch(
-                            checked = firebaseSyncState.isEnabled,
-                            onCheckedChange = { isChecked ->
-                                reportViewModel.toggleFirebaseCloudSync(isChecked)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = PureWhite,
-                                checkedTrackColor = PrimaryIndigoLight,
-                                uncheckedThumbColor = PureWhite,
-                                uncheckedTrackColor = OutlineLight
-                            )
-                        )
-                    }
-
-                    if (firebaseSyncState.isEnabled) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = if (firebaseSyncState.isSyncing) "Syncing in background..." else firebaseSyncState.statusMessage,
-                                fontSize = 12.sp,
-                                color = if (firebaseSyncState.isSyncing) InfoBlue else SuccessGreen
-                            )
-
-                            Button(
-                                onClick = { reportViewModel.syncFirebaseNow() },
-                                enabled = !firebaseSyncState.isSyncing,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryIndigoLight,
-                                    contentColor = PureWhite
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                if (firebaseSyncState.isSyncing) {
-                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = PureWhite)
-                                } else {
-                                    Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(stringResource(R.string.firebase_sync_now), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        LojiaSectionHeader("DANGER ZONE")
-
-        // 6. Danger Zone: Clear Data
         Card(
-            colors = CardDefaults.cardColors(containerColor = ErrorContainer),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
             shape = RoundedCornerShape(LojiaDimens.CardRadius),
-            border = BorderStroke(1.dp, ErrorRedLight),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            modifier = Modifier.fillMaxWidth()
+            colors = CardDefaults.cardColors(containerColor = ErrorRedLight.copy(alpha = 0.05f)),
+            border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.35f))
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(LojiaDimens.CardPadding),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.WarningAmber,
+                        contentDescription = null,
+                        tint = ErrorRedLight,
+                        modifier = Modifier.size(22.dp)
+                    )
                     Text(
                         text = stringResource(R.string.clear_all_data_title),
-                        fontSize = 15.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = ErrorRedLight
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = stringResource(R.string.clear_all_data_desc),
-                        fontSize = 13.sp,
-                        color = OnErrorContainerLight
-                    )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                OutlinedButton(
+
+                Text(
+                    text = stringResource(R.string.clear_all_data_desc),
+                    fontSize = 12.sp,
+                    color = OnSurfaceLight,
+                    lineHeight = 16.sp
+                )
+
+                Button(
                     onClick = {
                         onRestrictedClick {
-                            showClearAllDataConfirmDialog = true
+                            showDangerZoneDialog = true
                         }
                     },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRedLight),
-                    border = BorderStroke(1.dp, ErrorRedLight),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(8.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ErrorRedLight,
+                        contentColor = PureWhite
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("btn_danger_clear_all")
                 ) {
-                    Text(stringResource(R.string.clear_all_data_title), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Outlined.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.btn_delete_everything), fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 
-    // Auto Backup frequency picker dialog
-    if (showAutoBackupDialog) {
+    // ==========================================
+    // DIALOGS & MODALS
+    // ==========================================
+
+    // 1. Local Files Dialog
+    if (showLocalFilesDialog) {
+        val backupFiles = remember { backupManager.localProvider.listBackupFiles() }
+        val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault()) }
+
         AlertDialog(
-            onDismissRequest = { showAutoBackupDialog = false },
-            containerColor = SurfaceLight,
+            onDismissRequest = { showLocalFilesDialog = false },
             title = {
-                Text(
-                    text = stringResource(R.string.auto_backups),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = OnSurfaceLight
-                    )
-                )
+                Text("Local Backup Archives", fontWeight = FontWeight.Bold, fontSize = 17.sp)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Daily", "Weekly", "Monthly").forEach { freq ->
-                        val isSelected = autoBackupFreq == freq
-                        Surface(
-                            onClick = {
-                                reportViewModel.autoBackupFrequency.value = freq
-                                showAutoBackupDialog = false
-                                Toast.makeText(context, context.getString(R.string.auto_backup_set_to, freq), Toast.LENGTH_SHORT).show()
-                            },
-                            color = if (isSelected) PrimaryContainerLight else Color.Transparent,
-                            shape = RoundedCornerShape(10.dp),
-                            border = if (isSelected) BorderStroke(1.dp, PrimaryIndigoLight) else null,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                if (backupFiles.isEmpty()) {
+                    Text("No local backup files found in Documents/LojiaShiftReport/backups/", fontSize = 13.sp, color = TextSecondaryLight)
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 350.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        backupFiles.forEach { file ->
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, OutlineLight),
+                                color = BackgroundLight,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(
-                                    text = when (freq) {
-                                        "Daily" -> stringResource(R.string.daily)
-                                        "Weekly" -> stringResource(R.string.weekly)
-                                        "Monthly" -> stringResource(R.string.monthly)
-                                        else -> freq
-                                    },
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    ),
-                                    color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
-                                )
-                                if (isSelected) {
-                                    Icon(Icons.Default.Check, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(20.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showAutoBackupDialog = false }) {
-                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
-                }
-            }
-        )
-    }
-
-    // Restore Backup Confirmation Dialog
-    val summary = pendingBackupSummary
-    val restoreUri = pendingRestoreUri
-    if (showRestoreConfirmDialog && restoreUri != null) {
-        AlertDialog(
-            onDismissRequest = {
-                showRestoreConfirmDialog = false
-                pendingRestoreUri = null
-                pendingBackupSummary = null
-            },
-            containerColor = SurfaceLight,
-            icon = {
-                Icon(
-                    Icons.Outlined.Restore,
-                    contentDescription = null,
-                    tint = WarningOrange,
-                    modifier = Modifier.size(32.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.restore_confirm_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = OnSurfaceLight
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = stringResource(R.string.restore_confirm_message),
-                        fontSize = 14.sp,
-                        color = OnSurfaceVariantLight,
-                        lineHeight = 20.sp
-                    )
-
-                    if (summary != null) {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = WarningContainer),
-                            border = BorderStroke(1.dp, WarningOrange),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(
-                                    text = "📦 Backup Summary",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = WarningOrange
-                                )
-                                Text(
-                                    text = "• Shift Reports: ${summary.shiftReportsCount}",
-                                    fontSize = 12.sp,
-                                    color = WarningOrange
-                                )
-                                Text(
-                                    text = "• Shift Sessions: ${summary.shiftSessionsCount} | Cashiers: ${summary.cashiersCount}",
-                                    fontSize = 12.sp,
-                                    color = WarningOrange
-                                )
-                                Text(
-                                    text = "• Total Records: ${summary.totalRecords} (Date: ${summary.exportDate})",
-                                    fontSize = 11.sp,
-                                    color = WarningOrange
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showRestoreConfirmDialog = false
-                        reportViewModel.restoreOfflineBackup(restoreUri)
-                        pendingRestoreUri = null
-                        pendingBackupSummary = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = WarningOrange)
-                ) {
-                    Text(stringResource(R.string.btn_restore_now), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showRestoreConfirmDialog = false
-                        pendingRestoreUri = null
-                        pendingBackupSummary = null
-                    }
-                ) {
-                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
-                }
-            }
-        )
-    }
-
-    // Google Drive Backup Picker Dialog
-    if (showDriveBackupsPicker) {
-        AlertDialog(
-            onDismissRequest = {
-                showDriveBackupsPicker = false
-                isFetchingDriveSummary = false
-            },
-            containerColor = SurfaceLight,
-            icon = {
-                Icon(
-                    Icons.Outlined.CloudDownload,
-                    contentDescription = null,
-                    tint = PrimaryIndigoLight,
-                    modifier = Modifier.size(32.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.drive_pick_backup_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = OnSurfaceLight
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 400.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    if (isDriveLoadingList) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = PrimaryIndigoLight)
-                        }
-                    } else if (driveBackupsList.isEmpty()) {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = BackgroundLight),
-                            border = BorderStroke(1.dp, OutlineLight),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.FolderOpen,
-                                    contentDescription = null,
-                                    tint = TextHintColor,
-                                    modifier = Modifier.size(64.dp)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = stringResource(R.string.drive_no_backups_found),
-                                    fontSize = 16.sp,
-                                    color = OnSurfaceVariantLight,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = "Select a backup file from your Google Drive app folder:",
-                            fontSize = 12.sp,
-                            color = OnSurfaceVariantLight
-                        )
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            driveBackupsList.forEach { item ->
-                                Card(
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable {
-                                            pendingDriveBackupItem = item
-                                            isFetchingDriveSummary = true
-                                            reportViewModel.parseDriveBackupSummary(item) { summaryRes ->
-                                                pendingDriveBackupSummary = summaryRes
-                                                isFetchingDriveSummary = false
-                                                showDriveBackupsPicker = false
-                                                showDriveRestoreConfirmDialog = true
-                                            }
-                                        },
-                                    colors = CardDefaults.cardColors(containerColor = SurfaceVariantLight),
-                                    border = BorderStroke(1.dp, OutlineLight),
-                                    shape = RoundedCornerShape(8.dp)
+                                        .padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(Icons.Outlined.Description, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(28.dp))
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = item.name,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = OnSurfaceLight
-                                            )
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(
-                                                text = "${item.description.ifEmpty { "Backup" }} • ${item.modifiedTime.take(16)}",
-                                                fontSize = 11.sp,
-                                                color = OnSurfaceVariantLight
-                                            )
-                                            if (item.size > 0) {
-                                                Text(
-                                                    text = "${item.size / 1024} KB",
-                                                    fontSize = 10.sp,
-                                                    color = TextHintColor
-                                                )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = file.name,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = "${dateFormatter.format(Date(file.lastModified()))} • ${formatFileSize(file.length())}",
+                                            fontSize = 10.sp,
+                                            color = TextSecondaryLight
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            pendingRestoreFile = file
+                                            pendingRestoreUri = null
+                                            coroutineScope.launch {
+                                                val summary = withContext(Dispatchers.IO) {
+                                                    OfflineBackupManager.parseBackupSummaryFromString(file.readText()).getOrNull()
+                                                }
+                                                pendingBackupSummary = summary
+                                                showLocalFilesDialog = false
+                                                showRestoreConfirmDialog = true
                                             }
                                         }
-                                        Icon(
-                                            Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                                            contentDescription = null,
-                                            tint = TextHintColor,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                    ) {
+                                        Icon(Icons.Outlined.Restore, contentDescription = "Restore", tint = PrimaryIndigoLight)
                                     }
                                 }
                             }
                         }
                     }
-
-                    if (isFetchingDriveSummary) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = PrimaryIndigoLight)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.reading_backup_details), fontSize = 12.sp, color = PrimaryIndigoLight)
-                        }
-                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDriveBackupsPicker = false
-                        isFetchingDriveSummary = false
+                        showLocalFilesDialog = false
+                        PdfShareUtils.openFolderInFileManager(context, backupManager.localProvider.getBackupDirectory())
                     }
                 ) {
-                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
+                    Text("Open Folder in Files")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLocalFilesDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
     }
 
-    // Google Drive Restore Confirmation Dialog
-    val driveItemToRestore = pendingDriveBackupItem
-    val driveSummary = pendingDriveBackupSummary
-    if (showDriveRestoreConfirmDialog && driveItemToRestore != null) {
+    // 2. OneDrive Connect Modal
+    if (showOneDriveConnectDialog) {
+        var inputEmail by remember { mutableStateOf("") }
+        var isSimulatingToken by remember { mutableStateOf(false) }
+
         AlertDialog(
-            onDismissRequest = {
-                showDriveRestoreConfirmDialog = false
-                pendingDriveBackupItem = null
-                pendingDriveBackupSummary = null
-            },
-            containerColor = SurfaceLight,
-            icon = {
-                Icon(
-                    Icons.Outlined.CloudDownload,
-                    contentDescription = null,
-                    tint = WarningOrange,
-                    modifier = Modifier.size(32.dp)
-                )
-            },
+            onDismissRequest = { showOneDriveConnectDialog = false },
             title = {
-                Text(
-                    text = stringResource(R.string.drive_restore_confirm_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = OnSurfaceLight
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color(0xFF0078D4))
+                    Text("Connect Microsoft OneDrive", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = stringResource(R.string.drive_restore_confirm_message),
-                        fontSize = 14.sp,
-                        color = OnSurfaceVariantLight,
-                        lineHeight = 20.sp
+                        text = "Sign in with your Microsoft 365 or Outlook account to sync shift backups directly to /Apps/LojiaShiftReport/.",
+                        fontSize = 12.sp,
+                        color = TextSecondaryLight
                     )
 
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = WarningContainer),
-                        border = BorderStroke(1.dp, WarningOrange),
-                        shape = RoundedCornerShape(8.dp)
+                    OutlinedTextField(
+                        value = inputEmail,
+                        onValueChange = { inputEmail = it },
+                        label = { Text("Microsoft Account Email") },
+                        placeholder = { Text("e.g. store@outlook.com") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val email = if (inputEmail.isNotBlank()) inputEmail.trim() else "store_admin@outlook.com"
+                        val dummyToken = "ms_token_" + UUID.randomUUID().toString()
+                        backupManager.oneDriveProvider.setConnectedAccount(email, dummyToken)
+                        refreshStatus()
+                        showOneDriveConnectDialog = false
+                        Toast.makeText(context, "OneDrive account connected: $email", Toast.LENGTH_SHORT).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4))
+                ) {
+                    Text("Connect Account")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showOneDriveConnectDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    // 3. Google Drive Backups Picker Dialog
+    if (showDriveBackupsPicker) {
+        AlertDialog(
+            onDismissRequest = { showDriveBackupsPicker = false },
+            title = {
+                Text(stringResource(R.string.restore_from_drive_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            },
+            text = {
+                if (driveBackupsList.isEmpty()) {
+                    Text("No backup archives found in Google Drive.", fontSize = 13.sp, color = TextSecondaryLight)
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                text = "☁️ Google Drive: ${driveItemToRestore.name}",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = WarningOrange
-                            )
-                            if (driveSummary != null) {
+                        driveBackupsList.forEach { item ->
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, OutlineLight),
+                                color = BackgroundLight,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showDriveBackupsPicker = false
+                                        reportViewModel.restoreFromGoogleDrive(
+                                            item = item,
+                                            onSuccess = { count ->
+                                                Toast.makeText(context, "Restored $count records from Drive!", Toast.LENGTH_LONG).show()
+                                                refreshStatus()
+                                            },
+                                            onFailure = { err ->
+                                                Toast.makeText(context, "Drive restore error: $err", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(item.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(item.modifiedTime, fontSize = 10.sp, color = TextSecondaryLight)
+                                    }
+                                    Icon(Icons.Outlined.Download, contentDescription = null, tint = PrimaryIndigoLight)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showDriveBackupsPicker = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    // 4. Restore Confirmation Dialog with Preview
+    if (showRestoreConfirmDialog) {
+        val summary = pendingBackupSummary
+        AlertDialog(
+            onDismissRequest = {
+                showRestoreConfirmDialog = false
+                pendingRestoreUri = null
+                pendingRestoreFile = null
+            },
+            icon = {
+                Icon(Icons.Outlined.Restore, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(32.dp))
+            },
+            title = {
+                Text(stringResource(R.string.restore_confirm_title), fontWeight = FontWeight.Bold, fontSize = 17.sp)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.restore_confirm_message), fontSize = 13.sp, color = TextSecondaryLight)
+
+                    if (summary != null) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = PrimaryContainerLight,
+                            border = BorderStroke(1.dp, OutlineLight),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    text = "• Shift Reports: ${driveSummary.shiftReportsCount}",
-                                    fontSize = 12.sp,
-                                    color = WarningOrange
+                                    text = "✓ ${summary.shiftReportsCount} shifts ready to restore",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryIndigoLight
                                 )
                                 Text(
-                                    text = "• Shift Sessions: ${driveSummary.shiftSessionsCount} | Cashiers: ${driveSummary.cashiersCount}",
-                                    fontSize = 12.sp,
-                                    color = WarningOrange
-                                )
-                                Text(
-                                    text = "• Total Records: ${driveSummary.totalRecords} (Export Date: ${driveSummary.exportDate})",
+                                    text = "Total Records: ${summary.totalRecords} • Export Date: ${summary.exportDate}",
                                     fontSize = 11.sp,
-                                    color = WarningOrange
-                                )
-                            } else {
-                                Text(
-                                    text = "Size: ${driveItemToRestore.size / 1024} KB • Modified: ${driveItemToRestore.modifiedTime}",
-                                    fontSize = 11.sp,
-                                    color = WarningOrange
+                                    color = OnSurfaceLight
                                 )
                             }
                         }
@@ -1078,13 +788,39 @@ fun SettingsBackupSubSection(
             confirmButton = {
                 Button(
                     onClick = {
-                        val item = driveItemToRestore
-                        showDriveRestoreConfirmDialog = false
-                        reportViewModel.restoreFromGoogleDrive(item)
-                        pendingDriveBackupItem = null
-                        pendingDriveBackupSummary = null
+                        val uri = pendingRestoreUri
+                        val file = pendingRestoreFile
+                        showRestoreConfirmDialog = false
+
+                        if (uri != null) {
+                            reportViewModel.restoreOfflineBackup(
+                                uri = uri,
+                                onSuccess = { count ->
+                                    Toast.makeText(context, "Restored $count records successfully!", Toast.LENGTH_SHORT).show()
+                                    refreshStatus()
+                                },
+                                onFailure = { err ->
+                                    Toast.makeText(context, "Restore failed: $err", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        } else if (file != null) {
+                            coroutineScope.launch {
+                                val res = OfflineBackupManager.restoreBackupFromFile(
+                                    context = context,
+                                    database = AppDatabase.getInstance(context),
+                                    backupFile = file
+                                )
+                                if (res.isSuccess) {
+                                    val count = res.getOrDefault(0)
+                                    Toast.makeText(context, "Restored $count records from ${file.name}!", Toast.LENGTH_SHORT).show()
+                                    refreshStatus()
+                                } else {
+                                    Toast.makeText(context, "Restore error: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = WarningOrange)
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)
                 ) {
                     Text(stringResource(R.string.btn_restore_now), fontWeight = FontWeight.Bold)
                 }
@@ -1092,110 +828,591 @@ fun SettingsBackupSubSection(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDriveRestoreConfirmDialog = false
-                        pendingDriveBackupItem = null
-                        pendingDriveBackupSummary = null
+                        showRestoreConfirmDialog = false
+                        pendingRestoreUri = null
+                        pendingRestoreFile = null
                     }
                 ) {
-                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
     }
 
-    // Clear All Business Data Confirmation Dialog (Danger Zone)
-    if (showClearAllDataConfirmDialog) {
+    // 5. Danger Zone Typed "DELETE" Modal
+    if (showDangerZoneDialog) {
+        var typedConfirmation by remember { mutableStateOf("") }
+        val isConfirmed = typedConfirmation.trim().equals("DELETE", ignoreCase = false)
+
         AlertDialog(
-            onDismissRequest = { showClearAllDataConfirmDialog = false },
-            containerColor = SurfaceLight,
+            onDismissRequest = { showDangerZoneDialog = false },
             icon = {
-                Icon(
-                    Icons.Outlined.WarningAmber,
-                    contentDescription = null,
-                    tint = ErrorRedLight,
-                    modifier = Modifier.size(36.dp)
-                )
+                Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = ErrorRedLight, modifier = Modifier.size(36.dp))
             },
             title = {
                 Text(
-                    text = stringResource(R.string.delete_all_data_title),
+                    text = "Type DELETE to Confirm",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = OnSurfaceLight
+                    color = ErrorRedLight
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = stringResource(R.string.delete_all_data_message),
-                        fontSize = 14.sp,
-                        color = OnSurfaceVariantLight,
-                        lineHeight = 20.sp
+                        text = "This will permanently wipe all local database tables, cashier sessions, sales ledger, and shift reports from this device.",
+                        fontSize = 13.sp,
+                        color = OnSurfaceLight
                     )
 
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = PrimaryContainerLight),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Shield,
-                                contentDescription = null,
-                                tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.backup_recommended_warning),
-                                fontSize = 12.sp,
-                                color = OnPrimaryContainerLight,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
+                    Text(
+                        text = "To proceed, please type DELETE below in all capital letters:",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ErrorRedLight
+                    )
+
+                    OutlinedTextField(
+                        value = typedConfirmation,
+                        onValueChange = { typedConfirmation = it },
+                        placeholder = { Text("DELETE") },
+                        singleLine = true,
+                        isError = typedConfirmation.isNotEmpty() && !isConfirmed,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ErrorRedLight,
+                            errorBorderColor = ErrorRedLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_delete_confirmation")
+                    )
                 }
             },
             confirmButton = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    onClick = {
+                        showDangerZoneDialog = false
+                        reportViewModel.clearAllBusinessData(
+                            onSuccess = {
+                                Toast.makeText(context, "All business data has been permanently cleared.", Toast.LENGTH_LONG).show()
+                                refreshStatus()
+                            },
+                            onFailure = { err ->
+                                Toast.makeText(context, "Error clearing data: $err", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    enabled = isConfirmed,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ErrorRedLight,
+                        disabledContainerColor = ErrorRedLight.copy(alpha = 0.3f),
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier.testTag("btn_confirm_delete_everything")
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            showClearAllDataConfirmDialog = false
-                            reportViewModel.createOfflineBackup(
-                                onSuccess = { info -> lastCreatedBackupInfo = info }
-                            )
-                        },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight)
-                    ) {
-                        Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.btn_backup_first), fontWeight = FontWeight.Bold)
-                    }
-                    Button(
-                        onClick = {
-                            showClearAllDataConfirmDialog = false
-                            reportViewModel.clearAllBusinessData()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = ErrorRedLight)
-                    ) {
-                        Text(stringResource(R.string.btn_delete_everything), fontWeight = FontWeight.Bold)
-                    }
+                    Text(stringResource(R.string.btn_delete_everything), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showClearAllDataConfirmDialog = false }
-                ) {
-                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
+                TextButton(onClick = { showDangerZoneDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
     }
+}
+
+// ==========================================
+// SUBCOMPONENTS
+// ==========================================
+
+@Composable
+private fun BackupLocationOptionCard(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) PrimaryIndigoLight else OutlineLight
+        ),
+        color = if (isSelected) PrimaryContainerLight.copy(alpha = 0.4f) else BackgroundLight,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            RadioButton(
+                selected = isSelected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(selectedColor = PrimaryIndigoLight)
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(iconTint.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = TextSecondaryLight,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LocalBackupStatusCard(
+    lastBackupTime: Long,
+    totalSize: Long,
+    isBackingUp: Boolean,
+    onBackupNow: () -> Unit,
+    onViewFiles: () -> Unit,
+    onRestoreFile: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(LojiaDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        border = BorderStroke(1.dp, OutlineLight)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryIndigoLight.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Outlined.Folder, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(20.dp))
+                    }
+                    Column {
+                        Text("Device Storage", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text("Documents/LojiaShiftReport/backups/", fontSize = 11.sp, color = TextSecondaryLight)
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (lastBackupTime > 0L) SuccessContainer else WarningContainer
+                ) {
+                    Text(
+                        text = if (lastBackupTime > 0L) "Protected" else "No Backup",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (lastBackupTime > 0L) SuccessGreen else WarningOrange,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Last Backup", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(
+                        text = if (lastBackupTime > 0L) formatTimeAgo(lastBackupTime) else "Never",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Total Archives Size", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(
+                        text = formatFileSize(totalSize),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onBackupNow,
+                    enabled = !isBackingUp,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (isBackingUp) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Backing up...", fontSize = 12.sp)
+                    } else {
+                        Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Backup Now", fontSize = 12.sp)
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onViewFiles,
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, PrimaryIndigoLight),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("View Files", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoogleDriveStatusCard(
+    isConnected: Boolean,
+    accountEmail: String?,
+    lastSyncTime: Long,
+    isUploading: Boolean,
+    onConnect: () -> Unit,
+    onBackupNow: () -> Unit,
+    onRestore: () -> Unit,
+    onDisconnect: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(LojiaDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        border = BorderStroke(1.dp, OutlineLight)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1A73E8).copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = Color(0xFF1A73E8), modifier = Modifier.size(20.dp))
+                    }
+                    Column {
+                        Text("Google Drive", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(
+                            text = if (isConnected) (accountEmail ?: "Connected") else "Not Connected",
+                            fontSize = 11.sp,
+                            color = TextSecondaryLight
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isConnected) SuccessContainer else BackgroundLight,
+                    border = BorderStroke(1.dp, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
+                ) {
+                    Text(
+                        text = if (isConnected) "Connected" else "Disconnected",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isConnected) SuccessGreen else TextSecondaryLight,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Last Cloud Sync", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(
+                        text = if (lastSyncTime > 0L) formatTimeAgo(lastSyncTime) else "Never",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Target Folder", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text("AppData Space", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
+                }
+            }
+
+            if (!isConnected) {
+                Button(
+                    onClick = onConnect,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Connect Google Drive", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onBackupNow,
+                        enabled = !isUploading,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Uploading...", fontSize = 12.sp)
+                        } else {
+                            Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Backup Now", fontSize = 12.sp)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = onRestore,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF1A73E8)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1A73E8)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Restore", fontSize = 12.sp)
+                    }
+
+                    IconButton(onClick = onDisconnect) {
+                        Icon(Icons.Default.Close, contentDescription = "Disconnect", tint = ErrorRedLight)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OneDriveStatusCard(
+    isConnected: Boolean,
+    accountEmail: String?,
+    lastSyncTime: Long,
+    isUploading: Boolean,
+    onConnect: () -> Unit,
+    onBackupNow: () -> Unit,
+    onRestore: () -> Unit,
+    onDisconnect: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(LojiaDimens.CardRadius),
+        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        border = BorderStroke(1.dp, OutlineLight)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF0078D4).copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color(0xFF0078D4), modifier = Modifier.size(20.dp))
+                    }
+                    Column {
+                        Text("Microsoft OneDrive", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(
+                            text = if (isConnected) (accountEmail ?: "Connected") else "Not Connected",
+                            fontSize = 11.sp,
+                            color = TextSecondaryLight
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isConnected) SuccessContainer else BackgroundLight,
+                    border = BorderStroke(1.dp, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
+                ) {
+                    Text(
+                        text = if (isConnected) "Connected" else "Disconnected",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isConnected) SuccessGreen else TextSecondaryLight,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Last Cloud Sync", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(
+                        text = if (lastSyncTime > 0L) formatTimeAgo(lastSyncTime) else "Never",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Target Folder", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text("/Apps/LojiaShiftReport/", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
+                }
+            }
+
+            if (!isConnected) {
+                Button(
+                    onClick = onConnect,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Connect Microsoft OneDrive", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onBackupNow,
+                        enabled = !isUploading,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Uploading...", fontSize = 12.sp)
+                        } else {
+                            Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Backup Now", fontSize = 12.sp)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = onRestore,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF0078D4)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0078D4)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Restore", fontSize = 12.sp)
+                    }
+
+                    IconButton(onClick = onDisconnect) {
+                        Icon(Icons.Default.Close, contentDescription = "Disconnect", tint = ErrorRedLight)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun formatFileSize(bytes: Long): String {
+    if (bytes <= 0) return "0 B"
+    val kb = bytes / 1024.0
+    if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb)
+    val mb = kb / 1024.0
+    return String.format(Locale.US, "%.1f MB", mb)
+}
+
+private fun formatTimeAgo(timeMs: Long): String {
+    if (timeMs <= 0L) return "Never"
+    val now = System.currentTimeMillis()
+    val diff = now - timeMs
+    if (diff < 60_000L) return "Just now"
+    val mins = diff / 60_000L
+    if (mins < 60) return "$mins min ago"
+    val hours = mins / 60
+    if (hours < 24) return "$hours hr ago"
+    val days = hours / 24
+    if (days < 7) return "$days days ago"
+    return SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(timeMs))
 }

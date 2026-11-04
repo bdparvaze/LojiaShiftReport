@@ -1256,7 +1256,7 @@
     <string name="auth_complete_login_btn">Complete Login</string>
     <string name="auth_change_language_title">Change Language</string>
     <string name="quick_pin_enter_pin">Enter PIN</string>
-    <string name="quick_pin_subtitle">Enter your 4-digit PIN to unlock the app</string>
+    <string name="quick_pin_subtitle">Enter your 6-digit PIN to unlock the app</string>
     <string name="quick_pin_incorrect">Incorrect PIN</string>
     <string name="quick_pin_use_password">Use Password</string>
     <string name="auth_toast_please_enter_credentials">Please enter username and password</string>
@@ -1365,7 +1365,7 @@
     <string name="open_printer_settings">Open Printer Settings</string>
     <string name="printing_z_report">Printing Z-Report...</string>
     <string name="print_z_report_btn">Print Z-Report (Shift Close)</string>
-    <string name="pin_digit_label">4-Digit PIN</string>
+    <string name="pin_digit_label">6-Digit PIN</string>
     <string name="save_pin">Save PIN</string>
     <string name="restore_now">Restore Now</string>
     <string name="reading_backup_details">Reading backup details...</string>
@@ -1542,7 +1542,7 @@
     <string name="admin_reauth_default_desc">Admin authentication required to complete this operation.</string>
     <string name="fingerprint_not_recognized">Fingerprint not recognized. Try again.</string>
     <string name="quick_pin_saved_enabled">Quick PIN saved &amp; Quick Login enabled!</string>
-    <string name="four_digit_pin_label">4-Digit PIN</string>
+    <string name="four_digit_pin_label">6-Digit PIN</string>
     <string name="save_pin_btn">Save PIN</string>
     <string name="btn_numpad_del">DEL</string>
     <string name="default_shift_manager">Shift Manager</string>
@@ -1580,7 +1580,7 @@
     <string name="cd_zoom_out">Zoom Out</string>
     <string name="cd_open_google_maps">Open in Google Maps App</string>
     <string name="cd_quick_login_pin">Quick Login with PIN</string>
-    <string name="cd_change_pin">Change 4-Digit PIN</string>
+    <string name="cd_change_pin">Change 6-Digit PIN</string>
     <string name="cd_dismiss">Dismiss</string>
 
     <!-- Document Scanner & Camera -->
@@ -1691,7 +1691,7 @@
     <string name="doc_word_share_error">Could not share Word file: %s</string>
     <string name="doc_no_pdf_viewer">No PDF viewer app found on device</string>
     <string name="could_not_open_folder">Could not open folder: %s</string>
-    <string name="pin_must_be_4_digits">PIN must be exactly 4 digits</string>
+    <string name="pin_must_be_4_digits">PIN must be exactly 6 digits</string>
     <string name="cd_hide_password">Hide password</string>
     <string name="cd_show_password">Show password</string>
     <string name="gallery_error">Gallery error</string>
@@ -1755,4 +1755,16 @@
     <string name="change_password_desc">Change administrator master password</string>
     <string name="not_set">Not set</string>
     <string name="admin_auth_audit_desc">Mandatory admin re-authentication required. An automated security audit log entry will be created.</string>
+    <string name="cashier_cannot_delete_has_history_title">Cannot Delete - Has History</string>
+    <string name="cashier_cannot_delete_has_history_desc">This cashier has historical shift records and VAT audit records. Under POS standards, cashiers with shift history cannot be deleted. You can archive this cashier to disable shift entry while preserving audit integrity.</string>
+    <string name="action_archive">Archive</string>
+    <string name="action_unarchive">Restore</string>
+    <string name="archived_cashiers_title">Archived Cashiers</string>
+    <string name="delete_permanently_title">Delete Permanently?</string>
+    <string name="delete_permanently_desc">This cashier has no shift history. Type DELETE to permanently remove this record.</string>
+    <string name="type_delete_to_confirm">Type DELETE to confirm</string>
+    <string name="cashier_archived_success">Cashier %s has been archived.</string>
+    <string name="cashier_restored_success">Cashier %s has been restored.</string>
+    <string name="status_active">Active</string>
+    <string name="status_archived">Archived</string>
 </resources>

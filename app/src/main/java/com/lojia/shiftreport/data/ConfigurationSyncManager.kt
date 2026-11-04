@@ -371,7 +371,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     /**
      * Add new cashier to the centralized database roster.
      */
-    fun addCashier(name: String, pin: String, role: String = "CASHIER", onComplete: (() -> Unit)? = null) {
+    fun addCashier(name: String, pin: String, role: String = "CASHIER", createdByAdminId: String = "", onComplete: (() -> Unit)? = null) {
         val cleanName = name.trim()
         val cleanPin = pin.trim()
         if (cleanName.isBlank()) return
@@ -384,7 +384,9 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                         name = cleanName,
                         pin = hashedPin,
                         role = role.ifBlank { "CASHIER" },
-                        active = true
+                        isActive = true,
+                        isArchived = false,
+                        createdByAdminId = createdByAdminId
                     )
                 )
                 reportDao.insertAuditLog(
@@ -417,7 +419,45 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     }
 
     /**
-     * Delete cashier from centralized roster.
+     * Archive cashier to preserve audit trail and foreign key integrity.
+     */
+    fun archiveCashier(cashier: Cashier, onComplete: (() -> Unit)? = null) {
+        scope.launch {
+            val ts = System.currentTimeMillis()
+            reportDao.archiveCashier(cashier.id.toString(), ts)
+            reportDao.insertAuditLog(
+                AuditLog(
+                    username = _activeCashier.value,
+                    action = "ARCHIVE_CASHIER",
+                    details = "Archived cashier ${cashier.name} (ID: ${cashier.id})"
+                )
+            )
+            if (_activeCashier.value == cashier.name) {
+                setActiveCashier("Lojia Manager")
+            }
+            onComplete?.invoke()
+        }
+    }
+
+    /**
+     * Restore previously archived cashier.
+     */
+    fun unarchiveCashier(cashier: Cashier, onComplete: (() -> Unit)? = null) {
+        scope.launch {
+            reportDao.unarchiveCashier(cashier.id.toString())
+            reportDao.insertAuditLog(
+                AuditLog(
+                    username = _activeCashier.value,
+                    action = "RESTORE_CASHIER",
+                    details = "Restored archived cashier ${cashier.name} (ID: ${cashier.id})"
+                )
+            )
+            onComplete?.invoke()
+        }
+    }
+
+    /**
+     * Delete cashier from centralized roster (only allowed when shift count == 0).
      */
     fun deleteCashier(cashier: Cashier, onComplete: (() -> Unit)? = null) {
         scope.launch {

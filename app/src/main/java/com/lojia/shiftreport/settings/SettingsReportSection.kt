@@ -377,9 +377,7 @@ fun SettingsReportSection(
             "cashiers", "cashier", "staff", "employees", "employee" -> {
                 CashierManagementSection(
                     cashiers = cashiers,
-                    onAddCashierClick = { showAddCashierDialog = true },
-                    onDeleteCashierClick = { cashierToDelete = it },
-                    onToggleStatusClick = { reportViewModel.updateCashier(it) }
+                    reportViewModel = reportViewModel
                 )
             }
 
@@ -424,7 +422,7 @@ fun SettingsReportSection(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Unlock POS with 4-digit PIN",
+                                text = "Unlock POS with 6-digit PIN",
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -470,14 +468,14 @@ fun SettingsReportSection(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Change 4-Digit PIN",
+                                text = "Change 6-Digit PIN",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = OnSurfaceLight
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Tap to update your PIN",
+                                text = "Tap to update your 6-digit PIN",
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -582,7 +580,8 @@ fun SettingsReportSection(
             "backup" -> {
                 SettingsBackupSubSection(
                     reportViewModel = reportViewModel,
-                    onRestrictedClick = onRestrictedClick
+                    onRestrictedClick = onRestrictedClick,
+                    onNavigateBack = { reportViewModel.selectReportSettingsMenu("root") }
                 )
             }
 
@@ -731,43 +730,71 @@ fun SettingsReportSection(
     // Edit field modal
     if (editFieldDialog != null) {
         val (fieldName, fieldVal) = editFieldDialog!!
-        var tempVal by remember(fieldName) { mutableStateOf(fieldVal) }
-        AlertDialog(
-            onDismissRequest = { editFieldDialog = null },
-            containerColor = SurfaceLight,
-            title = { Text(stringResource(R.string.edit_field_title, fieldName), fontWeight = FontWeight.Bold) },
-            text = {
-                androidx.compose.foundation.layout.Box(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
-                    LojiaTextField(
-                        value = tempVal,
-                        onValueChange = { tempVal = it },
-                        label = { Text(fieldName) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        when (fieldName) {
-                            "Full name" -> { fullName = tempVal; persistProfile(fName = tempVal) }
-                            "Username" -> { username = tempVal; persistProfile(uName = tempVal) }
-                            "Email" -> { email = tempVal; persistProfile(mail = tempVal) }
-                            "Password" -> { password = tempVal; persistProfile(pass = tempVal) }
-                            "Number" -> { phone = tempVal; persistProfile(ph = tempVal) }
-                            "Address" -> { address = tempVal; persistProfile(addr = tempVal) }
-                            "Google Account" -> reportViewModel.googleAccount.value = tempVal
-                        }
-                        Toast.makeText(context, context.getString(R.string.field_updated_msg, fieldName), Toast.LENGTH_SHORT).show()
+        when (fieldName) {
+            "Password" -> {
+                ChangePasswordDialog(
+                    currentPasswordHash = userProfile?.passwordHash.orEmpty(),
+                    onDismiss = { editFieldDialog = null },
+                    onPasswordChanged = { newPw ->
+                        val hashed = SecurityUtils.hashSecret(newPw)
+                        password = hashed
+                        persistProfile(pass = hashed)
                         editFieldDialog = null
+                        Toast.makeText(context, context.getString(R.string.password_changed_success), Toast.LENGTH_SHORT).show()
                     }
-                ) {
-                    Text(stringResource(R.string.save_5))
-                }
-            },
-            dismissButton = { TextButton(onClick = { editFieldDialog = null }) { Text(stringResource(R.string.cancel_18)) } }
-        )
+                )
+            }
+            "Email" -> {
+                ChangeEmailDialog(
+                    currentEmail = email,
+                    onDismiss = { editFieldDialog = null },
+                    onEmailChanged = { newMail ->
+                        email = newMail
+                        persistProfile(mail = newMail)
+                        editFieldDialog = null
+                        Toast.makeText(context, context.getString(R.string.toast_email_updated), Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+            else -> {
+                var tempVal by remember(fieldName) { mutableStateOf(fieldVal) }
+                AlertDialog(
+                    onDismissRequest = { editFieldDialog = null },
+                    shape = RoundedCornerShape(28.dp),
+                    containerColor = SurfaceLight,
+                    title = { Text(stringResource(R.string.edit_field_title, fieldName), fontWeight = FontWeight.Bold) },
+                    text = {
+                        androidx.compose.foundation.layout.Box(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
+                            LojiaTextField(
+                                value = tempVal,
+                                onValueChange = { tempVal = it },
+                                label = { Text(fieldName) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                when (fieldName) {
+                                    "Full name" -> { fullName = tempVal; persistProfile(fName = tempVal) }
+                                    "Username" -> { username = tempVal; persistProfile(uName = tempVal) }
+                                    "Number" -> { phone = tempVal; persistProfile(ph = tempVal) }
+                                    "Address" -> { address = tempVal; persistProfile(addr = tempVal) }
+                                    "Google Account" -> reportViewModel.googleAccount.value = tempVal
+                                }
+                                Toast.makeText(context, context.getString(R.string.field_updated_msg, fieldName), Toast.LENGTH_SHORT).show()
+                                editFieldDialog = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.save_5))
+                        }
+                    },
+                    dismissButton = { TextButton(onClick = { editFieldDialog = null }) { Text(stringResource(R.string.cancel_18)) } }
+                )
+            }
+        }
     }
 
     // Google Maps Location Picker Modal
@@ -829,131 +856,21 @@ fun SettingsReportSection(
         )
     }
 
-    // Add Cashier Modal
-    if (showAddCashierDialog) {
-        AddCashierDialog(
-            userProfile = userProfile,
-            onDismissRequest = { showAddCashierDialog = false },
-            onConfirmAdd = { name ->
-                reportViewModel.addCashier(name, "", "CASHIER")
-                Toast.makeText(context, context.getString(R.string.user_added_success_msg, "Cashier", name), Toast.LENGTH_SHORT).show()
-                showAddCashierDialog = false
-            }
-        )
-    }
-
-    // Delete Cashier Confirmation Modal
-    if (cashierToDelete != null) {
-        val target = cashierToDelete!!
-        AlertDialog(
-            onDismissRequest = { cashierToDelete = null },
-            containerColor = SurfaceLight,
-            title = { Text(stringResource(R.string.remove_member), fontWeight = FontWeight.Bold) },
-            text = {
-                Text(stringResource(R.string.confirm_delete_cashier_prompt, target.name, target.role))
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        reportViewModel.deleteCashier(target)
-                        Toast.makeText(context, context.getString(R.string.user_deleted_msg, target.name), Toast.LENGTH_SHORT).show()
-                        cashierToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRedLight)
-                ) {
-                    Text(stringResource(R.string.delete_1))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { cashierToDelete = null }) { Text(stringResource(R.string.cancel_18)) }
-            }
-        )
-    }
 
     if (showQuickPinDialog) {
-        var tempPin by remember { mutableStateOf("") }
-        var pinError by remember { mutableStateOf<String?>(null) }
-        AlertDialog(
-            onDismissRequest = {
+        ChangeQuickPinDialog(
+            preferencesRepository = preferencesRepository,
+            onDismiss = {
                 showQuickPinDialog = false
                 if (!preferencesRepository.hasPinConfigured()) {
                     quickLoginEnabled = false
                     preferencesRepository.setQuickLoginEnabled(false)
                 }
             },
-            containerColor = SurfaceLight,
-            title = {
-                Text(
-                    text = if (preferencesRepository.hasPinConfigured()) "Change 4-Digit Quick PIN" else "Set 4-Digit Quick PIN",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = OnSurfaceLight
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Enter a 4-digit numeric PIN for fast, secure app login.",
-                        fontSize = 14.sp,
-                        color = OnSurfaceVariantLight
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = tempPin,
-                        onValueChange = {
-                            if (it.length <= 4 && it.all { ch -> ch.isDigit() }) {
-                                tempPin = it
-                                pinError = null
-                            }
-                        },
-                        label = { Text(stringResource(R.string.four_digit_pin_label)) },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (pinError != null) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = pinError ?: "",
-                            color = ErrorRedLight,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (tempPin.length != 4) {
-                            pinError = context.getString(R.string.pin_must_be_4_digits)
-                        } else {
-                            preferencesRepository.setQuickPin(tempPin)
-                            preferencesRepository.setQuickLoginEnabled(true)
-                            pinValue = tempPin
-                            persistProfile(p = tempPin)
-                            quickLoginEnabled = true
-                            showQuickPinDialog = false
-                            Toast.makeText(context, context.getString(R.string.settings_quick_pin_saved), Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)
-                ) {
-                    Text(stringResource(R.string.save_pin_btn))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showQuickPinDialog = false
-                        if (!preferencesRepository.hasPinConfigured()) {
-                            quickLoginEnabled = false
-                            preferencesRepository.setQuickLoginEnabled(false)
-                        }
-                    }
-                ) {
-                    Text(stringResource(R.string.cancel_18), color = OnSurfaceVariantLight)
-                }
+            onPinChanged = {
+                quickLoginEnabled = true
+                showQuickPinDialog = false
+                Toast.makeText(context, context.getString(R.string.settings_quick_pin_saved), Toast.LENGTH_SHORT).show()
             }
         )
     }

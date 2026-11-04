@@ -62,6 +62,50 @@ object CryptoUtils {
     }
 
     /**
+     * Generates a cryptographically secure 16-byte random salt as a hex string.
+     */
+    fun generateSalt(): String {
+        val bytes = ByteArray(16).apply { SecureRandom().nextBytes(this) }
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * Hashes a secret using PBKDF2 with 210,000 iterations and a cryptographically secure salt.
+     * Returns Pair(fullHash, saltHex).
+     */
+    fun hashWithSalt(
+        input: String,
+        saltHex: String = generateSalt(),
+        iterations: Int = PBKDF2_ITERATIONS
+    ): Pair<String, String> {
+        val cleanSalt = saltHex.ifBlank { generateSalt() }
+        val saltBytes = cleanSalt.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val fullHash = hashSecretPbkdf2(input, saltBytes, iterations)
+        return Pair(fullHash, cleanSalt)
+    }
+
+    /**
+     * Verifies an input against a stored hash using PBKDF2 with the provided salt in constant time.
+     */
+    fun verifyWithSalt(
+        input: String,
+        expectedHash: String,
+        saltHex: String,
+        iterations: Int = PBKDF2_ITERATIONS
+    ): Boolean {
+        if (input.isBlank() || expectedHash.isBlank() || saltHex.isBlank()) return false
+        val cleanSalt = saltHex.trim()
+        val saltBytes = cleanSalt.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val computedFull = hashSecretPbkdf2(input, saltBytes, iterations)
+        val computedHashHex = computedFull.split(":").lastOrNull().orEmpty()
+        val expectedHashHex = expectedHash.split(":").lastOrNull().orEmpty().ifBlank { expectedHash }
+        return MessageDigest.isEqual(
+            computedHashHex.lowercase().toByteArray(Charsets.UTF_8),
+            expectedHashHex.lowercase().toByteArray(Charsets.UTF_8)
+        )
+    }
+
+    /**
      * Hashes a password or PIN string using SHA-256 with an application salt (Legacy format).
      * Output is a 64-character lowercase hex string.
      * Retained only for verifying old legacy hashes inside verifySecretWithUpgrade.

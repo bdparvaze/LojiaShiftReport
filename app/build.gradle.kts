@@ -9,11 +9,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.lojia.shiftreport"
+        applicationId = "com.aistudio.shiftreport.lojia"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "CLOUD_SYNC_ENABLED", "false")
@@ -92,6 +92,10 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.microsoft.identity.client:msal:4.9.0") {
+        exclude(group = "com.microsoft.device.display", module = "display-mask")
+        exclude(group = "io.opentelemetry")
+    }
     ksp(libs.androidx.room.compiler)
 
     debugImplementation(libs.androidx.ui.tooling)

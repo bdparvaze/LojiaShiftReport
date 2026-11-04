@@ -244,12 +244,116 @@ class MoneyAndSecurityUnitTest {
 
     @Test
     fun securityUtils_twoHashesOfSamePin_differDueToRandomSalt() {
-        val pin = "4321"
+        val pin = "123456"
         val hash1 = SecurityUtils.hashSecret(pin)
         val hash2 = SecurityUtils.hashSecret(pin)
 
         assertNotEquals("Two hashes of the same PIN must differ due to unique random salts", hash1, hash2)
         assertTrue("First hash must verify PIN", SecurityUtils.verifySecret(pin, hash1))
         assertTrue("Second hash must verify PIN", SecurityUtils.verifySecret(pin, hash2))
+    }
+
+    @Test
+    fun authPinConstants_unifiesToSixDigits() {
+        assertEquals(6, com.lojia.shiftreport.auth.AuthPinConstants.PIN_LENGTH)
+        assertTrue("123456 must match 6-digit regex", "123456".matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX)))
+        assertFalse("1234 must fail 6-digit regex", "1234".matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX)))
+        assertFalse("1234567 must fail 6-digit regex", "1234567".matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX)))
+        assertFalse("abcdef must fail 6-digit regex", "abcdef".matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX)))
+    }
+
+    @Test
+    fun pinChangeRequest_validation_correct() {
+        val validReq = com.lojia.shiftreport.auth.PinChangeRequest(
+            oldPin = "111111",
+            newPin = "654321",
+            confirmPin = "654321"
+        )
+        assertTrue("Valid PinChangeRequest must return true", validReq.isValid())
+
+        val mismatchReq = com.lojia.shiftreport.auth.PinChangeRequest(
+            oldPin = "111111",
+            newPin = "654321",
+            confirmPin = "654322"
+        )
+        assertFalse("Mismatched confirmPin must return false", mismatchReq.isValid())
+
+        val invalidLengthReq = com.lojia.shiftreport.auth.PinChangeRequest(
+            oldPin = "111111",
+            newPin = "1234",
+            confirmPin = "1234"
+        )
+        assertFalse("Short PIN must return false", invalidLengthReq.isValid())
+    }
+
+    @Test
+    fun cryptoUtils_hashWithSalt_and_verifyWithSalt() {
+        val pin = "987654"
+        val (hash, salt) = SecurityUtils.hashWithSalt(pin)
+        assertTrue("Salt must not be blank", salt.isNotBlank())
+        assertTrue("Hash must not be blank", hash.isNotBlank())
+
+        assertTrue("Verify with correct PIN and salt must succeed", SecurityUtils.verifyWithSalt(pin, hash, salt))
+        assertFalse("Verify with wrong PIN must fail", SecurityUtils.verifyWithSalt("000000", hash, salt))
+    }
+
+    // ----------------------------------------------------------------------
+    // 7. CASHIER LIFECYCLE & INTEGRITY TESTS (Foodics POS Standard)
+    // ----------------------------------------------------------------------
+
+    @Test
+    fun cashierModel_defaultValues_areActiveAndNotArchived() {
+        val cashier = com.lojia.shiftreport.data.Cashier(
+            name = "Sarah Connor",
+            role = "CASHIER"
+        )
+        assertTrue("Cashier must default to isActive = true", cashier.isActive)
+        assertTrue("Cashier active property must match isActive", cashier.active)
+        assertFalse("Cashier must default to isArchived = false", cashier.isArchived)
+        assertNull("Cashier archivedAt must default to null", cashier.archivedAt)
+        assertEquals("", cashier.createdByAdminId)
+    }
+
+    @Test
+    fun cashierModel_archiving_preservesHistoricalIdentity() {
+        val timestamp = 1730500000000L
+        val activeCashier = com.lojia.shiftreport.data.Cashier(
+            id = 42,
+            name = "John Doe",
+            role = "CASHIER",
+            isActive = true,
+            isArchived = false
+        )
+
+        val archivedCashier = activeCashier.copy(
+            isActive = false,
+            isArchived = true,
+            archivedAt = timestamp
+        )
+
+        assertFalse("Archived cashier must not be active", archivedCashier.isActive)
+        assertFalse("Archived cashier active getter must be false", archivedCashier.active)
+        assertTrue("Archived cashier must be marked archived", archivedCashier.isArchived)
+        assertEquals(timestamp, archivedCashier.archivedAt)
+        assertEquals(42, archivedCashier.id)
+        assertEquals("John Doe", archivedCashier.name)
+    }
+
+    // ----------------------------------------------------------------------
+    // 8. REMEMBER ME POS SECURITY SPECIFICATION (Foodics / Banking Standard)
+    // ----------------------------------------------------------------------
+
+    @Test
+    fun loginUiState_rememberMe_mustDefaultToFalse() {
+        val state = com.lojia.shiftreport.auth.LoginUiState()
+        assertFalse(
+            "POS Security Standard Violation: rememberMe must default to false for shared POS terminals",
+            state.rememberMe
+        )
+        assertEquals("", state.username)
+        assertEquals("", state.password)
+        assertFalse(state.isPasswordVisible)
+        assertFalse(state.isLoading)
+        assertNull(state.errorMessage)
     }
 }

@@ -101,13 +101,21 @@ data class Cashier(
     val name: String,
     val pin: String = "",
     val role: String = "CASHIER", // ADMIN, CASHIER
-    val active: Boolean = true
-)
+    @ColumnInfo(name = "isActive") val isActive: Boolean = true,
+    @ColumnInfo(name = "isArchived") val isArchived: Boolean = false,
+    @ColumnInfo(name = "archivedAt") val archivedAt: Long? = null,
+    @ColumnInfo(name = "createdByAdminId") val createdByAdminId: String = ""
+) {
+    @get:Ignore
+    val active: Boolean
+        get() = isActive
+}
 
 @Entity(tableName = "shift_reports")
 data class ShiftReport(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val cashierName: String,
+    @ColumnInfo(name = "cashierId") val cashierId: String = "",
     val shift: String = "Day", // "Day", "Night", "Morning", "Evening"
     val dateInMillis: Long = System.currentTimeMillis(),
     val openingCash: Long = 0L,

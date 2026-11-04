@@ -175,4 +175,24 @@ class BackupRoundTripTest {
         assertTrue(summary.hasBusinessProfile)
         assertFalse(summary.hasUserProfile)
     }
+
+    @Test
+    fun backupJson_ownerIdAndShifts_topLevelParsing() {
+        val sampleJson = """
+            {
+                "app": "Lojia Shift Report",
+                "ownerId": "user_12345",
+                "shifts": [{}, {}, {}],
+                "shiftReports": [{}, {}, {}]
+            }
+        """.trimIndent()
+
+        val json = JSONObject(sampleJson)
+        val ownerId = json.optString("ownerId", "anonymous")
+        val shiftsArray = json.optJSONArray("shifts")
+
+        assertEquals("user_12345", ownerId)
+        assertNotNull(shiftsArray)
+        assertEquals(3, shiftsArray?.length())
+    }
 }

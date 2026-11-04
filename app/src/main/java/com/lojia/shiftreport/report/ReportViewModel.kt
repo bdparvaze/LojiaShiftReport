@@ -1073,6 +1073,26 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun archiveCashier(cashier: Cashier) {
+        syncManager.archiveCashier(cashier) {
+            viewModelScope.launch {
+                _uiMessage.emit(UiText.DynamicString("Archived cashier ${cashier.name}"))
+            }
+        }
+    }
+
+    fun unarchiveCashier(cashier: Cashier) {
+        syncManager.unarchiveCashier(cashier) {
+            viewModelScope.launch {
+                _uiMessage.emit(UiText.DynamicString("Restored cashier ${cashier.name}"))
+            }
+        }
+    }
+
+    suspend fun getShiftCountByCashierId(cashierId: String): Int {
+        return repository.getShiftCountByCashierId(cashierId)
+    }
+
     fun deleteCashier(cashier: Cashier) {
         syncManager.deleteCashier(cashier) {
             viewModelScope.launch {

@@ -284,3 +284,31 @@ enum class FieldValidationState {
     ERROR,
     SUCCESS
 }
+
+data class PinChangeRequest(
+    val oldPin: String,
+    val newPin: String,
+    val confirmPin: String
+) {
+    fun isValid(): Boolean {
+        return newPin == confirmPin && newPin.matches(Regex("^[0-9]{6}$"))
+    }
+}
+
+/**
+ * International POS / Banking standard authentication UI state.
+ *
+ * CRITICAL SECURITY CONSTRAINTS:
+ * 1. [rememberMe] MUST default to `false`. POS terminals require explicit opt-in.
+ * 2. Only the operator/cashier username identifier is ever remembered.
+ * 3. [password] is strictly ephemeral, cleared upon sign-in, and NEVER persisted to disk.
+ */
+data class LoginUiState(
+    val username: String = "",
+    val password: String = "",
+    val rememberMe: Boolean = false, // MUST be false by default - International Standard
+    val isPasswordVisible: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+

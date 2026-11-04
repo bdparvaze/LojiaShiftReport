@@ -1256,7 +1256,7 @@
     <string name="auth_complete_login_btn">লগইন সম্পন্ন করুন</string>
     <string name="auth_change_language_title">ভাষা পরিবর্তন করুন</string>
     <string name="quick_pin_enter_pin">পিন লিখুন</string>
-    <string name="quick_pin_subtitle">অ্যাপটি আনলক করতে আপনার 4-সংখ্যার পিন লিখুন</string>
+    <string name="quick_pin_subtitle">অ্যাপটি আনলক করতে আপনার ৬-সংখ্যার পিন লিখুন</string>
     <string name="quick_pin_incorrect">ভুল পিন</string>
     <string name="quick_pin_use_password">পাসওয়ার্ড ব্যবহার করুন</string>
     <string name="auth_toast_please_enter_credentials">ব্যবহারকারীর নাম এবং পাসওয়ার্ড দিন</string>
@@ -1365,7 +1365,7 @@
     <string name="open_printer_settings">প্রিন্টার সেটিংস খুলুন</string>
     <string name="printing_z_report">জ্রে-রিপোর্ট প্রিন্ট হচ্ছে...</string>
     <string name="print_z_report_btn">জ্রে-রিপোর্ট প্রিন্ট (শিফট বন্ধ)</string>
-    <string name="pin_digit_label">৪-সংখ্যার পিন</string>
+    <string name="pin_digit_label">৬-সংখ্যার পিন</string>
     <string name="save_pin">পিন সংরক্ষণ করুন</string>
     <string name="restore_now">এখনই পুনরুদ্ধার করুন</string>
     <string name="reading_backup_details">ব্যাকআপ তথ্য পড়া হচ্ছে...</string>
@@ -1542,7 +1542,7 @@
     <string name="admin_reauth_default_desc">এই কাজটি সম্পূর্ণ করতে অ্যাডমিন প্রমাণীকরণ প্রয়োজন।</string>
     <string name="fingerprint_not_recognized">আঙুলের ছাপ শনাক্ত হয়নি। আবার চেষ্টা করুন।</string>
     <string name="quick_pin_saved_enabled">দ্রুত পিন সংরক্ষিত এবং দ্রুত লগইন সক্রিয় করা হয়েছে!</string>
-    <string name="four_digit_pin_label">৪-সংখ্যার পিন</string>
+    <string name="four_digit_pin_label">৬-সংখ্যার পিন</string>
     <string name="save_pin_btn">পিন সংরক্ষণ করুন</string>
     <string name="btn_numpad_del">DEL</string>
     <string name="default_shift_manager">শিফট ম্যানেজার</string>
@@ -1580,7 +1580,7 @@
     <string name="cd_zoom_out">জুম আউট</string>
     <string name="cd_open_google_maps">গুগল ম্যাপস অ্যাপে খুলুন</string>
     <string name="cd_quick_login_pin">পিন দিয়ে দ্রুত লগইন</string>
-    <string name="cd_change_pin">৪-সংখ্যার পিন পরিবর্তন করুন</string>
+    <string name="cd_change_pin">৬-সংখ্যার পিন পরিবর্তন করুন</string>
     <string name="cd_dismiss">বাতিল করুন</string>
 
     <!-- Document Scanner & Camera -->
@@ -1691,7 +1691,7 @@
     <string name="doc_word_share_error">ওয়ার্ড ফাইল শেয়ার করা যায়নি: %s</string>
     <string name="doc_no_pdf_viewer">ডিভাইসে কোনো পিডিএফ ভিউয়ার অ্যাপ পাওয়া যায়নি</string>
     <string name="could_not_open_folder">ফোল্ডার খোলা যায়নি: %s</string>
-    <string name="pin_must_be_4_digits">পিনটি অবশ্যই ৪ ডিজিটের হতে হবে</string>
+    <string name="pin_must_be_4_digits">পিনটি অবশ্যই ৬ ডিজিটের হতে হবে</string>
     <string name="cd_hide_password">পাসওয়ার্ড লুকান</string>
     <string name="cd_show_password">পাসওয়ার্ড দেখান</string>
     <string name="gallery_error">গ্যালারি ত্রুটি</string>
@@ -1755,4 +1755,16 @@
     <string name="change_password_desc">প্রশাসক মাস্টার পাসওয়ার্ড পরিবর্তন করুন</string>
     <string name="not_set">নির্ধারিত নয়</string>
     <string name="admin_auth_audit_desc">বাধ্যতামূলক প্রশাসক পুনরায় প্রমাণীকরণ প্রয়োজন। একটি স্বয়ংক্রিয় সুরক্ষা অডিট লগ এন্ট্রি তৈরি হবে।</string>
+    <string name="cashier_cannot_delete_has_history_title">মুছে ফেলা যাবে না - হিস্ট্রি বিদ্যমান</string>
+    <string name="cashier_cannot_delete_has_history_desc">এই ক্যাশিয়ারের শিফট রেকর্ড এবং ভ্যাট অডিট হিস্ট্রি রয়েছে। পিওএস মানদণ্ড অনুযায়ী শিফট হিস্ট্রি থাকা ক্যাশিয়ারকে মুছে ফেলা যায় না। ডাটা অক্ষুণ্ণ রেখে আপনি এই ক্যাশিয়ারকে আর্কাইভ করতে পারেন।</string>
+    <string name="action_archive">আর্কাইভ</string>
+    <string name="action_unarchive">পুনরুদ্ধার</string>
+    <string name="archived_cashiers_title">আর্কাইভ করা ক্যাশিয়ারগণ</string>
+    <string name="delete_permanently_title">স্থায়ীভাবে মুছে ফেলবেন?</string>
+    <string name="delete_permanently_desc">এই ক্যাশিয়ারের কোনো শিফট হিস্ট্রি নেই। স্থায়ীভাবে মুছে ফেলতে নিচে DELETE লিখুন।</string>
+    <string name="type_delete_to_confirm">নিশ্চিত করতে DELETE লিখুন</string>
+    <string name="cashier_archived_success">ক্যাশিয়ার %s আর্কাইভ করা হয়েছে।</string>
+    <string name="cashier_restored_success">ক্যাশিয়ার %s পুনরুদ্ধার করা হয়েছে।</string>
+    <string name="status_active">সক্রিয়</string>
+    <string name="status_archived">আর্কাইভকৃত</string>
 </resources>

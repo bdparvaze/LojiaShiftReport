@@ -163,25 +163,43 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             val context = androidx.compose.ui.platform.LocalContext.current
             val scope = rememberCoroutineScope()
             val prefsRepo = remember { PreferencesRepository.getInstance(context) }
+            val backupManager = remember { com.lojia.shiftreport.settings.backup.BackupManager.getInstance(context) }
+            val restorePolicyManager = remember { RestorePolicyManager(prefsRepo, backupManager) }
+            var restoreDecision by remember { mutableStateOf<RestorePolicyManager.RestoreDecision?>(null) }
             val reinstallMeta = remember { OfflineBackupManager.readReinstallMeta(context) }
-            val latestBackupFile = remember { OfflineBackupManager.findLatestBackupFile(context) }
 
             var showPreservationSetup by rememberSaveable {
                 mutableStateOf(!prefsRepo.isFirstRunDataPreservationShown() && !reinstallMeta.first)
             }
 
-            var showRecoveryDialog by rememberSaveable {
-                mutableStateOf(reinstallMeta.first && reinstallMeta.second && latestBackupFile != null && !prefsRepo.isFirstRunDataPreservationShown())
+            var isAuthenticated by rememberSaveable { 
+                mutableStateOf(reportViewModel.preferencesRepository.isLoggedIn()) 
+            }
+
+            val currentUserId = remember(userProfile, prefsRepo) {
+                userProfile?.id?.toString() ?: userProfile?.username ?: prefsRepo.getSavedUsername().ifBlank { "anonymous" }
+            }
+
+            LaunchedEffect(isAuthenticated, currentUserId) {
+                if (isAuthenticated) {
+                    val isNewAccount = prefsRepo.isNewAccount()
+                    val decision = restorePolicyManager.evaluate(currentUserId, isNewAccount)
+                    restoreDecision = decision
+                    if (isNewAccount) {
+                        prefsRepo.setNewAccount(false)
+                    }
+                }
             }
 
             val backupPickerLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
                 if (uri != null) {
-                    showRecoveryDialog = false
+                    restoreDecision = null
                     prefsRepo.setFirstRunDataPreservationShown(true)
                     prefsRepo.setHasRunBefore(true)
                     scope.launch {
+                        prefsRepo.setHasSeenRestoreDialog(true)
                         val db = AppDatabase.getInstance(context)
                         val res = OfflineBackupManager.restoreBackup(context, uri, db)
                         res.onSuccess { count ->
@@ -192,10 +210,6 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                         }
                     }
                 }
-            }
-
-            var isAuthenticated by rememberSaveable { 
-                mutableStateOf(reportViewModel.preferencesRepository.isLoggedIn()) 
             }
 
             // POS Instant Session Lock Observer (Screen-off and onStop/Minimization)
@@ -245,6 +259,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             },
                             onSaveUserProfile = { updatedProfile ->
                                 reportViewModel.saveUserProfile(updatedProfile)
+                                prefsRepo.setNewAccount(true)
                             },
                             onSaveBusinessProfile = { updatedBiz ->
                                 reportViewModel.saveBusinessProfile(updatedBiz)
@@ -407,18 +422,22 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                             )
                                         }
 
-                                        // Data Recovery Dialog (on Reinstall)
-                                        if (showRecoveryDialog) {
+                                        // Data Recovery Dialog (evaluated securely by RestorePolicyManager)
+                                        if (restoreDecision?.shouldShowDialog == true) {
+                                            val decision = restoreDecision!!
                                             DataRecoveryDialog(
-                                                backupFile = latestBackupFile,
+                                                backupFile = decision.backupFile,
+                                                previewText = decision.previewText,
                                                 onRestore = {
-                                                    showRecoveryDialog = false
-                                                    prefsRepo.setFirstRunDataPreservationShown(true)
-                                                    prefsRepo.setHasRunBefore(true)
+                                                    restoreDecision = null
                                                     scope.launch {
-                                                        if (latestBackupFile != null) {
+                                                        prefsRepo.setHasSeenRestoreDialog(true)
+                                                        prefsRepo.setFirstRunDataPreservationShown(true)
+                                                        prefsRepo.setHasRunBefore(true)
+                                                        val fileToRestore = decision.backupFile ?: backupManager.restoreLatest()
+                                                        if (fileToRestore != null) {
                                                             val db = AppDatabase.getInstance(context)
-                                                            val res = OfflineBackupManager.restoreBackupFromFile(context, db, latestBackupFile)
+                                                            val res = OfflineBackupManager.restoreBackupFromFile(context, db, fileToRestore)
                                                             res.onSuccess { count ->
                                                                 val msg = context.getString(R.string.data_restored_success, count)
                                                                 android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
@@ -432,18 +451,14 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                     backupPickerLauncher.launch(arrayOf("application/json", "*/*"))
                                                 },
                                                 onStartFresh = {
-                                                    showRecoveryDialog = false
-                                                    prefsRepo.setFirstRunDataPreservationShown(true)
-                                                    prefsRepo.setHasRunBefore(true)
+                                                    restoreDecision = null
                                                     scope.launch {
-                                                        val db = AppDatabase.getInstance(context)
-                                                        OfflineBackupManager.wipeAllData(context, db)
-                                                        showPreservationSetup = true
+                                                        prefsRepo.setHasSeenRestoreDialog(true)
+                                                        prefsRepo.setFirstRunDataPreservationShown(true)
+                                                        prefsRepo.setHasRunBefore(true)
+                                                        // Navigate to Dashboard
+                                                        navState = AppNavState.ShiftReportState.Analytics
                                                     }
-                                                },
-                                                onDismiss = {
-                                                    showRecoveryDialog = false
-                                                    prefsRepo.setFirstRunDataPreservationShown(true)
                                                 }
                                             )
                                         }

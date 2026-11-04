@@ -707,7 +707,7 @@ fun ReportEntryTab(
                         val isPinValid = if (prefs.hasPinConfigured() || prefs.isQuickLoginEnabled()) {
                             prefs.verifyPin(mgrPin)
                         } else {
-                            mgrPin.length >= 4
+                            mgrPin.matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX))
                         }
                         if (isPinValid) {
                             isShiftLocked = true

@@ -1,20 +1,17 @@
 package com.lojia.shiftreport.auth
 
 import android.widget.Toast
-import kotlinx.coroutines.launch
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,48 +19,43 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AdminPanelSettings
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Fingerprint
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.lojia.shiftreport.R
-import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
- * Enterprise Admin Re-Authentication Dialog
- * Mandated for critical operations (e.g. deleting cashiers or changing system permissions).
+ * Enterprise Admin Re-Authentication Dialog (Foodics POS / Banking App standard).
+ * Uses Material 3 AlertDialog with 28dp corner radius and SixDigitPinInput.
  */
 @Composable
 fun AdminAuthDialog(
@@ -73,315 +65,226 @@ fun AdminAuthDialog(
     onAuthSuccess: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var adminPinInput by remember { mutableStateOf("") }
     var authError by remember { mutableStateOf<String?>(null) }
     var isAuthenticating by remember { mutableStateOf(false) }
 
-    LojiaDialog(
-        onDismissRequest = onDismissRequest,
-        maxWidth = Dimens.DialogMaxWidth,
-        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-        containerColor = SurfaceLight,
-        border = BorderStroke(1.dp, ErrorContainerLight),
-        modifier = Modifier.testTag("adminAuthDialog")
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
-        ) {
-            // Header with Admin Security Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(ErrorContainerLight)
-                            .border(1.dp, ErrorRedLight.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.AdminPanelSettings,
-                            contentDescription = null,
-                            tint = ErrorRedLight,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+    fun performPinVerification(pin: String) {
+        val trimmed = pin.trim()
+        if (trimmed.length != AuthPinConstants.PIN_LENGTH) {
+            authError = context.getString(R.string.pin_must_be_4_digits)
+            return
+        }
+        isAuthenticating = true
+        coroutineScope.launch(Dispatchers.IO) {
+            val secureStorage = SecureStorageManager
+            val isPinMatch = AdminAuthManager.requireAdminAuth(BiometricManager, secureStorage, trimmed)
+            val isRepoMatch = if (!isPinMatch) {
+                com.lojia.shiftreport.data.ShiftReportRepository.getInstance(context)
+                    .verifyAdminCredentials(context, trimmed)
+            } else true
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.admin_reauth_title),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OnBackgroundLight,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = actionTitle,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ErrorRedLight,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = onDismissRequest,
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(SurfaceVariantLight)
-                        .testTag("btnDismissAdminAuth")
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = stringResource(R.string.cancel_18),
-                        tint = TextHintColor,
-                        modifier = Modifier.size(16.dp)
-                    )
+            withContext(Dispatchers.Main) {
+                isAuthenticating = false
+                if (isPinMatch || isRepoMatch) {
+                    Toast.makeText(context, context.getString(R.string.toast_admin_authenticated), Toast.LENGTH_SHORT).show()
+                    onAuthSuccess()
+                } else {
+                    authError = context.getString(R.string.invalid_admin_credentials)
                 }
             }
+        }
+    }
 
-            // Audit warning container (High contrast warning tokens)
-            Surface(
-                color = WarningContainer,
-                shape = RoundedCornerShape(Dimens.RadiusSm),
-                border = BorderStroke(1.dp, WarningOrange.copy(alpha = 0.35f)),
-                modifier = Modifier.fillMaxWidth()
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = SurfaceLight,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Shield,
+                        imageVector = Icons.Outlined.AdminPanelSettings,
                         contentDescription = null,
-                        tint = WarningOrange,
-                        modifier = Modifier.size(16.dp)
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = stringResource(R.string.admin_reauth_title),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OnBackgroundLight
                     )
                     Text(
-                        text = actionDescription,
-                        fontSize = 11.5.sp,
-                        color = WarningText,
-                        lineHeight = 15.sp,
+                        text = actionTitle,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(1f)
+                        color = PrimaryIndigoLight,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Description badge
+                Surface(
+                    color = SurfaceVariantLight,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, OutlineLight)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Shield,
+                            contentDescription = null,
+                            tint = PrimaryIndigoLight,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = actionDescription,
+                            fontSize = 11.5.sp,
+                            color = OnSurfaceVariantLight,
+                            lineHeight = 15.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
 
-            // PIN / Password Input
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                // Biometric quick button
+                val activity = context as? androidx.fragment.app.FragmentActivity
+                OutlinedButton(
+                    onClick = {
+                        if (activity != null) {
+                            BiometricAuthManager.showBiometricPrompt(
+                                activity = activity,
+                                title = context.getString(R.string.biometric_authentication),
+                                subtitle = context.getString(R.string.biometric_prompt_default_subtitle),
+                                description = actionDescription
+                            ) { result ->
+                                when (result) {
+                                    is BiometricAuthResult.Success -> {
+                                        Toast.makeText(context, context.getString(R.string.toast_admin_authenticated), Toast.LENGTH_SHORT).show()
+                                        onAuthSuccess()
+                                    }
+                                    is BiometricAuthResult.Error -> {
+                                        authError = result.errString.toString()
+                                    }
+                                    is BiometricAuthResult.Failed -> {
+                                        authError = context.getString(R.string.biometric_verification_failed)
+                                    }
+                                    else -> {}
+                                }
+                            }
+                        } else {
+                            authError = context.getString(R.string.biometric_not_supported_window)
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, OutlineLight),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .testTag("btnAdminBiometric")
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Fingerprint,
+                            contentDescription = null,
+                            tint = PrimaryIndigoLight,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.btn_auth_with_biometrics),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryIndigoLight
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = OutlineVariantLight)
+
+                // 6-digit PIN input
                 Text(
                     text = stringResource(R.string.enter_admin_security_pin),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = OnSurfaceVariantLight
+                    color = OnSurfaceVariantLight,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                OutlinedTextField(
-                    value = adminPinInput,
-                    onValueChange = {
+                SixDigitPinInput(
+                    pin = adminPinInput,
+                    onPinChange = {
                         adminPinInput = it
                         if (authError != null) authError = null
+                        if (it.length == AuthPinConstants.PIN_LENGTH) {
+                            performPinVerification(it)
+                        }
                     },
-                    placeholder = {
-                        Text(stringResource(R.string.enter_pin_or_password), style = MaterialTheme.typography.bodySmall, color = TextHintColor)
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Lock,
-                            contentDescription = null,
-                            tint = if (authError != null) ErrorRedLight else PrimaryIndigoLight,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    },
-                    visualTransformation = PasswordVisualTransformation(),
-                    isError = authError != null,
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryIndigoLight,
-                        unfocusedBorderColor = OutlineVariantLight,
-                        focusedContainerColor = BackgroundLight,
-                        unfocusedContainerColor = BackgroundLight,
-                        errorBorderColor = ErrorRedLight
-                    ),
+                    isMasked = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag("etAdminPin")
+                        .testTag("six_digit_admin_pin_input")
                 )
 
                 if (authError != null) {
                     Text(
                         text = authError ?: "",
-                        fontSize = 11.sp,
-                        color = ErrorRedLight,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            // Biometric quick option
-            val activity = context as? androidx.fragment.app.FragmentActivity
-            OutlinedButton(
-                onClick = {
-                    if (activity != null) {
-                        BiometricAuthManager.showBiometricPrompt(
-                            activity = activity,
-                            title = context.getString(R.string.biometric_authentication),
-                            subtitle = context.getString(R.string.biometric_prompt_default_subtitle),
-                            description = actionDescription
-                        ) { result ->
-                            when (result) {
-                                is BiometricAuthResult.Success -> {
-                                    Toast.makeText(context, context.getString(R.string.toast_admin_authenticated), Toast.LENGTH_SHORT).show()
-                                    onAuthSuccess()
-                                }
-                                is BiometricAuthResult.Error -> {
-                                    authError = result.errString.toString()
-                                }
-                                is BiometricAuthResult.Failed -> {
-                                    authError = context.getString(R.string.biometric_verification_failed)
-                                }
-                                else -> {}
-                            }
-                        }
-                    } else {
-                        authError = context.getString(R.string.biometric_not_supported_window)
-                    }
-                },
-                shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, OutlineLight),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = BackgroundLight,
-                    contentColor = OnBackgroundLight
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Dimens.ButtonHeightCompact)
-                    .testTag("btnAdminBiometric")
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Fingerprint,
-                        contentDescription = null,
-                        tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.btn_auth_with_biometrics),
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        color = ErrorRedLight,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
-
-            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
-
-            val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-
-            // Actions
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+        },
+        confirmButton = {
+            Button(
+                onClick = { performPinVerification(adminPinInput) },
+                enabled = adminPinInput.length == AuthPinConstants.PIN_LENGTH && !isAuthenticating,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.testTag("btnConfirmAdminAuth")
             ) {
-                OutlinedButton(
-                    onClick = onDismissRequest,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, OutlineLight),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = SurfaceLight,
-                        contentColor = OnSurfaceVariantLight
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(Dimens.ButtonHeightStandard)
-                        .testTag("btnCancelAdminAuth")
-                ) {
-                    Text(
-                        text = stringResource(R.string.cancel_18),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Button(
-                    onClick = {
-                        val trimmedPin = adminPinInput.trim()
-                        if (trimmedPin.isBlank()) {
-                            authError = context.getString(R.string.admin_pin_or_password_required)
-                        } else {
-                            isAuthenticating = true
-                            coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                val repo = com.lojia.shiftreport.data.ShiftReportRepository.getInstance(context)
-                                val isMatch = repo.verifyAdminCredentials(context, trimmedPin)
-
-                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                    isAuthenticating = false
-                                    if (isMatch) {
-                                        Toast.makeText(context, context.getString(R.string.toast_admin_authenticated), Toast.LENGTH_SHORT).show()
-                                        onAuthSuccess()
-                                    } else {
-                                        authError = context.getString(R.string.invalid_admin_credentials)
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ErrorRedLight,
-                        contentColor = PureWhite
-                    ),
-                    modifier = Modifier
-                        .weight(1.2f)
-                        .height(Dimens.ButtonHeightStandard)
-                        .testTag("btnConfirmAdminAuth")
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.confirm),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                    }
-                }
+                Text(stringResource(R.string.confirm))
             }
-        }
-    }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismissRequest,
+                modifier = Modifier.testTag("btnCancelAdminAuth")
+            ) {
+                Text(stringResource(R.string.cancel_18))
+            }
+        },
+        modifier = Modifier.testTag("adminAuthDialog")
+    )
 }

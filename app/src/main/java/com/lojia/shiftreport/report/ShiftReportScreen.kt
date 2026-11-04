@@ -159,7 +159,10 @@ fun ShiftReportScreen(
     val businessProfile by viewModel.businessProfile.collectAsState()
 
     val availableCashiers = remember(cashiersState) {
-        val names = cashiersState.map { it.name }.filter { it.isNotBlank() }
+        val names = cashiersState
+            .filter { !it.isArchived && it.isActive && it.active }
+            .map { it.name }
+            .filter { it.isNotBlank() }
         if (names.isNotEmpty()) names else listOf("Noora", "Hassan", "Athar")
     }
 
@@ -236,8 +239,12 @@ fun ShiftReportScreen(
             }
             val formattedNotes = if (noteParts.isNotEmpty()) noteParts.joinToString(" | ") else "Saved from Shift Closing Ledger"
 
+            val matchedCashier = cashiersState.firstOrNull { it.name.equals(data.cashier, ignoreCase = true) }
+            val resolvedCashierId = matchedCashier?.id?.toString() ?: ""
+
             val report = ShiftReport(
                 cashierName = data.cashier.ifBlank { "Standard Cashier" },
+                cashierId = resolvedCashierId,
                 shift = data.shift,
                 dateInMillis = data.dateMillis,
                 openingCash = MoneyFormat.toMinorUnits(if (data.openingCash > java.math.BigDecimal.ZERO) data.openingCash else data.startingCash),

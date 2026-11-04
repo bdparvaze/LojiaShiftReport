@@ -1256,7 +1256,7 @@
     <string name="auth_complete_login_btn">إتمام الدخول</string>
     <string name="auth_change_language_title">تغيير اللغة</string>
     <string name="quick_pin_enter_pin">أدخل رمز PIN</string>
-    <string name="quick_pin_subtitle">أدخل رمز PIN المكون من 4 أرقام لفتح التطبيق</string>
+    <string name="quick_pin_subtitle">أدخل رمز PIN المكون من 6 أرقام لفتح التطبيق</string>
     <string name="quick_pin_incorrect">رمز PIN غير صحيح</string>
     <string name="quick_pin_use_password">استخدام كلمة المرور</string>
     <string name="auth_toast_please_enter_credentials">يرجى إدخال اسم المستخدم وكلمة المرور</string>
@@ -1365,7 +1365,7 @@
     <string name="open_printer_settings">فتح إعدادات الطابعة</string>
     <string name="printing_z_report">جاري طباعة تقرير Z...</string>
     <string name="print_z_report_btn">طباعة تقرير Z (إغلاق الورديّة)</string>
-    <string name="pin_digit_label">رمز PIN مكون من 4 أرقام</string>
+    <string name="pin_digit_label">رمز PIN مكون من 6 أرقام</string>
     <string name="save_pin">حفظ PIN</string>
     <string name="restore_now">استعادة الآن</string>
     <string name="reading_backup_details">جاري قراءة تفاصيل النسخة الاحتياطية...</string>
@@ -1542,7 +1542,7 @@
     <string name="admin_reauth_default_desc">مطلوب مصادقة المسؤول لإكمال هذه العملية.</string>
     <string name="fingerprint_not_recognized">لم يتم التعرف على بصمة الإصبع. حاول مرة أخرى.</string>
     <string name="quick_pin_saved_enabled">تم حفظ رمز PIN وتفعيل تسجيل الدخول السريع!</string>
-    <string name="four_digit_pin_label">رمز PIN من 4 أرقام</string>
+    <string name="four_digit_pin_label">رمز PIN من 6 أرقام</string>
     <string name="save_pin_btn">حفظ رمز PIN</string>
     <string name="btn_numpad_del">حذف</string>
     <string name="default_shift_manager">مدير الوردية</string>
@@ -1580,7 +1580,7 @@
     <string name="cd_zoom_out">تصغير</string>
     <string name="cd_open_google_maps">فتح في تطبيق خرائط Google</string>
     <string name="cd_quick_login_pin">تسجيل الدخول السريع برمز PIN</string>
-    <string name="cd_change_pin">تغيير رمز PIN المكون من 4 أرقام</string>
+    <string name="cd_change_pin">تغيير رمز PIN المكون من 6 أرقام</string>
     <string name="cd_dismiss">إغلاق</string>
 
     <!-- Document Scanner & Camera -->
@@ -1691,7 +1691,7 @@
     <string name="doc_word_share_error">تعذر مشاركة ملف Word: %s</string>
     <string name="doc_no_pdf_viewer">لم يتم العثور على تطبيق عرض PDF على الجهاز</string>
     <string name="could_not_open_folder">تعذر فتح المجلد: %s</string>
-    <string name="pin_must_be_4_digits">يجب أن يتكون رمز PIN من 4 أرقام بالضبط</string>
+    <string name="pin_must_be_4_digits">يجب أن يتكون رمز PIN من 6 أرقام بالضبط</string>
     <string name="cd_hide_password">إخفاء كلمة المرور</string>
     <string name="cd_show_password">إظهار كلمة المرور</string>
     <string name="gallery_error">خطأ في معرض الصور</string>
@@ -1755,4 +1755,16 @@
     <string name="change_password_desc">تغيير كلمة المرور الرئيسية للمسؤول</string>
     <string name="not_set">غير محدد</string>
     <string name="admin_auth_audit_desc">يلزم إعادة مصادقة المسؤول الإلزامية. سيتم إنشاء إدخال سجل تدقيق أمني تلقائي.</string>
+    <string name="cashier_cannot_delete_has_history_title">لا يمكن الحذف - يوجد سجل سابق</string>
+    <string name="cashier_cannot_delete_has_history_desc">يحتوي هذا الكاشير على سجل ورديات وسجلات تدقيق ضريبية. وفقًا لمعايير نقاط البيع، لا يمكن حذف كاشير له سجلات سابقة. يمكنك أرشفة الكاشير مع الحفاظ على البيانات.</string>
+    <string name="action_archive">أرشفة</string>
+    <string name="action_unarchive">استعادة</string>
+    <string name="archived_cashiers_title">الكاشير المؤرشف</string>
+    <string name="delete_permanently_title">حذف نهائي؟</string>
+    <string name="delete_permanently_desc">لا يوجد سجل ورديات لهذا الكاشير. اكتب DELETE لتأكيد الحذف النهائي.</string>
+    <string name="type_delete_to_confirm">اكتب DELETE للتأكيد</string>
+    <string name="cashier_archived_success">تمت أرشفة الكاشير %s بنجاح.</string>
+    <string name="cashier_restored_success">تمت استعادة الكاشير %s بنجاح.</string>
+    <string name="status_active">نشط</string>
+    <string name="status_archived">مؤرشف</string>
 </resources>

@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  *    - User enters directly into the app.
  *
  * 3. Settings → Security:
- *    - User can explicitly activate Quick Login (with a 4-digit PIN) and Biometric.
+ *    - User can explicitly activate Quick Login (with a 6-digit PIN) and Biometric.
  *
  * 4. Next launch / post-logout (keepQuickLoginState = true):
  *    - If Quick Login is enabled, displays Quick PIN / Biometric lock screen.
@@ -72,6 +72,8 @@ class PreferencesRepository private constructor(context: Context) {
         private const val KEY_PRESERVE_DATA_ON_UNINSTALL = "key_preserve_data_on_uninstall"
         private const val KEY_FIRST_RUN_DATA_PRESERVATION_SHOWN = "key_first_run_data_preservation_shown"
         private const val KEY_HAS_RUN_BEFORE = "key_has_run_before"
+        private const val KEY_HAS_SEEN_RESTORE_DIALOG = "has_seen_restore_dialog"
+        private const val KEY_IS_NEW_ACCOUNT = "key_is_new_account"
 
         @Volatile
         private var instance: PreferencesRepository? = null
@@ -136,7 +138,7 @@ class PreferencesRepository private constructor(context: Context) {
         username: String,
         fullName: String? = null,
         email: String? = null,
-        rememberMe: Boolean = true
+        rememberMe: Boolean = false
     ) {
         prefs.edit().apply {
             putBoolean(KEY_IS_LOGGED_IN, true)
@@ -173,9 +175,12 @@ class PreferencesRepository private constructor(context: Context) {
     }
 
     /**
-     * Updates or sets the 4-digit Quick PIN.
+     * Updates or sets the 6-digit Quick PIN.
      */
     fun setQuickPin(pin: String) {
+        if (!pin.matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX))) {
+            throw IllegalArgumentException("PIN must be exactly 6 digits")
+        }
         val hashed = SecurityUtils.hashSecret(pin)
         prefs.edit().apply {
             putString(KEY_STORED_PIN_HASH, hashed)
@@ -183,6 +188,9 @@ class PreferencesRepository private constructor(context: Context) {
             putBoolean(KEY_QUICK_LOGIN_ENABLED, true)
             apply()
         }
+        try {
+            com.lojia.shiftreport.auth.SecureStorageManager.saveQuickPin(appContext, pin)
+        } catch (_: Exception) {}
         _isQuickLoginActive.value = shouldDefaultToQuickLogin()
     }
 
@@ -195,6 +203,9 @@ class PreferencesRepository private constructor(context: Context) {
             remove(KEY_STORED_PIN_HASH)
             apply()
         }
+        try {
+            com.lojia.shiftreport.auth.SecureStorageManager.clearEncryptedPin(appContext)
+        } catch (_: Exception) {}
         _isQuickLoginActive.value = shouldDefaultToQuickLogin()
     }
 
@@ -219,6 +230,14 @@ class PreferencesRepository private constructor(context: Context) {
         if (!isQuickLoginEnabled() && !hasPinConfigured()) {
             return false
         }
+        if (!enteredPin.matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX))) {
+            return false
+        }
+        try {
+            if (com.lojia.shiftreport.auth.SecureStorageManager.verifyQuickPin(appContext, enteredPin)) {
+                return true
+            }
+        } catch (_: Exception) {}
         val storedHash = getStoredPinHash()
         if (!storedHash.isNullOrBlank()) {
             val result = SecurityUtils.verifySecretWithUpgrade(enteredPin, storedHash)
@@ -310,11 +329,36 @@ class PreferencesRepository private constructor(context: Context) {
     fun getSavedUsername(): String = prefs.getString(KEY_SAVED_USERNAME, "") ?: ""
     fun getSavedFullName(): String = prefs.getString(KEY_SAVED_FULL_NAME, "") ?: ""
     fun getSavedEmail(): String = prefs.getString(KEY_SAVED_EMAIL, "") ?: ""
-    fun isRememberMe(): Boolean = prefs.getBoolean(KEY_REMEMBER_ME, true)
+    fun isRememberMe(): Boolean = prefs.getBoolean(KEY_REMEMBER_ME, false)
     fun isQuickLoginEnabled(): Boolean = prefs.getBoolean(KEY_QUICK_LOGIN_ENABLED, false)
     fun isBiometricEnabled(): Boolean = prefs.getBoolean(KEY_BIOMETRIC_ENABLED, false)
     fun getStoredPinHash(): String? = prefs.getString(KEY_STORED_PIN_HASH, null)
     fun hasPinConfigured(): Boolean = prefs.getBoolean(KEY_HAS_PIN_CONFIGURED, false)
+
+    /**
+     * Foodics POS / Banking standard: Only persist operator username into EncryptedSharedPreferences.
+     * Passwords are NEVER persisted.
+     */
+    suspend fun saveRememberedUsername(username: String) {
+        com.lojia.shiftreport.auth.SecureStorageManager.saveRememberedUsername(username)
+    }
+
+    suspend fun getRememberedUsername(): String? {
+        return com.lojia.shiftreport.auth.SecureStorageManager.getRememberedUsername()
+    }
+
+    suspend fun clearRememberedUsername() {
+        com.lojia.shiftreport.auth.SecureStorageManager.clearRememberedUsername()
+    }
+
+    fun getRememberedUsernameSync(): String? {
+        return com.lojia.shiftreport.auth.SecureStorageManager.getRememberedUsernameSync()
+    }
+
+    fun clearRememberedUsernameSync() {
+        com.lojia.shiftreport.auth.SecureStorageManager.clearRememberedUsernameSync()
+    }
+
 
     fun savePrinterAddress(address: String) {
         prefs.edit().putString(KEY_PRINTER_ADDRESS, address).apply()
@@ -380,6 +424,25 @@ class PreferencesRepository private constructor(context: Context) {
 
     fun setHasRunBefore(hasRun: Boolean) {
         prefs.edit().putBoolean(KEY_HAS_RUN_BEFORE, hasRun).apply()
+    }
+
+    suspend fun getHasSeenRestoreDialog(): Boolean = prefs.getBoolean(KEY_HAS_SEEN_RESTORE_DIALOG, false)
+
+    suspend fun setHasSeenRestoreDialog(value: Boolean) {
+        prefs.edit().putBoolean(KEY_HAS_SEEN_RESTORE_DIALOG, value).apply()
+    }
+
+    fun isNewAccount(): Boolean = prefs.getBoolean(KEY_IS_NEW_ACCOUNT, false)
+
+    fun setNewAccount(isNew: Boolean) {
+        prefs.edit().putBoolean(KEY_IS_NEW_ACCOUNT, isNew).apply()
+    }
+
+    /**
+     * Requirement 4: Helper to retrieve shift count for cashier integrity checks.
+     */
+    suspend fun getShiftCountByCashierId(context: Context, cashierId: String): Int {
+        return ShiftReportRepository.getInstance(context).getShiftCountByCashierId(cashierId)
     }
 
     /**

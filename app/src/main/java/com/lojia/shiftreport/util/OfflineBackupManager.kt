@@ -38,7 +38,8 @@ object OfflineBackupManager {
 
     suspend fun generateBackupJson(
         database: AppDatabase,
-        isCloudBackup: Boolean = false
+        isCloudBackup: Boolean = false,
+        currentUserId: String? = null
     ): Pair<String, Int> = withContext(Dispatchers.IO) {
         val reportDao = database.reportDao()
 
@@ -59,6 +60,9 @@ object OfflineBackupManager {
         rootJson.put("exportDate", DateTimeFormatUtils.formatIsoDateTimeSeconds())
         rootJson.put("timestamp", System.currentTimeMillis())
         rootJson.put("isCloudBackup", isCloudBackup)
+
+        val ownerId = currentUserId ?: userProfile?.id?.toString() ?: userProfile?.username ?: "anonymous"
+        rootJson.put("ownerId", ownerId)
 
         // Business Profile
         if (businessProfile != null) {
@@ -138,7 +142,10 @@ object OfflineBackupManager {
                     put("pin", c.pin)
                 }
                 put("role", c.role)
-                put("active", c.active)
+                put("isActive", c.isActive)
+                put("isArchived", c.isArchived)
+                c.archivedAt?.let { put("archivedAt", it) }
+                put("createdByAdminId", c.createdByAdminId)
             })
         }
         rootJson.put("cashiers", cashiersArr)
@@ -165,6 +172,7 @@ object OfflineBackupManager {
             shiftReportsArr.put(shiftReportToJson(r))
         }
         rootJson.put("shiftReports", shiftReportsArr)
+        rootJson.put("shifts", shiftReportsArr)
 
         // Shift Sessions
         val shiftSessionsArr = JSONArray()
@@ -773,7 +781,10 @@ object OfflineBackupManager {
                             name = obj.getString("name"),
                             pin = pinVal,
                             role = obj.optString("role", "CASHIER"),
-                            active = obj.optBoolean("active", true) && pinVal.isNotBlank()
+                            isActive = obj.optBoolean("isActive", obj.optBoolean("active", true)) && pinVal.isNotBlank(),
+                            isArchived = obj.optBoolean("isArchived", false),
+                            archivedAt = if (obj.has("archivedAt")) obj.optLong("archivedAt") else null,
+                            createdByAdminId = obj.optString("createdByAdminId", "")
                         )
                     )
                 }

@@ -1,24 +1,38 @@
 package com.lojia.shiftreport.auth
 
-import com.lojia.shiftreport.R
-import androidx.compose.ui.res.stringResource
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.ui.theme.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+
+enum class QuickPinMode {
+    ENTER_PIN,
+    CREATE_PIN,
+    CONFIRM_PIN
+}
 
 @Composable
 fun QuickPinScreen(
@@ -28,118 +42,226 @@ fun QuickPinScreen(
     onFallbackToLogin: () -> Unit,
     onTriggerBiometric: () -> Unit
 ) {
-    var enteredPin by remember { mutableStateOf("") }
-    var pinError by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val hasPin = remember {
+        preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank()
+    }
+    var currentMode by remember {
+        mutableStateOf(if (hasPin) QuickPinMode.ENTER_PIN else QuickPinMode.CREATE_PIN)
+    }
 
+    var enteredPin by remember { mutableStateOf("") }
+    var createdPinTemp by remember { mutableStateOf("") }
+    var pinError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isMasked by remember { mutableStateOf(true) }
+
+    // When user completes typing 6 digits
     LaunchedEffect(enteredPin) {
-        if (enteredPin.length == 4) {
-            val isVerified = preferencesRepository.verifyPin(enteredPin)
-            if (isVerified) {
-                pinError = false
-                onAuthenticated()
-            } else {
-                pinError = true
-                delay(400)
-                enteredPin = ""
+        if (enteredPin.length == AuthPinConstants.PIN_LENGTH) {
+            when (currentMode) {
+                QuickPinMode.ENTER_PIN -> {
+                    val isVerified = preferencesRepository.verifyPin(enteredPin)
+                    if (isVerified) {
+                        pinError = false
+                        errorMessage = null
+                        onAuthenticated()
+                    } else {
+                        pinError = true
+                        errorMessage = context.getString(R.string.quick_pin_incorrect)
+                        delay(600)
+                        enteredPin = ""
+                    }
+                }
+                QuickPinMode.CREATE_PIN -> {
+                    createdPinTemp = enteredPin
+                    enteredPin = ""
+                    pinError = false
+                    errorMessage = null
+                    currentMode = QuickPinMode.CONFIRM_PIN
+                }
+                QuickPinMode.CONFIRM_PIN -> {
+                    if (enteredPin == createdPinTemp) {
+                        pinError = false
+                        errorMessage = null
+                        preferencesRepository.setQuickPin(enteredPin)
+                        preferencesRepository.setQuickLoginEnabled(true)
+                        Toast.makeText(context, context.getString(R.string.settings_quick_pin_saved), Toast.LENGTH_SHORT).show()
+                        onAuthenticated()
+                    } else {
+                        pinError = true
+                        errorMessage = if (isBn) "পিন মেলেনি, আবার চেষ্টা করুন" else "PINs do not match. Please try again."
+                        delay(700)
+                        enteredPin = ""
+                    }
+                }
             }
         } else {
-            pinError = false
+            if (pinError && enteredPin.isEmpty()) {
+                // keep error message until user types
+            } else if (enteredPin.isNotEmpty()) {
+                pinError = false
+            }
         }
+    }
+
+    val titleText = when (currentMode) {
+        QuickPinMode.ENTER_PIN -> stringResource(R.string.quick_pin_enter_pin)
+        QuickPinMode.CREATE_PIN -> if (isBn) "নতুন ৬-সংখ্যার পিন তৈরি করুন" else "Create 6-Digit PIN"
+        QuickPinMode.CONFIRM_PIN -> if (isBn) "পিন নিশ্চিত করুন" else "Confirm 6-Digit PIN"
+    }
+
+    val subtitleText = when (currentMode) {
+        QuickPinMode.ENTER_PIN -> stringResource(R.string.quick_pin_subtitle)
+        QuickPinMode.CREATE_PIN -> if (isBn) "অ্যাপ সহজে আনলক করতে ৬-সংখ্যার পিন সেট করুন" else "Set a 6-digit PIN for instant secure access"
+        QuickPinMode.CONFIRM_PIN -> if (isBn) "নিশ্চিত করতে একই ৬-সংখ্যার পিন আবার লিখুন" else "Re-enter the 6-digit PIN to confirm"
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundLight)
-            .padding(horizontal = 32.dp)
+            .padding(horizontal = 24.dp)
             .imePadding(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 360.dp)
-                .wrapContentHeight(Alignment.CenterVertically),
+                .widthIn(max = 380.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = stringResource(R.string.quick_pin_enter_pin),
-                fontSize = 24.sp,
+                text = titleText,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = OnBackgroundLight
+                color = OnBackgroundLight,
+                textAlign = TextAlign.Center
             )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = stringResource(R.string.quick_pin_subtitle),
-            fontSize = 14.sp,
-            color = OnSurfaceVariantLight,
-            textAlign = TextAlign.Center
-        )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // PIN Dots
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (i in 0 until 4) {
-                val isFilled = i < enteredPin.length
-                val color = if (pinError) ErrorRedLight else if (isFilled) PrimaryIndigoLight else OutlineLight
-                Box(
+            Text(
+                text = subtitleText,
+                fontSize = 13.5.sp,
+                color = OnSurfaceVariantLight,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // 6-box OTP Input
+            SixDigitPinInput(
+                pin = enteredPin,
+                onPinChange = { enteredPin = it },
+                isMasked = isMasked,
+                isError = pinError,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("six_digit_pin_screen_input")
+            )
+
+            // Visibility toggle & Error Display
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("quick_pin_error_text")
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                IconButton(
+                    onClick = { isMasked = !isMasked },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isMasked) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (isMasked) "Show PIN" else "Hide PIN",
+                        tint = OnSurfaceVariantLight,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Biometric fallback button below PIN boxes
+            if (preferencesRepository.isBiometricEnabled() && currentMode == QuickPinMode.ENTER_PIN) {
+                OutlinedButton(
+                    onClick = onTriggerBiometric,
                     modifier = Modifier
-                        .size(16.dp)
-                        .background(color, shape = androidx.compose.foundation.shape.CircleShape)
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("btn_biometric_fallback"),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Fingerprint,
+                        contentDescription = null,
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.btn_auth_with_biometrics),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrimaryIndigoLight
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // On-screen Numpad
+            NumpadView(
+                onNumberClick = { num ->
+                    if (enteredPin.length < AuthPinConstants.PIN_LENGTH) {
+                        enteredPin += num
+                    }
+                },
+                onDeleteClick = {
+                    if (enteredPin.isNotEmpty()) {
+                        enteredPin = enteredPin.dropLast(1)
+                    }
+                },
+                showBiometric = preferencesRepository.isBiometricEnabled() && currentMode == QuickPinMode.ENTER_PIN,
+                onBiometricClick = onTriggerBiometric
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            TextButton(
+                onClick = onFallbackToLogin,
+                modifier = Modifier.testTag("btn_fallback_to_login")
+            ) {
+                Text(
+                    text = stringResource(R.string.quick_pin_use_password),
+                    color = PrimaryIndigoLight,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
-        }
 
-        if (pinError) {
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.quick_pin_incorrect),
-                color = ErrorRedLight,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-        } else {
-            Spacer(modifier = Modifier.height(36.dp)) // Maintain spacing
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // Numpad
-        NumpadView(
-            onNumberClick = { num ->
-                if (enteredPin.length < 4) {
-                    enteredPin += num
-                }
-            },
-            onDeleteClick = {
-                if (enteredPin.isNotEmpty()) {
-                    enteredPin = enteredPin.dropLast(1)
-                }
-            },
-            showBiometric = preferencesRepository.isBiometricEnabled(),
-            onBiometricClick = onTriggerBiometric
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        TextButton(onClick = onFallbackToLogin) {
-            Text(
-                text = stringResource(R.string.quick_pin_use_password),
-                color = PrimaryIndigoLight,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
-}
 }
 
 @Composable
@@ -189,9 +311,9 @@ fun NumpadView(
             } else {
                 Spacer(modifier = Modifier.weight(1f))
             }
-            
+
             NumpadButton(text = "0", onClick = { onNumberClick("0") }, modifier = Modifier.weight(1f))
-            
+
             Box(
                 modifier = Modifier.weight(1f).aspectRatio(1.2f),
                 contentAlignment = Alignment.Center
@@ -218,7 +340,7 @@ fun NumpadButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifie
             containerColor = Color.White,
             contentColor = OnBackgroundLight
         ),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(12.dp),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
     ) {
         Text(

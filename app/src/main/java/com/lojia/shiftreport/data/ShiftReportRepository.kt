@@ -36,6 +36,47 @@ class ShiftReportRepository(private val reportDao: ReportDao) {
         reportDao.clearDraftReport()
     }
 
+    suspend fun getActiveCashiers(): List<Cashier> {
+        return reportDao.getActiveCashiers()
+    }
+
+    fun observeActiveCashiers(): Flow<List<Cashier>> {
+        return reportDao.observeActiveCashiers()
+    }
+
+    suspend fun getArchivedCashiers(): List<Cashier> {
+        return reportDao.getArchivedCashiers()
+    }
+
+    suspend fun getCashierById(id: String): Cashier? {
+        return reportDao.getCashierById(id)
+    }
+
+    suspend fun archiveCashier(id: String, timestamp: Long = System.currentTimeMillis()) {
+        reportDao.archiveCashier(id, timestamp)
+    }
+
+    suspend fun unarchiveCashier(id: String) {
+        reportDao.unarchiveCashier(id)
+    }
+
+    suspend fun deleteCashier(cashier: Cashier) {
+        reportDao.deleteCashier(cashier)
+    }
+
+    /**
+     * Requirement 4: Query shift_reports for cashier shift history before allowing delete.
+     */
+    suspend fun getShiftCountByCashierId(cashierId: String): Int {
+        val cashier = reportDao.getCashierById(cashierId)
+        val name = cashier?.name.orEmpty()
+        return if (name.isNotBlank()) {
+            reportDao.getShiftCountByCashierIdOrName(cashierId, name)
+        } else {
+            reportDao.getShiftCountByCashierId(cashierId)
+        }
+    }
+
     suspend fun verifyAdminCredentials(context: Context, enteredPinOrPassword: String): Boolean {
         val trimmed = enteredPinOrPassword.trim()
         if (trimmed.isEmpty()) return false

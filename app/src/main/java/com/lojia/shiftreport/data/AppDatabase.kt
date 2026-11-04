@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
         ScannedDocument::class,
         SavedAddress::class
     ],
-    version = 16,
+    version = 17,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -412,6 +412,17 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `cashiers` ADD COLUMN `isActive` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("UPDATE `cashiers` SET `isActive` = `active`")
+                db.execSQL("ALTER TABLE `cashiers` ADD COLUMN `isArchived` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `cashiers` ADD COLUMN `archivedAt` INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE `cashiers` ADD COLUMN `createdByAdminId` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `shift_reports` ADD COLUMN `cashierId` TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val builder = Room.databaseBuilder(
@@ -425,7 +436,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
                     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
                     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
-                    MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16
+                    MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17
                 )
 
                 builder.addCallback(DatabaseCallback(scope) { INSTANCE })

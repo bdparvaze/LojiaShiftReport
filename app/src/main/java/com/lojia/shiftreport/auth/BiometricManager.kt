@@ -329,22 +329,29 @@ fun BiometricLockScreen(
         userProfile?.let { preferencesRepository.syncWithUserProfile(it) }
     }
 
-    val prefs = remember(context) { context.getSharedPreferences("lojia", Context.MODE_PRIVATE) }
-    val savedUser = remember { prefs.getString("lojiaUser", "") ?: "" }
-    val sessionUser = remember(preferencesRepository) { preferencesRepository.getSavedUsername() }
-    val isCashierRole = remember(userProfile) {
-        val role = userProfile?.currentRole?.lowercase().orEmpty()
-        val desig = userProfile?.designation?.lowercase().orEmpty()
-        role.contains("cashier") || role.contains("staff") || desig.contains("cashier") || desig.contains("staff")
-    }
+    val secureStorageManager = SecureStorageManager
 
-    var loginUser by remember { mutableStateOf(sessionUser.ifEmpty { savedUser.ifEmpty { "" } }) }
+    var loginUser by remember { mutableStateOf("") }
     var loginPass by remember { mutableStateOf("") }
     var loginPassVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(if (isCashierRole) false else preferencesRepository.isRememberMe()) }
+    var rememberMe by remember { mutableStateOf(false) } // MUST be false by default - Foodics / POS Banking Standard
     var isSigningIn by remember { mutableStateOf(false) }
     var loginErrorMessage by remember { mutableStateOf<String?>(null) }
     var showForgotDialog by remember { mutableStateOf(false) }
+
+    // Load saved username on start - Foodics / Banking POS standard
+    LaunchedEffect(Unit) {
+        val savedUsername = preferencesRepository.getRememberedUsername()
+        if (!savedUsername.isNullOrBlank()) {
+            loginUser = savedUsername
+            rememberMe = true
+        } else {
+            rememberMe = false
+        }
+        try {
+            context.getSharedPreferences("lojia", Context.MODE_PRIVATE).edit().remove("lojiaUser").apply()
+        } catch (_: Exception) {}
+    }
 
     fun handleLogin() {
         focusManager.clearFocus()
@@ -359,13 +366,14 @@ fun BiometricLockScreen(
         isSigningIn = true
 
         coroutineScope.launch {
-            delay(500)
+            delay(300)
             isSigningIn = false
 
+            // International POS Security Standard: Save only username, NEVER password
             if (rememberMe) {
-                prefs.edit().putString("lojiaUser", u).apply()
+                secureStorageManager.saveRememberedUsername(u)
             } else {
-                prefs.edit().remove("lojiaUser").apply()
+                secureStorageManager.clearRememberedUsername()
             }
 
             val profile = userProfile
@@ -485,7 +493,15 @@ fun BiometricLockScreen(
                                 loginPassVisible = loginPassVisible,
                                 onTogglePasswordVisible = { loginPassVisible = !loginPassVisible },
                                 rememberMe = rememberMe,
-                                onRememberMeChange = { rememberMe = it },
+                                onRememberMeChange = { isChecked ->
+                                    rememberMe = isChecked
+                                    if (!isChecked) {
+                                        coroutineScope.launch {
+                                            secureStorageManager.clearRememberedUsername()
+                                            preferencesRepository.clearRememberedUsername()
+                                        }
+                                    }
+                                },
                                 onForgotPassword = { showForgotDialog = true },
                                 loginErrorMessage = loginErrorMessage,
                                 isSigningIn = isSigningIn,

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,11 +25,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.OfflineBackupManager
 import java.io.File
 
 /**
@@ -161,13 +164,14 @@ fun DataPreservationSetupDialog(
 @Composable
 fun DataRecoveryDialog(
     backupFile: File?,
+    previewText: String? = null,
     onRestore: () -> Unit,
     onBrowseBackups: (() -> Unit)? = null,
     onStartFresh: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit = {}
 ) {
     LojiaDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {}, // Non-dismissible
         maxWidth = Dimens.DialogSmallMaxWidth,
         shape = RoundedCornerShape(Dimens.DialogCornerRadius),
         containerColor = SurfaceLight,
@@ -217,6 +221,26 @@ fun DataRecoveryDialog(
                 )
 
                 if (backupFile != null) {
+                    val summary = remember(backupFile) {
+                        try {
+                            if (backupFile.exists() && backupFile.canRead()) {
+                                OfflineBackupManager.parseBackupSummaryFromString(backupFile.readText()).getOrNull()
+                            } else null
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+
+                    val preview = remember(backupFile, previewText) {
+                        if (!previewText.isNullOrBlank()) {
+                            previewText
+                        } else if (summary != null) {
+                            "${summary.shiftReportsCount} shifts ready to restore (${summary.totalRecords} records)"
+                        } else {
+                            "Backup found"
+                        }
+                    }
+
                     Surface(
                         color = BackgroundLight,
                         shape = RoundedCornerShape(8.dp),
@@ -225,23 +249,34 @@ fun DataRecoveryDialog(
                             .fillMaxWidth()
                             .padding(top = 4.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.History,
-                                contentDescription = null,
-                                tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.History,
+                                    contentDescription = null,
+                                    tint = PrimaryIndigoLight,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = backupFile.name,
+                                    fontSize = 12.sp,
+                                    color = OnSurfaceLight,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                             Text(
-                                text = backupFile.name,
-                                fontSize = 11.sp,
-                                color = OnSurfaceLight,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1
+                                text = preview,
+                                fontSize = 11.5.sp,
+                                color = PrimaryIndigoLight,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -252,6 +287,7 @@ fun DataRecoveryDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // 1. Primary: Restore from backup
                 if (backupFile != null) {
                     Button(
                         onClick = onRestore,
@@ -283,6 +319,7 @@ fun DataRecoveryDialog(
                     }
                 }
 
+                // 2. Outlined: Browse Backups
                 if (onBrowseBackups != null) {
                     OutlinedButton(
                         onClick = onBrowseBackups,
@@ -314,13 +351,9 @@ fun DataRecoveryDialog(
                     }
                 }
 
-                OutlinedButton(
+                // 3. Text Button: Start Fresh
+                TextButton(
                     onClick = onStartFresh,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, OutlineLight),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = OnSurfaceLight
-                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(Dimens.ButtonHeightStandard)
@@ -329,19 +362,7 @@ fun DataRecoveryDialog(
                     Text(
                         text = stringResource(R.string.btn_start_fresh),
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("btn_cancel_restore")
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_cancel),
-                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = TextSecondaryLight
                     )
                 }

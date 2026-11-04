@@ -395,7 +395,7 @@ class ReportBackupManager(
                         id = 0,
                         name = "Lojia Admin",
                         role = "ADMIN",
-                        active = true
+                        isActive = true
                     )
                     reportDao.insertCashiers(listOf(defaultCashier))
 

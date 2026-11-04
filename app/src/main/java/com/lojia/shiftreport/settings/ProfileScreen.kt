@@ -994,8 +994,8 @@ fun ProfileScreen(
                                             hasError = true
                                         }
                                     }
-                                    if (newPassword.length < 6) {
-                                        newPasswordError = context.getString(R.string.error_password_min_6_chars)
+                                    if (newPassword.length < 8 || !newPassword.any { it.isDigit() } || !newPassword.any { it.isUpperCase() }) {
+                                        newPasswordError = "Password must be at least 8 chars with 1 number and 1 uppercase letter"
                                         hasError = true
                                     }
                                     if (newPassword != confirmPassword) {

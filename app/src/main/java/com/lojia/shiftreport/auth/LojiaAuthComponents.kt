@@ -581,14 +581,32 @@ fun LojiaPasswordField(
     validationState: FieldValidationState = FieldValidationState.DEFAULT,
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    testTag: String = ""
+    testTag: String = "",
+    showEyeToggle: Boolean = true
 ) {
+    var isPasswordVisible by remember { mutableStateOf(false) }
+
     LojiaInputField(
         value = value,
         onValueChange = onValueChange,
         label = label,
         placeholder = placeholder,
-        visualTransformation = PasswordVisualTransformation(),
+        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = if (showEyeToggle) {
+            {
+                IconButton(
+                    onClick = { isPasswordVisible = !isPasswordVisible },
+                    modifier = Modifier.size(24.dp).testTag(if (testTag.isNotBlank()) "${testTag}_toggle" else "password_eye_toggle")
+                ) {
+                    Icon(
+                        imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                        tint = LojiaColors.N500,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        } else null,
         errorMessage = errorMessage,
         validationState = validationState,
         keyboardOptions = keyboardOptions,

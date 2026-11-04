@@ -214,7 +214,7 @@ fun LojiaRegisterScreen(
                 username = newProfile.username,
                 fullName = newProfile.fullName,
                 email = newProfile.email,
-                rememberMe = true
+                rememberMe = false
             )
             preferencesRepository.syncWithUserProfile(newProfile)
             onRegisterSuccess(newProfile)
