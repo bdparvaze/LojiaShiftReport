@@ -604,7 +604,7 @@ fun MonthlySalesSummaryView(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(stringResource(R.string.total_expenses), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = WarningOrange)
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = WarningOrange)
+                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses.toDouble(), currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = WarningOrange)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(stringResource(R.string.staff_advances_fmt, "%.2f".format(monthTotalStaffAdvances), currency), fontSize = 10.sp, color = TextSecondaryLight)
                         }

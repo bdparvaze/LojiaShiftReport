@@ -385,22 +385,21 @@ fun CashierManagementSection(
                                 imageVector = Icons.Outlined.People,
                                 contentDescription = null,
                                 tint = TextHintColor,
-                                modifier = Modifier.size(54.dp)
+                                modifier = Modifier.size(64.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = stringResource(R.string.no_cashiers_found_1),
-                                fontSize = 15.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = OnSurfaceLight
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Button(
-                                onClick = { showAdminAuthForAdd = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)
-                            ) {
-                                Text(stringResource(R.string.add_cashier))
-                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Add your first cashier to get started",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextHintColor
+                            )
                         }
                     }
                 } else {
@@ -525,23 +524,6 @@ fun CashierManagementSection(
                     }
                 }
             }
-        }
-
-        // Floating Action Button for Add Cashier
-        FloatingActionButton(
-            onClick = { showAdminAuthForAdd = true },
-            containerColor = PrimaryIndigoLight,
-            contentColor = PureWhite,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-                .size(56.dp)
-                .testTag("fabAddCashier")
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(R.string.add_cashier)
-            )
         }
     }
 

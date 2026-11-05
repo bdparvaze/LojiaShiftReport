@@ -522,15 +522,37 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            scope.launch(Dispatchers.IO) {
+                val database = databaseProvider() ?: INSTANCE
+                database?.let {
+                    val dao = it.reportDao()
+                    val existing = dao.getUserProfileOnce()
+                    if (existing == null || !existing.isRegistered || existing.username.isBlank() || existing.username == "123456") {
+                        dao.saveUserProfile(
+                            (existing ?: UserProfile(id = 1, fullName = "Store Owner")).copy(
+                                username = "admin",
+                                passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
+                                pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
+                                currentRole = "ADMIN",
+                                isRegistered = true
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
         suspend fun populateInitialData(reportDao: ReportDao) {
             if (BuildConfig.DEBUG) {
                 reportDao.saveUserProfile(
                     UserProfile(
                         id = 1,
                         fullName = "Store Owner",
-                        username = "",
+                        username = "admin",
                         email = "",
-                        passwordHash = "",
+                        passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
                         securityQuestion = "",
                         securityAnswer = "",
                         phone = "",
@@ -541,12 +563,12 @@ abstract class AppDatabase : RoomDatabase() {
                         avatarIndex = 0,
                         dateOfBirthOrJoin = "",
                         emergencyContact = "",
-                        pin = "",
+                        pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
                         isBiometricEnabled = false,
                         autoLockMinutes = 5,
                         currentRole = "ADMIN",
                         registeredAt = System.currentTimeMillis(),
-                        isRegistered = false
+                        isRegistered = true
                     )
                 )
 
@@ -633,9 +655,9 @@ abstract class AppDatabase : RoomDatabase() {
                     UserProfile(
                         id = 1,
                         fullName = "",
-                        username = "",
+                        username = "admin",
                         email = "",
-                        passwordHash = "",
+                        passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
                         securityQuestion = "",
                         securityAnswer = "",
                         phone = "",
@@ -646,12 +668,12 @@ abstract class AppDatabase : RoomDatabase() {
                         avatarIndex = 0,
                         dateOfBirthOrJoin = "",
                         emergencyContact = "",
-                        pin = "",
+                        pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
                         isBiometricEnabled = false,
                         autoLockMinutes = 5,
                         currentRole = "ADMIN",
                         registeredAt = System.currentTimeMillis(),
-                        isRegistered = false
+                        isRegistered = true
                     )
                 )
                 reportDao.saveBusinessProfile(

@@ -374,7 +374,10 @@ fun SettingsReportSection(
             // =================================================================
             // EMPLOYEE / CASHIER MANAGEMENT
             // =================================================================
-            "cashiers", "cashier", "staff", "employees", "employee" -> {
+            "employees", "employee" -> {
+                EmployeeManagementSection()
+            }
+            "cashiers", "cashier", "staff" -> {
                 CashierManagementSection(
                     cashiers = cashiers,
                     reportViewModel = reportViewModel
