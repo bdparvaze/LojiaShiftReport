@@ -289,6 +289,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
                             ModalNavigationDrawer(
                                 drawerState = drawerState,
+                                gesturesEnabled = false,
                                 drawerContent = {
                                     MainAppDrawer(
                                         activeModule = activeModule,
@@ -383,6 +384,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                             }
                                         }
                                     },
+                                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
                                     containerColor = MaterialTheme.colorScheme.background
                                 ) { innerPadding ->
                                     Box(

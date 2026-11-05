@@ -772,9 +772,9 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 unpaidBillsJson = serializeUnpaid(unpaidBills.value),
                 purchasedItemsJson = serializePurchased(purchasedItems.value),
                 notes = formattedNotes,
-                isLocked = isShiftLocked.value,
-                managerSignedBy = managerSignedBy.value,
-                managerSignTime = managerSignTime.value
+                isLocked = false,
+                managerSignedBy = null,
+                managerSignTime = null
             )
             repository.insertReport(report)
             reportDao.insertAuditLog(

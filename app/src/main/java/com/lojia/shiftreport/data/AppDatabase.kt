@@ -29,9 +29,11 @@ import kotlinx.coroutines.launch
         CashMovement::class,
         ShopReceiptConfig::class,
         ScannedDocument::class,
-        SavedAddress::class
+        SavedAddress::class,
+        Employee::class,
+        EmployerAdvanceTransaction::class
     ],
-    version = 17,
+    version = 18,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -39,6 +41,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun reportDao(): ReportDao
     abstract fun documentScannerDao(): DocumentScannerDao
     abstract fun savedAddressDao(): SavedAddressDao
+    abstract fun employeeDao(): EmployeeDao
+    abstract fun employerAdvanceDao(): EmployerAdvanceDao
 
     companion object {
         @Volatile
@@ -423,6 +427,44 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `employees` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `monthlySalary` REAL NOT NULL,
+                        `phone` TEXT,
+                        `isActive` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `createdByAdminId` TEXT NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `advance_transactions` (
+                        `id` TEXT NOT NULL,
+                        `employeeId` TEXT NOT NULL,
+                        `employeeName` TEXT NOT NULL,
+                        `shiftId` TEXT NOT NULL,
+                        `amount` REAL NOT NULL,
+                        `paymentMethod` TEXT NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `reason` TEXT NOT NULL,
+                        `originalTransactionId` TEXT,
+                        `isVoid` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `createdByAdminId` TEXT NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val builder = Room.databaseBuilder(
@@ -436,7 +478,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
                     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
                     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
-                    MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17
+                    MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
+                    MIGRATION_17_18
                 )
 
                 builder.addCallback(DatabaseCallback(scope) { INSTANCE })

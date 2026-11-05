@@ -49,9 +49,9 @@ fun MainAppDrawer(
     onLockApp: () -> Unit
 ) {
     ModalDrawerSheet(
-        drawerContainerColor = SurfaceLight,
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
         modifier = Modifier
-            .widthIn(min = 280.dp, max = 320.dp)
+            .width(304.dp)
             .fillMaxHeight()
             .testTag("main_navigation_drawer")
     ) {
@@ -61,115 +61,96 @@ fun MainAppDrawer(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 20.dp)
         ) {
-            // Top Header Banner (200.dp height, 28.dp bottomEnd radius, solid PrimaryIndigoDark)
-            Column(
+            // Compact Header - 140dp
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(
-                        RoundedCornerShape(
-                            bottomEnd = 28.dp,
-                            bottomStart = 0.dp
-                        )
-                    )
-                    .background(PrimaryIndigoDark)
+                    .background(MaterialTheme.colorScheme.primary)
                     .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 20.dp),
-                verticalArrangement = Arrangement.Bottom
+                    .height(140.dp)
+                    .padding(16.dp)
             ) {
-                // Logo circle
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(PureWhite.copy(alpha = 0.15f))
-                        .border(
-                            width = 1.5.dp,
-                            color = PureWhite.copy(alpha = 0.4f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Assessment,
-                        contentDescription = null,
-                        tint = PureWhite,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Title
-                Text(
-                    text = "Lojia Shift Report",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PureWhite,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Subtitle (user name)
-                Text(
-                    text = userProfile?.fullName ?: "Shift Manager",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PureWhite.copy(alpha = 0.85f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Badge row
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Badge 1: Shift Report (current mode)
-                    Surface(
-                        shape = RoundedCornerShape(999.dp),
-                        color = PureWhite.copy(alpha = 0.22f),
-                        border = BorderStroke(
-                            width = 0.5.dp,
-                            color = PureWhite.copy(alpha = 0.35f)
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = "Shift Report",
-                            modifier = Modifier.padding(
-                                horizontal = 12.dp,
-                                vertical = 6.dp
-                            ),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PureWhite,
-                            maxLines = 1,
-                            softWrap = false,
-                            letterSpacing = 0.3.sp
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BarChart,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Column {
+                            Text(
+                                text = "Lojia Shift Report",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = userProfile?.fullName ?: "Shift Manager",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.8f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
 
-                    // Badge 2: Role (ADMIN)
-                    Surface(
-                        shape = RoundedCornerShape(999.dp),
-                        color = SuccessGreen
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = userProfile?.currentRole ?: "ADMIN",
-                            modifier = Modifier.padding(
-                                horizontal = 12.dp,
-                                vertical = 6.dp
+                        AssistChip(
+                            onClick = {},
+                            label = {
+                                Text(
+                                    text = "Shift Report",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = Color.White.copy(alpha = 0.2f),
+                                labelColor = Color.White
                             ),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PureWhite,
-                            maxLines = 1,
-                            softWrap = false,
-                            letterSpacing = 0.3.sp
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.35f)),
+                            modifier = Modifier.height(28.dp)
+                        )
+
+                        AssistChip(
+                            onClick = {},
+                            label = {
+                                Text(
+                                    text = userProfile?.currentRole ?: "ADMIN",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = Color(0xFF2E7D32),
+                                labelColor = Color.White
+                            ),
+                            border = null,
+                            modifier = Modifier.height(28.dp)
                         )
                     }
                 }

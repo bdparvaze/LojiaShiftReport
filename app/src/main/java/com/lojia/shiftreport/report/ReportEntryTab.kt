@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +35,7 @@ import com.lojia.shiftreport.util.MoneyFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 /**
  * TAB 0: REPORT ENTRY (SHIFT CLOSING LEDGER FORM)
@@ -148,8 +150,11 @@ fun ReportEntryTab(
         SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date(dateMillis))
     }
 
+    val scrollState = rememberScrollState()
+
     Scaffold(
         containerColor = Color.White,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             StickySummaryBar(
                 expectedCash = MoneyFormat.toMinorUnits(expectedCash),
@@ -162,20 +167,20 @@ fun ReportEntryTab(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .padding(padding)
-                .imePadding(),
-            contentAlignment = Alignment.Center
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(Alignment.CenterVertically)
+                    .fillMaxSize()
                     .widthIn(max = 680.dp)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
+                    .imePadding()
+                    .navigationBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .testTag("shift_report_dashboard"),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
             // ---- Header card ----
             Card(
@@ -316,10 +321,96 @@ fun ReportEntryTab(
                             )
                         }
 
-                        // ---- Employer Advance ----
-                        SectionHeader("👤", stringResource(R.string.employer_advance), ShiftColors.PurpleLight, ShiftColors.Purple, ShiftColors.Purple) {
-                            modalType = ModalType.STAFF
+                        // ---- Employer Advance (Dropdown-only Foodics POS Standard) ----
+                        val context = LocalContext.current
+                        val coroutineScope = rememberCoroutineScope()
+                        val db = remember(context) { com.lojia.shiftreport.data.AppDatabase.getInstance(context) }
+                        val employeeDao = remember(db) { db.employeeDao() }
+                        val advanceDao = remember(db) { db.employerAdvanceDao() }
+                        val prefs = remember(context) { PreferencesRepository.getInstance(context) }
+                        val adminId = remember(prefs) { prefs.getSavedUsername().ifBlank { "admin" } }
+
+                        val activeEmployees by employeeDao.getAllActive().collectAsState(initial = emptyList())
+                        val allAdvances by advanceDao.getAllActive().collectAsState(initial = emptyList())
+                        val advancesByEmployee = remember(allAdvances) {
+                            allAdvances.groupBy { it.employeeId }.mapValues { (_, list) -> list.sumOf { it.amount } }
                         }
+
+                        var selectedAdvanceEmployee by remember { mutableStateOf<com.lojia.shiftreport.data.Employee?>(null) }
+                        var advanceAmountText by remember { mutableStateOf("") }
+                        var advancePaymentType by remember { mutableStateOf("Cash") }
+                        var showAdminAuthForAdvance by remember { mutableStateOf(false) }
+
+                        Text(
+                            text = "👤 " + stringResource(R.string.employer_advance),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = ShiftColors.Purple,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, bottom = 4.dp)
+                        )
+
+                        EmployerAdvanceSection(
+                            employees = activeEmployees,
+                            advancesByEmployee = advancesByEmployee,
+                            selectedEmployee = selectedAdvanceEmployee,
+                            onEmployeeSelected = { selectedAdvanceEmployee = it },
+                            amount = advanceAmountText,
+                            onAmountChange = { advanceAmountText = it },
+                            selectedType = advancePaymentType,
+                            onTypeChange = { advancePaymentType = it },
+                            onAddAdvance = {
+                                val amt = advanceAmountText.trim().toDoubleOrNull()
+                                if (amt == null || amt <= 0.0 || amt > 5000.0) {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Enter valid amount (1 - 5000 SAR)",
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    showAdminAuthForAdvance = true
+                                }
+                            }
+                        )
+
+                        if (showAdminAuthForAdvance && selectedAdvanceEmployee != null) {
+                            val emp = selectedAdvanceEmployee!!
+                            val amt = advanceAmountText.trim().toDoubleOrNull() ?: 0.0
+                            val isBank = advancePaymentType == "Bank"
+                            com.lojia.shiftreport.auth.AdminAuthDialog(
+                                onDismissRequest = { showAdminAuthForAdvance = false },
+                                onAuthSuccess = {
+                                    showAdminAuthForAdvance = false
+                                    coroutineScope.launch {
+                                        advanceDao.insert(
+                                            com.lojia.shiftreport.data.EmployerAdvanceTransaction(
+                                                employeeId = emp.id,
+                                                employeeName = emp.name,
+                                                amount = amt,
+                                                paymentMethod = if (isBank) "BANK" else "CASH",
+                                                type = com.lojia.shiftreport.data.AdvanceTransactionType.ADVANCE.name,
+                                                createdByAdminId = adminId
+                                            )
+                                        )
+                                        staffEntries.add(
+                                            StaffEntry(
+                                                name = emp.name,
+                                                amount = java.math.BigDecimal.valueOf(amt),
+                                                type = if (isBank) PayType.BANK else PayType.CASH
+                                            )
+                                        )
+                                        advanceAmountText = ""
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Added $amt SAR to ${emp.name}",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            )
+                        }
+
                         staffEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = e.name,
@@ -382,81 +473,6 @@ fun ReportEntryTab(
                         )
 
                         Spacer(Modifier.height(16.dp))
-
-                        // ---- Enterprise Manager Sign-Off & Lock Card ----
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isShiftLocked) SuccessContainer else BackgroundLight
-                            ),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isShiftLocked) PosCashGreen else ShiftColors.Border
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(14.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(if (isShiftLocked) "🔒" else "🛡️", fontSize = 16.sp)
-                                        Spacer(Modifier.width(8.dp))
-                                        Column {
-                                            Text(
-                                                text = stringResource(R.string.manager_sign_off_title),
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 13.5.sp,
-                                                color = ShiftColors.Charcoal
-                                            )
-                                            Text(
-                                                text = if (isShiftLocked) "Approved by ${managerSignedBy ?: "Manager"}" else "Optional audit lock & verification",
-                                                fontSize = 11.sp,
-                                                color = if (isShiftLocked) PosCashGreen else ShiftColors.TextMuted
-                                            )
-                                        }
-                                    }
-
-                                    Surface(
-                                        color = if (isShiftLocked) SuccessContainer else SurfaceVariantLight,
-                                        shape = RoundedCornerShape(6.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(if (isShiftLocked) R.string.shift_locked_badge else R.string.shift_draft_badge),
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (isShiftLocked) PosCashGreen else OnSurfaceVariantLight,
-                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(Modifier.height(8.dp))
-
-                                if (!isShiftLocked) {
-                                    OutlinedButton(
-                                        onClick = { showManagerLockDialog = true },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(8.dp),
-                                        border = BorderStroke(1.dp, ShiftColors.Primary),
-                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ShiftColors.Primary)
-                                    ) {
-                                        Text("🔐 " + stringResource(R.string.lock_and_finalize_btn), fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp)
-                                    }
-                                } else {
-                                    Text(
-                                        text = "✓ Shift report is verified and locked against edits.",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = PosCashGreen
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(Modifier.height(24.dp))
 
                         // ---- Action buttons ----
                         Row(
@@ -525,9 +541,9 @@ fun ReportEntryTab(
                                             itemEntries = itemEntries.toList(),
                                             netCash = expectedCash,
                                             netMada = netMada,
-                                            isLocked = isShiftLocked,
-                                            managerSignedBy = managerSignedBy,
-                                            managerSignTime = managerSignTime,
+                                            isLocked = false,
+                                            managerSignedBy = null,
+                                            managerSignTime = null,
                                             dateMillis = dateMillis
                                         )
                                     )
@@ -652,82 +668,137 @@ fun ReportEntryTab(
             }
         )
     }
+}
 
-    // ---- Manager Lock / Sign-off Dialog ----
-    if (showManagerLockDialog) {
-        val prefs = PreferencesRepository.getInstance(LocalContext.current)
-        var mgrName by remember { mutableStateOf("Shift Manager") }
-        var mgrPin by remember { mutableStateOf("") }
-        var pinError by remember { mutableStateOf<String?>(null) }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EmployerAdvanceSection(
+    employees: List<com.lojia.shiftreport.data.Employee>,
+    advancesByEmployee: Map<String, Double> = emptyMap(),
+    selectedEmployee: com.lojia.shiftreport.data.Employee?,
+    onEmployeeSelected: (com.lojia.shiftreport.data.Employee) -> Unit,
+    amount: String,
+    onAmountChange: (String) -> Unit,
+    selectedType: String,
+    onTypeChange: (String) -> Unit,
+    onAddAdvance: () -> Unit,
+    onNavigateToSettings: () -> Unit = {}
+) {
+    var expanded by remember { mutableStateOf(false) }
 
-        AlertDialog(
-            onDismissRequest = { showManagerLockDialog = false },
-            containerColor = Color.White,
-            titleContentColor = OnBackgroundLight,
-            textContentColor = OnSurfaceVariantLight,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🛡️", fontSize = 18.sp)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.manager_sign_off_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        stringResource(R.string.manager_sign_off_desc),
-                        fontSize = 12.5.sp,
-                        color = ShiftColors.TextMuted
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = selectedEmployee?.name ?: "Select Employee",
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null
                     )
-                    OutlinedTextField(
-                        value = mgrName,
-                        onValueChange = { mgrName = it },
-                        label = { Text(stringResource(R.string.manager_name_label)) },
-                        modifier = Modifier.fillMaxWidth()
+                },
+                modifier = Modifier
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                    .fillMaxWidth(),
+                label = { Text("Employee") },
+                placeholder = { Text("Select from ${employees.size} employees") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                if (employees.isEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("No employees - Add in Settings > Employees") },
+                        onClick = {
+                            expanded = false
+                            onNavigateToSettings()
+                        }
                     )
-                    OutlinedTextField(
-                        value = mgrPin,
-                        onValueChange = { mgrPin = it; pinError = null },
-                        label = { Text(stringResource(R.string.manager_pin_label)) },
-                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
-                        ),
-                        isError = pinError != null,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (pinError != null) {
-                        Text(pinError ?: "", color = ShiftColors.Danger, fontSize = 11.5.sp)
+                } else {
+                    employees.forEach { employee ->
+                        val taken = advancesByEmployee[employee.id] ?: 0.0
+                        val balance = employee.monthlySalary - taken
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(
+                                        text = employee.name,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = String.format(
+                                            Locale.US,
+                                            "Salary: %.0f SAR | Balance: %.2f SAR",
+                                            employee.monthlySalary,
+                                            balance
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onEmployeeSelected(employee)
+                                expanded = false
+                            }
+                        )
                     }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val isPinValid = if (prefs.hasPinConfigured() || prefs.isQuickLoginEnabled()) {
-                            prefs.verifyPin(mgrPin)
-                        } else {
-                            mgrPin.matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX))
-                        }
-                        if (isPinValid) {
-                            isShiftLocked = true
-                            managerSignedBy = mgrName.ifBlank { "Shift Manager" }
-                            managerSignTime = System.currentTimeMillis()
-                            showManagerLockDialog = false
-                        } else {
-                            pinError = "Invalid Manager PIN. Please verify credentials."
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ShiftColors.Primary)
-                ) {
-                    Text(stringResource(R.string.lock_and_finalize_btn), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showManagerLockDialog = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
             }
+        }
+
+        OutlinedTextField(
+            value = amount,
+            onValueChange = onAmountChange,
+            label = { Text("Advance Amount") },
+            enabled = selectedEmployee != null,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+            ),
+            suffix = { Text("SAR") },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
         )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilterChip(
+                selected = selectedType == "Cash",
+                onClick = { onTypeChange("Cash") },
+                label = { Text("Cash") }
+            )
+            FilterChip(
+                selected = selectedType == "Bank",
+                onClick = { onTypeChange("Bank") },
+                label = { Text("Bank") }
+            )
+        }
+
+        Button(
+            onClick = onAddAdvance,
+            enabled = selectedEmployee != null && amount.isNotEmpty(),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Add ${amount.ifBlank { "0" }} SAR to ${selectedEmployee?.name ?: "Employee"}",
+                fontWeight = FontWeight.SemiBold
+            )
+        }
     }
 }
