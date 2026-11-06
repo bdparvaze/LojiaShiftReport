@@ -211,6 +211,19 @@ fun MainAppDrawer(
                 }
             )
 
+            // Employee Management
+            DrawerMenuItem(
+                title = "Employee Management",
+                icon = Icons.Outlined.Groups,
+                activeColor = PrimaryIndigoLight,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "employees",
+                onClick = {
+                    onOpenReportMenu("employees")
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("employees"))
+                    onCloseDrawer()
+                }
+            )
+
             // 4. Profile
             DrawerMenuItem(
                 title = stringResource(R.string.nav_profile),

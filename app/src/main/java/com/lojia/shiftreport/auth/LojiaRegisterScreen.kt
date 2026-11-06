@@ -210,6 +210,12 @@ fun LojiaRegisterScreen(
                 phone = fullPhone,
                 isRegistered = true
             )
+            preferencesRepository.saveFirstName(rFn.trim())
+            preferencesRepository.saveLastName(rLn.trim())
+            preferencesRepository.saveFullName(newProfile.fullName)
+            preferencesRepository.saveEmail(newProfile.email)
+            preferencesRepository.savePhone(newProfile.phone)
+            preferencesRepository.saveRememberedUsername(newProfile.username)
             preferencesRepository.saveUserSession(
                 username = newProfile.username,
                 fullName = newProfile.fullName,

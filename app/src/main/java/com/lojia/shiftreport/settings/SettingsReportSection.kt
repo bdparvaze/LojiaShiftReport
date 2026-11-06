@@ -274,6 +274,13 @@ fun SettingsReportSection(
                     onClick = { onNavigateToSection("cashiers") }
                 )
 
+                LoyverseMenuItemRow(
+                    icon = Icons.Outlined.Badge,
+                    title = "Employee Management",
+                    subtitle = "Manage staff, monthly salaries & advances",
+                    onClick = { onNavigateToSection("employees") }
+                )
+
                 Text(
                     text = stringResource(R.string.security_data_section),
                     fontSize = 11.sp,

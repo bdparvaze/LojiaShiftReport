@@ -408,6 +408,78 @@ class PreferencesRepository private constructor(context: Context) {
         return prefs.getString(KEY_BUSINESS_LOGO_URI, "") ?: ""
     }
 
+    fun saveFullName(name: String) {
+        prefs.edit().putString("owner_full_name", name).apply()
+    }
+
+    fun getFullName(): String {
+        return prefs.getString("owner_full_name", "") ?: ""
+    }
+
+    fun saveEmail(email: String) {
+        prefs.edit().putString("owner_email", email).apply()
+    }
+
+    fun getEmail(): String {
+        return prefs.getString("owner_email", "") ?: ""
+    }
+
+    fun savePhone(phone: String) {
+        prefs.edit().putString("owner_phone", phone).apply()
+    }
+
+    fun getPhone(): String {
+        return prefs.getString("owner_phone", "") ?: ""
+    }
+
+    fun saveBusinessName(name: String) {
+        prefs.edit().putString("business_name", name).apply()
+    }
+
+    fun getBusinessName(): String {
+        return prefs.getString("business_name", "") ?: ""
+    }
+
+    fun saveFirstName(firstName: String) {
+        prefs.edit().putString("owner_first_name", firstName).apply()
+    }
+
+    fun getFirstName(): String {
+        return prefs.getString("owner_first_name", "") ?: ""
+    }
+
+    fun saveLastName(lastName: String) {
+        prefs.edit().putString("owner_last_name", lastName).apply()
+    }
+
+    fun getLastName(): String {
+        return prefs.getString("owner_last_name", "") ?: ""
+    }
+
+    fun saveRecoveryQuestion(question: String) {
+        prefs.edit().putString("recovery_question", question).apply()
+    }
+
+    fun getRecoveryQuestion(): String {
+        return prefs.getString("recovery_question", "") ?: ""
+    }
+
+    fun saveRecoveryAnswerHash(hash: String) {
+        prefs.edit().putString("recovery_answer_hash", hash).apply()
+    }
+
+    fun getRecoveryAnswerHash(): String {
+        return prefs.getString("recovery_answer_hash", "") ?: ""
+    }
+
+    fun saveProfileImageUri(uri: String) {
+        prefs.edit().putString("profile_image_uri", uri).apply()
+    }
+
+    fun getProfileImageUri(): String {
+        return prefs.getString("profile_image_uri", "") ?: ""
+    }
+
     fun isPreserveDataOnUninstall(): Boolean = prefs.getBoolean(KEY_PRESERVE_DATA_ON_UNINSTALL, true)
 
     fun setPreserveDataOnUninstall(preserve: Boolean) {

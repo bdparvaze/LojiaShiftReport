@@ -1,89 +1,91 @@
 package com.lojia.shiftreport.settings
 
-import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Patterns
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.lojia.shiftreport.R
-import com.lojia.shiftreport.data.AppCountry
+import androidx.compose.ui.window.DialogProperties
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.BusinessProfile
-import com.lojia.shiftreport.data.UpdateBusinessRequest
+import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.report.ReportViewModel
-import com.lojia.shiftreport.ui.common.LojiaOutlinedButton
-import com.lojia.shiftreport.ui.common.LojiaPrimaryButton
-import com.lojia.shiftreport.ui.theme.*
-import com.lojia.shiftreport.util.PdfReportGenerator
+import com.lojia.shiftreport.settings.ProfileImageCropper.ProfileImageCropperDialog
 import com.lojia.shiftreport.util.SecurityUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
 
-/**
- * Material 3 ProfileScreen for Lojia POS & Shift Report.
- * Features:
- * 1. Matching Exact UI from User Reference (100% pixel-perfect layout).
- * 2. Top Blue App Bar with Menu/Back navigation and "Profile" title.
- * 3. Elevated Circular Avatar with initials & Camera Badge overlay.
- * 4. INLINE Expandable Editing (Accordion Style): Clicking any row or arrow expands the input fields
- *    and action buttons (Cancel & Save) directly below the row without opening external popups.
- * 5. High-contrast typography (OnSurfaceLight text) on clean containers.
- * 6. Interactive Country Selector & Phone Formatter.
- * 7. Integrated Google Maps location picker and Password strength meter.
- */
+private val ProfileBlue = Color(0xFF2563EB)
+private val ProfileBg = Color(0xFFF9FAFB)
+private val ProfileTextBlack = Color(0xFF111827)
+private val ProfileTextGray = Color(0xFF6B7280)
+private val ProfileBorderLight = Color(0xFFE5E7EB)
+private val ProfileRed = Color(0xFFDC2626)
+private val ProfileRedBg = Color(0xFFFEF2F2)
+
+private val RECOVERY_QUESTIONS = listOf(
+    "What was your first pet's name?",
+    "What city were you born in?",
+    "What is your mother's maiden name?",
+    "What was your first school?",
+    "What is your favorite teacher?"
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
@@ -92,975 +94,530 @@ fun ProfileScreen(
     onLogoutClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
+    val prefs = remember(context) { PreferencesRepository.getInstance(context) }
 
     val userProfile by reportViewModel.userProfile.collectAsState()
     val businessProfile by reportViewModel.businessProfile.collectAsState()
     val savedAddresses by reportViewModel.savedAddresses.collectAsState()
     val addressCount = savedAddresses.size
-    val navTo: (String) -> Unit = { route -> reportViewModel.selectReportSettingsMenu(route) }
     val bProfile = businessProfile ?: BusinessProfile()
 
-    // Active expanded inline section: "name", "store_name", "vat", "address", "phone", "email", "password", or null
-    var expandedSection by remember { mutableStateOf<String?>(null) }
-
-    // Back handler: if any accordion is expanded, collapse it.
-    // Otherwise, do NOT intercept back — let MainActivity handle it.
-    BackHandler(enabled = expandedSection != null) {
-        expandedSection = null
+    // Read real registration & profile data
+    var refreshTrigger by remember { mutableIntStateOf(0) }
+    val displayFullName = remember(userProfile, refreshTrigger) {
+        prefs.getFullName()
+            .ifBlank { "${prefs.getFirstName()} ${prefs.getLastName()}".trim() }
+            .ifBlank { userProfile?.fullName.orEmpty() }
+            .ifBlank { "Store Owner" }
     }
-    var showMapLocationPicker by remember { mutableStateOf(false) }
-
-    var logoBitmap by remember(bProfile.logoUri) { mutableStateOf<Bitmap?>(null) }
-
-    LaunchedEffect(bProfile.logoUri) {
-        val uri = bProfile.logoUri
-        if (uri.isBlank()) {
-            logoBitmap = null
-        } else {
-            withContext(Dispatchers.IO) {
-                logoBitmap = PdfReportGenerator.loadBusinessLogoBitmap(context, uri, 300)
-            }
-        }
+    val displayUsername = remember(userProfile, refreshTrigger) {
+        prefs.getSavedUsername()
+            .ifBlank { userProfile?.username.orEmpty() }
+            .ifBlank { "admin" }
     }
-
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            coroutineScope.launch(Dispatchers.IO) {
-                try {
-                    val stream = context.contentResolver.openInputStream(uri)
-                    if (stream != null) {
-                        val file = File(context.filesDir, "biz_logo_${System.currentTimeMillis()}.png")
-                        file.outputStream().use { out -> stream.copyTo(out) }
-                        withContext(Dispatchers.Main) {
-                            reportViewModel.saveBusinessProfile(bProfile.copy(logoUri = file.absolutePath))
-                            Toast.makeText(context, context.getString(R.string.logo_updated_msg), Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
+    val displayEmail = remember(userProfile, bProfile, refreshTrigger) {
+        prefs.getEmail()
+            .ifBlank { userProfile?.email.orEmpty() }
+            .ifBlank { bProfile.email }
+            .ifBlank { "Not set" }
+    }
+    val displayPhone = remember(userProfile, bProfile, refreshTrigger) {
+        prefs.getPhone()
+            .ifBlank { userProfile?.phone.orEmpty() }
+            .ifBlank { bProfile.phone }
+            .ifBlank { "Not set" }
+    }
+    val displayRecoveryQuestion = remember(userProfile, refreshTrigger) {
+        prefs.getRecoveryQuestion()
+            .ifBlank { userProfile?.securityQuestion.orEmpty() }
     }
 
-    // Resolved permanent address & coordinates
-    val permanentAddress = remember(userProfile?.address, bProfile.address) {
-        val addr = userProfile?.address?.trim().orEmpty()
-        if (addr.isNotBlank()) addr else bProfile.address.trim()
-    }
-    val currentLat = remember(userProfile?.mapLat, bProfile.mapLat) {
-        if ((userProfile?.mapLat ?: 0.0) != 0.0) userProfile?.mapLat ?: 0.0 else bProfile.mapLat
-    }
-    val currentLng = remember(userProfile?.mapLng, bProfile.mapLng) {
-        if ((userProfile?.mapLng ?: 0.0) != 0.0) userProfile?.mapLng ?: 0.0 else bProfile.mapLng
-    }
+    // Dialog states
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var showEditEmailDialog by remember { mutableStateOf(false) }
+    var showEditPhoneDialog by remember { mutableStateOf(false) }
+    var showEditRecoveryDialog by remember { mutableStateOf(false) }
+    var showProfileChangePasswordDialog by remember { mutableStateOf(false) }
 
-    val currentAppCountry by reportViewModel.currentCountry.collectAsState()
-    val rawStorePhone = remember(bProfile.phone, userProfile?.phone) {
-        bProfile.phone.ifBlank { userProfile?.phone.orEmpty() }
-    }
-    val hasExplicitPhoneCountry = remember(rawStorePhone) {
-        val clean = rawStorePhone.trim()
-        clean.isNotBlank() && AppCountry.entries.any {
-            clean.startsWith(it.dialCode) ||
-                (clean.startsWith("+") && clean.removePrefix("+").startsWith(it.dialCode.removePrefix("+")))
-        }
-    }
-    val (storePhoneCountry, storePhoneLocalDigits) = remember(rawStorePhone, currentAppCountry) {
-        parsePhoneNumberWithCountry(rawStorePhone, currentAppCountry)
-    }
-    val storePhoneDisplay = remember(storePhoneCountry, storePhoneLocalDigits, rawStorePhone, hasExplicitPhoneCountry) {
-        if (hasExplicitPhoneCountry && storePhoneLocalDigits.isNotBlank()) {
-            "${countryCodeToFlagEmoji(storePhoneCountry.code)} ${storePhoneCountry.dialCode} $storePhoneLocalDigits"
-        } else if (rawStorePhone.isNotBlank()) {
-            rawStorePhone
-        } else {
-            "Not configured"
-        }
-    }
+    // Pending Admin PIN gate action
+    var pendingAuthSubtitle by remember { mutableStateOf<String?>(null) }
+    var pendingAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
-    val currentDisplayName = remember(userProfile?.fullName, userProfile?.username, bProfile.businessName) {
-        userProfile?.fullName?.takeIf { it.isNotBlank() }
-            ?: userProfile?.username?.takeIf { it.isNotBlank() }
-            ?: bProfile.businessName.takeIf { it.isNotBlank() }
-            ?: "Demo Owner"
-    }
-
-    val initials = remember(currentDisplayName) {
-        currentDisplayName
-            .trim()
-            .split(" ")
-            .filter { it.isNotBlank() }
-            .take(2)
-            .mapNotNull { it.firstOrNull()?.uppercaseChar() }
-            .joinToString("")
-            .ifEmpty { "DO" }
-    }
-
-    val openPhotoPicker = {
-        try {
-            photoPickerLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            )
-        } catch (e: Exception) {
-            Toast.makeText(context, e.localizedMessage ?: "Picker error", Toast.LENGTH_SHORT).show()
-        }
+    fun requireAdminPin(subtitle: String, onConfirmed: () -> Unit) {
+        pendingAuthSubtitle = subtitle
+        pendingAuthAction = onConfirmed
     }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(PureWhite),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(ProfileBg)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // TOP: Profile Photo Section - Center (6-Step WhatsApp/Foodics Flow)
+        var profileImageUri by remember { mutableStateOf<Uri?>(null) }
+        var profileBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+        var imageUriToCrop by remember { mutableStateOf<Uri?>(null) }
+        var showCropperDialog by remember { mutableStateOf(false) }
+
+        LaunchedEffect(Unit) {
+            val savedUriString = prefs.getProfileImageUri()
+            if (savedUriString.isNotBlank()) {
+                profileImageUri = Uri.parse(savedUriString)
+            }
+        }
+
+        LaunchedEffect(profileImageUri) {
+            val uri = profileImageUri
+            profileBitmap = if (uri != null) {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                    }
+                }.getOrNull()
+            } else {
+                null
+            }
+        }
+
+        val imagePickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri: Uri? ->
+            if (uri != null) {
+                imageUriToCrop = uri
+                showCropperDialog = true
+            }
+        }
+
         Column(
             modifier = Modifier
-                .widthIn(max = 600.dp)
                 .fillMaxWidth()
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp),
+                .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // =================================================================
-            // 1. Top Avatar block (100.dp, PrimaryContainerLight, 2.dp border)
-            // =================================================================
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .shadow(4.dp, CircleShape)
+                    .clip(CircleShape)
+                    .clickable { imagePickerLauncher.launch("image/*") }
+                    .border(3.dp, Color.White, CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.BottomEnd) {
+                if (profileBitmap != null) {
+                    Image(
+                        bitmap = profileBitmap!!,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .fillMaxSize()
                             .clip(CircleShape)
-                            .background(PrimaryContainerLight)
-                            .border(2.dp, PrimaryIndigoLight, CircleShape)
-                            .clickable { openPhotoPicker() }
-                            .testTag("avatar_profile_image"),
+                            .background(Color(0xFFDBEAFE)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (logoBitmap != null) {
-                            Image(
-                                bitmap = logoBitmap!!.asImageBitmap(),
-                                contentDescription = stringResource(R.string.business_logo),
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Text(
-                                text = initials,
-                                fontSize = 32.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryIndigoLight
-                            )
-                        }
-                    }
-
-                    // Camera Icon Badge
-                    Surface(
-                        shape = CircleShape,
-                        color = PrimaryIndigoLight,
-                        shadowElevation = 3.dp,
-                        modifier = Modifier
-                            .offset(x = (-2).dp, y = (-2).dp)
-                            .size(28.dp)
-                            .clickable { openPhotoPicker() }
-                            .testTag("btn_camera_avatar")
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = stringResource(R.string.cd_edit_photo),
-                                tint = PureWhite,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
+                        Text(
+                            text = displayFullName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "S",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ProfileBlue
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = currentDisplayName,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurfaceLight
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = PrimaryContainerLight
-                ) {
-                    Text(
-                        text = (userProfile?.currentRole ?: "ADMIN").uppercase(),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryIndigoDark,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedButton(
-                    onClick = { openPhotoPicker() },
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, PrimaryIndigoLight),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = PrimaryIndigoLight
-                    ),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(ProfileBlue)
+                        .border(2.dp, Color.White, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.CameraAlt,
-                        contentDescription = null,
-                        tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.change_photo),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PrimaryIndigoLight
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Profile Picture",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
-            // =================================================================
-            // 2. Clean Item List with Section Grouping & Accordion Editing
-            // =================================================================
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // =============================================================
-                // GROUP 1: PERSONAL INFORMATION
-                // =============================================================
-                ProfileSectionHeader(title = stringResource(R.string.personal_information_section))
-
-                // -------------------------------------------------------------
-                // ROW 1: Owner / Admin Name
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Person,
-                    iconTint = PrimaryIndigoLight,
-                    title = stringResource(R.string.owner_admin_name_label),
-                    value = userProfile?.fullName?.ifBlank { "Demo Owner" } ?: "Demo Owner",
-                    valueColor = OnSurfaceLight,
-                    valueFontSize = 13.sp,
-                    valueFontWeight = FontWeight.Medium,
-                    isExpanded = expandedSection == "name",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "name") null else "name"
-                    },
-                    testTag = "row_owner_name"
-                ) {
-                    var tempName by remember(userProfile?.fullName) {
-                        mutableStateOf(userProfile?.fullName ?: "")
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempName,
-                            onValueChange = { tempName = it },
-                            label = stringResource(R.string.owner_admin_full_name_label),
-                            placeholder = "e.g. Demo Owner",
-                            testTag = "input_edit_full_name"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    val current = userProfile ?: UserProfile()
-                                    reportViewModel.saveUserProfile(current.copy(fullName = tempName.trim()))
-                                    expandedSection = null
-                                    Toast.makeText(context, context.getString(R.string.toast_owner_name_updated), Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 2: Store Contact Email
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Email,
-                    iconTint = PrimaryIndigoLight,
-                    title = stringResource(R.string.store_contact_email_label),
-                    value = bProfile.email.ifBlank { userProfile?.email.orEmpty() }.ifBlank { "store@example.com" },
-                    valueColor = PrimaryIndigoLight,
-                    valueFontSize = 13.sp,
-                    valueFontWeight = FontWeight.Medium,
-                    isExpanded = expandedSection == "email",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "email") null else "email"
-                    },
-                    testTag = "row_store_email"
-                ) {
-                    var tempEmail by remember(bProfile.email, userProfile?.email) {
-                        mutableStateOf(bProfile.email.ifBlank { userProfile?.email.orEmpty() })
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempEmail,
-                            onValueChange = { tempEmail = it },
-                            label = stringResource(R.string.contact_email_address_label),
-                            placeholder = "e.g. store@example.com",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            testTag = "input_edit_email"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    val cleanMail = tempEmail.trim()
-                                    val current = userProfile ?: UserProfile()
-                                    reportViewModel.saveUserProfile(current.copy(email = cleanMail))
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(email = cleanMail))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(email = cleanMail))
-                                    expandedSection = null
-                                    Toast.makeText(context, context.getString(R.string.toast_email_updated), Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // =============================================================
-                // GROUP 2: STORE DETAILS
-                // =============================================================
-                ProfileSectionHeader(title = stringResource(R.string.store_details_section))
-
-                // -------------------------------------------------------------
-                // ROW 3: Store / Business Name
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Store,
-                    iconTint = OnSurfaceVariantLight,
-                    title = stringResource(R.string.store_business_name),
-                    value = bProfile.businessName.ifBlank { "Demo Store (Debug)" },
-                    valueColor = OnSurfaceLight,
-                    valueFontSize = 13.sp,
-                    valueFontWeight = FontWeight.Medium,
-                    isExpanded = expandedSection == "store_name",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "store_name") null else "store_name"
-                    },
-                    testTag = "row_store_name"
-                ) {
-                    var tempStoreName by remember(bProfile.businessName) {
-                        mutableStateOf(bProfile.businessName)
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempStoreName,
-                            onValueChange = { tempStoreName = it },
-                            label = stringResource(R.string.store_business_name),
-                            placeholder = "e.g. Demo Store (Debug)",
-                            testTag = "input_edit_store_name"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    val cleanName = tempStoreName.trim()
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(businessName = cleanName))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(businessName = cleanName))
-                                    expandedSection = null
-                                    Toast.makeText(context, context.getString(R.string.toast_store_name_updated), Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 4: Tax Registration / VAT ID
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.ReceiptLong,
-                    iconTint = OnSurfaceVariantLight,
-                    title = stringResource(R.string.tax_vat_registration_number),
-                    value = bProfile.vatNumber.ifBlank { stringResource(R.string.not_set) },
-                    valueColor = OnSurfaceVariantLight,
-                    valueFontSize = 12.sp,
-                    valueFontFamily = FontFamily.Monospace,
-                    isExpanded = expandedSection == "vat",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "vat") null else "vat"
-                    },
-                    testTag = "row_vat_number"
-                ) {
-                    var tempVat by remember(bProfile.vatNumber) {
-                        mutableStateOf(bProfile.vatNumber)
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempVat,
-                            onValueChange = { tempVat = it },
-                            label = stringResource(R.string.tax_vat_registration_number),
-                            placeholder = "e.g. 310000000000003",
-                            testTag = "input_edit_vat_id"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    val cleanVat = tempVat.trim()
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(vatNumber = cleanVat))
-                                    expandedSection = null
-                                    Toast.makeText(context, context.getString(R.string.toast_vat_id_updated), Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // Saved Addresses Row
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.LocationOn,
-                    label = stringResource(R.string.saved_addresses_title),
-                    currentValue = stringResource(R.string.saved_addresses_count_format, addressCount),
-                    onEditClick = { navTo("settings/profile/addresses") }
-                )
-
-                // -------------------------------------------------------------
-                // ROW 5: Permanent Store Address (Google Maps)
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Filled.Place,
-                    iconTint = OnSurfaceVariantLight,
-                    title = stringResource(R.string.permanent_store_address_label),
-                    value = if (permanentAddress.isNotBlank()) permanentAddress else "5000 Vista Del Lago Rd, Ukia...",
-                    valueColor = OnSurfaceVariantLight,
-                    valueFontSize = 12.sp,
-                    valueMaxLines = 2,
-                    isExpanded = expandedSection == "address",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "address") null else "address"
-                    },
-                    testTag = "row_permanent_store_address"
-                ) {
-                    var tempAddr by remember(permanentAddress) { mutableStateOf(permanentAddress) }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        ProfileDialogTextField(
-                            value = tempAddr,
-                            onValueChange = { tempAddr = it },
-                            label = stringResource(R.string.address),
-                            placeholder = stringResource(R.string.permanent_store_address_placeholder),
-                            testTag = "txt_permanent_address_field"
-                        )
-
-                        // Google Maps Live Picker Button
-                        Surface(
-                            onClick = { showMapLocationPicker = true },
-                            shape = RoundedCornerShape(10.dp),
-                            color = PrimaryContainerLight,
-                            border = BorderStroke(1.dp, OutlineLight),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(Icons.Outlined.Map, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(18.dp))
-                                Text(stringResource(R.string.select_location_on_map), fontWeight = FontWeight.SemiBold, color = PrimaryIndigoLight, fontSize = 13.sp)
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    val cleanAddr = tempAddr.trim()
-                                    val current = userProfile ?: UserProfile()
-                                    reportViewModel.saveUserProfile(current.copy(address = cleanAddr))
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(address = cleanAddr))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(address = cleanAddr))
-                                    expandedSection = null
-                                    Toast.makeText(context, context.getString(R.string.toast_address_saved), Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // ROW 6: Store Contact Phone (Country Code Selector + Digits)
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Phone,
-                    iconTint = OnSurfaceVariantLight,
-                    title = stringResource(R.string.store_contact_phone_label),
-                    value = storePhoneDisplay,
-                    valueColor = OnSurfaceVariantLight,
-                    valueFontSize = 13.sp,
-                    isExpanded = expandedSection == "phone",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "phone") null else "phone"
-                    },
-                    testTag = "row_store_phone"
-                ) {
-                    var tempPhoneCountry by remember(storePhoneCountry) { mutableStateOf(storePhoneCountry) }
-                    var hasUserSelectedCountry by remember(hasExplicitPhoneCountry) { mutableStateOf(hasExplicitPhoneCountry) }
-                    var tempPhoneDigits by remember(storePhoneLocalDigits) { mutableStateOf(storePhoneLocalDigits) }
-                    var showCountryPickerModal by remember { mutableStateOf(false) }
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Country Code Picker Button
-                            Surface(
-                                onClick = { showCountryPickerModal = true },
-                                shape = RoundedCornerShape(10.dp),
-                                color = BackgroundLight,
-                                border = BorderStroke(1.dp, OutlineLight),
-                                modifier = Modifier
-                                    .height(56.dp)
-                                    .testTag("btn_select_phone_country")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    if (hasUserSelectedCountry) {
-                                        Text(
-                                            text = countryCodeToFlagEmoji(tempPhoneCountry.code),
-                                            fontSize = 18.sp,
-                                            color = OnSurfaceLight
-                                        )
-                                    }
-                                    Text(
-                                        text = if (hasUserSelectedCountry) tempPhoneCountry.dialCode else "Code",
-                                        fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = OnSurfaceLight
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = stringResource(R.string.cd_change_country),
-                                        tint = OnSurfaceVariantLight,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-
-                            // Local Phone Digits Field
-                            ProfileDialogTextField(
-                                value = tempPhoneDigits,
-                                onValueChange = { input ->
-                                    tempPhoneDigits = input.filter { it.isDigit() || it == ' ' || it == '-' }
-                                },
-                                label = stringResource(R.string.phone_digits_label),
-                                placeholder = "500360360",
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                modifier = Modifier.weight(1f),
-                                testTag = "input_phone_digits"
-                            )
-                        }
-
-                        if (tempPhoneDigits.isNotBlank()) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = PrimaryContainerLight,
-                                border = BorderStroke(1.dp, OutlineLight),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                val previewPrefix = if (hasUserSelectedCountry) "${tempPhoneCountry.dialCode} " else ""
-                                Text(
-                                    text = stringResource(R.string.phone_preview_format, "$previewPrefix${tempPhoneDigits.trim()}"),
-                                    fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryIndigoLight,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    val fullFormatted = if (tempPhoneDigits.isNotBlank()) {
-                                        if (hasUserSelectedCountry) {
-                                            "${tempPhoneCountry.dialCode} ${tempPhoneDigits.trim()}"
-                                        } else {
-                                            tempPhoneDigits.trim()
-                                        }
-                                    } else {
-                                        ""
-                                    }
-                                    val current = userProfile ?: UserProfile()
-                                    reportViewModel.saveUserProfile(current.copy(phone = fullFormatted))
-                                    reportViewModel.saveBusinessProfile(bProfile.copy(phone = fullFormatted))
-                                    reportViewModel.updateBusiness(UpdateBusinessRequest(phone = fullFormatted))
-                                    expandedSection = null
-                                    Toast.makeText(context, context.getString(R.string.toast_phone_saved), Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        if (showCountryPickerModal) {
-                            CountryCodePickerDialog(
-                                selectedCountry = tempPhoneCountry,
-                                onCountrySelected = { newCountry ->
-                                    tempPhoneCountry = newCountry
-                                    hasUserSelectedCountry = true
-                                    showCountryPickerModal = false
-                                },
-                                onDismiss = { showCountryPickerModal = false }
-                            )
-                        }
-                    }
-                }
-
-                // =============================================================
-                // GROUP 3: SECURITY
-                // =============================================================
-                ProfileSectionHeader(title = stringResource(R.string.nav_security))
-
-                // -------------------------------------------------------------
-                // ROW 7: Change Password
-                // -------------------------------------------------------------
-                InlineEditableProfileRow(
-                    icon = Icons.Outlined.Key,
-                    iconTint = ErrorRedLight,
-                    title = stringResource(R.string.change_password_title),
-                    value = stringResource(R.string.change_password_desc),
-                    valueColor = OnSurfaceVariantLight,
-                    valueFontSize = 13.sp,
-                    isExpanded = expandedSection == "password",
-                    onToggle = {
-                        expandedSection = if (expandedSection == "password") null else "password"
-                    },
-                    testTag = "row_change_password"
-                ) {
-                    var currentPassword by remember { mutableStateOf("") }
-                    var newPassword by remember { mutableStateOf("") }
-                    var confirmPassword by remember { mutableStateOf("") }
-
-                    var currentPasswordVisible by remember { mutableStateOf(false) }
-                    var newPasswordVisible by remember { mutableStateOf(false) }
-                    var confirmPasswordVisible by remember { mutableStateOf(false) }
-
-                    var currentPasswordError by remember { mutableStateOf<String?>(null) }
-                    var newPasswordError by remember { mutableStateOf<String?>(null) }
-                    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
-
-                    val focusManager = LocalFocusManager.current
-                    val currentPasswordHash = userProfile?.passwordHash.orEmpty()
-
-                    val hasMinLength = newPassword.length >= 6
-                    val hasUpper = newPassword.any { it.isUpperCase() }
-                    val hasDigit = newPassword.any { it.isDigit() }
-                    val hasSpecial = newPassword.any { !it.isLetterOrDigit() }
-
-                    val strengthScore = listOf(hasMinLength, hasUpper, hasDigit, hasSpecial).count { it }
-                    val (strengthLabel, strengthColor, strengthProgress) = when {
-                        newPassword.isEmpty() -> Triple("", OutlineVariantLight, 0f)
-                        strengthScore <= 1 -> Triple(stringResource(R.string.auth_weak), ErrorRedLight, 0.25f)
-                        strengthScore == 2 -> Triple(stringResource(R.string.auth_fair), WarningOrange, 0.5f)
-                        strengthScore == 3 -> Triple(stringResource(R.string.auth_good), InfoBlue, 0.75f)
-                        else -> Triple(stringResource(R.string.auth_strong), SuccessGreen, 1f)
-                    }
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        if (currentPasswordHash.isNotBlank()) {
-                            ProfileDialogTextField(
-                                value = currentPassword,
-                                onValueChange = {
-                                    currentPassword = it
-                                    currentPasswordError = null
-                                },
-                                label = stringResource(R.string.current_password_label),
-                                placeholder = stringResource(R.string.placeholder_enter_current_password),
-                                isError = currentPasswordError != null,
-                                supportingText = {
-                                    currentPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
-                                },
-                                visualTransformation = if (currentPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                                trailingIcon = {
-                                    IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
-                                        Icon(
-                                            imageVector = if (currentPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                            contentDescription = if (currentPasswordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
-                                            tint = OnSurfaceVariantLight
-                                        )
-                                    }
-                                },
-                                testTag = "input_current_password"
-                            )
-                        }
-
-                        ProfileDialogTextField(
-                            value = newPassword,
-                            onValueChange = {
-                                newPassword = it
-                                newPasswordError = null
-                                if (confirmPassword.isNotEmpty() && it != confirmPassword) {
-                                    confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
-                                } else {
-                                    confirmPasswordError = null
-                                }
-                            },
-                            label = stringResource(R.string.new_password_label),
-                            placeholder = stringResource(R.string.placeholder_enter_new_password),
-                            isError = newPasswordError != null,
-                            supportingText = {
-                                newPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
-                            },
-                            visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
-                            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                            trailingIcon = {
-                                IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
-                                    Icon(
-                                        imageVector = if (newPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = if (newPasswordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
-                                        tint = OnSurfaceVariantLight
-                                    )
-                                }
-                            },
-                            testTag = "input_new_password"
-                        )
-
-                        if (newPassword.isNotEmpty()) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(stringResource(R.string.password_strength_label), style = MaterialTheme.typography.labelSmall.copy(color = OnSurfaceVariantLight, fontSize = 11.sp))
-                                    Text(strengthLabel, style = MaterialTheme.typography.labelSmall.copy(color = strengthColor, fontWeight = FontWeight.Bold, fontSize = 11.sp))
-                                }
-                                Spacer(modifier = Modifier.height(3.dp))
-                                LinearProgressIndicator(
-                                    progress = { strengthProgress },
-                                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(50)),
-                                    color = strengthColor,
-                                    trackColor = OutlineVariantLight
-                                )
-                            }
-                        }
-
-                        ProfileDialogTextField(
-                            value = confirmPassword,
-                            onValueChange = {
-                                confirmPassword = it
-                                if (it.isNotEmpty() && it != newPassword) {
-                                    confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
-                                } else {
-                                    confirmPasswordError = null
-                                }
-                            },
-                            label = stringResource(R.string.confirm_password_label),
-                            placeholder = stringResource(R.string.placeholder_reenter_new_password),
-                            isError = confirmPasswordError != null,
-                            supportingText = {
-                                confirmPasswordError?.let { Text(it, color = ErrorRedLight, fontSize = 12.sp) }
-                            },
-                            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                            trailingIcon = {
-                                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                                    Icon(
-                                        imageVector = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = if (confirmPasswordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
-                                        tint = OnSurfaceVariantLight
-                                    )
-                                }
-                            },
-                            testTag = "input_confirm_password"
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            LojiaOutlinedButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = { expandedSection = null },
-                                modifier = Modifier.weight(1f)
-                            )
-                            LojiaPrimaryButton(
-                                text = stringResource(R.string.save),
-                                onClick = {
-                                    var hasError = false
-                                    if (currentPasswordHash.isNotBlank()) {
-                                        if (currentPassword.isBlank()) {
-                                            currentPasswordError = context.getString(R.string.error_current_password_required)
-                                            hasError = true
-                                        } else if (!SecurityUtils.verifySecret(currentPassword, currentPasswordHash)) {
-                                            currentPasswordError = context.getString(R.string.error_incorrect_current_password)
-                                            hasError = true
-                                        }
-                                    }
-                                    if (newPassword.length < 8 || !newPassword.any { it.isDigit() } || !newPassword.any { it.isUpperCase() }) {
-                                        newPasswordError = "Password must be at least 8 chars with 1 number and 1 uppercase letter"
-                                        hasError = true
-                                    }
-                                    if (newPassword != confirmPassword) {
-                                        confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
-                                        hasError = true
-                                    }
-                                    if (!hasError) {
-                                        val updated = (userProfile ?: UserProfile()).copy(
-                                            passwordHash = SecurityUtils.hashSecret(newPassword)
-                                        )
-                                        reportViewModel.saveUserProfile(updated)
-                                        expandedSection = null
-                                        Toast.makeText(context, context.getString(R.string.password_changed_success), Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = displayFullName,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = ProfileTextBlack,
+                modifier = Modifier.padding(top = 12.dp)
+            )
         }
+
+        if (showCropperDialog && imageUriToCrop != null) {
+            ProfileImageCropperDialog(
+                imageUri = imageUriToCrop!!,
+                onCropSaved = { croppedUri ->
+                    profileImageUri = croppedUri
+                    prefs.saveProfileImageUri(croppedUri.toString())
+                    showCropperDialog = false
+                    imageUriToCrop = null
+                    Toast.makeText(context, "Profile picture updated", Toast.LENGTH_SHORT).show()
+                },
+                onDismiss = {
+                    showCropperDialog = false
+                    imageUriToCrop = null
+                }
+            )
+        }
+
+        // SECTION 1: PERSONAL INFORMATION
+        ProfileSectionTitle("PERSONAL INFORMATION")
+
+        // 1. Full Name
+        ProfileItemCard(
+            icon = Icons.Default.Person,
+            title = "Full Name",
+            value = displayFullName,
+            onClick = { showEditNameDialog = true }
+        )
+
+        // 2. User ID (READ-ONLY)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(ProfileBg)
+                .drawBehind {
+                    drawRoundRect(
+                        color = Color(0xFFD1D5DB),
+                        style = Stroke(
+                            width = 1.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)
+                        ),
+                        cornerRadius = CornerRadius(16.dp.toPx())
+                    )
+                }
+                .clickable {
+                    clipboardManager.setText(AnnotatedString(displayUsername))
+                    Toast.makeText(
+                        context,
+                        "User ID cannot be changed. Permanent login ID.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF3F4F6)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Badge,
+                        contentDescription = null,
+                        tint = ProfileTextGray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp, end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "User ID",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ProfileTextBlack
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFFF3F4F6))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "Cannot be changed",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = ProfileTextGray
+                            )
+                        }
+                    }
+                    Text(
+                        text = displayUsername,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = ProfileTextGray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Locked",
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "Copy User ID",
+                    tint = ProfileBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        // 3. Email Address
+        ProfileItemCard(
+            icon = Icons.Default.Email,
+            title = "Email Address",
+            value = displayEmail,
+            onClick = { showEditEmailDialog = true }
+        )
+
+        // 4. Phone Number
+        ProfileItemCard(
+            icon = Icons.Default.Phone,
+            title = "Phone Number",
+            value = displayPhone,
+            onClick = { showEditPhoneDialog = true }
+        )
+
+        // 5. Address
+        ProfileItemCard(
+            icon = Icons.Default.LocationOn,
+            title = "Address",
+            value = if (addressCount > 0) {
+                "$addressCount addresses saved"
+            } else {
+                "Add store or branch address"
+            },
+            onClick = {
+                reportViewModel.selectReportSettingsMenu("saved_addresses")
+            }
+        )
+
+        // SECTION 2: SECURITY & RECOVERY
+        ProfileSectionTitle("SECURITY & RECOVERY")
+
+        // 6. Recovery Question
+        ProfileItemCard(
+            icon = Icons.Default.HelpOutline,
+            title = "Recovery Question",
+            value = if (displayRecoveryQuestion.isNotBlank()) {
+                "$displayRecoveryQuestion ••••"
+            } else {
+                "Set security recovery question"
+            },
+            onClick = { showEditRecoveryDialog = true }
+        )
+
+        // 7. Password
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            border = BorderStroke(1.dp, ProfileBorderLight),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showProfileChangePasswordDialog = true }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(ProfileRedBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Key,
+                        contentDescription = null,
+                        tint = ProfileRed,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp, end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = "Password",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ProfileTextBlack
+                    )
+                    Text(
+                        text = "•••••••• • Change administrator master password",
+                        fontSize = 13.sp,
+                        color = ProfileTextGray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 
-    // Google Maps Location Picker Modal
-    if (showMapLocationPicker) {
-        GoogleMapsLocationPickerModal(
-            initialAddress = permanentAddress,
-            initialLat = currentLat,
-            initialLng = currentLng,
-            onLocationConfirmed = { newAddr, newLat, newLng ->
-                showMapLocationPicker = false
-                val current = userProfile ?: UserProfile()
-                val updatedUser = current.copy(
-                    address = newAddr.ifBlank { current.address },
-                    mapLat = newLat,
-                    mapLng = newLng
-                )
-                reportViewModel.saveUserProfile(updatedUser)
+    // A. Edit Full Name Dialog
+    if (showEditNameDialog) {
+        val parts = displayFullName.split(" ", limit = 2)
+        EditFullNameDialog(
+            initialFirst = prefs.getFirstName().ifBlank { parts.getOrNull(0).orEmpty() },
+            initialLast = prefs.getLastName().ifBlank { parts.getOrNull(1).orEmpty() },
+            onDismiss = { showEditNameDialog = false },
+            onSave = { first, last ->
+                showEditNameDialog = false
+                requireAdminPin("Update Full Name") {
+                    val full = "$first $last".trim()
+                    prefs.saveFirstName(first)
+                    prefs.saveLastName(last)
+                    prefs.saveFullName(full)
+                    val current = userProfile ?: UserProfile()
+                    reportViewModel.saveUserProfile(current.copy(fullName = full))
+                    refreshTrigger++
+                    Toast.makeText(context, "Full name updated", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
 
-                val updatedBiz = bProfile.copy(
-                    address = newAddr.ifBlank { bProfile.address },
-                    mapLat = newLat,
-                    mapLng = newLng
-                )
-                reportViewModel.saveBusinessProfile(updatedBiz)
-                reportViewModel.updateBusiness(
-                    UpdateBusinessRequest(
-                        address = newAddr,
-                        mapLat = newLat,
-                        mapLng = newLng
+    // B. Edit Email Dialog
+    if (showEditEmailDialog) {
+        EditEmailDialog(
+            currentEmail = if (displayEmail == "Not set") "" else displayEmail,
+            onDismiss = { showEditEmailDialog = false },
+            onSave = { newEmail ->
+                showEditEmailDialog = false
+                requireAdminPin("Update Email Address") {
+                    prefs.saveEmail(newEmail)
+                    val current = userProfile ?: UserProfile()
+                    reportViewModel.saveUserProfile(current.copy(email = newEmail))
+                    reportViewModel.saveBusinessProfile(bProfile.copy(email = newEmail))
+                    refreshTrigger++
+                    Toast.makeText(context, "Email updated - Verification sent", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    // C. Edit Phone Dialog
+    if (showEditPhoneDialog) {
+        EditPhoneDialog(
+            currentPhone = if (displayPhone == "Not set") "" else displayPhone,
+            onDismiss = { showEditPhoneDialog = false },
+            onSave = { newPhone ->
+                showEditPhoneDialog = false
+                requireAdminPin("Update Phone Number") {
+                    prefs.savePhone(newPhone)
+                    val current = userProfile ?: UserProfile()
+                    reportViewModel.saveUserProfile(current.copy(phone = newPhone))
+                    reportViewModel.saveBusinessProfile(bProfile.copy(phone = newPhone))
+                    refreshTrigger++
+                    Toast.makeText(context, "Phone number updated", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    // D. Edit Recovery Question Dialog
+    if (showEditRecoveryDialog) {
+        EditRecoveryQuestionDialog(
+            currentQuestion = displayRecoveryQuestion.ifBlank { RECOVERY_QUESTIONS.first() },
+            onDismiss = { showEditRecoveryDialog = false },
+            onSave = { question, answer ->
+                showEditRecoveryDialog = false
+                requireAdminPin("Update Recovery Question") {
+                    val hash = SecurityUtils.hashSecret(answer)
+                    prefs.saveRecoveryQuestion(question)
+                    prefs.saveRecoveryAnswerHash(hash)
+                    val current = userProfile ?: UserProfile()
+                    reportViewModel.saveUserProfile(
+                        current.copy(
+                            securityQuestion = question,
+                            securityAnswer = hash
+                        )
                     )
-                )
-                Toast.makeText(context, context.getString(R.string.toast_location_saved_maps), Toast.LENGTH_SHORT).show()
+                    refreshTrigger++
+                    Toast.makeText(context, "Recovery question updated", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    // F. Change Password Dialog
+    if (showProfileChangePasswordDialog) {
+        ProfileChangePasswordDialog(
+            currentPasswordHash = userProfile?.passwordHash.orEmpty(),
+            onDismiss = { showProfileChangePasswordDialog = false },
+            onSave = { newPassword ->
+                showProfileChangePasswordDialog = false
+                requireAdminPin("Change Master Password") {
+                    val newHash = SecurityUtils.hashSecret(newPassword)
+                    val current = userProfile ?: UserProfile()
+                    reportViewModel.saveUserProfile(current.copy(passwordHash = newHash))
+                    Toast.makeText(context, "Password changed. Please sign in again.", Toast.LENGTH_SHORT).show()
+                    onLogoutClick()
+                }
+            }
+        )
+    }
+
+    // Unified Admin PIN Gate
+    pendingAuthSubtitle?.let { sub ->
+        AdminAuthDialog(
+            subtitle = sub,
+            onDismissRequest = {
+                pendingAuthSubtitle = null
+                pendingAuthAction = null
             },
-            onDismiss = { showMapLocationPicker = false }
+            onAuthSuccess = {
+                val action = pendingAuthAction
+                pendingAuthSubtitle = null
+                pendingAuthAction = null
+                action?.invoke()
+            }
         )
     }
 }
 
-/**
- * Compatible alias for existing callers
- */
 @Composable
 fun EnterpriseProfileScreen(
     reportViewModel: ReportViewModel,
@@ -1072,4 +629,709 @@ fun EnterpriseProfileScreen(
         modifier = modifier,
         onLogoutClick = onLogoutClick
     )
+}
+
+@Composable
+private fun ProfileSectionTitle(title: String) {
+    Text(
+        text = title,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        color = ProfileBlue,
+        modifier = Modifier
+            .padding(top = 12.dp, bottom = 4.dp)
+            .drawBehind {
+                drawLine(
+                    color = ProfileBlue,
+                    start = Offset(0f, 0f),
+                    end = Offset(0f, size.height),
+                    strokeWidth = 3.dp.toPx()
+                )
+            }
+            .padding(start = 8.dp)
+    )
+}
+
+@Composable
+private fun ProfileItemCard(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, ProfileBorderLight),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFEFF6FF)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = ProfileBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp, end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ProfileTextBlack
+                )
+                Text(
+                    text = value,
+                    fontSize = 13.sp,
+                    color = ProfileTextGray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF9CA3AF),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun EditFullNameDialog(
+    initialFirst: String,
+    initialLast: String,
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var firstName by remember { mutableStateOf(initialFirst) }
+    var lastName by remember { mutableStateOf(initialLast) }
+    val isValid = firstName.isNotBlank() && lastName.isNotBlank()
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .widthIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEFF6FF)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = ProfileBlue)
+                        }
+                        Text("Edit Full Name", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                    }
+
+                    OutlinedTextField(
+                        value = firstName,
+                        onValueChange = { firstName = it },
+                        label = { Text("First Name *") },
+                        singleLine = true,
+                        isError = firstName.isBlank(),
+                        supportingText = if (firstName.isBlank()) {
+                            { Text("First name is required") }
+                        } else null,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = lastName,
+                        onValueChange = { lastName = it },
+                        label = { Text("Last Name *") },
+                        singleLine = true,
+                        isError = lastName.isBlank(),
+                        supportingText = if (lastName.isBlank()) {
+                            { Text("Last name is required") }
+                        } else null,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = ProfileBlue.copy(alpha = 0.08f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "This will be shown as your full name in reports and profile.",
+                            fontSize = 12.sp,
+                            color = ProfileBlue,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", color = ProfileTextGray)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { onSave(firstName.trim(), lastName.trim()) },
+                            enabled = isValid,
+                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Save", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditEmailDialog(
+    currentEmail: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var email by remember { mutableStateOf(currentEmail) }
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+    val isDifferent = email.trim() != currentEmail.trim()
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .widthIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEFF6FF)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Email, contentDescription = null, tint = ProfileBlue)
+                        }
+                        Text("Edit Email Address", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                    }
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email Address *") },
+                        singleLine = true,
+                        isError = email.isNotBlank() && !isEmailValid,
+                        supportingText = if (email.isNotBlank() && !isEmailValid) {
+                            { Text("Enter a valid email address", color = ProfileRed) }
+                        } else null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = ProfileBlue.copy(alpha = 0.08f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Verification email will be sent to new address.",
+                            fontSize = 12.sp,
+                            color = ProfileBlue,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", color = ProfileTextGray)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { onSave(email.trim()) },
+                            enabled = isEmailValid && isDifferent,
+                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Save", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditPhoneDialog(
+    currentPhone: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var phone by remember { mutableStateOf(currentPhone) }
+    val digitsCount = phone.count { it.isDigit() }
+    val isValid = digitsCount in 10..15
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .widthIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEFF6FF)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Phone, contentDescription = null, tint = ProfileBlue)
+                        }
+                        Text("Edit Phone Number", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                    }
+
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text("Phone Number *") },
+                        placeholder = { Text("+966 50 000 0000") },
+                        singleLine = true,
+                        isError = phone.isNotBlank() && !isValid,
+                        supportingText = if (phone.isNotBlank() && !isValid) {
+                            { Text("Enter 10 to 15 digits", color = ProfileRed) }
+                        } else null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", color = ProfileTextGray)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { onSave(phone.trim()) },
+                            enabled = isValid,
+                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Save", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditRecoveryQuestionDialog(
+    currentQuestion: String,
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var selectedQuestion by remember { mutableStateOf(currentQuestion) }
+    var expanded by remember { mutableStateOf(false) }
+    var answer by remember { mutableStateOf("") }
+    var answerVisible by remember { mutableStateOf(false) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .widthIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEFF6FF)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.HelpOutline, contentDescription = null, tint = ProfileBlue)
+                        }
+                        Text("Edit Recovery Question", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                    }
+
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedQuestion,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Security Question") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                .fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            RECOVERY_QUESTIONS.forEach { q ->
+                                DropdownMenuItem(
+                                    text = { Text(q) },
+                                    onClick = {
+                                        selectedQuestion = q
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = answer,
+                        onValueChange = { answer = it },
+                        label = { Text("Answer * (min 3 chars)") },
+                        singleLine = true,
+                        visualTransformation = if (answerVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { answerVisible = !answerVisible }) {
+                                Icon(
+                                    imageVector = if (answerVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFFEF3C7),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "This will be used to recover your account if you forget password. Keep it secure.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF92400E),
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", color = ProfileTextGray)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { onSave(selectedQuestion, answer.trim()) },
+                            enabled = answer.trim().length >= 3,
+                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Save", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileChangePasswordDialog(
+    currentPasswordHash: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var currentPass by remember { mutableStateOf("") }
+    var newPass by remember { mutableStateOf("") }
+    var confirmPass by remember { mutableStateOf("") }
+
+    var showCurrent by remember { mutableStateOf(false) }
+    var showNew by remember { mutableStateOf(false) }
+    var showConfirm by remember { mutableStateOf(false) }
+    var errorText by remember { mutableStateOf<String?>(null) }
+
+    val strengthLabel = when {
+        newPass.length < 8 -> "Weak"
+        newPass.any { it.isDigit() } && newPass.any { !it.isLetterOrDigit() } -> "Strong"
+        else -> "Medium"
+    }
+    val strengthColor = when (strengthLabel) {
+        "Strong" -> Color(0xFF10B981)
+        "Medium" -> Color(0xFFF59E0B)
+        else -> ProfileRed
+    }
+
+    val isValid = currentPass.isNotEmpty() &&
+        newPass.length >= 8 &&
+        newPass != currentPass &&
+        confirmPass == newPass
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .widthIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(ProfileRedBg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Key, contentDescription = null, tint = ProfileRed)
+                        }
+                        Text("Change Password", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                    }
+
+                    OutlinedTextField(
+                        value = currentPass,
+                        onValueChange = { currentPass = it; errorText = null },
+                        label = { Text("Current Password *") },
+                        singleLine = true,
+                        visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showCurrent = !showCurrent }) {
+                                Icon(if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = newPass,
+                        onValueChange = { newPass = it; errorText = null },
+                        label = { Text("New Password * (min 8 chars)") },
+                        singleLine = true,
+                        visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showNew = !showNew }) {
+                                Icon(if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (newPass.isNotEmpty()) {
+                        Text(
+                            text = "Password strength: $strengthLabel",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = strengthColor
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = confirmPass,
+                        onValueChange = { confirmPass = it; errorText = null },
+                        label = { Text("Confirm New Password *") },
+                        singleLine = true,
+                        isError = confirmPass.isNotEmpty() && confirmPass != newPass,
+                        visualTransformation = if (showConfirm) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showConfirm = !showConfirm }) {
+                                Icon(if (showConfirm) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (errorText != null) {
+                        Text(
+                            text = errorText!!,
+                            color = ProfileRed,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel", color = ProfileTextGray)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                val currentOk = currentPasswordHash.isBlank() ||
+                                    SecurityUtils.verifySecretWithUpgrade(currentPass, currentPasswordHash).isMatch
+                                if (!currentOk) {
+                                    errorText = "Current password is incorrect"
+                                } else {
+                                    onSave(newPass)
+                                }
+                            },
+                            enabled = isValid,
+                            colors = ButtonDefaults.buttonColors(containerColor = ProfileRed),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Change", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

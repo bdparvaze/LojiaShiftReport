@@ -534,8 +534,7 @@ fun CashierManagementSection(
     // 1. Admin Auth for Add Cashier
     if (showAdminAuthForAdd) {
         AdminAuthDialog(
-            actionTitle = stringResource(R.string.add_cashier),
-            actionDescription = stringResource(R.string.admin_auth_audit_desc),
+            subtitle = stringResource(R.string.add_cashier),
             onDismissRequest = { showAdminAuthForAdd = false },
             onAuthSuccess = {
                 showAdminAuthForAdd = false
@@ -575,8 +574,7 @@ fun CashierManagementSection(
     // 3. Admin Auth for Edit Cashier
     cashierPendingAdminAuthForEdit?.let { target ->
         AdminAuthDialog(
-            actionTitle = "${stringResource(R.string.edit_cashier)}: ${target.name}",
-            actionDescription = stringResource(R.string.admin_auth_audit_desc),
+            subtitle = "${stringResource(R.string.edit_cashier)}: ${target.name}",
             onDismissRequest = { cashierPendingAdminAuthForEdit = null },
             onAuthSuccess = {
                 cashierPendingAdminAuthForEdit = null
@@ -610,8 +608,7 @@ fun CashierManagementSection(
     // 5. Admin Auth for Delete/Archive
     cashierPendingAdminAuthForDelete?.let { target ->
         AdminAuthDialog(
-            actionTitle = "${stringResource(R.string.delete_cashier)}: ${target.name}",
-            actionDescription = stringResource(R.string.admin_auth_audit_desc),
+            subtitle = "${stringResource(R.string.delete_cashier)}: ${target.name}",
             onDismissRequest = { cashierPendingAdminAuthForDelete = null },
             onAuthSuccess = {
                 val toEvaluate = target
@@ -633,8 +630,7 @@ fun CashierManagementSection(
     // 6. Admin Auth for Restore
     cashierPendingAdminAuthForRestore?.let { target ->
         AdminAuthDialog(
-            actionTitle = "${stringResource(R.string.action_unarchive)}: ${target.name}",
-            actionDescription = stringResource(R.string.admin_auth_audit_desc),
+            subtitle = "${stringResource(R.string.action_unarchive)}: ${target.name}",
             onDismissRequest = { cashierPendingAdminAuthForRestore = null },
             onAuthSuccess = {
                 executeRestore(target)
