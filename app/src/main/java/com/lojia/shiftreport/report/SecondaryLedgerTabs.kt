@@ -630,6 +630,7 @@ fun WalkoutLedgerTab(
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun EmployerAdvancesTab(
+    currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onNavigateToEmployees: () -> Unit = {},
     onViewShift: (String) -> Unit = {}
 ) {
@@ -643,6 +644,8 @@ fun EmployerAdvancesTab(
 
     val employees by employeeDao.getAllActive().collectAsState(initial = emptyList())
     val allTransactions by advanceDao.getAllActive().collectAsState(initial = emptyList())
+    val businessProfile by db.reportDao().getBusinessProfile().collectAsState(initial = null)
+    val activeCurrency = businessProfile?.currency?.ifBlank { currency } ?: currency
 
     var selectedEmployeeId by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(employees) {
@@ -722,7 +725,7 @@ fun EmployerAdvancesTab(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = String.format(Locale.US, "%.2f SAR", totalMonthAdvances),
+                        text = MoneyFormat.format(totalMonthAdvances, activeCurrency),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -749,13 +752,13 @@ fun EmployerAdvancesTab(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = String.format(Locale.US, "Cash: %.2f SAR", cashMonthAdvances),
+                        text = "Cash: ${MoneyFormat.format(cashMonthAdvances, activeCurrency)}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = String.format(Locale.US, "Bank: %.2f SAR", bankMonthAdvances),
+                        text = "Bank: ${MoneyFormat.format(bankMonthAdvances, activeCurrency)}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -852,17 +855,17 @@ fun EmployerAdvancesTab(
                             }
 
                             Text(
-                                text = String.format(Locale.US, "Salary: %.0f SAR", emp.monthlySalary),
+                                text = "Salary: ${MoneyFormat.format(emp.monthlySalary, activeCurrency)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = String.format(Locale.US, "Taken: %.2f SAR", totalTaken),
+                                text = "Taken: ${MoneyFormat.format(totalTaken, activeCurrency)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = String.format(Locale.US, "Balance: %.2f SAR", remaining),
+                                text = "Balance: ${MoneyFormat.format(remaining, activeCurrency)}",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = if (remaining >= 0) PosCashGreen else ErrorRedLight
@@ -1038,9 +1041,9 @@ fun EmployerAdvancesTab(
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
                                             text = if (tx.amount >= 0) {
-                                                String.format(Locale.US, "+%.2f SAR", tx.amount)
+                                                "+${MoneyFormat.format(tx.amount, activeCurrency)}"
                                             } else {
-                                                String.format(Locale.US, "%.2f SAR", tx.amount)
+                                                MoneyFormat.format(tx.amount, activeCurrency)
                                             },
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,

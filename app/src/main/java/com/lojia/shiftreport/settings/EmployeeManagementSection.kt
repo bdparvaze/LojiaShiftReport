@@ -58,6 +58,10 @@ fun EmployeeManagementSection(
     val adminId = remember(prefs) { prefs.getSavedUsername().ifBlank { "admin" } }
 
     val employees by employeeDao.getAll().collectAsState(initial = emptyList())
+    val businessProfile by db.reportDao().getBusinessProfile().collectAsState(initial = null)
+    val activeCurrency = businessProfile?.currency?.ifBlank {
+        com.lojia.shiftreport.util.MoneyFormat.DEFAULT_CURRENCY_CODE
+    } ?: com.lojia.shiftreport.util.MoneyFormat.DEFAULT_CURRENCY_CODE
     var searchQuery by remember { mutableStateOf("") }
 
     var showAdminAuthForAdd by remember { mutableStateOf(false) }
@@ -466,7 +470,7 @@ private fun EmployeeItemCard(
                 }
 
                 Text(
-                    text = String.format(Locale.US, "SAR %,.2f / month", employee.monthlySalary),
+                    text = "${com.lojia.shiftreport.util.MoneyFormat.format(employee.monthlySalary)} / month",
                     fontSize = 14.sp,
                     color = FoodicsTextGray
                 )
@@ -559,10 +563,10 @@ private fun AddEditEmployeeDialog(
                 OutlinedTextField(
                     value = salaryText,
                     onValueChange = { salaryText = it },
-                    label = { Text("Monthly Salary (SAR) *") },
+                    label = { Text("Monthly Salary *") },
                     placeholder = { Text("e.g., 1500") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text("SAR") },
+                    suffix = { Text(com.lojia.shiftreport.util.MoneyFormat.DEFAULT_CURRENCY_CODE) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()

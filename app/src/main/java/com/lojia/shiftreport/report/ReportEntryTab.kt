@@ -365,7 +365,7 @@ fun ReportEntryTab(
                                 if (amt == null || amt <= 0.0 || amt > 5000.0) {
                                     android.widget.Toast.makeText(
                                         context,
-                                        "Enter valid amount (1 - 5000 SAR)",
+                                        "Enter valid amount (1 - 10000 $currentCurrency)",
                                         android.widget.Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
@@ -403,7 +403,7 @@ fun ReportEntryTab(
                                         advanceAmountText = ""
                                         android.widget.Toast.makeText(
                                             context,
-                                            "Added $amt SAR to ${emp.name}",
+                                            "Added ${MoneyFormat.format(amt, currentCurrency)} to ${emp.name}",
                                             android.widget.Toast.LENGTH_SHORT
                                         ).show()
                                     }
@@ -682,6 +682,7 @@ fun EmployerAdvanceSection(
     selectedType: String,
     onTypeChange: (String) -> Unit,
     onAddAdvance: () -> Unit,
+    currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onNavigateToSettings: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -738,12 +739,7 @@ fun EmployerAdvanceSection(
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = String.format(
-                                            Locale.US,
-                                            "Salary: %.0f SAR | Balance: %.2f SAR",
-                                            employee.monthlySalary,
-                                            balance
-                                        ),
+                                        text = "Salary: ${MoneyFormat.format(employee.monthlySalary, currency)} | Balance: ${MoneyFormat.format(balance, currency)}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.Gray
                                     )
@@ -767,7 +763,7 @@ fun EmployerAdvanceSection(
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
             ),
-            suffix = { Text("SAR") },
+            suffix = { Text(currency) },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
@@ -796,7 +792,7 @@ fun EmployerAdvanceSection(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Add ${amount.ifBlank { "0" }} SAR to ${selectedEmployee?.name ?: "Employee"}",
+                text = "Add ${amount.ifBlank { "0" }} $currency to ${selectedEmployee?.name ?: "Employee"}",
                 fontWeight = FontWeight.SemiBold
             )
         }
