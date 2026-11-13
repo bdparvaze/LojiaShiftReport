@@ -6,6 +6,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.lojia.shiftreport.util.AppLogger
 import com.lojia.shiftreport.util.CryptoUtils
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -95,11 +96,12 @@ object SecureStorageManager {
      * Verifies entered PIN against the stored encrypted hash using constant-time evaluation.
      */
     fun verifyQuickPin(input: String): Boolean {
-        if (!input.matches(Regex(AuthPinConstants.PIN_REGEX))) {
+        if (!isPinUsable(input) || !input.matches(Regex(AuthPinConstants.PIN_REGEX))) {
             return false
         }
         val prefs = getEncryptedPrefs()
-        val storedHash = prefs.getString(KEY_ENCRYPTED_PIN_HASH, null) ?: return false
+        val storedHash = prefs.getString(KEY_ENCRYPTED_PIN_HASH, null)
+        if (!isPinUsable(storedHash) || storedHash == null) return false
         val storedSalt = prefs.getString(KEY_ENCRYPTED_PIN_SALT, null).orEmpty()
 
         return if (storedSalt.isNotBlank()) {
@@ -139,7 +141,7 @@ object SecureStorageManager {
         } catch (_: Exception) {
             null
         }
-        return !storedHash.isNullOrBlank()
+        return isPinUsable(storedHash)
     }
 
     /**

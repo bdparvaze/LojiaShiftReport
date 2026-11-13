@@ -195,6 +195,9 @@ fun AddEntryDialog(
                             modifier = Modifier.padding(start = 4.dp)
                         )
 
+                        Spacer(Modifier.height(12.dp))
+                        PayTypeSelector(payType) { payType = it }
+
                         Spacer(Modifier.height(14.dp))
 
                         // Optional details section divider & collapsible toggle

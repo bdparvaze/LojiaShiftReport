@@ -2,13 +2,11 @@ package com.lojia.shiftreport.report
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocalMall
 import androidx.compose.material.icons.outlined.Person
@@ -41,8 +39,8 @@ import java.util.*
 data class PaidOutShoppingItem(
     val itemName: String,
     val qty: Int,
-    val unitPrice: Double,
-    val totalAmount: Double,
+    val unitPriceMinor: Long,
+    val totalAmountMinor: Long,
     val dateInMillis: Long,
     val cashierName: String
 )
@@ -56,15 +54,15 @@ fun parsePaidOutItems(reports: List<ShiftReport>): List<PaidOutShoppingItem> {
                 val obj = array.getJSONObject(i)
                 val name = obj.optString("itemName").ifBlank { obj.optString("name", "Item") }
                 val qty = obj.optInt("quantity", obj.optDouble("quantity", 0.0).toInt())
-                val price = obj.optDouble("unitPrice", 0.0)
-                val total = obj.optDouble("totalAmount", 0.0)
-                if (total > 0 || name.isNotBlank()) {
+                val price = obj.optLong("unitPrice", 0L)
+                val total = obj.optLong("totalAmount", 0L)
+                if (total > 0L || name.isNotBlank()) {
                     list.add(
                         PaidOutShoppingItem(
                             itemName = name,
                             qty = qty,
-                            unitPrice = price,
-                            totalAmount = total,
+                            unitPriceMinor = price,
+                            totalAmountMinor = total,
                             dateInMillis = report.dateInMillis,
                             cashierName = report.cashierName
                         )
@@ -89,7 +87,7 @@ fun PaidOutShoppingLedgerTab(
             maximumFractionDigits = 2
         }
     }
-    val totalExpense = list.sumOf { it.totalAmount }
+    val totalExpense = list.sumOf { it.totalAmountMinor }
 
     Column(
         modifier = Modifier
@@ -138,7 +136,7 @@ fun PaidOutShoppingLedgerTab(
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = "${numberFormatter.format(totalExpense)} $currency",
+                        text = MoneyFormat.formatMinor(totalExpense, currency),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = WarningOrange
@@ -275,10 +273,10 @@ fun PaidOutShoppingLedgerTab(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            if (item.qty > 0 && item.unitPrice > 0.0) {
+                            if (item.qty > 0 && item.unitPriceMinor > 0L) {
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    text = "${item.qty} pcs × ${numberFormatter.format(item.unitPrice)} $currency",
+                                    text = "${item.qty} pcs × ${MoneyFormat.formatMinor(item.unitPriceMinor, currency)}",
                                     fontSize = 12.sp,
                                     color = OnSurfaceVariantLight,
                                     maxLines = 1
@@ -329,7 +327,7 @@ fun PaidOutShoppingLedgerTab(
                         // Right — amount
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "${numberFormatter.format(item.totalAmount)} $currency",
+                                text = MoneyFormat.formatMinor(item.totalAmountMinor, currency),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ErrorRedLight
@@ -347,7 +345,7 @@ fun PaidOutShoppingLedgerTab(
  * ---------------------------------------------------------------------- */
 data class WalkoutLogItem(
     val description: String,
-    val amount: Double,
+    val amountMinor: Long,
     val dateInMillis: Long,
     val cashierName: String
 )
@@ -360,12 +358,12 @@ fun parseWalkoutItems(reports: List<ShiftReport>): List<WalkoutLogItem> {
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
                 val desc = obj.optString("tableOrOrderRef").ifBlank { obj.optString("description", "Walkout") }
-                val amt = obj.optDouble("amount", 0.0)
-                if (amt > 0) {
+                val amt = obj.optLong("amount", 0L)
+                if (amt > 0L) {
                     list.add(
                         WalkoutLogItem(
                             description = desc,
-                            amount = amt,
+                            amountMinor = amt,
                             dateInMillis = report.dateInMillis,
                             cashierName = report.cashierName
                         )
@@ -384,7 +382,7 @@ fun WalkoutLedgerTab(
 ) {
     val list = remember(reports) { parseWalkoutItems(reports) }
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val totalWalkout = list.sumOf { it.amount }
+    val totalWalkout = list.sumOf { it.amountMinor }
     val count = list.size
 
     Column(
@@ -435,7 +433,7 @@ fun WalkoutLedgerTab(
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = MoneyFormat.format(totalWalkout, currency),
+                        text = MoneyFormat.formatMinor(totalWalkout, currency),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = ErrorRedLight
@@ -611,7 +609,7 @@ fun WalkoutLedgerTab(
                         // Right — amount
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = MoneyFormat.format(item.amount, currency),
+                                text = MoneyFormat.formatMinor(item.amountMinor, currency),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ErrorRedLight
@@ -624,589 +622,3 @@ fun WalkoutLedgerTab(
     }
 }
 
-/* ----------------------------------------------------------------------
- * TAB 5: EMPLOYER ADVANCES & PAYROLL LEDGER (Foodics + SAP Standard)
- * ---------------------------------------------------------------------- */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
-fun EmployerAdvancesTab(
-    currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
-    onNavigateToEmployees: () -> Unit = {},
-    onViewShift: (String) -> Unit = {}
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val db = remember(context) { com.lojia.shiftreport.data.AppDatabase.getInstance(context) }
-    val employeeDao = remember(db) { db.employeeDao() }
-    val advanceDao = remember(db) { db.employerAdvanceDao() }
-    val prefs = remember(context) { com.lojia.shiftreport.data.PreferencesRepository.getInstance(context) }
-    val adminId = remember(prefs) { prefs.getSavedUsername().ifBlank { "admin" } }
-
-    val employees by employeeDao.getAllActive().collectAsState(initial = emptyList())
-    val allTransactions by advanceDao.getAllActive().collectAsState(initial = emptyList())
-    val businessProfile by db.reportDao().getBusinessProfile().collectAsState(initial = null)
-    val activeCurrency = businessProfile?.currency?.ifBlank { currency } ?: currency
-
-    var selectedEmployeeId by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(employees) {
-        if (selectedEmployeeId == null && employees.isNotEmpty()) {
-            selectedEmployeeId = employees.first().id
-        } else if (selectedEmployeeId != null && employees.none { it.id == selectedEmployeeId }) {
-            selectedEmployeeId = employees.firstOrNull()?.id
-        }
-    }
-
-    val selectedEmployee = remember(employees, selectedEmployeeId) {
-        employees.find { it.id == selectedEmployeeId }
-    }
-
-    // Current month range
-    val (monthStart, monthEnd, monthLabel) = remember {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.DAY_OF_MONTH, 1)
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        val start = cal.timeInMillis
-        cal.add(Calendar.MONTH, 1)
-        val end = cal.timeInMillis - 1
-        val label = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(start))
-        Triple(start, end, label)
-    }
-
-    val monthTransactions = remember(allTransactions, monthStart, monthEnd) {
-        allTransactions.filter { it.createdAt in monthStart..monthEnd }
-    }
-    val totalMonthAdvances = remember(monthTransactions) {
-        monthTransactions.sumOf { it.amount }
-    }
-    val cashMonthAdvances = remember(monthTransactions) {
-        monthTransactions.filter { it.paymentMethod == "CASH" }.sumOf { it.amount }
-    }
-    val bankMonthAdvances = remember(monthTransactions) {
-        monthTransactions.filter { it.paymentMethod == "BANK" }.sumOf { it.amount }
-    }
-
-    val txByEmployee = remember(allTransactions) {
-        allTransactions.groupBy { it.employeeId }
-    }
-
-    // Long-press action states
-    var actionTargetTx by remember { mutableStateOf<com.lojia.shiftreport.data.EmployerAdvanceTransaction?>(null) }
-    var correctionTargetTx by remember { mutableStateOf<com.lojia.shiftreport.data.EmployerAdvanceTransaction?>(null) }
-    var pendingCorrectionData by remember { mutableStateOf<Pair<Double, String>?>(null) }
-    var showAdminAuthForCorrection by remember { mutableStateOf(false) }
-    var voidTargetTx by remember { mutableStateOf<com.lojia.shiftreport.data.EmployerAdvanceTransaction?>(null) }
-    var showAdminAuthForVoid by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Top Section: Row of 2 Summary Cards
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                modifier = Modifier.weight(1f)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Total Advances",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = MoneyFormat.format(totalMonthAdvances, activeCurrency),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = monthLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
-                    )
-                }
-            }
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier.weight(1f)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Cash / Bank Breakdown",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = "Cash: ${MoneyFormat.format(cashMonthAdvances, activeCurrency)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Bank: ${MoneyFormat.format(bankMonthAdvances, activeCurrency)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        if (employees.isEmpty()) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Text(
-                        text = "Add your first employee",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Button(onClick = onNavigateToEmployees) {
-                        Text("Manage Employees")
-                    }
-                }
-            }
-        } else {
-            // Middle Section: LazyRow of Employee Cards
-            androidx.compose.foundation.lazy.LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(employees.size) { index ->
-                    val emp = employees[index]
-                    val empTxs = txByEmployee[emp.id].orEmpty()
-                    val totalTaken = empTxs.sumOf { it.amount }
-                    val remaining = emp.monthlySalary - totalTaken
-                    val isSelected = emp.id == selectedEmployeeId
-
-                    Card(
-                        onClick = { selectedEmployeeId = emp.id },
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) {
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                            } else {
-                                MaterialTheme.colorScheme.surface
-                            }
-                        ),
-                        modifier = Modifier.width(185.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(34.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = emp.name.take(1).uppercase(Locale.getDefault()),
-                                        color = androidx.compose.ui.graphics.Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                                Text(
-                                    text = emp.name,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-
-                            Text(
-                                text = "Salary: ${MoneyFormat.format(emp.monthlySalary, activeCurrency)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Taken: ${MoneyFormat.format(totalTaken, activeCurrency)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Balance: ${MoneyFormat.format(remaining, activeCurrency)}",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (remaining >= 0) PosCashGreen else ErrorRedLight
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Print Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        val emp = selectedEmployee ?: return@OutlinedButton
-                        val empTxs = txByEmployee[emp.id].orEmpty()
-                        coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                            val pdfFile = com.lojia.shiftreport.util.EmployerAdvancePdfGenerator.generateEmployeeAdvanceReport(
-                                context = context,
-                                employee = emp,
-                                transactions = empTxs,
-                                dateRange = monthLabel
-                            )
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                android.widget.Toast.makeText(
-                                    context,
-                                    "PDF saved: ${pdfFile.name}",
-                                    android.widget.Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    },
-                    enabled = selectedEmployee != null,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Print Employee", fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-
-                OutlinedButton(
-                    onClick = {
-                        coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                            val pdfFile = com.lojia.shiftreport.util.EmployerAdvancePdfGenerator.generateAllEmployeesSummaryReport(
-                                context = context,
-                                employees = employees,
-                                allTransactions = allTransactions,
-                                dateRange = monthLabel
-                            )
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                android.widget.Toast.makeText(
-                                    context,
-                                    "Summary PDF saved: ${pdfFile.name}",
-                                    android.widget.Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Print All Summary", fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-
-            // Bottom Section: Per-Employee Detailed Ledger
-            selectedEmployee?.let { emp ->
-                val empTxs = txByEmployee[emp.id].orEmpty()
-                Text(
-                    text = "${emp.name}'s Advance Transactions (${empTxs.size})",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                if (empTxs.isEmpty()) {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No advances for ${emp.name}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                } else {
-                    // Compute running balance per transaction
-                    val sortedAsc = empTxs.sortedBy { it.createdAt }
-                    val balanceMap = mutableMapOf<String, Double>()
-                    var running = 0.0
-                    for (t in sortedAsc) {
-                        running += t.amount
-                        balanceMap[t.id] = emp.monthlySalary - running
-                    }
-
-                    val dateFmt = remember { SimpleDateFormat("dd MMM", Locale.getDefault()) }
-
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(bottom = 24.dp)
-                    ) {
-                        items(empTxs.size) { idx ->
-                            val tx = empTxs[idx]
-                            val balAfter = balanceMap[tx.id] ?: emp.monthlySalary
-                            val isCorrection = tx.type == "CORRECTION"
-
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .combinedClickable(
-                                        onClick = {},
-                                        onLongClick = { actionTargetTx = tx }
-                                    )
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = dateFmt.format(Date(tx.createdAt)),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            if (tx.shiftId.isNotBlank()) {
-                                                Text(
-                                                    text = "#${tx.shiftId.take(6)}",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            AssistChip(
-                                                onClick = {},
-                                                label = {
-                                                    Text(
-                                                        text = if (isCorrection) "Correction" else tx.paymentMethod,
-                                                        fontSize = 10.sp
-                                                    )
-                                                },
-                                                modifier = Modifier.height(22.dp)
-                                            )
-                                        }
-                                        if (tx.reason.isNotBlank()) {
-                                            Text(
-                                                text = tx.reason,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = if (tx.amount >= 0) {
-                                                "+${MoneyFormat.format(tx.amount, activeCurrency)}"
-                                            } else {
-                                                MoneyFormat.format(tx.amount, activeCurrency)
-                                            },
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (tx.amount >= 0) PosCashGreen else ErrorRedLight
-                                        )
-                                        Text(
-                                            text = String.format(Locale.US, "Bal: %.2f", balAfter),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Long-press Options Dialog
-    actionTargetTx?.let { tx ->
-        AlertDialog(
-            onDismissRequest = { actionTargetTx = null },
-            title = { Text("Transaction Options", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(
-                        onClick = {
-                            actionTargetTx = null
-                            correctionTargetTx = tx
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Add Correction (-Amount)")
-                    }
-                    TextButton(
-                        onClick = {
-                            actionTargetTx = null
-                            voidTargetTx = tx
-                            showAdminAuthForVoid = true
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Void Transaction", color = MaterialTheme.colorScheme.error)
-                    }
-                    if (tx.shiftId.isNotBlank()) {
-                        TextButton(
-                            onClick = {
-                                actionTargetTx = null
-                                onViewShift(tx.shiftId)
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("View Shift #${tx.shiftId.take(6)}")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { actionTargetTx = null }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-
-    // Correction Input Dialog
-    correctionTargetTx?.let { origTx ->
-        var corrAmountText by remember { mutableStateOf("-50") }
-        var corrReason by remember { mutableStateOf("") }
-        var corrError by remember { mutableStateOf<String?>(null) }
-
-        AlertDialog(
-            onDismissRequest = { correctionTargetTx = null },
-            title = { Text("Add Payroll Correction", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = corrAmountText,
-                        onValueChange = { corrAmountText = it; corrError = null },
-                        label = { Text("Correction Amount (e.g. -50)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = corrReason,
-                        onValueChange = { corrReason = it },
-                        label = { Text("Reason") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (corrError != null) {
-                        Text(corrError ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val amt = corrAmountText.trim().toDoubleOrNull()
-                        if (amt == null || amt == 0.0) {
-                            corrError = "Enter a valid non-zero amount (e.g. -50)"
-                            return@Button
-                        }
-                        val normalized = if (amt > 0) -amt else amt
-                        pendingCorrectionData = normalized to corrReason.trim().ifBlank { "Payroll Correction" }
-                        showAdminAuthForCorrection = true
-                    }
-                ) {
-                    Text("Verify & Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { correctionTargetTx = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showAdminAuthForCorrection && correctionTargetTx != null && pendingCorrectionData != null) {
-        val origTx = correctionTargetTx!!
-        val (corrAmt, corrReason) = pendingCorrectionData!!
-        com.lojia.shiftreport.auth.AdminAuthDialog(
-            onDismissRequest = { showAdminAuthForCorrection = false },
-            onAuthSuccess = {
-                showAdminAuthForCorrection = false
-                correctionTargetTx = null
-                pendingCorrectionData = null
-                coroutineScope.launch {
-                    advanceDao.insert(
-                        com.lojia.shiftreport.data.EmployerAdvanceTransaction(
-                            employeeId = origTx.employeeId,
-                            employeeName = origTx.employeeName,
-                            shiftId = origTx.shiftId,
-                            amount = corrAmt,
-                            paymentMethod = origTx.paymentMethod,
-                            type = com.lojia.shiftreport.data.AdvanceTransactionType.CORRECTION.name,
-                            reason = corrReason,
-                            originalTransactionId = origTx.id,
-                            createdByAdminId = adminId
-                        )
-                    )
-                }
-            }
-        )
-    }
-
-    if (showAdminAuthForVoid && voidTargetTx != null) {
-        val target = voidTargetTx!!
-        com.lojia.shiftreport.auth.AdminAuthDialog(
-            onDismissRequest = {
-                showAdminAuthForVoid = false
-                voidTargetTx = null
-            },
-            onAuthSuccess = {
-                showAdminAuthForVoid = false
-                voidTargetTx = null
-                coroutineScope.launch {
-                    advanceDao.voidTransaction(target.id)
-                }
-            }
-        )
-    }
-}

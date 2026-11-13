@@ -71,8 +71,12 @@ object InvoicePaymentRenderer {
         drawRow("MADA & Card / مدى والبطاقات", p.madaCard)
         drawRow("Digital Wallet / المحفظة الرقمية", p.digitalWallet)
         drawRow("Daily Expenses / المصروفات اليومية", -p.expenses, overrideColor = PdfPalette.ERROR)
-        drawRow("Staff Meal / وجبات الموظفين", -p.staffMeal, overrideColor = PdfPalette.WARNING)
-        drawRow("Muassel / مبيعات المعسل", p.muassel)
+        if (p.staffMeal > 0.0) {
+            drawRow("Staff Meal / وجبات الموظفين", -p.staffMeal, overrideColor = PdfPalette.WARNING)
+        }
+        if (p.muassel > 0.0) {
+            drawRow("Muassel / مبيعات المعسل", p.muassel)
+        }
 
         // Variance / Cash Discrepancy
         val varColor = if (p.variance >= 0) PdfPalette.SUCCESS else PdfPalette.ERROR
@@ -88,10 +92,12 @@ object InvoicePaymentRenderer {
         canvas.drawLine(margin, currentY, margin + boxWidth, currentY, divPaint)
         currentY += 8f
 
-        // Subtotal & VAT (15%)
+        // Subtotal & VAT (Dynamic)
         drawRow("Net Sales (Excl. VAT) / صافي المبيعات", p.netSales, isBold = true)
-        val vatPctStr = "${(p.vatRate * 100).toInt()}%"
-        drawRow("VAT ($vatPctStr) / ضريبة القيمة المضافة", p.vatAmount, isBold = false)
+        if (p.vatRate > 0.0 && p.vatAmount > 0.0) {
+            val vatPctStr = "${String.format(java.util.Locale.US, "%.1f", p.vatRate * 100).trimEnd('0').trimEnd('.')}%"
+            drawRow("VAT ($vatPctStr) / ضريبة القيمة المضافة", p.vatAmount, isBold = false)
+        }
 
         currentY += 6f
 

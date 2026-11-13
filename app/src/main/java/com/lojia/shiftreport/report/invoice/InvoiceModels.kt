@@ -24,7 +24,7 @@ data class InvoiceItem(
     val qty: Double,
     val unitPrice: Double,
     val total: Double,
-    val vatRate: Double = 0.15
+    val vatRate: Double = 0.0
 )
 
 /**
@@ -35,11 +35,11 @@ data class PaymentSummary(
     val madaCard: Double,
     val digitalWallet: Double,
     val expenses: Double,
-    val staffMeal: Double,
-    val muassel: Double,
+    val staffMeal: Double = 0.0,
+    val muassel: Double = 0.0,
     val variance: Double,
     val netSales: Double,
-    val vatRate: Double = 0.15,
+    val vatRate: Double = 0.0,
     val vatAmount: Double = netSales * vatRate,
     val totalPayable: Double = netSales + vatAmount
 )
@@ -51,15 +51,15 @@ data class InvoiceData(
     val storeName: String,
     val storeNameArabic: String = "",
     val storeNameBengali: String = "",
-    val vatNo: String,
+    val vatNo: String = "",
     val invoiceNo: String,
     val date: String,
     val cashier: String,
     val storeAddress: String = "",
     val logoUri: String? = null,
     val shiftId: String = "",
-    val currencyCode: String = "SAR", // SAR, BDT, USD
-    val currencySymbol: String = "SAR",
+    val currencyCode: String = "",
+    val currencySymbol: String = "",
     val items: List<InvoiceItem> = emptyList(),
     val payment: PaymentSummary,
     val qrData: String = "",

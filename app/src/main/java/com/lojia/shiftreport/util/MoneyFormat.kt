@@ -92,6 +92,13 @@ object MoneyFormat {
         return startingCash + cashSales + payIn - payOut - salesReturns
     }
 
+    fun calculateExpectedCashMinor(
+        totalCashIn: Long,
+        totalCashOut: Long
+    ): Long {
+        return totalCashIn - totalCashOut
+    }
+
     fun calculateVarianceMinor(actualCash: Long, expectedCash: Long): Long {
         return actualCash - expectedCash
     }

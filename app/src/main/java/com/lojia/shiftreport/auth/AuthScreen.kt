@@ -49,6 +49,7 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -165,7 +166,9 @@ fun AuthScreenLoginTab(
             val profile = userProfile
             var isProfileValid = false
 
-            if (profile != null && profile.username.isNotBlank()) {
+            if (profile != null && profile.username.isNotBlank() &&
+                isPinUsable(trimmedPass) && isPinUsable(profile.passwordHash)
+            ) {
                 val usernameMatch = (trimmedUser.equals(profile.username, ignoreCase = true) ||
                         trimmedUser.equals(profile.email, ignoreCase = true))
                 val verifyResult = SecurityUtils.verifySecretWithUpgrade(trimmedPass, profile.passwordHash)

@@ -195,4 +195,25 @@ class BackupRoundTripTest {
         assertNotNull(shiftsArray)
         assertEquals(3, shiftsArray?.length())
     }
+
+    @Test
+    fun shiftReport_cashierId_roundTripAndMissingDefault() {
+        val original = ShiftReport(
+            id = 77,
+            cashierName = "Sara Khaled",
+            cashierId = "cashier_77_uid",
+            shift = "Morning",
+            dateInMillis = 1712345678000L
+        )
+        val json = OfflineBackupManager.shiftReportToJson(original)
+        assertEquals("cashier_77_uid", json.getString("cashierId"))
+
+        val restored = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false)
+        assertEquals("cashier_77_uid", restored.cashierId)
+
+        // Old backup with no cashierId key falls back to default ""
+        json.remove("cashierId")
+        val restoredOld = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false)
+        assertEquals("", restoredOld.cashierId)
+    }
 }

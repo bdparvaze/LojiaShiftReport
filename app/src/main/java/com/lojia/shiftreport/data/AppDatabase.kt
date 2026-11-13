@@ -10,6 +10,7 @@ import com.lojia.shiftreport.BuildConfig
 import com.lojia.shiftreport.scanner.DocumentScannerDao
 import com.lojia.shiftreport.scanner.ScannedDocument
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.shouldSeedDemoData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -552,7 +553,10 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         suspend fun populateInitialData(reportDao: ReportDao) {
-            if (BuildConfig.DEBUG) {
+            val databaseIsEmpty = reportDao.getAllShiftReportsList().isEmpty() &&
+                reportDao.getAllShiftSessionsList().isEmpty() &&
+                reportDao.getBusinessProfileOnce() == null
+            if (shouldSeedDemoData(isDebugBuild = BuildConfig.DEBUG, databaseIsEmpty = databaseIsEmpty)) {
                 reportDao.saveUserProfile(
                     UserProfile(
                         id = 1,
@@ -583,7 +587,7 @@ abstract class AppDatabase : RoomDatabase() {
                     BusinessProfile(
                         id = 1,
                         businessName = "Demo Store (Debug)",
-                        vatNumber = "310000000000003",
+                        vatNumber = "",
                         phone = "+1 555 0100",
                         email = "store@example.com",
                         address = "123 Commercial Avenue",
@@ -657,7 +661,7 @@ abstract class AppDatabase : RoomDatabase() {
                 reportDao.insertShiftReport(ShiftReport(cashierName = "Demo Staff", shift = "Evening", dateInMillis = now - (1 * oneDay), grossCash = 2750000L, madaPayments = 6400000L, digitalWallet = 1850000L, staffMealsCount = 8, totalExpenses = 450000L, muasselQty = 0.0, notes = "Superb sales volume"))
 
                 reportDao.insertAuditLog(AuditLog(username = "System", action = "INITIALIZATION", details = "LojiaShiftReport database initialized"))
-            } else {
+            } else if (databaseIsEmpty) {
                 reportDao.saveUserProfile(
                     UserProfile(
                         id = 1,

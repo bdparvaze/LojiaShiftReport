@@ -224,8 +224,30 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
 
     private val prefsRepository = PreferencesRepository.getInstance(context)
 
+    data class ZReportCashDrawerMinor(
+        val expectedCash: Long,
+        val variance: Long?
+    )
+
     companion object {
         private const val TAG = "BluetoothPrinterManager"
+
+        fun calculateZReportCashDrawerMinor(
+            openingCash: Long,
+            grossCash: Long,
+            totalPreviousDueCash: Long,
+            totalCashOut: Long,
+            actualCashCount: Long?
+        ): ZReportCashDrawerMinor {
+            val expected = MoneyFormat.calculateExpectedCashMinor(
+                startingCash = openingCash,
+                cashSales = grossCash,
+                payIn = totalPreviousDueCash,
+                payOut = totalCashOut
+            )
+            val variance = actualCashCount?.let { MoneyFormat.calculateVarianceMinor(it, expected) }
+            return ZReportCashDrawerMinor(expectedCash = expected, variance = variance)
+        }
     }
 
     private var activeSocket: BluetoothSocket? = null
@@ -627,9 +649,9 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
         businessPhone: String = "",
         vatNumber: String = "",
         report: com.lojia.shiftreport.data.ShiftReport,
-        currencySymbol: String = "$",
-        vatRate: Double = 15.0,
-        isTaxEnabled: Boolean = true,
+        currencySymbol: String = "",
+        vatRate: Double = 0.0,
+        isTaxEnabled: Boolean = false,
         isTaxIncluded: Boolean = true
     ): String = buildShiftReportText(
         businessName, businessAddress, businessPhone, vatNumber, report, currencySymbol, vatRate, isTaxEnabled, isTaxIncluded
@@ -641,22 +663,29 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
         businessPhone: String = "",
         vatNumber: String = "",
         report: com.lojia.shiftreport.data.ShiftReport,
-        currencySymbol: String = "$",
-        vatRate: Double = 15.0,
-        isTaxEnabled: Boolean = true,
+        currencySymbol: String = "",
+        vatRate: Double = 0.0,
+        isTaxEnabled: Boolean = false,
         isTaxIncluded: Boolean = true
     ): String {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
         val lineSeparator = "-".repeat(paperWidth.charsPerLine)
         val formattedDate = DateTimeFormatUtils.formatDateTime(report.dateInMillis)
 
-        val startingCash = com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashFromNotes(report)
-        val actualCashCount = com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashFromNotes(report)
-        val cashIn = MoneyFormat.toMajorUnits(report.totalDueCollectedCash)
-        val cashOut = MoneyFormat.toMajorUnits(report.totalCashOut)
-        val grossCash = MoneyFormat.toMajorUnits(report.grossCash)
-        val expectedCash = startingCash + grossCash + cashIn - cashOut
-        val variance = actualCashCount?.let { it - expectedCash }
+        val startingCashMinor = if (report.openingCash > 0L) report.openingCash else com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashMinor(report)
+        val actualCashCountMinor = if (report.closingCash > 0L) report.closingCash else com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashMinor(report)
+        val cashInMinor = report.totalPreviousDueCash
+        val cashOutMinor = report.totalCashOut
+        val grossCashMinor = report.grossCash
+        val cashRecon = calculateZReportCashDrawerMinor(
+            openingCash = startingCashMinor,
+            grossCash = grossCashMinor,
+            totalPreviousDueCash = cashInMinor,
+            totalCashOut = cashOutMinor,
+            actualCashCount = actualCashCountMinor
+        )
+        val expectedCashMinor = cashRecon.expectedCash
+        val varianceMinor = cashRecon.variance
 
         val sb = StringBuilder()
 
@@ -681,7 +710,7 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
 
         // 1. SALES BY PAYMENT METHOD
         sb.append("[L]<b>${context.getString(R.string.zreport_sec_sales)}</b>\n")
-        sb.append("[L]${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", grossCash)}\n")
+        sb.append("[L]${context.getString(R.string.zreport_cash_sales)}[R]${MoneyFormat.formatMinor(grossCashMinor, currencySymbol)}\n")
         sb.append("[L]${context.getString(R.string.zreport_card_mada)}[R]$currencySymbol${String.format(Locale.US, "%.2f", madaPayments)}\n")
         if (digitalWallet > 0.0) {
             sb.append("[L]${context.getString(R.string.zreport_digital_wallet)}[R]$currencySymbol${String.format(Locale.US, "%.2f", digitalWallet)}\n")
@@ -691,24 +720,24 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
 
         // 2. CASH DRAWER RECONCILIATION
         sb.append("[L]<b>${context.getString(R.string.zreport_sec_cash_recon)}</b>\n")
-        if (startingCash > 0.0) {
-            sb.append("[L]${context.getString(R.string.zreport_starting_float)}[R]$currencySymbol${String.format(Locale.US, "%.2f", startingCash)}\n")
+        if (startingCashMinor > 0L) {
+            sb.append("[L]${context.getString(R.string.zreport_starting_float)}[R]${MoneyFormat.formatMinor(startingCashMinor, currencySymbol)}\n")
         }
-        sb.append("[L](+) ${context.getString(R.string.zreport_cash_sales)}[R]$currencySymbol${String.format(Locale.US, "%.2f", grossCash)}\n")
-        if (cashIn > 0.0) {
-            sb.append("[L]${context.getString(R.string.zreport_cash_in_dues)}[R]$currencySymbol${String.format(Locale.US, "%.2f", cashIn)}\n")
+        sb.append("[L](+) ${context.getString(R.string.zreport_cash_sales)}[R]${MoneyFormat.formatMinor(grossCashMinor, currencySymbol)}\n")
+        if (cashInMinor > 0L) {
+            sb.append("[L]${context.getString(R.string.zreport_cash_in_dues)}[R]${MoneyFormat.formatMinor(cashInMinor, currencySymbol)}\n")
         }
-        if (cashOut > 0.0) {
-            sb.append("[L]${context.getString(R.string.zreport_cash_out)}[R]$currencySymbol${String.format(Locale.US, "%.2f", cashOut)}\n")
+        if (cashOutMinor > 0L) {
+            sb.append("[L]${context.getString(R.string.zreport_cash_out)}[R]${MoneyFormat.formatMinor(cashOutMinor, currencySymbol)}\n")
         }
-        sb.append("[L]<b>${context.getString(R.string.zreport_expected_cash)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", expectedCash)}</b>\n")
+        sb.append("[L]<b>${context.getString(R.string.zreport_expected_cash)}</b>[R]<b>${MoneyFormat.formatMinor(expectedCashMinor, currencySymbol)}</b>\n")
 
-        if (actualCashCount != null) {
-            sb.append("[L]<b>${context.getString(R.string.zreport_actual_cash)}</b>[R]<b>$currencySymbol${String.format(Locale.US, "%.2f", actualCashCount)}</b>\n")
+        if (actualCashCountMinor != null && varianceMinor != null) {
+            sb.append("[L]<b>${context.getString(R.string.zreport_actual_cash)}</b>[R]<b>${MoneyFormat.formatMinor(actualCashCountMinor, currencySymbol)}</b>\n")
             val varFormatted = when {
-                Math.abs(variance ?: 0.0) < 0.01 -> "${currencySymbol}0.00 (${context.getString(R.string.zreport_balanced)})"
-                (variance ?: 0.0) > 0 -> "+$currencySymbol${String.format(Locale.US, "%.2f", variance)} (${context.getString(R.string.zreport_over)})"
-                else -> "-$currencySymbol${String.format(Locale.US, "%.2f", Math.abs(variance ?: 0.0))} (${context.getString(R.string.zreport_short)})"
+                varianceMinor == 0L -> "${MoneyFormat.formatMinor(0L, currencySymbol)} (${context.getString(R.string.zreport_balanced)})"
+                varianceMinor > 0L -> "+${MoneyFormat.formatMinor(varianceMinor, currencySymbol)} (${context.getString(R.string.zreport_over)})"
+                else -> "-${MoneyFormat.formatMinor(Math.abs(varianceMinor), currencySymbol)} (${context.getString(R.string.zreport_short)})"
             }
             sb.append("[L]<b>${context.getString(R.string.zreport_variance)}</b>[R]<b>$varFormatted</b>\n")
         }

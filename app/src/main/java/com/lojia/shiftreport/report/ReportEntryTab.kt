@@ -32,6 +32,8 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.isUnspecifiedReceipt
+import com.lojia.shiftreport.util.normalizeReceiptNumber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -98,22 +100,36 @@ fun ReportEntryTab(
     val actualCashVal = actualCashCountInput.toDoubleOrNull()
     val expenses = d(totalExpenses)
 
-    val totalCredit = creditEntries.sumOf { it.amountDouble }
-    val totalOldDueCash = oldDueEntries.filter { it.type == PayType.CASH }.sumOf { it.amountDouble }
-    val totalOldDueBank = oldDueEntries.filter { it.type == PayType.BANK }.sumOf { it.amountDouble }
-    val totalStaffCash = staffEntries.filter { it.type == PayType.CASH }.sumOf { it.amountDouble }
-    val totalStaffBank = staffEntries.filter { it.type == PayType.BANK }.sumOf { it.amountDouble }
-    val totalWalkout = walkoutEntries.sumOf { it.amountDouble }
-    val totalItems = itemEntries.sumOf { it.totalDouble }
+    val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
+    val cashMinor = MoneyFormat.toMinorUnits(cash)
+    val madaMinor = MoneyFormat.toMinorUnits(mada)
+    val digitalWalletMinor = MoneyFormat.toMinorUnits(digitalWallet)
+    val totalDiscountsMinor = MoneyFormat.toMinorUnits(totalDiscounts)
+    val salesReturnsMinor = MoneyFormat.toMinorUnits(salesReturns)
+    val actualCashMinor = actualCashVal?.let { MoneyFormat.toMinorUnits(it) }
+    val expensesMinor = MoneyFormat.toMinorUnits(expenses)
+
+    val totalCreditMinor = MoneyFormat.sumOfMinor(creditEntries.map { MoneyFormat.toMinorUnits(it.amount) })
+    val totalOldDueCashMinor = MoneyFormat.sumOfMinor(oldDueEntries.filter { it.type == PayType.CASH }.map { MoneyFormat.toMinorUnits(it.amount) })
+    val totalOldDueBankMinor = MoneyFormat.sumOfMinor(oldDueEntries.filter { it.type == PayType.BANK }.map { MoneyFormat.toMinorUnits(it.amount) })
+    val totalStaffCashMinor = MoneyFormat.sumOfMinor(staffEntries.filter { it.type == PayType.CASH }.map { MoneyFormat.toMinorUnits(it.amount) })
+    val totalStaffBankMinor = MoneyFormat.sumOfMinor(staffEntries.filter { it.type == PayType.BANK }.map { MoneyFormat.toMinorUnits(it.amount) })
+    val totalWalkoutMinor = MoneyFormat.sumOfMinor(walkoutEntries.map { MoneyFormat.toMinorUnits(it.amount) })
+    val totalItemsCashMinor = MoneyFormat.sumOfMinor(itemEntries.filter { it.type == PayType.CASH }.map { MoneyFormat.toMinorUnits(it.total) })
 
     // International Standard Formulas
-    val totalSales = cash + mada + digitalWallet
-    val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0.0)
-    val totalCashIn = startingCash + cash + totalOldDueCash
-    val totalCashOut = expenses + totalStaffCash + totalItems
-    val expectedCash = totalCashIn - totalCashOut
-    val variance = actualCashVal?.let { it - expectedCash }
-    val netMada = mada + digitalWallet + totalOldDueBank - totalStaffBank
+    val totalCashOutMinor = MoneyFormat.addMinor(expensesMinor, totalStaffCashMinor, totalItemsCashMinor)
+    val expectedCashMinor = MoneyFormat.calculateExpectedCashMinor(
+        startingCash = startingCashMinor,
+        cashSales = cashMinor,
+        payIn = totalOldDueCashMinor,
+        payOut = totalCashOutMinor
+    )
+    val varianceMinor = actualCashMinor?.let { MoneyFormat.calculateVarianceMinor(it, expectedCashMinor) }
+    val netMadaMinor = MoneyFormat.subtractMinor(
+        MoneyFormat.addMinor(madaMinor, digitalWalletMinor, totalOldDueBankMinor),
+        totalStaffBankMinor
+    )
 
     val hasEnteredData = cashier.isNotBlank() || startingCashInput.isNotBlank() ||
             cashReceipts.isNotBlank() || madaPayments.isNotBlank() || digitalWalletInput.isNotBlank() ||
@@ -157,8 +173,8 @@ fun ReportEntryTab(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             StickySummaryBar(
-                expectedCash = MoneyFormat.toMinorUnits(expectedCash),
-                variance = variance?.let { MoneyFormat.toMinorUnits(it) },
+                expectedCash = expectedCashMinor,
+                variance = varianceMinor,
                 currentCurrency = currentCurrency
             )
         }
@@ -302,8 +318,14 @@ fun ReportEntryTab(
                             modalType = ModalType.CREDIT
                         }
                         creditEntries.forEachIndexed { i, e ->
+                            val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                            val receiptLabel = when {
+                                isUnspecifiedReceipt(normReceipt) -> stringResource(R.string.receipt_unspecified)
+                                normReceipt.isNotEmpty() -> "#$normReceipt"
+                                else -> ""
+                            }
                             EntryRow(
-                                left = "#${e.receiptNo}",
+                                left = receiptLabel,
                                 right = "%.2f $currentCurrency".format(e.amount),
                                 onRemove = { creditEntries.removeAt(i) }
                             )
@@ -314,8 +336,14 @@ fun ReportEntryTab(
                             modalType = ModalType.OLD_DUE
                         }
                         oldDueEntries.forEachIndexed { i, e ->
+                            val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                            val receiptLabel = when {
+                                isUnspecifiedReceipt(normReceipt) -> stringResource(R.string.receipt_unspecified)
+                                normReceipt.isNotEmpty() -> "#$normReceipt"
+                                else -> ""
+                            }
                             EntryRow(
-                                left = "#${e.receiptNo}",
+                                left = receiptLabel,
                                 right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.amount),
                                 onRemove = { oldDueEntries.removeAt(i) }
                             )
@@ -323,17 +351,19 @@ fun ReportEntryTab(
 
                         // ---- Employer Advance (Dropdown-only Foodics POS Standard) ----
                         val context = LocalContext.current
-                        val coroutineScope = rememberCoroutineScope()
                         val db = remember(context) { com.lojia.shiftreport.data.AppDatabase.getInstance(context) }
                         val employeeDao = remember(db) { db.employeeDao() }
-                        val advanceDao = remember(db) { db.employerAdvanceDao() }
-                        val prefs = remember(context) { PreferencesRepository.getInstance(context) }
-                        val adminId = remember(prefs) { prefs.getSavedUsername().ifBlank { "admin" } }
 
                         val activeEmployees by employeeDao.getAllActive().collectAsState(initial = emptyList())
-                        val allAdvances by advanceDao.getAllActive().collectAsState(initial = emptyList())
-                        val advancesByEmployee = remember(allAdvances) {
-                            allAdvances.groupBy { it.employeeId }.mapValues { (_, list) -> list.sumOf { it.amount } }
+                        val advancesByEmployee by remember(activeEmployees) {
+                            derivedStateOf {
+                                val totalsByName = staffEntries
+                                    .groupBy { com.lojia.shiftreport.util.normalizeRestoreName(it.name) }
+                                    .mapValues { (_, list) -> list.sumOf { it.amount.toDouble() } }
+                                activeEmployees.associate { emp ->
+                                    emp.id to (totalsByName[com.lojia.shiftreport.util.normalizeRestoreName(emp.name)] ?: 0.0)
+                                }
+                            }
                         }
 
                         var selectedAdvanceEmployee by remember { mutableStateOf<com.lojia.shiftreport.data.Employee?>(null) }
@@ -360,6 +390,7 @@ fun ReportEntryTab(
                             onAmountChange = { advanceAmountText = it },
                             selectedType = advancePaymentType,
                             onTypeChange = { advancePaymentType = it },
+                            currency = currentCurrency,
                             onAddAdvance = {
                                 val amt = advanceAmountText.trim().toDoubleOrNull()
                                 if (amt == null || amt <= 0.0 || amt > 5000.0) {
@@ -382,31 +413,19 @@ fun ReportEntryTab(
                                 onDismissRequest = { showAdminAuthForAdvance = false },
                                 onAuthSuccess = {
                                     showAdminAuthForAdvance = false
-                                    coroutineScope.launch {
-                                        advanceDao.insert(
-                                            com.lojia.shiftreport.data.EmployerAdvanceTransaction(
-                                                employeeId = emp.id,
-                                                employeeName = emp.name,
-                                                amount = amt,
-                                                paymentMethod = if (isBank) "BANK" else "CASH",
-                                                type = com.lojia.shiftreport.data.AdvanceTransactionType.ADVANCE.name,
-                                                createdByAdminId = adminId
-                                            )
+                                    staffEntries.add(
+                                        StaffEntry(
+                                            name = emp.name,
+                                            amount = java.math.BigDecimal.valueOf(amt),
+                                            type = if (isBank) PayType.BANK else PayType.CASH
                                         )
-                                        staffEntries.add(
-                                            StaffEntry(
-                                                name = emp.name,
-                                                amount = java.math.BigDecimal.valueOf(amt),
-                                                type = if (isBank) PayType.BANK else PayType.CASH
-                                            )
-                                        )
-                                        advanceAmountText = ""
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            "Added ${MoneyFormat.format(amt, currentCurrency)} to ${emp.name}",
-                                            android.widget.Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
+                                    )
+                                    advanceAmountText = ""
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Added ${MoneyFormat.format(amt, currentCurrency)} to ${emp.name}",
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             )
                         }
@@ -439,7 +458,7 @@ fun ReportEntryTab(
                             val leftText = if (e.qty > 0) "${e.name} (${e.qty} pcs)" else e.name
                             EntryRow(
                                 left = leftText,
-                                right = "%.2f $currentCurrency".format(e.total),
+                                right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.total),
                                 onRemove = { itemEntries.removeAt(i) }
                             )
                         }
@@ -448,20 +467,20 @@ fun ReportEntryTab(
 
                         // ---- Standard 4-Card International POS Reconciliation Summary ----
                         PosReconciliationSummary(
-                            startingCash = MoneyFormat.toMinorUnits(startingCash),
-                            cashSales = MoneyFormat.toMinorUnits(cash),
-                            madaSales = MoneyFormat.toMinorUnits(mada),
-                            digitalWalletSales = MoneyFormat.toMinorUnits(digitalWallet),
-                            totalDiscounts = MoneyFormat.toMinorUnits(totalDiscounts),
-                            salesReturns = MoneyFormat.toMinorUnits(salesReturns),
-                            totalExpenses = MoneyFormat.toMinorUnits(expenses),
-                            totalDueCredit = MoneyFormat.toMinorUnits(totalCredit),
-                            totalDueCollectedCash = MoneyFormat.toMinorUnits(totalOldDueCash),
-                            totalDueCollectedBank = MoneyFormat.toMinorUnits(totalOldDueBank),
-                            totalStaffAdvanceCash = MoneyFormat.toMinorUnits(totalStaffCash),
-                            totalStaffAdvanceBank = MoneyFormat.toMinorUnits(totalStaffBank),
-                            totalWalkout = MoneyFormat.toMinorUnits(totalWalkout),
-                            totalPurchasesCash = MoneyFormat.toMinorUnits(totalItems),
+                            startingCash = startingCashMinor,
+                            cashSales = cashMinor,
+                            madaSales = madaMinor,
+                            digitalWalletSales = digitalWalletMinor,
+                            totalDiscounts = totalDiscountsMinor,
+                            salesReturns = salesReturnsMinor,
+                            totalExpenses = expensesMinor,
+                            totalDueCredit = totalCreditMinor,
+                            totalDueCollectedCash = totalOldDueCashMinor,
+                            totalDueCollectedBank = totalOldDueBankMinor,
+                            totalStaffAdvanceCash = totalStaffCashMinor,
+                            totalStaffAdvanceBank = totalStaffBankMinor,
+                            totalWalkout = totalWalkoutMinor,
+                            totalPurchasesCash = totalItemsCashMinor,
                             staffMealsCount = staffCount,
                             muasselCount = muassel.toIntOrNull() ?: 0,
                             outdoorMuasselCount = outdoorMuassel.toIntOrNull() ?: 0,
@@ -539,8 +558,8 @@ fun ReportEntryTab(
                                             staffEntries = staffEntries.toList(),
                                             walkoutEntries = walkoutEntries.toList(),
                                             itemEntries = itemEntries.toList(),
-                                            netCash = expectedCash,
-                                            netMada = netMada,
+                                            netCash = MoneyFormat.toMajorUnits(expectedCashMinor),
+                                            netMada = MoneyFormat.toMajorUnits(netMadaMinor),
                                             isLocked = false,
                                             managerSignedBy = null,
                                             managerSignTime = null,
@@ -659,7 +678,8 @@ fun ReportEntryTab(
                             name = result.name,
                             qty = result.qty,
                             unitPriceDouble = result.unitPrice,
-                            totalDouble = result.amount
+                            totalDouble = result.amount,
+                            type = result.type
                         )
                     )
                     ModalType.NONE -> {}
@@ -730,7 +750,6 @@ fun EmployerAdvanceSection(
                 } else {
                     employees.forEach { employee ->
                         val taken = advancesByEmployee[employee.id] ?: 0.0
-                        val balance = employee.monthlySalary - taken
                         DropdownMenuItem(
                             text = {
                                 Column {
@@ -739,7 +758,7 @@ fun EmployerAdvanceSection(
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = "Salary: ${MoneyFormat.format(employee.monthlySalary, currency)} | Balance: ${MoneyFormat.format(balance, currency)}",
+                                        text = "${stringResource(R.string.total_advances)}: ${MoneyFormat.format(taken, currency)}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.Gray
                                     )

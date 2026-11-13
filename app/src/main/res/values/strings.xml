@@ -401,6 +401,7 @@
     <string name="receipt_breakdown_count">Receipt Ledger Breakdown (%d)</string>
     <string name="no_due_records">No due history records found</string>
     <string name="receipt_num_tag">Receipt #%s</string>
+    <string name="receipt_unspecified">Unspecified</string>
     <string name="paid_in_full">Paid in Full</string>
     <string name="partially_paid">Partially Paid</string>
     <string name="unpaid_due">Unpaid Due</string>
@@ -740,6 +741,9 @@
     <string name="profile_updated_successfully">Profile updated successfully</string>
     <string name="receipt_customization_updated">Receipt customization updated</string>
     <string name="pdf_vat_tel">VAT: %1$s | Tel: %2$s</string>
+    <string name="pdf_vat_only">VAT: %1$s</string>
+    <string name="pdf_tel_only">Tel: %1$s</string>
+    <string name="pdf_vat_id">VAT ID: %1$s</string>
     <string name="pdf_address">Address: %1$s</string>
     <string name="pdf_location">Location: %1$s</string>
     <string name="pdf_total_currency">Total (%1$s)</string>
@@ -1328,6 +1332,7 @@
     <string name="status_printing_z_report">Printing Z-Report...</string>
     <string name="toast_z_report_sent_printer">Z-Report sent to Bluetooth printer!</string>
     <string name="nav_cashier">Cashier</string>
+    <string name="nav_employee">Employee</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_security">Security</string>
     <string name="nav_language">Language</string>

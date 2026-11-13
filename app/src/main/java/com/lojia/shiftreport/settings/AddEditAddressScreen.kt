@@ -74,6 +74,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppCountry
 import com.lojia.shiftreport.data.SavedAddress
 import com.lojia.shiftreport.report.ReportViewModel
@@ -129,6 +130,7 @@ fun AddEditAddressScreen(
 
     var showCountrySheet by remember { mutableStateOf(false) }
     var showMapPicker by remember { mutableStateOf(false) }
+    var pendingAddressToSave by remember { mutableStateOf<SavedAddress?>(null) }
 
     // Sync initial dial code with current app country when adding a new address
     LaunchedEffect(addressId) {
@@ -259,8 +261,7 @@ fun AddEditAddressScreen(
                                 isDefault = isDefault,
                                 createdAt = createdAt
                             )
-                            viewModel.saveAddress(savedAddress)
-                            onSaved()
+                            pendingAddressToSave = savedAddress
                         },
                         enabled = canSave,
                         shape = RoundedCornerShape(26.dp),
@@ -829,6 +830,19 @@ fun AddEditAddressScreen(
                 showMapPicker = false
             },
             onDismiss = { showMapPicker = false }
+        )
+    }
+
+    pendingAddressToSave?.let { addrToSave ->
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = stringResource(R.string.saved_addresses_title),
+            onDismissRequest = { pendingAddressToSave = null },
+            onAuthSuccess = {
+                pendingAddressToSave = null
+                viewModel.saveAddress(addrToSave)
+                onSaved()
+            }
         )
     }
 }

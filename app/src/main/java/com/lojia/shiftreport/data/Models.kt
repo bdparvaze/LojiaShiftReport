@@ -163,7 +163,7 @@ data class ShiftReport(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         customerName = obj.optString("customerName", obj.optString("receiptNo", "")),
                         amount = obj.optLong("amount", 0L),
-                        paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH")),
+                        paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH")).ifBlank { "CASH" },
                         note = obj.optString("note", "")
                     )
                 )
@@ -196,12 +196,14 @@ data class ShiftReport(
             val list = mutableListOf<StaffAdvanceItem>()
             for (i in 0 until arr.length()) {
                 val obj = arr.getJSONObject(i)
+                val mode = obj.optString("paymentMode", obj.optString("type", "CASH")).ifBlank { "CASH" }
                 list.add(
                     StaffAdvanceItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         staffName = obj.optString("staffName", obj.optString("name", "")),
                         amount = obj.optLong("amount", 0L),
-                        reason = obj.optString("reason", obj.optString("type", "CASH"))
+                        reason = obj.optString("reason", ""),
+                        paymentMode = mode
                     )
                 )
             }
@@ -224,7 +226,7 @@ data class ShiftReport(
                         quantity = qty,
                         unitPrice = unitPrice,
                         totalAmount = total,
-                        paidVia = obj.optString("paidVia", "CASH"),
+                        paidVia = obj.optString("paidVia", "CASH").ifBlank { "CASH" },
                         supplier = obj.optString("supplier", "")
                     )
                 )
@@ -273,8 +275,14 @@ data class ShiftReport(
         get() = MoneyFormat.sumOfMinor(previousDueCollectionsList.map { it.amount })
 
     // Staff Advances
+    val totalStaffAdvancesCash: Long
+        get() = MoneyFormat.sumOfMinor(staffAdvancesList.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount })
+
+    val totalStaffAdvancesBank: Long
+        get() = MoneyFormat.sumOfMinor(staffAdvancesList.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount })
+
     val totalStaffAdvances: Long
-        get() = MoneyFormat.sumOfMinor(staffAdvancesList.map { it.amount })
+        get() = MoneyFormat.addMinor(totalStaffAdvancesCash, totalStaffAdvancesBank)
 
     val totalStaffAdvancesAmount: Long
         get() = totalStaffAdvances
@@ -300,11 +308,16 @@ data class ShiftReport(
         get() = MoneyFormat.addMinor(openingCash, grossCash, totalPreviousDueCash)
 
     val totalCashOut: Long
-        get() = MoneyFormat.addMinor(totalExpenses, totalStaffAdvances, totalCashPurchases)
+        get() = MoneyFormat.addMinor(totalExpenses, totalStaffAdvancesCash, totalCashPurchases)
 
     // 3. Expected Cash in Drawer
     val expectedCashInDrawer: Long
-        get() = MoneyFormat.subtractMinor(totalCashIn, totalCashOut)
+        get() = MoneyFormat.calculateExpectedCashMinor(
+            startingCash = openingCash,
+            cashSales = grossCash,
+            payIn = totalPreviousDueCash,
+            payOut = totalCashOut
+        )
 
     val netCash: Long
         get() = expectedCashInDrawer
@@ -398,7 +411,8 @@ data class StaffAdvanceItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val staffName: String,
     val amount: Long,
-    val reason: String = ""
+    val reason: String = "",
+    val paymentMode: String = "CASH" // CASH or BANK
 )
 
 data class UnpaidBillItem(

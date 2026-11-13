@@ -21,6 +21,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.lojia.shiftreport.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -105,7 +107,7 @@ fun EmployeeManagementSection(
             ) {
                 Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                     Text(
-                        text = "Employee Management",
+                        text = stringResource(R.string.nav_employee),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = FoodicsTextBlack,

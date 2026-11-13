@@ -191,23 +191,33 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                 }
             }
 
+            var pendingMainRestoreAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
             val backupPickerLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
                 if (uri != null) {
-                    restoreDecision = null
-                    prefsRepo.setFirstRunDataPreservationShown(true)
-                    prefsRepo.setHasRunBefore(true)
-                    scope.launch {
-                        prefsRepo.setHasSeenRestoreDialog(true)
-                        val db = AppDatabase.getInstance(context)
-                        val res = OfflineBackupManager.restoreBackup(context, uri, db)
-                        res.onSuccess { count ->
-                            val msg = context.getString(R.string.data_restored_success, count)
-                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                        }.onFailure { err ->
-                            android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+                    val runRestore = {
+                        restoreDecision = null
+                        prefsRepo.setFirstRunDataPreservationShown(true)
+                        prefsRepo.setHasRunBefore(true)
+                        scope.launch {
+                            prefsRepo.setHasSeenRestoreDialog(true)
+                            val db = AppDatabase.getInstance(context)
+                            val res = OfflineBackupManager.restoreBackup(context, uri, db)
+                            res.onSuccess { count ->
+                                val msg = context.getString(R.string.data_restored_success, count)
+                                android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                            }.onFailure { err ->
+                                android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+                            }
                         }
+                        Unit
+                    }
+                    if (userProfile != null || prefsRepo.hasPinConfigured()) {
+                        pendingMainRestoreAction = runRestore
+                    } else {
+                        runRestore()
                     }
                 }
             }
@@ -431,22 +441,30 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 backupFile = decision.backupFile,
                                                 previewText = decision.previewText,
                                                 onRestore = {
-                                                    restoreDecision = null
-                                                    scope.launch {
-                                                        prefsRepo.setHasSeenRestoreDialog(true)
-                                                        prefsRepo.setFirstRunDataPreservationShown(true)
-                                                        prefsRepo.setHasRunBefore(true)
-                                                        val fileToRestore = decision.backupFile ?: backupManager.restoreLatest()
-                                                        if (fileToRestore != null) {
-                                                            val db = AppDatabase.getInstance(context)
-                                                            val res = OfflineBackupManager.restoreBackupFromFile(context, db, fileToRestore)
-                                                            res.onSuccess { count ->
-                                                                val msg = context.getString(R.string.data_restored_success, count)
-                                                                android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                                                            }.onFailure { err ->
-                                                                android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+                                                    val runFileRestore = {
+                                                        restoreDecision = null
+                                                        scope.launch {
+                                                            prefsRepo.setHasSeenRestoreDialog(true)
+                                                            prefsRepo.setFirstRunDataPreservationShown(true)
+                                                            prefsRepo.setHasRunBefore(true)
+                                                            val fileToRestore = decision.backupFile ?: backupManager.restoreLatest()
+                                                            if (fileToRestore != null) {
+                                                                val db = AppDatabase.getInstance(context)
+                                                                val res = OfflineBackupManager.restoreBackupFromFile(context, db, fileToRestore)
+                                                                res.onSuccess { count ->
+                                                                    val msg = context.getString(R.string.data_restored_success, count)
+                                                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                                                }.onFailure { err ->
+                                                                    android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+                                                                }
                                                             }
                                                         }
+                                                        Unit
+                                                    }
+                                                    if (userProfile != null || prefsRepo.hasPinConfigured()) {
+                                                        pendingMainRestoreAction = runFileRestore
+                                                    } else {
+                                                        runFileRestore()
                                                     }
                                                 },
                                                 onBrowseBackups = {
@@ -461,6 +479,19 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                         // Navigate to Dashboard
                                                         navState = AppNavState.ShiftReportState.Analytics
                                                     }
+                                                }
+                                            )
+                                        }
+
+                                        if (pendingMainRestoreAction != null) {
+                                            AdminAuthDialog(
+                                                title = stringResource(R.string.admin_authorization_required),
+                                                subtitle = stringResource(R.string.restore_backup_title),
+                                                onDismissRequest = { pendingMainRestoreAction = null },
+                                                onAuthSuccess = {
+                                                    val action = pendingMainRestoreAction
+                                                    pendingMainRestoreAction = null
+                                                    action?.invoke()
                                                 }
                                             )
                                         }

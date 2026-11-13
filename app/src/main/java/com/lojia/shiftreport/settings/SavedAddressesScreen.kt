@@ -42,7 +42,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
@@ -55,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.SavedAddress
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.theme.BackgroundLight
@@ -85,6 +89,8 @@ fun SavedAddressesScreen(
 
     val addresses by viewModel.savedAddresses.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    var pendingAuthSubtitle by remember { mutableStateOf<String?>(null) }
+    var pendingAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     Scaffold(
         containerColor = BackgroundLight,
@@ -239,10 +245,16 @@ fun SavedAddressesScreen(
                         AddressCard(
                             address = address,
                             setAsDefault = { id ->
-                                coroutineScope.launch { viewModel.setDefaultAddress(id) }
+                                pendingAuthSubtitle = null
+                                pendingAuthAction = {
+                                    coroutineScope.launch { viewModel.setDefaultAddress(id) }
+                                }
                             },
                             onDelete = { target ->
-                                coroutineScope.launch { viewModel.deleteSavedAddress(target) }
+                                pendingAuthSubtitle = null
+                                pendingAuthAction = {
+                                    coroutineScope.launch { viewModel.deleteSavedAddress(target) }
+                                }
                             },
                             onEdit = onEdit
                         )
@@ -250,6 +262,23 @@ fun SavedAddressesScreen(
                 }
             }
         }
+    }
+
+    if (pendingAuthAction != null) {
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = pendingAuthSubtitle ?: stringResource(R.string.saved_addresses_title),
+            onDismissRequest = {
+                pendingAuthSubtitle = null
+                pendingAuthAction = null
+            },
+            onAuthSuccess = {
+                val action = pendingAuthAction
+                pendingAuthSubtitle = null
+                pendingAuthAction = null
+                action?.invoke()
+            }
+        )
     }
 }
 

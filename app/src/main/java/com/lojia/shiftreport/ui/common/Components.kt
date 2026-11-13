@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.isPinUsable
 
 
 
@@ -367,7 +368,9 @@ fun SecureDeleteModal(
                     // Delete — filled error
                     Button(
                         onClick = {
-                            val passValid = SecurityUtils.verifySecret(passwordInput, actualPasswordHash)
+                            val passValid = isPinUsable(passwordInput) &&
+                                isPinUsable(actualPasswordHash) &&
+                                SecurityUtils.verifySecret(passwordInput, actualPasswordHash)
                             val ansValid = answerInput.trim().equals(actualAnswer.trim(), ignoreCase = true)
                             if (passValid && ansValid) {
                                 onConfirmDelete()
@@ -927,7 +930,7 @@ fun SecurityPinModal(
                                                         val next = enteredPin + item.key
                                                         enteredPin = next
                                                         if (next.length == 6) {
-                                                            if (SecurityUtils.verifySecret(next, expectedPin)) {
+                                                            if (isPinUsable(next) && isPinUsable(expectedPin) && SecurityUtils.verifySecret(next, expectedPin)) {
                                                                 onSuccess()
                                                             } else {
                                                                 errorMsg = "Incorrect PIN. Try again."

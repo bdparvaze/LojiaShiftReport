@@ -159,7 +159,9 @@ fun SettingsCommonDialogs(
                 Button(
                     onClick = {
                         val expectedPin = userProfile?.pin.orEmpty()
-                        if (SecurityUtils.verifySecret(enteredPin, expectedPin)) {
+                        if (isPinUsable(enteredPin) && isPinUsable(expectedPin) &&
+                            SecurityUtils.verifySecret(enteredPin, expectedPin)
+                        ) {
                             enteredPin = ""
                             pinError = false
                             onAdminPinVerified()

@@ -49,6 +49,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -122,21 +123,25 @@ fun AdminAuthDialog(
 
         delay(300L)
 
-        val isValid = try {
-            val profile = db.reportDao().getUserProfileOnce()
-            val pinMatched = if (!passwordMode) {
-                SecureStorageManager.verifyQuickPin(context, input) ||
-                    (profile?.pin?.isNotBlank() == true &&
-                        SecurityUtils.verifySecretWithUpgrade(input, profile.pin).isMatch)
-            } else {
+        val isValid = if (!isPinUsable(input)) {
+            false
+        } else {
+            try {
+                val profile = db.reportDao().getUserProfileOnce()
+                val pinMatched = if (!passwordMode) {
+                    SecureStorageManager.verifyQuickPin(context, input) ||
+                        (profile != null && isPinUsable(profile.pin) &&
+                            SecurityUtils.verifySecretWithUpgrade(input, profile.pin).isMatch)
+                } else {
+                    false
+                }
+                val passwordMatched = profile != null && isPinUsable(profile.passwordHash) &&
+                    SecurityUtils.verifySecretWithUpgrade(input, profile.passwordHash).isMatch
+
+                pinMatched || passwordMatched
+            } catch (_: Exception) {
                 false
             }
-            val passwordMatched = profile?.passwordHash?.isNotBlank() == true &&
-                SecurityUtils.verifySecretWithUpgrade(input, profile.passwordHash).isMatch
-
-            pinMatched || passwordMatched
-        } catch (_: Exception) {
-            false
         }
 
         if (isValid) {

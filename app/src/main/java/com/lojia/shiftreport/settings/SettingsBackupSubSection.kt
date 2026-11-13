@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.settings.backup.BackupLocation
@@ -97,6 +98,8 @@ fun SettingsBackupSubSection(
     var pendingRestoreFile by remember { mutableStateOf<File?>(null) }
     var pendingBackupSummary by remember { mutableStateOf<BackupSummary?>(null) }
     var showDangerZoneDialog by remember { mutableStateOf(false) }
+    var pendingAdminAuthTitle by remember { mutableStateOf<String?>(null) }
+    var pendingAdminAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val refreshStatus = {
         localLastBackupTime = backupManager.localProvider.getLastBackupTime()
@@ -511,9 +514,7 @@ fun SettingsBackupSubSection(
 
                 Button(
                     onClick = {
-                        onRestrictedClick {
-                            showDangerZoneDialog = true
-                        }
+                        showDangerZoneDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ErrorRedLight,
@@ -705,16 +706,19 @@ fun SettingsBackupSubSection(
                                     .fillMaxWidth()
                                     .clickable {
                                         showDriveBackupsPicker = false
-                                        reportViewModel.restoreFromGoogleDrive(
-                                            item = item,
-                                            onSuccess = { count ->
-                                                Toast.makeText(context, "Restored $count records from Drive!", Toast.LENGTH_LONG).show()
-                                                refreshStatus()
-                                            },
-                                            onFailure = { err ->
-                                                Toast.makeText(context, "Drive restore error: $err", Toast.LENGTH_SHORT).show()
-                                            }
-                                        )
+                                        pendingAdminAuthTitle = context.getString(R.string.restore_from_drive_title)
+                                        pendingAdminAuthAction = {
+                                            reportViewModel.restoreFromGoogleDrive(
+                                                item = item,
+                                                onSuccess = { count ->
+                                                    Toast.makeText(context, "Restored $count records from Drive!", Toast.LENGTH_LONG).show()
+                                                    refreshStatus()
+                                                },
+                                                onFailure = { err ->
+                                                    Toast.makeText(context, "Drive restore error: $err", Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                        }
                                     }
                             ) {
                                 Row(
@@ -791,31 +795,35 @@ fun SettingsBackupSubSection(
                         val uri = pendingRestoreUri
                         val file = pendingRestoreFile
                         showRestoreConfirmDialog = false
-
-                        if (uri != null) {
-                            reportViewModel.restoreOfflineBackup(
-                                uri = uri,
-                                onSuccess = { count ->
-                                    Toast.makeText(context, "Restored $count records successfully!", Toast.LENGTH_SHORT).show()
-                                    refreshStatus()
-                                },
-                                onFailure = { err ->
-                                    Toast.makeText(context, "Restore failed: $err", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        } else if (file != null) {
-                            coroutineScope.launch {
-                                val res = OfflineBackupManager.restoreBackupFromFile(
-                                    context = context,
-                                    database = AppDatabase.getInstance(context),
-                                    backupFile = file
+                        pendingRestoreUri = null
+                        pendingRestoreFile = null
+                        pendingAdminAuthTitle = context.getString(R.string.restore_confirm_title)
+                        pendingAdminAuthAction = {
+                            if (uri != null) {
+                                reportViewModel.restoreOfflineBackup(
+                                    uri = uri,
+                                    onSuccess = { count ->
+                                        Toast.makeText(context, "Restored $count records successfully!", Toast.LENGTH_SHORT).show()
+                                        refreshStatus()
+                                    },
+                                    onFailure = { err ->
+                                        Toast.makeText(context, "Restore failed: $err", Toast.LENGTH_SHORT).show()
+                                    }
                                 )
-                                if (res.isSuccess) {
-                                    val count = res.getOrDefault(0)
-                                    Toast.makeText(context, "Restored $count records from ${file.name}!", Toast.LENGTH_SHORT).show()
-                                    refreshStatus()
-                                } else {
-                                    Toast.makeText(context, "Restore error: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                            } else if (file != null) {
+                                coroutineScope.launch {
+                                    val res = OfflineBackupManager.restoreBackupFromFile(
+                                        context = context,
+                                        database = AppDatabase.getInstance(context),
+                                        backupFile = file
+                                    )
+                                    if (res.isSuccess) {
+                                        val count = res.getOrDefault(0)
+                                        Toast.makeText(context, "Restored $count records from ${file.name}!", Toast.LENGTH_SHORT).show()
+                                        refreshStatus()
+                                    } else {
+                                        Toast.makeText(context, "Restore error: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
@@ -892,15 +900,18 @@ fun SettingsBackupSubSection(
                 Button(
                     onClick = {
                         showDangerZoneDialog = false
-                        reportViewModel.clearAllBusinessData(
-                            onSuccess = {
-                                Toast.makeText(context, "All business data has been permanently cleared.", Toast.LENGTH_LONG).show()
-                                refreshStatus()
-                            },
-                            onFailure = { err ->
-                                Toast.makeText(context, "Error clearing data: $err", Toast.LENGTH_SHORT).show()
-                            }
-                        )
+                        pendingAdminAuthTitle = context.getString(R.string.clear_all_data_title)
+                        pendingAdminAuthAction = {
+                            reportViewModel.clearAllBusinessData(
+                                onSuccess = {
+                                    Toast.makeText(context, "All business data has been permanently cleared.", Toast.LENGTH_LONG).show()
+                                    refreshStatus()
+                                },
+                                onFailure = { err ->
+                                    Toast.makeText(context, "Error clearing data: $err", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
                     },
                     enabled = isConfirmed,
                     colors = ButtonDefaults.buttonColors(
@@ -917,6 +928,23 @@ fun SettingsBackupSubSection(
                 TextButton(onClick = { showDangerZoneDialog = false }) {
                     Text(stringResource(R.string.action_cancel))
                 }
+            }
+        )
+    }
+
+    if (pendingAdminAuthAction != null) {
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = pendingAdminAuthTitle ?: stringResource(R.string.admin_reauth_default_title),
+            onDismissRequest = {
+                pendingAdminAuthAction = null
+                pendingAdminAuthTitle = null
+            },
+            onAuthSuccess = {
+                val action = pendingAdminAuthAction
+                pendingAdminAuthAction = null
+                pendingAdminAuthTitle = null
+                action?.invoke()
             }
         )
     }

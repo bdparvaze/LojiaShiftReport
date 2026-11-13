@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.room.withTransaction
 import com.lojia.shiftreport.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -552,6 +553,7 @@ object OfflineBackupManager {
     fun shiftReportToJson(r: ShiftReport): JSONObject = JSONObject().apply {
         put("id", r.id)
         put("cashierName", r.cashierName)
+        put("cashierId", r.cashierId)
         put("shift", r.shift)
         put("dateInMillis", r.dateInMillis)
         put("openingCash", r.openingCash)
@@ -592,6 +594,7 @@ object OfflineBackupManager {
         return ShiftReport(
             id = obj.optInt("id", 0),
             cashierName = obj.optString("cashierName", "Staff"),
+            cashierId = if (!obj.has("cashierId") || obj.isNull("cashierId")) "" else obj.optString("cashierId", ""),
             shift = obj.optString("shift", "Day"),
             dateInMillis = obj.optLong("dateInMillis", 0L),
             openingCash = getMoneyVal(obj, "openingCash", 0L, isLegacyBackup),
@@ -680,195 +683,250 @@ object OfflineBackupManager {
 
             val reportDao = database.reportDao()
 
-            var restoredCount = 0
+            val restoredCount = database.withTransaction {
+                var count = 0
 
-            // 1. Business Profile
-            if (root.has("businessProfile")) {
-                val obj = root.getJSONObject("businessProfile")
-                val bp = BusinessProfile(
-                    id = obj.optInt("id", 1),
-                    businessName = obj.optString("businessName", "My Store"),
-                    vatNumber = obj.optString("vatNumber", ""),
-                    phone = obj.optString("phone", ""),
-                    email = obj.optString("email", ""),
-                    address = obj.optString("address", ""),
-                    workingHours = obj.optString("workingHours", "08:00 AM - 10:00 PM"),
-                    currency = obj.optString("currency", "USD"),
-                    country = obj.optString("country", "United States"),
-                    vatRate = obj.optDouble("vatRate", 0.0),
-                    isTaxEnabled = obj.optBoolean("isTaxEnabled", false),
-                    isTaxIncluded = obj.optBoolean("isTaxIncluded", true),
-                    logoUri = obj.optString("logoUri", "")
-                )
-                reportDao.saveBusinessProfile(bp)
-                restoredCount++
-            }
-
-            // 2. User Profile (Preserve current password & PIN if not in backup)
-            if (root.has("userProfile")) {
-                val obj = root.getJSONObject("userProfile")
-                val existing = reportDao.getUserProfileOnce()
-                val passwordHash = if (obj.has("passwordHash") && obj.getString("passwordHash").isNotBlank()) {
-                    obj.getString("passwordHash")
-                } else {
-                    existing?.passwordHash.orEmpty()
-                }
-                val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) {
-                    obj.getString("pin")
-                } else {
-                    existing?.pin.orEmpty()
-                }
-
-                val up = UserProfile(
-                    id = obj.optInt("id", 1),
-                    fullName = obj.optString("fullName", "Store Owner"),
-                    username = obj.optString("username", "admin"),
-                    email = obj.optString("email", "admin@lojia.com"),
-                    passwordHash = passwordHash,
-                    pin = pinVal,
-                    phone = obj.optString("phone", ""),
-                    designation = obj.optString("designation", "Owner"),
-                    address = obj.optString("address", ""),
-                    isBiometricEnabled = obj.optBoolean("isBiometricEnabled", false),
-                    autoLockMinutes = obj.optInt("autoLockMinutes", 5),
-                    currentRole = obj.optString("currentRole", "ADMIN"),
-                    registeredAt = obj.optLong("registeredAt", System.currentTimeMillis()),
-                    isRegistered = obj.optBoolean("isRegistered", true) && pinVal.isNotBlank()
-                )
-                reportDao.saveUserProfile(up)
-                restoredCount++
-            }
-
-            // 3. Receipt Config
-            if (root.has("shopReceiptConfig")) {
-                val obj = root.getJSONObject("shopReceiptConfig")
-                val rc = ShopReceiptConfig(
-                    id = obj.optInt("id", 1),
-                    shopLogo = obj.optString("shopLogo", "store_logo_default"),
-                    customHeader = obj.optString("customHeader", "Welcome"),
-                    customFooterText = obj.optString("customFooterText", "Thank you, visit again!"),
-                    showTaxNumber = obj.optBoolean("showTaxNumber", true),
-                    showCashierName = obj.optBoolean("showCashierName", true),
-                    showBarcode = obj.optBoolean("showBarcode", true),
-                    showCustomerMemo = obj.optBoolean("showCustomerMemo", true)
-                )
-                reportDao.saveReceiptConfig(rc)
-                restoredCount++
-            }
-
-            // 4. App Settings
-            val settingsArr = root.optJSONArray("settings")
-            if (settingsArr != null) {
-                val list = mutableListOf<AppSetting>()
-                for (i in 0 until settingsArr.length()) {
-                    val obj = settingsArr.getJSONObject(i)
-                    list.add(AppSetting(key = obj.getString("key"), value = obj.getString("value")))
-                }
-                reportDao.insertSettings(list)
-                restoredCount += list.size
-            }
-
-            // 5. Cashiers (Preserve local PIN if omitted in cloud backup)
-            val cashiersArr = root.optJSONArray("cashiers")
-            if (cashiersArr != null) {
-                val list = mutableListOf<Cashier>()
-                for (i in 0 until cashiersArr.length()) {
-                    val obj = cashiersArr.getJSONObject(i)
-                    val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) obj.getString("pin") else ""
-                    list.add(
-                        Cashier(
-                            id = obj.optInt("id", 0),
-                            name = obj.getString("name"),
-                            pin = pinVal,
-                            role = obj.optString("role", "CASHIER"),
-                            isActive = obj.optBoolean("isActive", obj.optBoolean("active", true)) && pinVal.isNotBlank(),
-                            isArchived = obj.optBoolean("isArchived", false),
-                            archivedAt = if (obj.has("archivedAt")) obj.optLong("archivedAt") else null,
-                            createdByAdminId = obj.optString("createdByAdminId", "")
-                        )
+                // 1. Business Profile
+                if (root.has("businessProfile")) {
+                    val obj = root.getJSONObject("businessProfile")
+                    val bp = BusinessProfile(
+                        id = obj.optInt("id", 1),
+                        businessName = obj.optString("businessName", "My Store"),
+                        vatNumber = obj.optString("vatNumber", ""),
+                        phone = obj.optString("phone", ""),
+                        email = obj.optString("email", ""),
+                        address = obj.optString("address", ""),
+                        workingHours = obj.optString("workingHours", "08:00 AM - 10:00 PM"),
+                        currency = obj.optString("currency", "USD"),
+                        country = obj.optString("country", "United States"),
+                        vatRate = obj.optDouble("vatRate", 0.0),
+                        isTaxEnabled = obj.optBoolean("isTaxEnabled", false),
+                        isTaxIncluded = obj.optBoolean("isTaxIncluded", true),
+                        logoUri = obj.optString("logoUri", "")
                     )
+                    reportDao.saveBusinessProfile(bp)
+                    count++
                 }
-                reportDao.insertCashiers(list)
-                restoredCount += list.size
-            }
 
-            // 6. Users (Preserve local password/PIN if omitted)
-            val usersArr = root.optJSONArray("users")
-            if (usersArr != null) {
-                val list = mutableListOf<User>()
-                for (i in 0 until usersArr.length()) {
-                    val obj = usersArr.getJSONObject(i)
-                    val passVal = if (obj.has("passwordHash") && obj.getString("passwordHash").isNotBlank()) obj.getString("passwordHash") else ""
-                    val pinVal = if (obj.has("pin") && obj.getString("pin").isNotBlank()) obj.getString("pin") else ""
-                    list.add(
-                        User(
-                            id = obj.optInt("id", 0),
-                            username = obj.getString("username"),
-                            passwordHash = passVal,
-                            pin = pinVal,
-                            role = obj.optString("role", "ADMIN"),
-                            createdAt = obj.optLong("createdAt", System.currentTimeMillis())
-                        )
+                // 2. User Profile (Preserve current password & PIN if not in backup)
+                if (root.has("userProfile")) {
+                    val obj = root.getJSONObject("userProfile")
+                    val existing = reportDao.getUserProfileOnce()
+                    val backupPasswordHash = if (obj.has("passwordHash") && !obj.isNull("passwordHash")) obj.getString("passwordHash") else null
+                    val backupPin = if (obj.has("pin") && !obj.isNull("pin")) obj.getString("pin") else null
+                    val passwordHash = mergePinHash(existing?.passwordHash, backupPasswordHash).orEmpty()
+                    val pinVal = mergePinHash(existing?.pin, backupPin).orEmpty()
+
+                    val isRegistered = if (existing != null) {
+                        existing.isRegistered || (obj.optBoolean("isRegistered", true) && (pinVal.isNotBlank() || passwordHash.isNotBlank()))
+                    } else {
+                        obj.optBoolean("isRegistered", true) && (pinVal.isNotBlank() || passwordHash.isNotBlank())
+                    }
+
+                    val up = UserProfile(
+                        id = obj.optInt("id", 1),
+                        fullName = obj.optString("fullName", "Store Owner"),
+                        username = obj.optString("username", "admin"),
+                        email = obj.optString("email", "admin@lojia.com"),
+                        passwordHash = passwordHash,
+                        pin = pinVal,
+                        phone = obj.optString("phone", ""),
+                        designation = obj.optString("designation", "Owner"),
+                        address = obj.optString("address", ""),
+                        isBiometricEnabled = obj.optBoolean("isBiometricEnabled", false),
+                        autoLockMinutes = obj.optInt("autoLockMinutes", 5),
+                        currentRole = obj.optString("currentRole", "ADMIN"),
+                        registeredAt = obj.optLong("registeredAt", System.currentTimeMillis()),
+                        isRegistered = isRegistered
                     )
+                    reportDao.saveUserProfile(up)
+                    count++
                 }
-                reportDao.insertUsers(list)
-                restoredCount += list.size
-            }
 
-            // 7. Shift Reports
-            val reportsArr = root.optJSONArray("shiftReports")
-            if (reportsArr != null) {
-                val list = mutableListOf<ShiftReport>()
-                for (i in 0 until reportsArr.length()) {
-                    val obj = reportsArr.getJSONObject(i)
-                    list.add(jsonToShiftReport(obj, isLegacyBackup))
-                }
-                reportDao.insertShiftReports(list)
-                restoredCount += list.size
-            }
-
-            // 8. Shift Sessions
-            val sessionsArr = root.optJSONArray("shiftSessions")
-            if (sessionsArr != null) {
-                val list = mutableListOf<ShiftSession>()
-                for (i in 0 until sessionsArr.length()) {
-                    val obj = sessionsArr.getJSONObject(i)
-                    list.add(jsonToShiftSession(obj, isLegacyBackup))
-                }
-                reportDao.insertShiftSessions(list)
-                restoredCount += list.size
-            }
-
-            // 9. Cash Movements
-            val cashMovementsArr = root.optJSONArray("cashMovements")
-            if (cashMovementsArr != null) {
-                val list = mutableListOf<CashMovement>()
-                for (i in 0 until cashMovementsArr.length()) {
-                    val obj = cashMovementsArr.getJSONObject(i)
-                    list.add(
-                        CashMovement(
-                            id = obj.optInt("id", 0),
-                            shiftSessionId = obj.getInt("shiftSessionId"),
-                            cashierName = obj.getString("cashierName"),
-                            type = obj.getString("type"),
-                            amount = getMoneyVal(obj, "amount", 0L, isLegacyBackup),
-                            reason = obj.optString("reason", ""),
-                            timestamp = obj.optLong("timestamp", System.currentTimeMillis())
-                        )
+                // 3. Receipt Config
+                if (root.has("shopReceiptConfig")) {
+                    val obj = root.getJSONObject("shopReceiptConfig")
+                    val rc = ShopReceiptConfig(
+                        id = obj.optInt("id", 1),
+                        shopLogo = obj.optString("shopLogo", "store_logo_default"),
+                        customHeader = obj.optString("customHeader", "Welcome"),
+                        customFooterText = obj.optString("customFooterText", "Thank you, visit again!"),
+                        showTaxNumber = obj.optBoolean("showTaxNumber", true),
+                        showCashierName = obj.optBoolean("showCashierName", true),
+                        showBarcode = obj.optBoolean("showBarcode", true),
+                        showCustomerMemo = obj.optBoolean("showCustomerMemo", true)
                     )
+                    reportDao.saveReceiptConfig(rc)
+                    count++
                 }
-                reportDao.insertCashMovements(list)
-                restoredCount += list.size
-            }
 
-            // Audit Log
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = adminUser,
-                    action = "RESTORE_DATA",
-                    details = "Restored $restoredCount items from: $sourceDescription"
+                // 4. App Settings
+                val settingsArr = root.optJSONArray("settings")
+                if (settingsArr != null) {
+                    val list = mutableListOf<AppSetting>()
+                    for (i in 0 until settingsArr.length()) {
+                        val obj = settingsArr.getJSONObject(i)
+                        list.add(AppSetting(key = obj.getString("key"), value = obj.getString("value")))
+                    }
+                    reportDao.insertSettings(list)
+                    count += list.size
+                }
+
+                // 5. Cashiers (Match ONLY by trimmed case-insensitive name; never match by id)
+                val cashierIdMap = mutableMapOf<Int, Int>()
+                val cashiersArr = root.optJSONArray("cashiers")
+                if (cashiersArr != null) {
+                    val existingCashiers = reportDao.getAllCashiersList()
+                    val existingById = existingCashiers.associateBy { it.id }
+                    val localIdToName = existingCashiers.associate { it.id to it.name }
+                    val backupIds = mutableListOf<Int>()
+                    val list = mutableListOf<Cashier>()
+                    for (i in 0 until cashiersArr.length()) {
+                        val obj = cashiersArr.getJSONObject(i)
+                        val backupId = obj.optInt("id", 0)
+                        val name = obj.getString("name")
+                        val matchedLocalId = matchLocalIdByName(name, localIdToName)
+                        val existing = matchedLocalId?.let { existingById[it] }
+                        val backupPin = if (obj.has("pin") && !obj.isNull("pin")) obj.getString("pin") else null
+                        val pinVal = mergePinHash(existing?.pin, backupPin).orEmpty()
+                        val backupIsActive: Boolean? = when {
+                            obj.has("isActive") && !obj.isNull("isActive") -> obj.getBoolean("isActive")
+                            obj.has("active") && !obj.isNull("active") -> obj.getBoolean("active")
+                            else -> null
+                        }
+                        val resolvedIsActive = resolveRestoredIsActive(existing?.isActive, backupIsActive)
+                        backupIds.add(backupId)
+                        list.add(
+                            Cashier(
+                                id = matchedLocalId ?: 0,
+                                name = name,
+                                pin = pinVal,
+                                role = obj.optString("role", existing?.role ?: "CASHIER"),
+                                isActive = resolvedIsActive,
+                                isArchived = obj.optBoolean("isArchived", existing?.isArchived ?: false),
+                                archivedAt = if (obj.has("archivedAt") && !obj.isNull("archivedAt")) obj.optLong("archivedAt") else existing?.archivedAt,
+                                createdByAdminId = obj.optString("createdByAdminId", existing?.createdByAdminId ?: "")
+                            )
+                        )
+                    }
+                    val insertedIds = reportDao.insertCashiers(list)
+                    for (i in list.indices) {
+                        val bId = backupIds[i]
+                        val newId = insertedIds.getOrNull(i)?.toInt() ?: list[i].id
+                        if (bId > 0 && newId > 0) {
+                            cashierIdMap[bId] = newId
+                        }
+                    }
+                    count += list.size
+                }
+
+                // 6. Users (Match ONLY by trimmed case-insensitive username; preserve local password/PIN if omitted)
+                val userIdMap = mutableMapOf<Int, Int>()
+                val usersArr = root.optJSONArray("users")
+                if (usersArr != null) {
+                    val existingUsers = reportDao.getAllUsersList()
+                    val existingById = existingUsers.associateBy { it.id }
+                    val localIdToUsername = existingUsers.associate { it.id to it.username }
+                    val backupIds = mutableListOf<Int>()
+                    val list = mutableListOf<User>()
+                    for (i in 0 until usersArr.length()) {
+                        val obj = usersArr.getJSONObject(i)
+                        val backupId = obj.optInt("id", 0)
+                        val username = obj.getString("username")
+                        val matchedLocalId = matchLocalIdByName(username, localIdToUsername)
+                        val existing = matchedLocalId?.let { existingById[it] }
+                        val backupPasswordHash = if (obj.has("passwordHash") && !obj.isNull("passwordHash")) obj.getString("passwordHash") else null
+                        val backupPin = if (obj.has("pin") && !obj.isNull("pin")) obj.getString("pin") else null
+                        val passVal = mergePinHash(existing?.passwordHash, backupPasswordHash).orEmpty()
+                        val pinVal = mergePinHash(existing?.pin, backupPin).orEmpty()
+                        backupIds.add(backupId)
+                        list.add(
+                            User(
+                                id = matchedLocalId ?: 0,
+                                username = username,
+                                passwordHash = passVal,
+                                pin = pinVal,
+                                role = obj.optString("role", existing?.role ?: "ADMIN"),
+                                createdAt = obj.optLong("createdAt", existing?.createdAt ?: System.currentTimeMillis())
+                            )
+                        )
+                    }
+                    val insertedIds = reportDao.insertUsers(list)
+                    for (i in list.indices) {
+                        val bId = backupIds[i]
+                        val newId = insertedIds.getOrNull(i)?.toInt() ?: list[i].id
+                        if (bId > 0 && newId > 0) {
+                            userIdMap[bId] = newId
+                        }
+                    }
+                    count += list.size
+                }
+
+                // 7. Shift Reports
+                val reportsArr = root.optJSONArray("shiftReports")
+                if (reportsArr != null) {
+                    val list = mutableListOf<ShiftReport>()
+                    for (i in 0 until reportsArr.length()) {
+                        val obj = reportsArr.getJSONObject(i)
+                        val parsedReport = jsonToShiftReport(obj, isLegacyBackup)
+                        val remappedCashierId = mapShiftReportCashierId(parsedReport.cashierId, cashierIdMap)
+                        list.add(
+                            if (remappedCashierId != parsedReport.cashierId) {
+                                parsedReport.copy(cashierId = remappedCashierId)
+                            } else {
+                                parsedReport
+                            }
+                        )
+                    }
+                    reportDao.insertShiftReports(list)
+                    count += list.size
+                }
+
+                // 8. Shift Sessions
+                val sessionsArr = root.optJSONArray("shiftSessions")
+                if (sessionsArr != null) {
+                    val list = mutableListOf<ShiftSession>()
+                    for (i in 0 until sessionsArr.length()) {
+                        val obj = sessionsArr.getJSONObject(i)
+                        list.add(jsonToShiftSession(obj, isLegacyBackup))
+                    }
+                    reportDao.insertShiftSessions(list)
+                    count += list.size
+                }
+
+                // 9. Cash Movements
+                val cashMovementsArr = root.optJSONArray("cashMovements")
+                if (cashMovementsArr != null) {
+                    val list = mutableListOf<CashMovement>()
+                    for (i in 0 until cashMovementsArr.length()) {
+                        val obj = cashMovementsArr.getJSONObject(i)
+                        list.add(
+                            CashMovement(
+                                id = obj.optInt("id", 0),
+                                shiftSessionId = obj.getInt("shiftSessionId"),
+                                cashierName = obj.getString("cashierName"),
+                                type = obj.getString("type"),
+                                amount = getMoneyVal(obj, "amount", 0L, isLegacyBackup),
+                                reason = obj.optString("reason", ""),
+                                timestamp = obj.optLong("timestamp", System.currentTimeMillis())
+                            )
+                        )
+                    }
+                    reportDao.insertCashMovements(list)
+                    count += list.size
+                }
+
+                // Audit Log
+                reportDao.insertAuditLog(
+                    AuditLog(
+                        username = adminUser,
+                        action = "RESTORE_DATA",
+                        details = "Restored $count items from: $sourceDescription"
+                    )
                 )
-            )
+
+                count
+            }
 
             Result.success(restoredCount)
         } catch (e: Exception) {

@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppCountry
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
@@ -271,9 +272,28 @@ fun RegionalPreferencesDetailView(
     val langInfo = getLanguageDisplayInfo(currentLanguage)
 
     var activeSheet by remember { mutableStateOf<RegionalSheetType?>(null) }
+    var pendingAuthSubtitle by remember { mutableStateOf<String?>(null) }
+    var pendingAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     BackHandler(enabled = activeSheet != null) {
         activeSheet = null
+    }
+
+    if (pendingAuthAction != null) {
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = pendingAuthSubtitle ?: stringResource(R.string.admin_reauth_default_title),
+            onDismissRequest = {
+                pendingAuthSubtitle = null
+                pendingAuthAction = null
+            },
+            onAuthSuccess = {
+                val action = pendingAuthAction
+                pendingAuthSubtitle = null
+                pendingAuthAction = null
+                action?.invoke()
+            }
+        )
     }
 
     Column(
@@ -454,10 +474,13 @@ fun RegionalPreferencesDetailView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    // Select country and auto-select its matching currency
-                                    reportViewModel.setCountry(country)
-                                    reportViewModel.setCurrency(country.currencyCode)
-                                    activeSheet = null
+                                    pendingAuthSubtitle = countryName
+                                    pendingAuthAction = {
+                                        // Select country and auto-select its matching currency
+                                        reportViewModel.setCountry(country)
+                                        reportViewModel.setCurrency(country.currencyCode)
+                                        activeSheet = null
+                                    }
                                 }
                                 .background(if (isSelected) PrimaryContainerLight else SurfaceLight)
                                 .padding(horizontal = 12.dp, vertical = 14.dp)
@@ -725,8 +748,11 @@ fun RegionalPreferencesDetailView(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    reportViewModel.setCurrency(currency.code)
-                                    activeSheet = null
+                                    pendingAuthSubtitle = currency.code
+                                    pendingAuthAction = {
+                                        reportViewModel.setCurrency(currency.code)
+                                        activeSheet = null
+                                    }
                                 }
                                 .background(if (isSelected) PrimaryContainerLight else SurfaceLight)
                                 .padding(horizontal = 12.dp, vertical = 12.dp)

@@ -106,8 +106,8 @@ fun SettingsScreen(
     val isAdmin = currentRole == "ADMIN"
 
     // Dialog trigger states
-    var showAdminPinDialog by remember { mutableStateOf(false) }
     var pendingAdminAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var pendingAdminSubtitle by remember { mutableStateOf<String?>(null) }
     var showRoleSwitchDialog by remember { mutableStateOf(false) }
     var showLanguageDropdown by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
@@ -116,12 +116,8 @@ fun SettingsScreen(
     var showTestPrintDialog by remember { mutableStateOf(false) }
 
     val handleRestrictedClick: (action: () -> Unit) -> Unit = { action ->
-        if (isAdmin) {
-            action()
-        } else {
-            pendingAdminAction = action
-            showAdminPinDialog = true
-        }
+        pendingAdminSubtitle = null
+        pendingAdminAction = action
     }
 
     Box(
@@ -154,9 +150,7 @@ fun SettingsScreen(
 
     // Role Switcher Dialog
     if (showRoleSwitchDialog) {
-        var pinToAdmin by remember { mutableStateOf("") }
         var roleTarget by remember { mutableStateOf(if (isAdmin) "CASHIER" else "ADMIN") }
-        var isPinError by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { showRoleSwitchDialog = false },
@@ -179,36 +173,23 @@ fun SettingsScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
-
-                    if (roleTarget == "ADMIN" && !isAdmin) {
-                        LojiaTextField(
-                            value = pinToAdmin,
-                            onValueChange = {
-                                if (it.length <= 6 && it.all { c -> c.isDigit() }) {
-                                    pinToAdmin = it
-                                    isPinError = false
-                                }
-                            },
-                            label = { Text(stringResource(R.string.msg_admin_pin_required)) },
-                            singleLine = true,
-                            isError = isPinError,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (isPinError) {
-                            Text(stringResource(R.string.incorrect_pin), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                        }
-                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        reportViewModel.switchUserRole(
-                            role = roleTarget,
-                            enteredPin = pinToAdmin,
-                            onSuccess = { showRoleSwitchDialog = false },
-                            onFailure = { isPinError = true }
-                        )
+                        showRoleSwitchDialog = false
+                        if (roleTarget == "ADMIN") {
+                            pendingAdminSubtitle = context.getString(R.string.switch_role)
+                            pendingAdminAction = {
+                                reportViewModel.switchUserRole(
+                                    role = "ADMIN",
+                                    authorizedByAdmin = true
+                                )
+                            }
+                        } else {
+                            reportViewModel.switchUserRole(role = roleTarget)
+                        }
                     }
                 ) {
                     Text(stringResource(R.string.apply))
@@ -220,18 +201,28 @@ fun SettingsScreen(
         )
     }
 
-    // Common Dialogs (Admin PIN, Terms, Privacy, Support Ticket, Test Print)
+    if (pendingAdminAction != null) {
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = pendingAdminSubtitle ?: stringResource(R.string.admin_reauth_default_title),
+            onDismissRequest = {
+                pendingAdminAction = null
+                pendingAdminSubtitle = null
+            },
+            onAuthSuccess = {
+                val action = pendingAdminAction
+                pendingAdminAction = null
+                pendingAdminSubtitle = null
+                action?.invoke()
+            }
+        )
+    }
+
+    // Common Dialogs (Terms, Privacy, Support Ticket, Test Print)
     SettingsCommonDialogs(
-        showAdminPinDialog = showAdminPinDialog,
-        onDismissAdminPin = {
-            showAdminPinDialog = false
-            pendingAdminAction = null
-        },
-        onAdminPinVerified = {
-            showAdminPinDialog = false
-            pendingAdminAction?.invoke()
-            pendingAdminAction = null
-        },
+        showAdminPinDialog = false,
+        onDismissAdminPin = {},
+        onAdminPinVerified = {},
         showTermsDialog = showTermsDialog,
         onDismissTerms = { showTermsDialog = false },
         showPrivacyDialog = showPrivacyDialog,

@@ -254,59 +254,64 @@ fun MonthlySalesSummaryView(
     }
 
     val monthTotalIssuedDue = remember(monthShiftReports) {
-        monthShiftReports.sumOf { report ->
+        val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.dueCreditEntriesJson)
-                var sum = 0.0
+                var sum = 0L
                 for (i in 0 until arr.length()) {
-                    sum += arr.getJSONObject(i).optDouble("amount", 0.0)
+                    sum += arr.getJSONObject(i).optLong("amount", 0L)
                 }
                 sum
-            } catch (e: Exception) { 0.0 }
+            } catch (e: Exception) { 0L }
         }
+        MoneyFormat.toMajorUnits(minorSum)
     }
 
     val monthTotalCollectedDue = remember(monthShiftReports) {
-        monthShiftReports.sumOf { report ->
+        val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.previousDueCollectionsJson)
-                var sum = 0.0
+                var sum = 0L
                 for (i in 0 until arr.length()) {
-                    sum += arr.getJSONObject(i).optDouble("amount", 0.0)
+                    sum += arr.getJSONObject(i).optLong("amount", 0L)
                 }
                 sum
-            } catch (e: Exception) { 0.0 }
+            } catch (e: Exception) { 0L }
         }
+        MoneyFormat.toMajorUnits(minorSum)
     }
 
     val monthTotalExpenses = remember(monthShiftReports) {
-        monthShiftReports.sumOf { it.totalExpenses }
+        val minorSum = monthShiftReports.sumOf { it.totalExpenses }
+        MoneyFormat.toMajorUnits(minorSum)
     }
 
     val monthTotalPurchases = remember(monthShiftReports) {
-        monthShiftReports.sumOf { report ->
+        val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.purchasedItemsJson)
-                var sum = 0.0
+                var sum = 0L
                 for (i in 0 until arr.length()) {
-                    sum += arr.getJSONObject(i).optDouble("totalAmount", 0.0)
+                    sum += arr.getJSONObject(i).optLong("totalAmount", 0L)
                 }
                 sum
-            } catch (e: Exception) { 0.0 }
+            } catch (e: Exception) { 0L }
         }
+        MoneyFormat.toMajorUnits(minorSum)
     }
 
     val monthTotalStaffAdvances = remember(monthShiftReports) {
-        monthShiftReports.sumOf { report ->
+        val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.staffAdvancesJson)
-                var sum = 0.0
+                var sum = 0L
                 for (i in 0 until arr.length()) {
-                    sum += arr.getJSONObject(i).optDouble("amount", 0.0)
+                    sum += arr.getJSONObject(i).optLong("amount", 0L)
                 }
                 sum
-            } catch (e: Exception) { 0.0 }
+            } catch (e: Exception) { 0L }
         }
+        MoneyFormat.toMajorUnits(minorSum)
     }
 
     val monthTotalCashIn = dailyDataList.sumOf { it.cashAmount }
@@ -345,159 +350,120 @@ fun MonthlySalesSummaryView(
         modifier = modifier
             .fillMaxWidth()
             .testTag("monthly_sales_summary_view"),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 1. Month Header & Time Navigation Card
+        // 1. Month Navigator Card (~56dp, 14dp radius, white bg, 1dp border)
         Surface(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             color = PureWhite,
             border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { calendarMonthOffset -= 1 },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SurfaceVariantLight)
+                        .testTag("prev_month_btn")
                 ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Timeline,
-                                contentDescription = null,
-                                tint = PrimaryBlue,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.monthly_sales_summary),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 17.sp,
-                                    color = TextPrimaryLight
-                                )
-                            )
-                        }
-                        Text(
-                            text = if (isCurrentCalendarMonth)
-                                "Real-time trends & daily revenue trajectory for the active cycle"
-                            else
-                                "Historical revenue records & performance trends",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = TextSecondaryLight,
-                                fontSize = 12.sp
-                            )
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.cd_previous_month),
+                        tint = OnBackgroundLight,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { calendarMonthOffset = 0 }
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(19.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = currentMonthDisplayName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = OnBackgroundLight
+                        )
+                    )
                     if (isCurrentCalendarMonth) {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = InfoContainer,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryContainerLight)
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFF0FDF4),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBBF7D0))
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(7.dp)
+                                        .size(6.dp)
                                         .clip(CircleShape)
-                                        .background(AccentEmerald)
+                                        .background(Color(0xFF16A34A))
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = stringResource(R.string.current_month),
-                                    fontSize = 11.sp,
+                                    fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = PrimaryBlue
+                                    color = Color(0xFF166534)
                                 )
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = OutlineLight, thickness = 1.dp)
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Month Switcher Controls
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = { calendarMonthOffset += 1 },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SurfaceVariantLight)
+                        .testTag("next_month_btn")
                 ) {
-                    IconButton(
-                        onClick = { calendarMonthOffset -= 1 },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(BgLightGrey)
-                            .testTag("prev_month_btn")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_previous_month),
-                            tint = TextPrimaryLight,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { calendarMonthOffset = 0 }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = PrimaryBlue,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = currentMonthDisplayName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = TextPrimaryLight
-                            )
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { calendarMonthOffset += 1 },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(BgLightGrey)
-                            .testTag("next_month_btn")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = stringResource(R.string.cd_next_month),
-                            tint = TextPrimaryLight,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.cd_next_month),
+                        tint = OnBackgroundLight,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
 
-        // 2. Primary KPI Highlights Grid (4 Cards)
+        // 2. Primary KPI Highlights Grid (4 Cards in 2x2 Grid)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MonthlyKpiCard(
                 title = stringResource(R.string.total_revenue),
                 value = "%.2f %s".format(totalMonthRevenue, currency),
                 subtitle = stringResource(R.string.sales_shifts_count_fmt, dailyDataList.sumOf { it.transactionsCount }),
                 icon = Icons.Default.Paid,
-                accentColor = AccentEmerald,
+                accentColor = Color(0xFF059669),
                 modifier = Modifier.weight(1f)
             )
             MonthlyKpiCard(
@@ -505,21 +471,21 @@ fun MonthlySalesSummaryView(
                 value = "%.2f %s".format(dailyAverageRevenue, currency),
                 subtitle = stringResource(R.string.across_active_days_fmt, actualActiveDays),
                 icon = Icons.Default.TrendingUp,
-                accentColor = PrimaryBlue,
+                accentColor = Color(0xFF2563EB),
                 modifier = Modifier.weight(1f)
             )
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             MonthlyKpiCard(
                 title = stringResource(R.string.peak_sales_day),
                 value = if (peakDay != null && peakDay.totalRevenue > 0) "%.2f %s".format(peakDay.totalRevenue, currency) else "0.00 $currency",
                 subtitle = if (peakDay != null && peakDay.totalRevenue > 0) "${peakDay.dateString} (${peakDay.dayName})" else stringResource(R.string.no_data_available),
                 icon = Icons.Default.Star,
-                accentColor = AccentGold,
+                accentColor = Color(0xFFD97706),
                 modifier = Modifier.weight(1f)
             )
             val projectedSubtitle = when {
@@ -532,145 +498,19 @@ fun MonthlySalesSummaryView(
                 value = "%.2f %s".format(projectedMonthClose, currency),
                 subtitle = projectedSubtitle,
                 icon = Icons.Default.QueryStats,
-                accentColor = PrimaryBlue,
+                accentColor = Color(0xFF6366F1),
                 modifier = Modifier.weight(1f)
             )
         }
 
-        // 2.5 Automated Full Monthly Financial Breakdown Section
+        // 3. Chart Hero Card (14dp radius, 14dp padding, white bg, 1dp border)
         Surface(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             color = PureWhite,
             border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Calculate, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.auto_monthly_financial_breakdown_fmt, currentMonthDisplayName),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextPrimaryLight)
-                    )
-                }
-                Text(
-                    text = stringResource(R.string.auto_calculated_financial_summary),
-                    fontSize = 11.sp,
-                    color = TextSecondaryLight
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Row 1: Cash & Bank Inflow vs Due Issued/Collected
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = SuccessContainer,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, PosCashGreen.copy(alpha = 0.4f)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.total_cash_in), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PosCashGreen)
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalCashIn, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = PosCashGreen)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.bank_mada_fmt, "%.2f".format(monthTotalBankIn), currency), fontSize = 10.sp, color = TextSecondaryLight)
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = ErrorContainerLight,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, PosExpenseRed.copy(alpha = 0.4f)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.total_issued_due), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PosExpenseRed)
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalIssuedDue, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = PosExpenseRed)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.due_collected_fmt, "%.2f".format(monthTotalCollectedDue), currency), fontSize = 10.sp, color = PosCashGreen)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Row 2: Expenses & Product Purchases
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = WarningContainer,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, WarningOrange.copy(alpha = 0.4f)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.total_expenses), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = WarningOrange)
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses.toDouble(), currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = WarningOrange)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.staff_advances_fmt, "%.2f".format(monthTotalStaffAdvances), currency), fontSize = 10.sp, color = TextSecondaryLight)
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = TertiaryContainerLight,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, TertiaryPurpleLight.copy(alpha = 0.4f)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(stringResource(R.string.product_purchases), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TertiaryPurpleLight)
-                            Text(stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = TertiaryPurpleLight)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(stringResource(R.string.inventory_investment), fontSize = 10.sp, color = TextSecondaryLight)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Net Monthly Cashflow Card
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (monthNetCashflow >= 0) SuccessContainer else ErrorContainerLight,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, if (monthNetCashflow >= 0) PosCashGreen.copy(alpha = 0.4f) else PosExpenseRed.copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                stringResource(R.string.net_monthly_financial_cashflow),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (monthNetCashflow >= 0) PosCashGreen else PosExpenseRed
-                            )
-                            Text(
-                                stringResource(R.string.net_cashflow_formula),
-                                fontSize = 10.sp,
-                                color = TextSecondaryLight
-                            )
-                        }
-                        Text(
-                            stringResource(R.string.msg_2f_s_21).format(monthNetCashflow, currency),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = if (monthNetCashflow >= 0) PosCashGreen else PosExpenseRed
-                        )
-                    }
-                }
-            }
-        }
-
-        // 3. Recharts-Styled Interactive Chart Canvas Container
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = PureWhite,
-            border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 // Chart Title & Toggle Bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -681,15 +521,16 @@ fun MonthlySalesSummaryView(
                         Text(
                             text = stringResource(R.string.monthly_revenue_trend),
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimaryLight
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.5.sp,
+                                color = OnBackgroundLight
                             )
                         )
                         Text(
                             text = stringResource(R.string.interactive_curve_with_tooltips),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = TextSecondaryLight,
-                                fontSize = 11.5.sp
+                                fontSize = 11.sp
                             )
                         )
                     }
@@ -697,14 +538,14 @@ fun MonthlySalesSummaryView(
                     // Chart Mode Selector (Area Curve vs Bar Chart)
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = BgLightGrey,
+                        color = SurfaceVariantLight,
                         border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight)
                     ) {
                         Row(modifier = Modifier.padding(2.dp)) {
                             IconButton(
                                 onClick = { selectedChartType = ChartType.AREA_TREND },
                                 modifier = Modifier
-                                    .size(30.dp)
+                                    .size(28.dp)
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(if (selectedChartType == ChartType.AREA_TREND) PureWhite else Color.Transparent)
                                     .testTag("chart_mode_area")
@@ -713,13 +554,13 @@ fun MonthlySalesSummaryView(
                                     imageVector = Icons.Default.ShowChart,
                                     contentDescription = stringResource(R.string.cd_area_trend),
                                     tint = if (selectedChartType == ChartType.AREA_TREND) PrimaryBlue else TextSecondaryLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                             IconButton(
                                 onClick = { selectedChartType = ChartType.BAR_CHART },
                                 modifier = Modifier
-                                    .size(30.dp)
+                                    .size(28.dp)
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(if (selectedChartType == ChartType.BAR_CHART) PureWhite else Color.Transparent)
                                     .testTag("chart_mode_bar")
@@ -728,19 +569,19 @@ fun MonthlySalesSummaryView(
                                     imageVector = Icons.Default.BarChart,
                                     contentDescription = stringResource(R.string.cd_bar_chart),
                                     tint = if (selectedChartType == ChartType.BAR_CHART) PrimaryBlue else TextSecondaryLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Stream Breakdown Toggles / Legend
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     LegendItem(
@@ -757,16 +598,48 @@ fun MonthlySalesSummaryView(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Interactive Recharts-Styled Chart Rendering Area
+                val hasSalesData = dailyDataList.any { it.totalRevenue > 0 }
+
+                // Interactive Chart Rendering Area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
-                        .testTag("recharts_canvas_box")
+                        .height(180.dp)
+                        .testTag("recharts_canvas_box"),
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (selectedChartType == ChartType.AREA_TREND) {
+                    if (!hasSalesData) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(SurfaceVariantLight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.BarChart,
+                                    contentDescription = null,
+                                    tint = TextDisabledColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.no_data_available),
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = TextSecondaryLight,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp
+                                )
+                            )
+                        }
+                    } else if (selectedChartType == ChartType.AREA_TREND) {
                         RechartsAreaTrendCanvas(
                             data = dailyDataList,
                             currency = currency,
@@ -788,13 +661,11 @@ fun MonthlySalesSummaryView(
                 hoveredDayIndex?.let { index ->
                     if (index in dailyDataList.indices) {
                         val d = dailyDataList[index]
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = OnBackgroundLight,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(6.dp, RoundedCornerShape(12.dp))
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier
@@ -821,13 +692,15 @@ fun MonthlySalesSummaryView(
                                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = stringResource(R.string.shift_2f).format(d.shiftSales),
-                                            color = AccentGold,
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                    if (showShiftBreakdown && d.shiftSales > 0) {
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(
+                                                text = stringResource(R.string.shift_2f).format(d.shiftSales),
+                                                color = AccentGold,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
                                     }
 
                                     Surface(
@@ -836,7 +709,7 @@ fun MonthlySalesSummaryView(
                                         border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.6f))
                                     ) {
                                         Column(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
                                             Text(
@@ -861,6 +734,161 @@ fun MonthlySalesSummaryView(
             }
         }
 
+        // 4. Automated Full Monthly Financial Breakdown Section
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = PureWhite,
+            border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryBlue.copy(alpha = 0.10f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Calculate,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.auto_monthly_financial_breakdown_fmt, currentMonthDisplayName),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.5.sp,
+                                color = OnBackgroundLight
+                            )
+                        )
+                        Text(
+                            text = stringResource(R.string.auto_calculated_financial_summary),
+                            fontSize = 11.sp,
+                            color = TextSecondaryLight
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Row 1: Cash Inflow
+                MonthlyFinancialRowItem(
+                    icon = Icons.Default.Payments,
+                    iconTint = Color(0xFF059669),
+                    label = stringResource(R.string.total_cash_in),
+                    detail = stringResource(R.string.bank_mada_fmt, "%.2f".format(monthTotalBankIn), currency),
+                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalCashIn, currency),
+                    amountColor = Color(0xFF059669)
+                )
+                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+
+                // Row 2: Digital / Bank Card
+                MonthlyFinancialRowItem(
+                    icon = Icons.Default.CreditCard,
+                    iconTint = Color(0xFF2563EB),
+                    label = stringResource(R.string.mada_payments) + " / " + stringResource(R.string.digital_wallet),
+                    detail = "MADA & digital settlements",
+                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalBankIn, currency),
+                    amountColor = Color(0xFF2563EB)
+                )
+                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+
+                // Row 3: Due Credit Issued & Collected
+                MonthlyFinancialRowItem(
+                    icon = Icons.Default.AccountBalanceWallet,
+                    iconTint = Color(0xFFEA580C),
+                    label = stringResource(R.string.total_issued_due),
+                    detail = stringResource(R.string.due_collected_fmt, "%.2f".format(monthTotalCollectedDue), currency),
+                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalIssuedDue, currency),
+                    amountColor = Color(0xFFEA580C)
+                )
+                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+
+                // Row 4: Expenses
+                MonthlyFinancialRowItem(
+                    icon = Icons.Default.ReceiptLong,
+                    iconTint = Color(0xFFDC2626),
+                    label = stringResource(R.string.total_expenses),
+                    detail = stringResource(R.string.operational_costs),
+                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses, currency),
+                    amountColor = Color(0xFFDC2626)
+                )
+                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+
+                // Row 5: Product Purchases
+                MonthlyFinancialRowItem(
+                    icon = Icons.Default.ShoppingBag,
+                    iconTint = Color(0xFF7C3AED),
+                    label = stringResource(R.string.product_purchases),
+                    detail = stringResource(R.string.inventory_investment),
+                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency),
+                    amountColor = Color(0xFF7C3AED)
+                )
+                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+
+                // Row 6: Staff Advances
+                MonthlyFinancialRowItem(
+                    icon = Icons.Default.People,
+                    iconTint = Color(0xFFD97706),
+                    label = stringResource(R.string.staff_advances_fmt, "%.2f".format(monthTotalStaffAdvances), currency).substringBefore(":"),
+                    detail = "Salary advance payouts",
+                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalStaffAdvances, currency),
+                    amountColor = Color(0xFFD97706)
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Net Monthly Cashflow Card
+                val isNetPositive = monthNetCashflow >= 0
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isNetPositive) Color(0xFFF0FDF4) else Color(0xFFFEF2F2),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isNetPositive) Color(0xFFBBF7D0) else Color(0xFFFECACA)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.net_monthly_financial_cashflow),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isNetPositive) Color(0xFF067647) else Color(0xFFB42318)
+                            )
+                            Text(
+                                text = stringResource(R.string.net_cashflow_formula),
+                                fontSize = 10.sp,
+                                color = if (isNetPositive) Color(0xFF067647).copy(alpha = 0.8f) else Color(0xFFB42318).copy(alpha = 0.8f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.msg_2f_s_21).format(monthNetCashflow, currency),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (isNetPositive) Color(0xFF067647) else Color(0xFFB42318)
+                        )
+                    }
+                }
+            }
+        }
+
         // 4. Weekly Breakdown Progress Cards
         WeeklyBreakdownCard(
             weeklyBreakdowns = weeklyBreakdowns,
@@ -876,3 +904,62 @@ fun MonthlySalesSummaryView(
     }
 }
 
+@Composable
+private fun MonthlyFinancialRowItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    label: String,
+    detail: String,
+    amount: String,
+    amountColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 40.dp)
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(iconTint.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(15.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    text = label,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = OnBackgroundLight
+                )
+                Text(
+                    text = detail,
+                    fontSize = 10.5.sp,
+                    color = TextSecondaryLight
+                )
+            }
+        }
+
+        Text(
+            text = amount,
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = amountColor
+        )
+    }
+}

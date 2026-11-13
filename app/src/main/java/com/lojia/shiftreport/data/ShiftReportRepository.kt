@@ -2,6 +2,7 @@ package com.lojia.shiftreport.data
 
 import android.content.Context
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -79,12 +80,12 @@ class ShiftReportRepository(private val reportDao: ReportDao) {
 
     suspend fun verifyAdminCredentials(context: Context, enteredPinOrPassword: String): Boolean {
         val trimmed = enteredPinOrPassword.trim()
-        if (trimmed.isEmpty()) return false
+        if (!isPinUsable(trimmed)) return false
         val profile = reportDao.getUserProfileOnce() ?: return false
         val storedPin = profile.pin
         val storedHash = profile.passwordHash
 
-        val pinResult = if (storedPin.isNotEmpty()) SecurityUtils.verifySecretWithUpgrade(trimmed, storedPin) else null
+        val pinResult = if (isPinUsable(storedPin)) SecurityUtils.verifySecretWithUpgrade(trimmed, storedPin) else null
         if (pinResult?.isMatch == true) {
             if (pinResult.newHashToStore != null) {
                 reportDao.saveUserProfile(profile.copy(pin = pinResult.newHashToStore))
@@ -92,7 +93,7 @@ class ShiftReportRepository(private val reportDao: ReportDao) {
             return true
         }
 
-        val passResult = if (storedHash.isNotEmpty()) SecurityUtils.verifySecretWithUpgrade(trimmed, storedHash) else null
+        val passResult = if (isPinUsable(storedHash)) SecurityUtils.verifySecretWithUpgrade(trimmed, storedHash) else null
         if (passResult?.isMatch == true) {
             if (passResult.newHashToStore != null) {
                 reportDao.saveUserProfile(profile.copy(passwordHash = passResult.newHashToStore))

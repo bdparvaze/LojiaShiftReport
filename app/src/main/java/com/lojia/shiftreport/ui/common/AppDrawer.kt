@@ -211,9 +211,9 @@ fun MainAppDrawer(
                 }
             )
 
-            // Employee Management
+            // Employee
             DrawerMenuItem(
-                title = "Employee Management",
+                title = stringResource(R.string.nav_employee),
                 icon = Icons.Outlined.Groups,
                 activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "employees",

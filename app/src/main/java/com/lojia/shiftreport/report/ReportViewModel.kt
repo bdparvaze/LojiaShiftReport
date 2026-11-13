@@ -160,12 +160,20 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     val currentRole: StateFlow<String> = userProfile.map { it?.currentRole ?: "ADMIN" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "ADMIN")
 
-    fun switchUserRole(role: String, enteredPin: String? = null, onSuccess: () -> Unit = {}, onFailure: () -> Unit = {}) {
+    fun switchUserRole(
+        role: String,
+        enteredPin: String? = null,
+        authorizedByAdmin: Boolean = false,
+        onSuccess: () -> Unit = {},
+        onFailure: () -> Unit = {}
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val profile = userProfile.value ?: UserProfile()
             if (role == "ADMIN" && profile.currentRole == "CASHIER") {
-                // Switching from Cashier to Admin requires Admin PIN check
-                if (enteredPin != null && SecurityUtils.verifySecret(enteredPin, profile.pin)) {
+                // Switching from Cashier to Admin requires Admin PIN check or AdminAuthDialog verification
+                if (authorizedByAdmin || (isPinUsable(enteredPin) && isPinUsable(profile.pin) &&
+                    SecurityUtils.verifySecret(enteredPin.orEmpty(), profile.pin))
+                ) {
                     reportDao.saveUserProfile(profile.copy(currentRole = "ADMIN"))
                     _uiMessage.emit(UiText.StringResource(R.string.authenticated_as_administrator))
                     withContext(Dispatchers.Main) { onSuccess() }
@@ -355,6 +363,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         MoneyFormat.toMajorUnits(list.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amount })
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
+    val totalStaffAdvancesCash: StateFlow<Double> = staffAdvances.map { list ->
+        MoneyFormat.toMajorUnits(list.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amount })
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalStaffAdvancesBank: StateFlow<Double> = staffAdvances.map { list ->
+        MoneyFormat.toMajorUnits(list.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amount })
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
     val totalStaffAdvances: StateFlow<Double> = staffAdvances.map { list ->
         MoneyFormat.toMajorUnits(list.sumOf { it.amount })
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
@@ -418,12 +434,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     val totalCashOut: StateFlow<Double> = combine(
         totalExpenses,
-        totalStaffAdvances,
+        totalStaffAdvancesCash,
         totalPurchasedCash
-    ) { exp, adv, purchCash ->
+    ) { exp, advCash, purchCash ->
         val sumMinor = MoneyFormat.addMinor(
             MoneyFormat.toMinorUnits(exp),
-            MoneyFormat.toMinorUnits(adv),
+            MoneyFormat.toMinorUnits(advCash),
             MoneyFormat.toMinorUnits(purchCash)
         )
         MoneyFormat.toMajorUnits(sumMinor)
@@ -437,11 +453,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalCashIn,
         totalCashOut
     ) { cin, cout ->
-        val diffMinor = MoneyFormat.subtractMinor(
-            MoneyFormat.toMinorUnits(cin),
-            MoneyFormat.toMinorUnits(cout)
+        val expectedMinor = MoneyFormat.calculateExpectedCashMinor(
+            totalCashIn = MoneyFormat.toMinorUnits(cin),
+            totalCashOut = MoneyFormat.toMinorUnits(cout)
         )
-        MoneyFormat.toMajorUnits(diffMinor)
+        MoneyFormat.toMajorUnits(expectedMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedCashInDrawer: StateFlow<Double> = expectedCashInDrawer
@@ -505,9 +521,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         previousDueCollections.value = previousDueCollections.value.filter { it.id != id }
     }
 
-    fun addStaffAdvance(staffName: String, amount: Double, reason: String = "") {
+    fun addStaffAdvance(staffName: String, amount: Double, reason: String = "", paymentMode: String = "CASH") {
         if (staffName.isBlank() || amount <= 0) return
-        staffAdvances.value = staffAdvances.value + StaffAdvanceItem(staffName = staffName.trim(), amount = MoneyFormat.toMinorUnits(amount), reason = reason.trim())
+        staffAdvances.value = staffAdvances.value + StaffAdvanceItem(
+            staffName = staffName.trim(),
+            amount = MoneyFormat.toMinorUnits(amount),
+            reason = reason.trim(),
+            paymentMode = paymentMode
+        )
     }
 
     fun removeStaffAdvance(id: String) {
@@ -983,46 +1004,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             withContext(Dispatchers.Main) { onReportCreated(finalReport) }
-        }
-    }
-
-    fun adminOverrideReport(
-        adminUsername: String,
-        report: ShiftReport,
-        reason: String,
-        onSuccess: () -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertReport(report)
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = adminUsername,
-                    action = "ADMIN_REPORT_OVERRIDE",
-                    details = "Admin overridden Shift Report #${report.id} (${report.cashierName}). Reason: $reason"
-                )
-            )
-            _uiMessage.emit(UiText.StringResource(R.string.shift_report_submitted_successfully))
-            withContext(Dispatchers.Main) { onSuccess() }
-        }
-    }
-
-    fun adminDeleteReport(
-        adminUsername: String,
-        report: ShiftReport,
-        reason: String,
-        onSuccess: () -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteReport(report)
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = adminUsername,
-                    action = "ADMIN_REPORT_DELETE",
-                    details = "Admin deleted Shift Report #${report.id} (${report.cashierName}). Reason: $reason"
-                )
-            )
-            _uiMessage.emit(UiText.StringResource(R.string.report_deleted))
-            withContext(Dispatchers.Main) { onSuccess() }
         }
     }
 

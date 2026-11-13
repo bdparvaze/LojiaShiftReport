@@ -36,9 +36,12 @@ fun MonthlyKpiCard(
         shape = RoundedCornerShape(14.dp),
         color = PureWhite,
         border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-        modifier = modifier
+        modifier = modifier.defaultMinSize(minHeight = 96.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -51,11 +54,12 @@ fun MonthlyKpiCard(
                         fontWeight = FontWeight.Medium,
                         fontSize = 11.5.sp
                     ),
-                    maxLines = 1
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
                         .background(accentColor.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
@@ -64,33 +68,35 @@ fun MonthlyKpiCard(
                         imageVector = icon,
                         contentDescription = null,
                         tint = accentColor,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(17.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.5.sp,
-                    color = TextPrimaryLight
-                ),
-                maxLines = 1
-            )
+            Column {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = OnBackgroundLight
+                    ),
+                    maxLines = 1
+                )
 
-            Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondaryLight,
-                    fontSize = 10.5.sp
-                ),
-                maxLines = 1
-            )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = TextSecondaryLight,
+                        fontSize = 11.sp
+                    ),
+                    maxLines = 1
+                )
+            }
         }
     }
 }

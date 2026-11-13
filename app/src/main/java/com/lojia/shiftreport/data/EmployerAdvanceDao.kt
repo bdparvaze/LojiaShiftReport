@@ -1,8 +1,6 @@
 package com.lojia.shiftreport.data
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
@@ -25,10 +23,4 @@ interface EmployerAdvanceDao {
 
     @Query("SELECT COALESCE(SUM(amount), 0.0) FROM advance_transactions WHERE isVoid = 0 AND createdAt BETWEEN :start AND :end")
     suspend fun getTotalInRange(start: Long, end: Long): Double
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(transaction: EmployerAdvanceTransaction)
-
-    @Query("UPDATE advance_transactions SET isVoid = 1 WHERE id = :id")
-    suspend fun voidTransaction(id: String)
 }

@@ -29,10 +29,17 @@ data class ItemEntry(
     val name: String,
     val qty: Int = 0,
     val unitPrice: BigDecimal = BigDecimal.ZERO,
-    val total: BigDecimal = BigDecimal.ZERO
+    val total: BigDecimal = BigDecimal.ZERO,
+    val type: PayType = PayType.CASH
 ) {
-    constructor(name: String, qty: Int, unitPriceDouble: Double, totalDouble: Double) : this(
-        name, qty, BigDecimal.valueOf(unitPriceDouble), BigDecimal.valueOf(totalDouble)
+    constructor(
+        name: String,
+        qty: Int,
+        unitPriceDouble: Double,
+        totalDouble: Double,
+        type: PayType = PayType.CASH
+    ) : this(
+        name, qty, BigDecimal.valueOf(unitPriceDouble), BigDecimal.valueOf(totalDouble), type
     )
     val unitPriceDouble: Double get() = unitPrice.toDouble()
     val totalDouble: Double get() = total.toDouble()

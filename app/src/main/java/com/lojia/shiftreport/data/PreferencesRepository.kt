@@ -3,6 +3,7 @@ package com.lojia.shiftreport.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -230,7 +231,7 @@ class PreferencesRepository private constructor(context: Context) {
         if (!isQuickLoginEnabled() && !hasPinConfigured()) {
             return false
         }
-        if (!enteredPin.matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX))) {
+        if (!isPinUsable(enteredPin) || !enteredPin.matches(Regex(com.lojia.shiftreport.auth.AuthPinConstants.PIN_REGEX))) {
             return false
         }
         try {
@@ -239,7 +240,7 @@ class PreferencesRepository private constructor(context: Context) {
             }
         } catch (_: Exception) {}
         val storedHash = getStoredPinHash()
-        if (!storedHash.isNullOrBlank()) {
+        if (isPinUsable(storedHash) && storedHash != null) {
             val result = SecurityUtils.verifySecretWithUpgrade(enteredPin, storedHash)
             if (result.isMatch) {
                 if (result.newHashToStore != null) {
@@ -257,7 +258,7 @@ class PreferencesRepository private constructor(context: Context) {
                 return true
             }
         }
-        if (!fallbackPinHash.isNullOrBlank()) {
+        if (isPinUsable(fallbackPinHash) && fallbackPinHash != null) {
             val result = SecurityUtils.verifySecretWithUpgrade(enteredPin, fallbackPinHash)
             if (result.isMatch) {
                 val upgradeHash = result.newHashToStore ?: fallbackPinHash
@@ -297,7 +298,7 @@ class PreferencesRepository private constructor(context: Context) {
                 putString(KEY_SAVED_EMAIL, profile.email)
             }
             // Only update the stored PIN hash if the user has already enabled Quick Login
-            if (isQuickLoginEnabled() && profile.pin.isNotBlank()) {
+            if (isQuickLoginEnabled() && isPinUsable(profile.pin)) {
                 val hashToStore = if (!SecurityUtils.needsUpgrade(profile.pin)) {
                     profile.pin
                 } else {

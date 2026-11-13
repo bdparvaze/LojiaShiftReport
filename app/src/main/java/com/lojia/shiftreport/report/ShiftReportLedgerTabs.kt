@@ -38,6 +38,8 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.isUnspecifiedReceipt
+import com.lojia.shiftreport.util.normalizeReceiptNumber
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -47,7 +49,7 @@ import java.util.*
  * ---------------------------------------------------------------------- */
 data class DueDetailEntry(
     val receiptNo: String,
-    val amount: Double,
+    val amountMinor: Long,
     val dateInMillis: Long,
     val cashierName: String,
     val shift: String,
@@ -63,13 +65,13 @@ fun parseDueSales(reports: List<ShiftReport>): List<DueDetailEntry> {
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
                 val rawRef = obj.optString("receiptNo").ifBlank { obj.optString("customerName") }
-                val cleanRef = rawRef.replace("Receipt #", "").trim().ifBlank { "N/A" }
-                val amt = obj.optDouble("amount", 0.0)
-                if (amt > 0) {
+                val cleanRef = normalizeReceiptNumber(rawRef)
+                val amt = obj.optLong("amount", 0L)
+                if (amt > 0L) {
                     list.add(
                         DueDetailEntry(
                             receiptNo = cleanRef,
-                            amount = amt,
+                            amountMinor = amt,
                             dateInMillis = report.dateInMillis,
                             cashierName = report.cashierName,
                             shift = report.shift,
@@ -91,14 +93,14 @@ fun parseDueCollections(reports: List<ShiftReport>): List<DueDetailEntry> {
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
                 val rawRef = obj.optString("receiptNo").ifBlank { obj.optString("customerName") }
-                val cleanRef = rawRef.replace("Receipt #", "").trim().ifBlank { "N/A" }
-                val amt = obj.optDouble("amount", 0.0)
+                val cleanRef = normalizeReceiptNumber(rawRef)
+                val amt = obj.optLong("amount", 0L)
                 val mode = obj.optString("paymentMode", "CASH")
-                if (amt > 0) {
+                if (amt > 0L) {
                     list.add(
                         DueDetailEntry(
                             receiptNo = cleanRef,
-                            amount = amt,
+                            amountMinor = amt,
                             dateInMillis = report.dateInMillis,
                             cashierName = report.cashierName,
                             shift = report.shift,
@@ -115,10 +117,10 @@ fun parseDueCollections(reports: List<ShiftReport>): List<DueDetailEntry> {
 
 data class DueReceiptSummary(
     val receiptNo: String,
-    val initialDue: Double,
-    val totalCollected: Double
+    val initialDueMinor: Long,
+    val totalCollectedMinor: Long
 ) {
-    val remainingDue: Double get() = (initialDue - totalCollected).coerceAtLeast(0.0)
+    val remainingDueMinor: Long get() = (initialDueMinor - totalCollectedMinor).coerceAtLeast(0L)
 }
 
 /* ----------------------------------------------------------------------
@@ -136,22 +138,22 @@ fun DueLedgerTab(
     val collectionsList = remember(reports) { parseDueCollections(reports) }
 
     val receiptMap = remember(salesList, collectionsList) {
-        val map = mutableMapOf<String, Pair<Double, Double>>()
+        val map = mutableMapOf<String, Pair<Long, Long>>()
         salesList.forEach { s ->
-            val curr = map[s.receiptNo] ?: Pair(0.0, 0.0)
-            map[s.receiptNo] = Pair(curr.first + s.amount, curr.second)
+            val curr = map[s.receiptNo] ?: Pair(0L, 0L)
+            map[s.receiptNo] = Pair(curr.first + s.amountMinor, curr.second)
         }
         collectionsList.forEach { c ->
-            val curr = map[c.receiptNo] ?: Pair(0.0, 0.0)
-            map[c.receiptNo] = Pair(curr.first, curr.second + c.amount)
+            val curr = map[c.receiptNo] ?: Pair(0L, 0L)
+            map[c.receiptNo] = Pair(curr.first, curr.second + c.amountMinor)
         }
         map.map { (ref, pair) -> DueReceiptSummary(ref, pair.first, pair.second) }
-            .sortedByDescending { it.remainingDue }
+            .sortedByDescending { it.remainingDueMinor }
     }
 
-    val totalIssuedDue = salesList.sumOf { it.amount }
-    val totalCollectedDue = collectionsList.sumOf { it.amount }
-    val netOutstandingDue = (totalIssuedDue - totalCollectedDue).coerceAtLeast(0.0)
+    val totalIssuedDue = salesList.sumOf { it.amountMinor }
+    val totalCollectedDue = collectionsList.sumOf { it.amountMinor }
+    val netOutstandingDue = (totalIssuedDue - totalCollectedDue).coerceAtLeast(0L)
 
     val filteredReceipts = remember(receiptMap, searchQuery) {
         if (searchQuery.isBlank()) receiptMap
@@ -258,7 +260,7 @@ fun DueLedgerTab(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = MoneyFormat.format(totalIssuedDue, currency),
+                            text = MoneyFormat.formatMinor(totalIssuedDue, currency),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = ErrorRedLight,
@@ -308,7 +310,7 @@ fun DueLedgerTab(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = MoneyFormat.format(totalCollectedDue, currency),
+                            text = MoneyFormat.formatMinor(totalCollectedDue, currency),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = SuccessGreen,
@@ -370,7 +372,7 @@ fun DueLedgerTab(
                 Spacer(Modifier.width(8.dp))
                 // Value — never wraps
                 Text(
-                    text = MoneyFormat.format(netOutstandingDue, currency),
+                    text = MoneyFormat.formatMinor(netOutstandingDue, currency),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = WarningOrange,
@@ -453,9 +455,9 @@ fun DueLedgerTab(
                 val matchedEntry = salesList.firstOrNull { it.receiptNo == item.receiptNo }
                     ?: collectionsList.firstOrNull { it.receiptNo == item.receiptNo }
                 val (statusText, statusBg, statusFg) = when {
-                    item.initialDue > 0 && item.totalCollected >= item.initialDue ->
+                    item.initialDueMinor > 0L && item.totalCollectedMinor >= item.initialDueMinor ->
                         Triple(stringResource(R.string.paid_in_full), SuccessContainer, SuccessGreen)
-                    item.totalCollected > 0 && item.remainingDue > 0 ->
+                    item.totalCollectedMinor > 0L && item.remainingDueMinor > 0L ->
                         Triple(stringResource(R.string.partially_paid), WarningContainer, WarningOrange)
                     else ->
                         Triple(stringResource(R.string.unpaid_due), ErrorContainer, ErrorRedLight)
@@ -480,13 +482,21 @@ fun DueLedgerTab(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = "Receipt #${item.receiptNo}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = OnSurfaceLight,
-                                maxLines = 1
-                            )
+                            val normReceipt = normalizeReceiptNumber(item.receiptNo)
+                            if (normReceipt.isNotEmpty()) {
+                                val receiptLabel = if (isUnspecifiedReceipt(normReceipt)) {
+                                    stringResource(R.string.receipt_unspecified)
+                                } else {
+                                    stringResource(R.string.receipt_num_tag, normReceipt)
+                                }
+                                Text(
+                                    text = receiptLabel,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = OnSurfaceLight,
+                                    maxLines = 1
+                                )
+                            }
                             Spacer(Modifier.weight(1f))
 
                             // Status chip
@@ -557,7 +567,7 @@ fun DueLedgerTab(
                                 )
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    text = MoneyFormat.format(item.initialDue, currency),
+                                    text = MoneyFormat.formatMinor(item.initialDueMinor, currency),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = ErrorRedLight,
@@ -579,7 +589,7 @@ fun DueLedgerTab(
                                 )
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    text = MoneyFormat.format(item.totalCollected, currency),
+                                    text = MoneyFormat.formatMinor(item.totalCollectedMinor, currency),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = SuccessGreen,
@@ -601,7 +611,7 @@ fun DueLedgerTab(
                                 )
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    text = MoneyFormat.format(item.remainingDue, currency),
+                                    text = MoneyFormat.formatMinor(item.remainingDueMinor, currency),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryIndigoDark,
@@ -621,7 +631,7 @@ fun DueLedgerTab(
  * ---------------------------------------------------------------------- */
 data class EmployerAdvanceItem(
     val staffName: String,
-    val amount: Double,
+    val amountMinor: Long,
     val paymentMode: String,
     val dateInMillis: Long,
     val cashierName: String
@@ -635,13 +645,13 @@ fun parseEmployerAdvances(reports: List<ShiftReport>): List<EmployerAdvanceItem>
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
                 val name = obj.optString("staffName").ifBlank { obj.optString("name", "") }
-                val amt = obj.optDouble("amount", 0.0)
+                val amt = obj.optLong("amount", 0L)
                 val mode = obj.optString("paymentMode", "CASH")
-                if (amt > 0) {
+                if (amt > 0L) {
                     list.add(
                         EmployerAdvanceItem(
                             staffName = name,
-                            amount = amt,
+                            amountMinor = amt,
                             paymentMode = mode,
                             dateInMillis = report.dateInMillis,
                             cashierName = report.cashierName
@@ -662,9 +672,9 @@ fun EmployerLedgerTab(
     val list = remember(reports) { parseEmployerAdvances(reports) }
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
-    val totalAmount = list.sumOf { it.amount }
-    val cashAmount = list.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amount }
-    val bankAmount = list.filter { it.paymentMode.equals("BANK", ignoreCase = true) }.sumOf { it.amount }
+    val totalAmount = list.sumOf { it.amountMinor }
+    val cashAmount = list.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.sumOf { it.amountMinor }
+    val bankAmount = list.filter { it.paymentMode.equals("BANK", ignoreCase = true) }.sumOf { it.amountMinor }
     val count = list.size
 
     Column(
@@ -718,7 +728,7 @@ fun EmployerLedgerTab(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = MoneyFormat.format(totalAmount, currency),
+                            text = MoneyFormat.formatMinor(totalAmount, currency),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryIndigoDark,
@@ -759,7 +769,7 @@ fun EmployerLedgerTab(
                         )
                         Spacer(Modifier.weight(1f))
                         Text(
-                            text = MoneyFormat.format(cashAmount, currency),
+                            text = MoneyFormat.formatMinor(cashAmount, currency),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SuccessGreen,
@@ -784,7 +794,7 @@ fun EmployerLedgerTab(
                         )
                         Spacer(Modifier.weight(1f))
                         Text(
-                            text = MoneyFormat.format(bankAmount, currency),
+                            text = MoneyFormat.formatMinor(bankAmount, currency),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = InfoBlue,
@@ -949,7 +959,7 @@ fun EmployerLedgerTab(
                         // Right — amount + payment mode chip
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = MoneyFormat.format(item.amount, currency),
+                                text = MoneyFormat.formatMinor(item.amountMinor, currency),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryIndigoDark,

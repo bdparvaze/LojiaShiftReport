@@ -73,12 +73,17 @@ fun ShiftReportPreviewDialog(
     val staffMealsLabel = stringResource(R.string.staff_meals_count)
     val notesLabel = stringResource(R.string.notes)
 
-    val startingCash = PdfReportGenerator.extractStartingCashFromNotes(report)
-    val actualCashCount = PdfReportGenerator.extractActualCashFromNotes(report)
-    val cashIn = MoneyFormat.toMajorUnits(report.totalDueCollectedCash)
-    val cashOut = MoneyFormat.toMajorUnits(report.totalCashOut)
-    val expectedCashInDrawer = startingCash + MoneyFormat.toMajorUnits(report.grossCash) + cashIn - cashOut
-    val variance = actualCashCount?.let { it - expectedCashInDrawer }
+    val startingCash = PdfReportGenerator.extractStartingCashMinor(report)
+    val actualCashCount = PdfReportGenerator.extractActualCashMinor(report)
+    val cashIn = report.totalDueCollectedCash
+    val cashOut = report.totalCashOut
+    val expectedCashInDrawer = MoneyFormat.calculateExpectedCashMinor(
+        startingCash = startingCash,
+        cashSales = report.grossCash,
+        payIn = cashIn,
+        payOut = cashOut
+    )
+    val variance = actualCashCount?.let { MoneyFormat.calculateVarianceMinor(it, expectedCashInDrawer) }
 
     val defaultBizName = stringResource(R.string.default_business_name)
     val businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName
@@ -86,7 +91,7 @@ fun ShiftReportPreviewDialog(
 
     val isTax = businessProfile?.isTaxEnabled ?: false
     val isTaxIncluded = businessProfile?.isTaxIncluded ?: true
-    val vatRate = if (isTax) (businessProfile?.vatRate ?: 15.0) else 0.0
+    val vatRate = if (isTax) (businessProfile?.vatRate ?: 0.0) else 0.0
     val totalSalesMajor = MoneyFormat.toMajorUnits(report.totalSales)
     val (netTax, vatTax, grossTax) = if (isTax && vatRate > 0.0) {
         if (isTaxIncluded) {
@@ -216,10 +221,10 @@ fun ShiftReportPreviewDialog(
 
                 // Cash Drawer section
                 PreviewSection(title = "Cash Drawer Reconciliation") {
-                    if (startingCash > 0) {
+                    if (startingCash > 0L) {
                         PreviewRow(
                             label = "Starting Cash",
-                            value = MoneyFormat.format(startingCash, currencyCode)
+                            value = MoneyFormat.formatMinor(startingCash, currencyCode)
                         )
                     }
                     PreviewRow(
@@ -227,35 +232,35 @@ fun ShiftReportPreviewDialog(
                         value = "+${MoneyFormat.formatMinor(report.grossCash, currencyCode)}",
                         color = SuccessGreen
                     )
-                    if (cashIn > 0) {
+                    if (cashIn > 0L) {
                         PreviewRow(
                             label = "(+) Cash In",
-                            value = "+${MoneyFormat.format(cashIn, currencyCode)}",
+                            value = "+${MoneyFormat.formatMinor(cashIn, currencyCode)}",
                             color = SuccessGreen
                         )
                     }
                     PreviewRow(
                         label = "(-) Cash Out",
-                        value = "-${MoneyFormat.format(cashOut, currencyCode)}",
+                        value = "-${MoneyFormat.formatMinor(cashOut, currencyCode)}",
                         color = ErrorRedLight
                     )
                     PreviewDivider()
                     PreviewRow(
                         label = netCashLabel,
-                        value = MoneyFormat.format(expectedCashInDrawer, currencyCode),
+                        value = MoneyFormat.formatMinor(expectedCashInDrawer, currencyCode),
                         bold = true,
                         highlight = SuccessGreen
                     )
                     if (actualCashCount != null) {
                         PreviewRow(
                             label = "Actual Cash Count",
-                            value = MoneyFormat.format(actualCashCount, currencyCode)
+                            value = MoneyFormat.formatMinor(actualCashCount, currencyCode)
                         )
                         val (varText, varColor) = when {
                             variance == null -> "N/A" to OnSurfaceLight
-                            variance == 0.0 -> "${MoneyFormat.format(0.0, currencyCode)} (Balanced)" to SuccessGreen
-                            variance > 0.0 -> "+${MoneyFormat.format(variance, currencyCode)} (Over)" to SuccessGreen
-                            else -> "-${MoneyFormat.format(Math.abs(variance), currencyCode)} (Short)" to ErrorRedLight
+                            variance == 0L -> "${MoneyFormat.formatMinor(0L, currencyCode)} (Balanced)" to SuccessGreen
+                            variance > 0L -> "+${MoneyFormat.formatMinor(variance, currencyCode)} (Over)" to SuccessGreen
+                            else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currencyCode)} (Short)" to ErrorRedLight
                         }
                         PreviewRow(
                             label = "Variance (Over/Short)",
@@ -464,13 +469,13 @@ fun ShiftReportPreviewDialog(
                                 scope.launch {
                                     try {
                                         val zReportText = printerManager.buildZReportText(
-                                            businessName = businessProfile?.businessName?.ifBlank { "Lojia Store" } ?: "Lojia Store",
+                                            businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName,
                                             businessAddress = businessProfile?.address ?: "",
                                             businessPhone = businessProfile?.phone ?: "",
                                             vatNumber = businessProfile?.vatNumber ?: "",
                                             report = report,
-                                            currencySymbol = currencyCode ?: "$",
-                                            vatRate = businessProfile?.vatRate ?: 15.0,
+                                            currencySymbol = MoneyFormat.resolveCurrency(businessProfile?.currency),
+                                            vatRate = if (businessProfile?.isTaxEnabled == true) (businessProfile?.vatRate ?: 0.0) else 0.0,
                                             isTaxEnabled = businessProfile?.isTaxEnabled ?: false,
                                             isTaxIncluded = businessProfile?.isTaxIncluded ?: true
                                         )

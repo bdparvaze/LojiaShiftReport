@@ -100,7 +100,7 @@ interface ReportDao {
     suspend fun unarchiveCashier(id: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCashiers(cashiers: List<Cashier>)
+    suspend fun insertCashiers(cashiers: List<Cashier>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCashier(cashier: Cashier): Long
@@ -122,7 +122,7 @@ interface ReportDao {
     suspend fun getAllUsersList(): List<User>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUsers(users: List<User>)
+    suspend fun insertUsers(users: List<User>): List<Long>
 
     @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
     suspend fun getUserByUsername(username: String): User?

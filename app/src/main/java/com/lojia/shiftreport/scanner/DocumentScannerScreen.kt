@@ -39,6 +39,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.permission.AppFeaturePermission
 import com.lojia.shiftreport.permission.rememberPermissionRequester
 import com.lojia.shiftreport.ui.common.LojiaTextField
@@ -71,6 +72,8 @@ fun DocumentScannerScreen(
     var documentToRename by remember { mutableStateOf<ScannedDocument?>(null) }
     var documentToDelete by remember { mutableStateOf<ScannedDocument?>(null) }
     var showBatchDeleteConfirm by remember { mutableStateOf(false) }
+    var docPendingAdminDelete by remember { mutableStateOf<ScannedDocument?>(null) }
+    var batchPendingAdminDelete by remember { mutableStateOf<List<ScannedDocument>?>(null) }
     var documentForOcr by remember { mutableStateOf<ScannedDocument?>(null) }
     var ocrLoading by remember { mutableStateOf(false) }
     var ocrTextResult by remember { mutableStateOf("") }
@@ -383,9 +386,8 @@ fun DocumentScannerScreen(
         DeleteDocumentConfirmDialog(
             documentTitle = doc.title,
             onConfirmDelete = {
-                viewModel.deleteDocument(doc)
+                docPendingAdminDelete = doc
                 documentToDelete = null
-                Toast.makeText(context, context.getString(R.string.doc_toast_deleted_success), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { documentToDelete = null }
         )
@@ -395,14 +397,38 @@ fun DocumentScannerScreen(
         BatchDeleteConfirmDialog(
             count = selectedDocs.size,
             onConfirmDelete = {
-                val count = selectedDocs.size
-                viewModel.deleteDocuments(selectedDocs.toList())
-                selectedDocs.clear()
-                isSelectionMode = false
+                batchPendingAdminDelete = selectedDocs.toList()
                 showBatchDeleteConfirm = false
-                Toast.makeText(context, context.getString(R.string.doc_toast_deleted_success), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showBatchDeleteConfirm = false }
+        )
+    }
+
+    docPendingAdminDelete?.let { doc ->
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = stringResource(R.string.delete_doc_title),
+            onDismissRequest = { docPendingAdminDelete = null },
+            onAuthSuccess = {
+                docPendingAdminDelete = null
+                viewModel.deleteDocument(doc)
+                Toast.makeText(context, context.getString(R.string.doc_toast_deleted_success), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    batchPendingAdminDelete?.let { docsToDelete ->
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = stringResource(R.string.delete_doc_title),
+            onDismissRequest = { batchPendingAdminDelete = null },
+            onAuthSuccess = {
+                batchPendingAdminDelete = null
+                viewModel.deleteDocuments(docsToDelete)
+                selectedDocs.clear()
+                isSelectionMode = false
+                Toast.makeText(context, context.getString(R.string.doc_toast_deleted_success), Toast.LENGTH_SHORT).show()
+            }
         )
     }
 

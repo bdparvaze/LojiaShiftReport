@@ -1,6 +1,9 @@
 package com.lojia.shiftreport.report
 
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import kotlinx.coroutines.launch
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.*
@@ -178,9 +181,15 @@ fun ShiftReportScreen(
         onSaveReportData = { data ->
             val dueJson = org.json.JSONArray().apply {
                 data.creditEntries.forEach { e ->
+                    val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                    val customerLabel = when {
+                        isUnspecifiedReceipt(normReceipt) -> context.getString(R.string.receipt_unspecified)
+                        normReceipt.isNotEmpty() -> context.getString(R.string.receipt_num_tag, normReceipt)
+                        else -> ""
+                    }
                     put(org.json.JSONObject().apply {
                         put("receiptNo", e.receiptNo)
-                        put("customerName", "Receipt #${e.receiptNo}")
+                        put("customerName", customerLabel)
                         put("amount", MoneyFormat.toMinorUnits(e.amount))
                     })
                 }
@@ -188,9 +197,15 @@ fun ShiftReportScreen(
 
             val prevDueJson = org.json.JSONArray().apply {
                 data.oldDueEntries.forEach { e ->
+                    val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                    val customerLabel = when {
+                        isUnspecifiedReceipt(normReceipt) -> context.getString(R.string.receipt_unspecified)
+                        normReceipt.isNotEmpty() -> context.getString(R.string.receipt_num_tag, normReceipt)
+                        else -> ""
+                    }
                     put(org.json.JSONObject().apply {
                         put("receiptNo", e.receiptNo)
-                        put("customerName", "Receipt #${e.receiptNo}")
+                        put("customerName", customerLabel)
                         put("amount", MoneyFormat.toMinorUnits(e.amount))
                         put("paymentMode", e.type.name)
                     })
@@ -223,6 +238,7 @@ fun ShiftReportScreen(
                         put("quantity", e.qty.toDouble())
                         put("unitPrice", MoneyFormat.toMinorUnits(e.unitPrice))
                         put("totalAmount", MoneyFormat.toMinorUnits(e.total))
+                        put("paidVia", e.type.name)
                     })
                 }
             }.toString()
@@ -308,10 +324,11 @@ fun ShiftReportScreenContent(
     onDeleteReport: (ShiftReport) -> Unit = {}
 ) {
     // 0 = Report Entry, 1 = Due History, 2 = Employer, 3 = Shopping/Paid Out, 4 = Walkout, 5 = Archives
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var savedTab by rememberSaveable { mutableIntStateOf(0) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
 
     val tabTitles = listOf(
         stringResource(R.string.tab_report_entry),
@@ -321,6 +338,21 @@ fun ShiftReportScreenContent(
         stringResource(R.string.tab_walkout),
         stringResource(R.string.tab_archives, shiftReports.size)
     )
+
+    val pagerState = rememberPagerState(initialPage = savedTab.coerceIn(0, tabTitles.size - 1)) {
+        tabTitles.size
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        savedTab = pagerState.currentPage
+    }
+
+    LaunchedEffect(pagerState.isScrollInProgress) {
+        if (pagerState.isScrollInProgress) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+        }
+    }
 
     val tabIcons = listOf(
         Icons.AutoMirrored.Filled.ListAlt,
@@ -349,33 +381,37 @@ fun ShiftReportScreenContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             ScrollableTabRow(
-                selectedTabIndex = selectedTab,
+                selectedTabIndex = pagerState.currentPage,
                 containerColor = SurfaceLight,
                 contentColor = PrimaryIndigoDark,
                 edgePadding = 8.dp,
                 modifier = Modifier.height(44.dp),
                 indicator = { tabPositions ->
-                    Box(
-                        Modifier
-                            .tabIndicatorOffset(tabPositions[selectedTab])
-                            .height(3.dp)
-                            .background(
-                                color = PrimaryIndigoLight,
-                                shape = RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
-                            )
-                    )
+                    if (pagerState.currentPage < tabPositions.size) {
+                        Box(
+                            Modifier
+                                .tabIndicatorOffset(tabPositions[pagerState.currentPage])
+                                .height(3.dp)
+                                .background(
+                                    color = PrimaryIndigoLight,
+                                    shape = RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
+                                )
+                        )
+                    }
                 },
                 divider = { HorizontalDivider(color = OutlineLight) }
             ) {
                 tabTitles.forEachIndexed { index, title ->
-                    val isSelected = selectedTab == index
+                    val isSelected = pagerState.currentPage == index
                     Tab(
                         selected = isSelected,
                         modifier = Modifier.height(44.dp),
                         onClick = {
                             focusManager.clearFocus()
                             keyboardController?.hide()
-                            selectedTab = index
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
                         },
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -401,9 +437,14 @@ fun ShiftReportScreenContent(
             }
         }
 
-        // ---- TAB CONTENT ----
-        Box(modifier = Modifier.weight(1f)) {
-            when (selectedTab) {
+        // ---- TAB CONTENT (HORIZONTAL PAGER) ----
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) { page ->
+            when (page) {
                 0 -> ReportEntryTab(
                     cashierOptions = cashierOptions,
                     currentCurrency = currentCurrency,
@@ -432,9 +473,9 @@ fun ShiftReportScreenContent(
                     onPreviewPdf = onPreviewPdf,
                     onDeleteReport = onDeleteReport
                 )
+            }
         }
     }
-}
 
 
 

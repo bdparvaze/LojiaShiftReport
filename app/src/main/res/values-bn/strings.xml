@@ -401,6 +401,7 @@
     <string name="receipt_breakdown_count">রসিদ লেজার বিবরণ (%d)</string>
     <string name="no_due_records">কোনো বকেয়া রেকর্ড পাওয়া যায়নি</string>
     <string name="receipt_num_tag">রসিদ #%s</string>
+    <string name="receipt_unspecified">উল্লেখ নেই</string>
     <string name="paid_in_full">সম্পূর্ণ পরিশোধিত</string>
     <string name="partially_paid">আংশিক পরিশোধিত</string>
     <string name="unpaid_due">অপরিশোধিত বকেয়া</string>
@@ -740,6 +741,9 @@
     <string name="profile_updated_successfully">প্রোফাইল সফলভাবে আপডেট হয়েছে</string>
     <string name="receipt_customization_updated">রসিদ কাস্টমাইজেশন আপডেট হয়েছে</string>
     <string name="pdf_vat_tel">ভ্যাট: %1$s | ফোন: %2$s</string>
+    <string name="pdf_vat_only">ভ্যাট: %1$s</string>
+    <string name="pdf_tel_only">ফোন: %1$s</string>
+    <string name="pdf_vat_id">ভ্যাট আইডি: %1$s</string>
     <string name="pdf_address">ঠিকানা: %1$s</string>
     <string name="pdf_location">অবস্থান: %1$s</string>
     <string name="pdf_total_currency">মোট (%1$s)</string>
@@ -1328,6 +1332,7 @@
     <string name="status_printing_z_report">জেড-রিপোর্ট প্রিন্ট হচ্ছে...</string>
     <string name="toast_z_report_sent_printer">জেড-রিপোর্ট ব্লুটুথ প্রিন্টারে পাঠানো হয়েছে!</string>
     <string name="nav_cashier">ক্যাশিয়ার</string>
+    <string name="nav_employee">কর্মচারী</string>
     <string name="nav_profile">প্রোফাইল</string>
     <string name="nav_security">সিকিউরিটি</string>
     <string name="nav_language">ভাষা</string>

@@ -76,7 +76,7 @@ object ShiftReportSerializer {
                         id = obj.optString("id", UUID.randomUUID().toString()),
                         customerName = obj.optString("customerName", ""),
                         amount = obj.optLong("amount", 0L),
-                        paymentMode = obj.optString("paymentMode", "CASH"),
+                        paymentMode = obj.optString("paymentMode", "CASH").ifBlank { "CASH" },
                         note = obj.optString("note", "")
                     )
                 )
@@ -95,6 +95,7 @@ object ShiftReportSerializer {
             obj.put("staffName", item.staffName)
             obj.put("amount", item.amount)
             obj.put("reason", item.reason)
+            obj.put("paymentMode", item.paymentMode)
             arr.put(obj)
         }
         return arr.toString()
@@ -107,12 +108,14 @@ object ShiftReportSerializer {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
                 val obj = arr.getJSONObject(i)
+                val mode = obj.optString("paymentMode", obj.optString("type", "CASH")).ifBlank { "CASH" }
                 list.add(
                     StaffAdvanceItem(
                         id = obj.optString("id", UUID.randomUUID().toString()),
                         staffName = obj.optString("staffName", ""),
                         amount = obj.optLong("amount", 0L),
-                        reason = obj.optString("reason", "")
+                        reason = obj.optString("reason", ""),
+                        paymentMode = mode
                     )
                 )
             }
@@ -187,7 +190,7 @@ object ShiftReportSerializer {
                         quantity = obj.optDouble("quantity", obj.optDouble("qty", 0.0)),
                         unitPrice = obj.optLong("unitPrice", 0L),
                         totalAmount = obj.optLong("totalAmount", obj.optLong("total", 0L)),
-                        paidVia = obj.optString("paidVia", "CASH"),
+                        paidVia = obj.optString("paidVia", "CASH").ifBlank { "CASH" },
                         supplier = obj.optString("supplier", "")
                     )
                 )

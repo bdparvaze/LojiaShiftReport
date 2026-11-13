@@ -338,6 +338,8 @@ fun ScannedDocumentItemCard(
                                 onShareDocxClick()
                             }
                         )
+                        // Disabled: output is not a valid PDF. Re-enable only with a real PDF encryption library.
+                        /*
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.doc_btn_protect_pdf), color = OnSurfaceLight) },
                             leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = null, tint = OnSurfaceVariantLight) },
@@ -346,6 +348,7 @@ fun ScannedDocumentItemCard(
                                 onPasswordProtectClick()
                             }
                         )
+                        */
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.doc_btn_rename), color = OnSurfaceLight) },
                             leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null, tint = OnSurfaceVariantLight) },

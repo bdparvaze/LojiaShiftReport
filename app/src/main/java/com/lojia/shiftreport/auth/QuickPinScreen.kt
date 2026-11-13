@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
 
 enum class QuickPinMode {
@@ -45,7 +46,7 @@ fun QuickPinScreen(
     val context = LocalContext.current
     val hasPin = remember {
         SecureStorageManager.hasEncryptedPin(context) ||
-            (preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank())
+            (preferencesRepository.hasPinConfigured() && isPinUsable(preferencesRepository.getStoredPinHash()))
     }
     var currentMode by remember {
         mutableStateOf(if (hasPin) QuickPinMode.ENTER_PIN else QuickPinMode.CREATE_PIN)
@@ -78,8 +79,10 @@ fun QuickPinScreen(
         if (enteredPin.length == AuthPinConstants.PIN_LENGTH && !isLockedOut) {
             when (currentMode) {
                 QuickPinMode.ENTER_PIN -> {
-                    val isVerified = SecureStorageManager.verifyQuickPin(context, enteredPin) ||
-                        preferencesRepository.verifyPin(enteredPin)
+                    val isVerified = isPinUsable(enteredPin) && (
+                        SecureStorageManager.verifyQuickPin(context, enteredPin) ||
+                            preferencesRepository.verifyPin(enteredPin)
+                        )
                     if (isVerified) {
                         pinError = false
                         errorMessage = null

@@ -56,7 +56,12 @@ fun PosReconciliationSummary(
     val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0L)
     val totalCashIn = MoneyFormat.addMinor(startingCash, cashSales, totalDueCollectedCash)
     val totalCashOut = MoneyFormat.addMinor(totalExpenses, totalStaffAdvanceCash, totalPurchasesCash)
-    val expectedCash = totalCashIn - totalCashOut
+    val expectedCash = MoneyFormat.calculateExpectedCashMinor(
+        startingCash = startingCash,
+        cashSales = cashSales,
+        payIn = totalDueCollectedCash,
+        payOut = totalCashOut
+    )
     val actualCountVal = actualCashCount.toDoubleOrNull()?.let { MoneyFormat.toMinorUnits(it) }
     val variance = actualCountVal?.let { MoneyFormat.calculateVarianceMinor(it, expectedCash) }
 

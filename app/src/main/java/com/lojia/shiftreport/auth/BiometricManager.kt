@@ -54,6 +54,7 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -379,7 +380,9 @@ fun BiometricLockScreen(
             val profile = userProfile
             var isProfileValid = false
 
-            if (profile != null && profile.username.isNotBlank()) {
+            if (profile != null && profile.username.isNotBlank() &&
+                isPinUsable(p) && isPinUsable(profile.passwordHash)
+            ) {
                 val usernameMatch = (u.equals(profile.username, ignoreCase = true) || u.equals(profile.email, ignoreCase = true))
                 val verifyResult = SecurityUtils.verifySecretWithUpgrade(p, profile.passwordHash)
                 if (usernameMatch && verifyResult.isMatch) {

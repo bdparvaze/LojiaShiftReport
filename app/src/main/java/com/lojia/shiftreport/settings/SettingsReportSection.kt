@@ -157,6 +157,8 @@ fun SettingsReportSection(
     var showQuickPinDialog by remember { mutableStateOf(false) }
     var pinValue by remember(userProfile) { mutableStateOf(userProfile?.pin.orEmpty()) }
     var showChangePinModal by remember { mutableStateOf(false) }
+    var pendingSecurityAuthSubtitle by remember { mutableStateOf<String?>(null) }
+    var pendingSecurityAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // Active edit dialog
     var editFieldDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -276,7 +278,7 @@ fun SettingsReportSection(
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.Badge,
-                    title = "Employee Management",
+                    title = stringResource(R.string.nav_employee),
                     subtitle = "Manage staff, monthly salaries & advances",
                     onClick = { onNavigateToSection("employees") }
                 )
@@ -440,22 +442,25 @@ fun SettingsReportSection(
                         Switch(
                             checked = quickLoginEnabled,
                             onCheckedChange = { enable ->
-                                if (enable) {
-                                    if (preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank()) {
-                                        quickLoginEnabled = true
-                                        preferencesRepository.setQuickLoginEnabled(true)
-                                        Toast.makeText(context, context.getString(R.string.quick_login_enabled), Toast.LENGTH_SHORT).show()
+                                pendingSecurityAuthSubtitle = context.getString(R.string.quick_login_pin)
+                                pendingSecurityAuthAction = {
+                                    if (enable) {
+                                        if (preferencesRepository.hasPinConfigured() && !preferencesRepository.getStoredPinHash().isNullOrBlank()) {
+                                            quickLoginEnabled = true
+                                            preferencesRepository.setQuickLoginEnabled(true)
+                                            Toast.makeText(context, context.getString(R.string.quick_login_enabled), Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            showQuickPinDialog = true
+                                        }
                                     } else {
-                                        showQuickPinDialog = true
+                                        quickLoginEnabled = false
+                                        preferencesRepository.setQuickLoginEnabled(false)
+                                        // Disabling Quick Login also disables Biometric unlock as required
+                                        biometricEnabled = false
+                                        preferencesRepository.setBiometricEnabled(false)
+                                        persistProfile(bio = false)
+                                        Toast.makeText(context, context.getString(R.string.quick_login_disabled), Toast.LENGTH_SHORT).show()
                                     }
-                                } else {
-                                    quickLoginEnabled = false
-                                    preferencesRepository.setQuickLoginEnabled(false)
-                                    // Disabling Quick Login also disables Biometric unlock as required
-                                    biometricEnabled = false
-                                    preferencesRepository.setBiometricEnabled(false)
-                                    persistProfile(bio = false)
-                                    Toast.makeText(context, context.getString(R.string.quick_login_disabled), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = SwitchDefaults.colors(
@@ -468,7 +473,12 @@ fun SettingsReportSection(
                     }
 
                     // Card 2 — Change PIN row
-                    LojiaSettingsCard(onClick = { showQuickPinDialog = true }) {
+                    LojiaSettingsCard(
+                        onClick = {
+                            pendingSecurityAuthSubtitle = context.getString(R.string.quick_login_pin)
+                            pendingSecurityAuthAction = { showQuickPinDialog = true }
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Key,
                             contentDescription = stringResource(R.string.cd_change_pin),
@@ -526,51 +536,53 @@ fun SettingsReportSection(
                         Switch(
                             checked = biometricEnabled,
                             onCheckedChange = { enable ->
-                                if (enable) {
-                                    // 3. First check that Quick Login is already enabled and a PIN exists (as fallback)
-                                    if (!quickLoginEnabled || !preferencesRepository.hasPinConfigured()) {
-                                        Toast.makeText(context, context.getString(R.string.settings_enable_pin_first_biometric), Toast.LENGTH_LONG).show()
-                                        showQuickPinDialog = true
-                                        return@Switch
-                                    }
-
-                                    val fragActivity = context as? FragmentActivity
-                                    val bioStatus = BiometricAuthManager.checkBiometricAvailability(context)
-                                    if (fragActivity != null && bioStatus == BiometricStatus.AVAILABLE) {
-                                        BiometricAuthManager.showBiometricPrompt(
-                                            activity = fragActivity,
-                                            title = context.getString(R.string.admin_reauth_default_title),
-                                            subtitle = context.getString(R.string.biometric_touch_to_activate),
-                                            description = context.getString(R.string.biometric_verifying_security),
-                                            onResult = { result ->
-                                                when (result) {
-                                                    is BiometricAuthResult.Success -> {
-                                                        biometricEnabled = true
-                                                        preferencesRepository.setBiometricEnabled(true)
-                                                        persistProfile(bio = true)
-                                                        Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
+                                pendingSecurityAuthSubtitle = context.getString(R.string.biometric_authentication)
+                                pendingSecurityAuthAction = {
+                                    if (enable) {
+                                        // 3. First check that Quick Login is already enabled and a PIN exists (as fallback)
+                                        if (!quickLoginEnabled || !preferencesRepository.hasPinConfigured()) {
+                                            Toast.makeText(context, context.getString(R.string.settings_enable_pin_first_biometric), Toast.LENGTH_LONG).show()
+                                            showQuickPinDialog = true
+                                        } else {
+                                            val fragActivity = context as? FragmentActivity
+                                            val bioStatus = BiometricAuthManager.checkBiometricAvailability(context)
+                                            if (fragActivity != null && bioStatus == BiometricStatus.AVAILABLE) {
+                                                BiometricAuthManager.showBiometricPrompt(
+                                                    activity = fragActivity,
+                                                    title = context.getString(R.string.admin_reauth_default_title),
+                                                    subtitle = context.getString(R.string.biometric_touch_to_activate),
+                                                    description = context.getString(R.string.biometric_verifying_security),
+                                                    onResult = { result ->
+                                                        when (result) {
+                                                            is BiometricAuthResult.Success -> {
+                                                                biometricEnabled = true
+                                                                preferencesRepository.setBiometricEnabled(true)
+                                                                persistProfile(bio = true)
+                                                                Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
+                                                            }
+                                                            is BiometricAuthResult.Failed -> {
+                                                                Toast.makeText(context, context.getString(R.string.fingerprint_not_recognized), Toast.LENGTH_SHORT).show()
+                                                            }
+                                                            is BiometricAuthResult.Error -> {
+                                                                Toast.makeText(context, result.errString.toString(), Toast.LENGTH_SHORT).show()
+                                                            }
+                                                            else -> {}
+                                                        }
                                                     }
-                                                    is BiometricAuthResult.Failed -> {
-                                                        Toast.makeText(context, context.getString(R.string.fingerprint_not_recognized), Toast.LENGTH_SHORT).show()
-                                                    }
-                                                    is BiometricAuthResult.Error -> {
-                                                        Toast.makeText(context, result.errString.toString(), Toast.LENGTH_SHORT).show()
-                                                    }
-                                                    else -> {}
-                                                }
+                                                )
+                                            } else {
+                                                biometricEnabled = true
+                                                preferencesRepository.setBiometricEnabled(true)
+                                                persistProfile(bio = true)
+                                                Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
                                             }
-                                        )
+                                        }
                                     } else {
-                                        biometricEnabled = true
-                                        preferencesRepository.setBiometricEnabled(true)
-                                        persistProfile(bio = true)
-                                        Toast.makeText(context, context.getString(R.string.biometric_login_enabled), Toast.LENGTH_SHORT).show()
+                                        biometricEnabled = false
+                                        preferencesRepository.setBiometricEnabled(false)
+                                        persistProfile(bio = false)
+                                        Toast.makeText(context, context.getString(R.string.biometric_login_disabled), Toast.LENGTH_SHORT).show()
                                     }
-                                } else {
-                                    biometricEnabled = false
-                                    preferencesRepository.setBiometricEnabled(false)
-                                    persistProfile(bio = false)
-                                    Toast.makeText(context, context.getString(R.string.biometric_login_disabled), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = SwitchDefaults.colors(
@@ -815,18 +827,21 @@ fun SettingsReportSection(
             initialLng = mapLng,
             onLocationConfirmed = { newAddr, newLat, newLng ->
                 showMapLocationPicker = false
-                if (newAddr.isNotBlank()) {
-                    address = newAddr
-                }
-                mapLat = newLat
-                mapLng = newLng
-                reportViewModel.updateBusiness(
-                    com.lojia.shiftreport.data.UpdateBusinessRequest(
-                        address = newAddr,
-                        mapLat = newLat,
-                        mapLng = newLng
+                pendingSecurityAuthSubtitle = context.getString(R.string.confirm_location)
+                pendingSecurityAuthAction = {
+                    if (newAddr.isNotBlank()) {
+                        address = newAddr
+                    }
+                    mapLat = newLat
+                    mapLng = newLng
+                    reportViewModel.updateBusiness(
+                        com.lojia.shiftreport.data.UpdateBusinessRequest(
+                            address = newAddr,
+                            mapLat = newLat,
+                            mapLng = newLng
+                        )
                     )
-                )
+                }
             },
             onDismiss = { showMapLocationPicker = false }
         )
@@ -881,6 +896,23 @@ fun SettingsReportSection(
                 quickLoginEnabled = true
                 showQuickPinDialog = false
                 Toast.makeText(context, context.getString(R.string.settings_quick_pin_saved), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    if (pendingSecurityAuthAction != null) {
+        AdminAuthDialog(
+            title = stringResource(R.string.admin_authorization_required),
+            subtitle = pendingSecurityAuthSubtitle ?: stringResource(R.string.admin_reauth_default_title),
+            onDismissRequest = {
+                pendingSecurityAuthSubtitle = null
+                pendingSecurityAuthAction = null
+            },
+            onAuthSuccess = {
+                val action = pendingSecurityAuthAction
+                pendingSecurityAuthSubtitle = null
+                pendingSecurityAuthAction = null
+                action?.invoke()
             }
         )
     }

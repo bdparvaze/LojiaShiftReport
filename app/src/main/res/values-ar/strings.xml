@@ -401,6 +401,7 @@
     <string name="receipt_breakdown_count">تفاصيل سجل الفواتير (%d)</string>
     <string name="no_due_records">لا يوجد سجل ديون</string>
     <string name="receipt_num_tag">فاتورة #%s</string>
+    <string name="receipt_unspecified">غير محدد</string>
     <string name="paid_in_full">مدفوع بالكامل</string>
     <string name="partially_paid">مدفوع جزئياً</string>
     <string name="unpaid_due">غير مدفوع</string>
@@ -740,6 +741,9 @@
     <string name="profile_updated_successfully">تم تحديث الملف الشخصي بنجاح</string>
     <string name="receipt_customization_updated">تم تحديث تخصيص الإيصال</string>
     <string name="pdf_vat_tel">الضريبة: %1$s | هاتف: %2$s</string>
+    <string name="pdf_vat_only">الضريبة: %1$s</string>
+    <string name="pdf_tel_only">هاتف: %1$s</string>
+    <string name="pdf_vat_id">معرف الضريبة: %1$s</string>
     <string name="pdf_address">العنوان: %1$s</string>
     <string name="pdf_location">الموقع: %1$s</string>
     <string name="pdf_total_currency">المجموع (%1$s)</string>
@@ -1328,6 +1332,7 @@
     <string name="status_printing_z_report">جارٍ طباعة تقرير Z...</string>
     <string name="toast_z_report_sent_printer">تم إرسال تقرير Z إلى الطابعة عبر البلوتوث!</string>
     <string name="nav_cashier">الكاشير</string>
+    <string name="nav_employee">الموظف</string>
     <string name="nav_profile">الملف الشخصي</string>
     <string name="nav_security">الأমান</string>
     <string name="nav_language">اللغة</string>

@@ -80,6 +80,7 @@ fun CashierManagementSection(
     var cashierPendingAdminAuthForEdit by remember { mutableStateOf<Cashier?>(null) }
     var cashierPendingAdminAuthForDelete by remember { mutableStateOf<Cashier?>(null) }
     var cashierPendingAdminAuthForRestore by remember { mutableStateOf<Cashier?>(null) }
+    var cashierPendingAdminAuthForToggle by remember { mutableStateOf<Cashier?>(null) }
 
     // Modals triggered post Admin-Auth
     var showAddDialog by remember { mutableStateOf(false) }
@@ -415,11 +416,7 @@ fun CashierManagementSection(
                                     cashierPendingAdminAuthForEdit = cashier
                                 },
                                 onToggleActive = { updated ->
-                                    if (onToggleStatusClick != null) {
-                                        onToggleStatusClick(updated)
-                                    } else {
-                                        reportViewModel?.updateCashier(updated)
-                                    }
+                                    cashierPendingAdminAuthForToggle = updated
                                 },
                                 onDelete = {
                                     cashierPendingAdminAuthForDelete = cashier
@@ -634,6 +631,22 @@ fun CashierManagementSection(
             onDismissRequest = { cashierPendingAdminAuthForRestore = null },
             onAuthSuccess = {
                 executeRestore(target)
+            }
+        )
+    }
+
+    // 6b. Admin Auth for Active/Inactive Status Toggle
+    cashierPendingAdminAuthForToggle?.let { updated ->
+        AdminAuthDialog(
+            subtitle = "${stringResource(R.string.edit_cashier)}: ${updated.name}",
+            onDismissRequest = { cashierPendingAdminAuthForToggle = null },
+            onAuthSuccess = {
+                cashierPendingAdminAuthForToggle = null
+                if (onToggleStatusClick != null) {
+                    onToggleStatusClick(updated)
+                } else {
+                    reportViewModel?.updateCashier(updated)
+                }
             }
         )
     }
