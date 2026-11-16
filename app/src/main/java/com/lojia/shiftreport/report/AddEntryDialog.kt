@@ -26,6 +26,8 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.MoneyInput
+import com.lojia.shiftreport.util.classifyMoneyInput
 import java.util.Locale
 
 enum class PayType { CASH, BANK }
@@ -62,7 +64,12 @@ fun AddEntryDialog(
     var showOptionalDetails by remember { mutableStateOf(false) }
     var payType by remember { mutableStateOf(PayType.CASH) }
     var error by remember { mutableStateOf<String?>(null) }
+    val digits = MoneyFormat.minorUnitDigits(currentCurrency)
     val invalidAmountError = stringResource(R.string.valid_amount_error)
+    val amountClass = classifyMoneyInput(amountText, digits)
+    val unitPriceClass = if (type == ModalType.ITEM) classifyMoneyInput(unitPriceText, digits) else MoneyInput.Empty
+    val isAmountInvalid = amountClass is MoneyInput.Invalid
+    val isUnitPriceInvalid = unitPriceClass is MoneyInput.Invalid
 
     val title = when (type) {
         ModalType.CREDIT -> stringResource(R.string.add_due_sale_entry)
@@ -96,26 +103,42 @@ fun AddEntryDialog(
                     ModalType.CREDIT -> {
                         LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        if (isAmountInvalid) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
                     }
                     ModalType.OLD_DUE -> {
                         LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        if (isAmountInvalid) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
                         Spacer(Modifier.height(10.dp))
                         PayTypeSelector(payType) { payType = it }
                     }
                     ModalType.STAFF -> {
                         LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        if (isAmountInvalid) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
                         Spacer(Modifier.height(10.dp))
                         PayTypeSelector(payType) { payType = it }
                     }
                     ModalType.WALKOUT -> {
                         LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        if (isAmountInvalid) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
                     }
                     ModalType.ITEM -> {
                         // 1. Item / Description * (Required, max 100 chars)
@@ -156,14 +179,14 @@ fun AddEntryDialog(
                         LojiaTextField(
                             value = amountText,
                             onValueChange = { raw ->
-                                val filtered = raw.filter { c -> c.isDigit() || c == '.' }
+                                val filtered = raw.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }
                                 amountText = filtered
                                 error = null
                                 // Priority: When Total is edited, Total is truth; if Quantity exists, auto-fill Unit Price = Total ÷ Quantity
-                                val totalVal = filtered.toDoubleOrNull()
+                                val totalVal = MoneyFormat.parseMoneyInput(filtered, digits)?.let { MoneyFormat.toMajorUnits(it, digits) }
                                 val qtyVal = qtyText.toDoubleOrNull()
                                 if (totalVal != null && totalVal > 0.0 && qtyVal != null && qtyVal > 0.0) {
-                                    unitPriceText = String.format(Locale.US, "%.2f", totalVal / qtyVal)
+                                    unitPriceText = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(totalVal / qtyVal, digits), digits)
                                 }
                             },
                             label = {
@@ -175,18 +198,28 @@ fun AddEntryDialog(
                             },
                             placeholder = {
                                 Text(
-                                    text = "0.00",
+                                    text = MoneyFormat.zeroPlaceholder(digits),
                                     fontSize = 13.sp,
                                     color = TextHintColor
                                 )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            isError = isAmountInvalid,
                             shape = RoundedCornerShape(10.dp),
                             colors = fieldColors(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("paid_out_total_amount_input")
                         )
+                        if (isAmountInvalid) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = invalidAmountError,
+                                color = ErrorRedLight,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = "The amount shown on your bill",
@@ -237,9 +270,9 @@ fun AddEntryDialog(
                                     qtyText = filtered
                                     // Priority: When Quantity is entered AND Total exists -> Auto-fill Unit Price = Total ÷ Quantity
                                     val qtyVal = filtered.toDoubleOrNull()
-                                    val totalVal = amountText.toDoubleOrNull()
+                                    val totalVal = MoneyFormat.parseMoneyInput(amountText, digits)?.let { MoneyFormat.toMajorUnits(it, digits) }
                                     if (qtyVal != null && qtyVal > 0.0 && totalVal != null && totalVal > 0.0) {
-                                        unitPriceText = String.format(Locale.US, "%.2f", totalVal / qtyVal)
+                                        unitPriceText = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(totalVal / qtyVal, digits), digits)
                                     } else if (filtered.isEmpty()) {
                                         unitPriceText = ""
                                     }
@@ -279,13 +312,13 @@ fun AddEntryDialog(
                             LojiaTextField(
                                 value = unitPriceText,
                                 onValueChange = { raw ->
-                                    val filtered = raw.filter { c -> c.isDigit() || c == '.' }
+                                    val filtered = raw.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }
                                     unitPriceText = filtered
                                     // Priority: When Unit Price is manually changed AND Quantity exists -> Auto-update Total = Unit Price × Quantity
-                                    val unitVal = filtered.toDoubleOrNull()
+                                    val unitVal = MoneyFormat.parseMoneyInput(filtered, digits)?.let { MoneyFormat.toMajorUnits(it, digits) }
                                     val qtyVal = qtyText.toDoubleOrNull()
                                     if (unitVal != null && unitVal > 0.0 && qtyVal != null && qtyVal > 0.0) {
-                                        amountText = String.format(Locale.US, "%.2f", unitVal * qtyVal)
+                                        amountText = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(unitVal * qtyVal, digits), digits)
                                     }
                                 },
                                 label = {
@@ -303,12 +336,22 @@ fun AddEntryDialog(
                                     )
                                 },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                isError = isUnitPriceInvalid,
                                 shape = RoundedCornerShape(10.dp),
                                 colors = fieldColors(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("paid_out_unit_price_input")
                             )
+                            if (isUnitPriceInvalid) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = invalidAmountError,
+                                    color = ErrorRedLight,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 text = "→ Auto-filled from Total ÷ Quantity",
@@ -328,16 +371,29 @@ fun AddEntryDialog(
         },
         confirmButton = {
             Button(
+                enabled = !isAmountInvalid && !isUnitPriceInvalid,
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
                 onClick = {
-                    val amount = amountText.toDoubleOrNull() ?: 0.0
+                    val amount = when (amountClass) {
+                        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(amountClass.minor, digits)
+                        MoneyInput.Empty, MoneyInput.Invalid -> {
+                            error = invalidAmountError
+                            return@Button
+                        }
+                    }
                     if (amount <= 0) {
                         error = invalidAmountError
                         return@Button
                     }
                     val parsedQty = qtyText.toIntOrNull()?.coerceAtLeast(0) ?: 0
-                    val parsedUnitPrice = unitPriceText.toDoubleOrNull()
-                        ?: if (parsedQty > 0) (amount / parsedQty) else 0.0
+                    val parsedUnitPrice = when (unitPriceClass) {
+                        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(unitPriceClass.minor, digits)
+                        MoneyInput.Empty -> if (parsedQty > 0) (amount / parsedQty) else 0.0
+                        MoneyInput.Invalid -> {
+                            error = invalidAmountError
+                            return@Button
+                        }
+                    }
 
                     focusManager.clearFocus()
                     keyboardController?.hide()

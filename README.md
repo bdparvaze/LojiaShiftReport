@@ -23,7 +23,7 @@
 * **Document Security:** Add password protection and encryption to sensitive scanned documents.
 
 ### 3. 🌐 Multilingual & Localized
-* **3 Fully Localized Languages & Global Currencies:** Complete native UI localization across English, Bengali (বাংলা), and Arabic (العربية, RTL) with 1,741 validated strings per locale, plus support for 100+ countries, local currency symbols, and VAT presets.
+* **3 Fully Localized Languages & Global Currencies:** Complete native UI localization across English, Bengali (বাংলা), and Arabic (العربية, RTL) with 1,788 validated strings per locale, plus support for 100+ countries, local currency symbols, and VAT presets.
 * **Multi-Currency & VAT Support:** Configure national currencies (SAR, BDT, USD, AED, etc.) and regional tax rates.
 
 ### 4. 🔒 Offline-First Architecture
@@ -86,7 +86,6 @@ com.lojia.shiftreport
 ├── report/                        # 📊 Shift Reports, Analytics, Ledgers & Summaries
 │   ├── AddEntryDialog.kt
 │   ├── DashboardScreen.kt
-│   ├── LiveCashflowTab.kt
 │   ├── MonthlyBreakdownComponents.kt
 │   ├── MonthlySalesCharts.kt
 │   ├── MonthlySalesSummaryView.kt
@@ -170,7 +169,6 @@ com.lojia.shiftreport
     ├── ExportHelper.kt
     ├── GoogleDriveManager.kt
     ├── LanguagePreferences.kt
-    ├── LocaleManager.kt
     ├── MoneyFormat.kt
     ├── NotificationHelper.kt
     ├── OfflineBackupManager.kt
@@ -195,7 +193,7 @@ com.lojia.shiftreport
 * **শিফট হিসাব ও ক্যাশ ব্যালেন্সিং:** ক্যাশিয়ারের শিফট শুরু, ক্যাশ ইন/আউট, কার্ড ও ডিজিটাল পেমেন্ট হিসাব এবং ক্যাশ অমিল (Variance) নিরূপণ।
 * **শিফট রিপোর্ট ও পিডিএফ প্রিন্ট:** তাত্ক্ষণিক শিফট রিপোর্ট তৈরি এবং কিউআর কোডসহ পিডিএফ রসিদ প্রিন্ট বা শেয়ার।
 * **ডকুমেন্ট স্ক্যানার ও ওসিআর:** ক্যামেরা বা গ্যালারি থেকে রসিদ/চালান স্ক্যান, টেক্সট এক্সট্রাকশন (OCR), ওয়ার্ড (.docx) তৈরি এবং পাসওয়ার্ড দিয়ে সুরক্ষিত পিডিএফ তৈরি।
-* **৩টি ভাষা ও বৈশ্বিক মুদ্রা সাপোর্ট:** সম্পূর্ণ বাংলা, ইংরেজি এবং আরবি (RTL) ভাষা সমর্থন (প্রতিটি ভাষায় ১,৭৪১টি নিবিড়ভাবে যাচাইকৃত স্ট্রিং) এবং ১০০+ দেশের মুদ্রা ও ভ্যাট রেট কনফিগারেশন।
+* **৩টি ভাষা ও বৈশ্বিক মুদ্রা সাপোর্ট:** সম্পূর্ণ বাংলা, ইংরেজি এবং আরবি (RTL) ভাষা সমর্থন (প্রতিটি ভাষায় ১,৭৮৮টি নিবিড়ভাবে যাচাইকৃত স্ট্রিং) এবং ১০০+ দেশের মুদ্রা ও ভ্যাট রেট কনফিগারেশন।
 
 ---
 
@@ -207,4 +205,4 @@ com.lojia.shiftreport
 * **إدارة الورديات وتدقيق النقد:** فتح وإغلاق الورديات، حساب المبيعات النقدية وشبكة مدى والمحافظ الرقمية، وحساب الفروقات النقدية.
 * **تقارير الوردية وطباعة PDF:** توليد تقارير الوردية بتنسيق PDF احترافي مع رمز الاستجابة السريعة (QR).
 * **ماسح المستندات الضوئي:** مسح الإيصالات والفواتير، استخراج النصوص (OCR)، وتصديرها بصيغة Word أو PDF محمي بكلمة مرور.
-* **دعم 3 لغات وعملات عالمية:** دعم كامل وموثق للغات العربية (RTL)، الإنجليزية، والبنجالية (1,741 نصاً معرباً بدقة لكل لغة) مع تهيئة أكثر من 100 دولة وعملة وضريبة محلية.
+* **دعم 3 لغات وعملات عالمية:** دعم كامل وموثق للغات العربية (RTL)، الإنجليزية، والبنجالية (1,788 نصاً معرباً بدقة لكل لغة) مع تهيئة أكثر من 100 دولة وعملة وضريبة محلية.

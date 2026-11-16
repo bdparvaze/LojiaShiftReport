@@ -5,13 +5,25 @@ import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.data.ShiftSession
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.OfflineBackupManager
+import com.lojia.shiftreport.util.BackupFileDecoder
+import com.lojia.shiftreport.util.BackupFormatException
+import com.lojia.shiftreport.util.TIER_DEVICE
+import com.lojia.shiftreport.util.TIER_PORTABLE
+import com.lojia.shiftreport.util.backupTierOf
+import com.lojia.shiftreport.util.deriveBackupKek
+import com.lojia.shiftreport.util.encryptBackup
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
+import java.security.SecureRandom
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Unit tests for ShiftReport and ShiftSession backup export/restore round-trip fidelity,
- * legacy migration conversion (schemaVersion < 15), and getMoneyVal default unit handling.
+ * legacy migration conversion (schemaVersion < 15), getMoneyVal default unit handling,
+ * and LSB2 / legacy plain-JSON BackupFileDecoder round-trips.
  */
 class BackupRoundTripTest {
 
@@ -215,5 +227,145 @@ class BackupRoundTripTest {
         json.remove("cashierId")
         val restoredOld = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false)
         assertEquals("", restoredOld.cashierId)
+    }
+
+    @Test
+    fun lsb2Portable_roundTrip_fixedPassword_preservesBackupRecords() {
+        val report = ShiftReport(
+            id = 101,
+            cashierName = "Nadia Hassan",
+            cashierId = "cashier_101",
+            shift = "Afternoon",
+            dateInMillis = 1712350000000L,
+            openingCash = 80000L,
+            closingCash = 240000L,
+            grossCash = 160000L,
+            madaPayments = 95000L,
+            isLocked = true
+        )
+        val session = ShiftSession(
+            id = 202,
+            cashierName = "Nadia Hassan",
+            shiftName = "Afternoon",
+            status = "LOCKED",
+            openedAt = 1712340000000L,
+            closedAt = 1712350000000L,
+            startingCash = 80000L,
+            cashSales = 160000L,
+            expectedCash = 240000L,
+            actualCashCount = 240000L,
+            isLocked = true
+        )
+        val rootJson = JSONObject().apply {
+            put("app", "Lojia Shift Report")
+            put("schemaVersion", 15)
+            put("shiftReports", JSONArray().apply { put(OfflineBackupManager.shiftReportToJson(report)) })
+            put("shiftSessions", JSONArray().apply { put(OfflineBackupManager.shiftSessionToJson(session)) })
+        }.toString(2)
+
+        val salt = ByteArray(16).apply { SecureRandom().nextBytes(this) }
+        val password = "portable-roundtrip-pw"
+        val kek = deriveBackupKek(password.toCharArray(), salt)
+        val blob = encryptBackup(rootJson.toByteArray(Charsets.UTF_8), kek, TIER_PORTABLE, salt)
+
+        assertEquals(TIER_PORTABLE, backupTierOf(blob))
+
+        val decodedJson = BackupFileDecoder.decodeToJson(
+            bytes = blob,
+            kekFor = { tier, blobSalt ->
+                assertEquals(TIER_PORTABLE, tier)
+                deriveBackupKek(password.toCharArray(), blobSalt)
+            },
+            legacyDecrypt = { throw AssertionError("legacyDecrypt must not be invoked for LSB2 portable blobs") }
+        )
+        assertEquals(rootJson, decodedJson)
+
+        val parsed = JSONObject(decodedJson)
+        val restoredReport = OfflineBackupManager.jsonToShiftReport(parsed.getJSONArray("shiftReports").getJSONObject(0), false)
+        val restoredSession = OfflineBackupManager.jsonToShiftSession(parsed.getJSONArray("shiftSessions").getJSONObject(0), false)
+        assertEquals(report, restoredReport)
+        assertEquals(session, restoredSession)
+
+        // Wrong password fails AEAD verification
+        assertThrows(Exception::class.java) {
+            BackupFileDecoder.decodeToJson(
+                bytes = blob,
+                kekFor = { _, blobSalt -> deriveBackupKek("wrong-portable-pw".toCharArray(), blobSalt) },
+                legacyDecrypt = { "" }
+            )
+        }
+    }
+
+    @Test
+    fun lsb2Device_roundTrip_randomAesKey_preservesBackupRecords() {
+        val report = ShiftReport(
+            id = 303,
+            cashierName = "Tariq Mansour",
+            shift = "Night",
+            dateInMillis = 1712360000000L,
+            openingCash = 50000L,
+            closingCash = 185000L,
+            grossCash = 135000L
+        )
+        val rootJson = JSONObject().apply {
+            put("app", "Lojia Shift Report")
+            put("schemaVersion", 15)
+            put("shiftReports", JSONArray().apply { put(OfflineBackupManager.shiftReportToJson(report)) })
+        }.toString()
+
+        val keyBytes = ByteArray(32).apply { SecureRandom().nextBytes(this) }
+        val deviceKey: SecretKey = SecretKeySpec(keyBytes, "AES")
+        val blob = encryptBackup(rootJson.toByteArray(Charsets.UTF_8), deviceKey, TIER_DEVICE, null)
+
+        assertEquals(TIER_DEVICE, backupTierOf(blob))
+
+        val decodedJson = BackupFileDecoder.decodeToJson(
+            bytes = blob,
+            kekFor = { tier, salt ->
+                assertEquals(TIER_DEVICE, tier)
+                assertEquals(16, salt.size)
+                assertTrue(salt.all { it == 0.toByte() })
+                deviceKey
+            },
+            legacyDecrypt = { throw AssertionError("legacyDecrypt must not be invoked for LSB2 device blobs") }
+        )
+        assertEquals(rootJson, decodedJson)
+
+        val restoredReport = OfflineBackupManager.jsonToShiftReport(
+            JSONObject(decodedJson).getJSONArray("shiftReports").getJSONObject(0),
+            isLegacyBackup = false
+        )
+        assertEquals(report, restoredReport)
+    }
+
+    @Test
+    fun legacyPlainJson_decodeToJson_returnsOriginalAndRestoresModels() {
+        val report = ShiftReport(
+            id = 404,
+            cashierName = "Salma Youssef",
+            shift = "Morning",
+            dateInMillis = 1712370000000L,
+            openingCash = 40000L,
+            closingCash = 95000L,
+            grossCash = 55000L
+        )
+        val rootJson = JSONObject().apply {
+            put("app", "Lojia Shift Report")
+            put("schemaVersion", 15)
+            put("shiftReports", JSONArray().apply { put(OfflineBackupManager.shiftReportToJson(report)) })
+        }.toString()
+
+        val decodedJson = BackupFileDecoder.decodeToJson(
+            bytes = rootJson.toByteArray(Charsets.UTF_8),
+            kekFor = { _, _ -> throw BackupFormatException("kekFor must not be called for plain JSON") },
+            legacyDecrypt = { throw AssertionError("legacyDecrypt must not be called for plain JSON") }
+        )
+        assertEquals(rootJson, decodedJson)
+
+        val restoredReport = OfflineBackupManager.jsonToShiftReport(
+            JSONObject(decodedJson).getJSONArray("shiftReports").getJSONObject(0),
+            isLegacyBackup = false
+        )
+        assertEquals(report, restoredReport)
     }
 }

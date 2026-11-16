@@ -522,9 +522,10 @@ fun FormInputField(
                 val sanitized = if (keyboardType == KeyboardType.Number) {
                     input.filter { it.isDigit() }
                 } else if (keyboardType == KeyboardType.Decimal) {
+                    val normalizedInput = input.replace('\u060C', ',')
                     var hasDot = false
                     buildString {
-                        for (char in input) {
+                        for (char in normalizedInput) {
                             if (char.isDigit()) {
                                 append(char)
                             } else if (char == '.' || char == ',') {

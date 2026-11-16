@@ -224,7 +224,7 @@ fun DataRecoveryDialog(
                     val summary = remember(backupFile) {
                         try {
                             if (backupFile.exists() && backupFile.canRead()) {
-                                OfflineBackupManager.parseBackupSummaryFromString(backupFile.readText()).getOrNull()
+                                OfflineBackupManager.parseBackupSummaryFromBytes(backupFile.readBytes()).getOrNull()
                             } else null
                         } catch (_: Exception) {
                             null

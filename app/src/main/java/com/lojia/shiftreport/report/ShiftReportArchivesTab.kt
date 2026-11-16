@@ -99,10 +99,11 @@ fun ShiftReportArchivesTab(
         }
     }
 
-    val numberFormatter = remember {
+    val archiveDigits = MoneyFormat.minorUnitDigits(currentCurrency)
+    val numberFormatter = remember(archiveDigits) {
         NumberFormat.getNumberInstance(Locale.US).apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
+            minimumFractionDigits = archiveDigits
+            maximumFractionDigits = archiveDigits
         }
     }
 

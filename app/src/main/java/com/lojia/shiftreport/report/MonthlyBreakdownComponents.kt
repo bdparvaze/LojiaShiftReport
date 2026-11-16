@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.MoneyFormat
 
 @Composable
 fun WeeklyBreakdownCard(
@@ -80,8 +81,10 @@ fun WeeklyBreakdownCard(
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                             color = TextPrimaryLight
                         )
+                        val digits = MoneyFormat.minorUnitDigits(currency)
+                        val amountStr = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(weekAmount, digits), digits)
                         Text(
-                            text = stringResource(R.string.msg_2f_s_d_1).format(weekAmount, currency, percentage),
+                            text = "$amountStr $currency ($percentage%)",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = if (weekAmount > 0) PrimaryIndigo else TextSecondaryLight
@@ -192,8 +195,9 @@ fun TopRevenueDaysCard(
                         }
                     }
 
+                    val dayDigits = MoneyFormat.minorUnitDigits(currency)
                     Text(
-                        text = stringResource(R.string.msg_2f_s_21).format(dayData.totalRevenue, currency),
+                        text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(dayData.totalRevenue, dayDigits), dayDigits)} $currency",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = AccentEmerald

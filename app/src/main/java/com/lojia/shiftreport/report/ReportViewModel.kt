@@ -34,12 +34,15 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+internal fun draftFieldText(minor: Long): String = MoneyFormat.toPlainDecimal(minor)
+
 class ReportViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
     private val db = AppDatabase.getInstance(application)
     private val reportDao = db.reportDao()
     private val savedAddressDao = db.savedAddressDao()
     private val repository = ShiftReportRepository(reportDao)
+    private val serialUpdater = SerialUpdater()
 
     val savedAddresses: StateFlow<List<SavedAddress>> =
         savedAddressDao.getAll()
@@ -82,6 +85,16 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     // Centralized Synchronized Country & Currency State
     val currentCountry: StateFlow<AppCountry> = syncManager.currentCountry
     val currentCurrency: StateFlow<String> = syncManager.currentCurrency
+    val isCurrencyLocked: StateFlow<Boolean> = syncManager.isCurrencyLocked
+
+    init {
+        MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(syncManager.currentCurrency.value)
+        viewModelScope.launch {
+            syncManager.currentCurrency.collect { curr ->
+                MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(curr)
+            }
+        }
+    }
 
     fun setLanguage(language: AppLanguage) {
         syncManager.setLanguage(language)
@@ -91,16 +104,31 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setCountry(country: AppCountry) {
-        syncManager.setCountry(country)
         viewModelScope.launch {
-            _uiMessage.emit(UiText.StringResource(R.string.toast_country_set, country.displayNameEn, country.currencyCode, country.currencySymbol))
+            val result = syncManager.setCountry(country)
+            if (result.isSuccess) {
+                _uiMessage.emit(
+                    UiText.StringResource(
+                        R.string.toast_country_set,
+                        country.displayNameEn,
+                        country.currencyCode,
+                        country.currencySymbol
+                    )
+                )
+            } else {
+                _uiMessage.emit(UiText.StringResource(R.string.currency_locked_message))
+            }
         }
     }
 
     fun setCurrency(currencyCode: String) {
-        syncManager.setCurrency(currencyCode)
         viewModelScope.launch {
-            _uiMessage.emit(UiText.DynamicString("Currency set to $currencyCode"))
+            val result = syncManager.setCurrency(currencyCode)
+            if (result.isSuccess) {
+                _uiMessage.emit(UiText.DynamicString("Currency set to ${currencyCode.trim().uppercase(Locale.US)}"))
+            } else {
+                _uiMessage.emit(UiText.StringResource(R.string.currency_locked_message))
+            }
         }
     }
 
@@ -231,8 +259,27 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         backupManager.backupToGoogleDrive(onSuccess, onFailure)
     fun fetchGoogleDriveBackups(onSuccess: (List<DriveBackupItem>) -> Unit = {}, onFailure: (String) -> Unit = {}) =
         backupManager.fetchGoogleDriveBackups(onSuccess, onFailure)
-    fun restoreFromGoogleDrive(item: DriveBackupItem, onSuccess: (Int) -> Unit = {}, onFailure: (String) -> Unit = {}) =
-        backupManager.restoreFromGoogleDrive(item, onSuccess, onFailure)
+    fun prepareGoogleDriveRestore(
+        item: DriveBackupItem,
+        onReady: (bytes: ByteArray, requiresPassword: Boolean) -> Unit,
+        onFailure: (String) -> Unit = {}
+    ) = backupManager.prepareGoogleDriveRestore(item, onReady, onFailure)
+
+    fun restoreGoogleDriveBytes(
+        item: DriveBackupItem,
+        bytes: ByteArray,
+        password: String? = null,
+        onSuccess: (Int) -> Unit = {},
+        onFailure: (String) -> Unit = {}
+    ) = backupManager.restoreGoogleDriveBytes(item, bytes, password, onSuccess, onFailure)
+
+    fun restoreFromGoogleDrive(
+        item: DriveBackupItem,
+        password: String? = null,
+        onSuccess: (Int) -> Unit = {},
+        onFailure: (String) -> Unit = {}
+    ) = backupManager.restoreFromGoogleDrive(item, password, onSuccess, onFailure)
+
     fun parseDriveBackupSummary(item: DriveBackupItem, onResult: (BackupSummary?) -> Unit) =
         backupManager.parseDriveBackupSummary(item, onResult)
     fun toggleFirebaseCloudSync(enabled: Boolean) = backupManager.toggleFirebaseCloudSync(enabled)
@@ -247,8 +294,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         backupManager.createOfflineBackup(onSuccess, onFailure)
     fun parseBackupSummary(uri: android.net.Uri, onResult: (BackupSummary?) -> Unit) =
         backupManager.parseBackupSummary(uri, onResult)
-    fun restoreOfflineBackup(uri: android.net.Uri, onSuccess: (Int) -> Unit = {}, onFailure: (String) -> Unit = {}) =
-        backupManager.restoreOfflineBackup(uri, onSuccess, onFailure)
+    fun restoreOfflineBackup(
+        uri: android.net.Uri,
+        password: String? = null,
+        onSuccess: (Int) -> Unit = {},
+        onFailure: (String) -> Unit = {}
+    ) = backupManager.restoreOfflineBackup(uri, password, onSuccess, onFailure)
     fun clearAllBusinessData(onSuccess: () -> Unit = {}, onFailure: (String) -> Unit = {}) =
         backupManager.clearAllBusinessData(onSuccess, onFailure)
 
@@ -278,23 +329,30 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     var managerSignTime = MutableStateFlow<Long?>(null)
 
     val openingCash: StateFlow<Double> = combine(openingCashInput, startingCashInput) { open, start ->
-        open.toDoubleOrNull() ?: start.toDoubleOrNull() ?: 0.0
+        MoneyFormat.parseMoneyInput(open)?.let { MoneyFormat.toMajorUnits(it) }
+            ?: MoneyFormat.parseMoneyInput(start)?.let { MoneyFormat.toMajorUnits(it) }
+            ?: 0.0
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val closingCash: StateFlow<Double> = combine(closingCashInput, actualCashCountInput) { close, actual ->
-        close.toDoubleOrNull() ?: actual.toDoubleOrNull() ?: 0.0
+        MoneyFormat.parseMoneyInput(close)?.let { MoneyFormat.toMajorUnits(it) }
+            ?: MoneyFormat.parseMoneyInput(actual)?.let { MoneyFormat.toMajorUnits(it) }
+            ?: 0.0
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    val totalDiscounts: StateFlow<Double> = totalDiscountsInput.map { it.toDoubleOrNull() ?: 0.0 }
+    val totalDiscounts: StateFlow<Double> = totalDiscountsInput
+        .map { MoneyFormat.parseMoneyInput(it)?.let { m -> MoneyFormat.toMajorUnits(m) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    val salesReturns: StateFlow<Double> = salesReturnsInput.map { it.toDoubleOrNull() ?: 0.0 }
+    val salesReturns: StateFlow<Double> = salesReturnsInput
+        .map { MoneyFormat.parseMoneyInput(it)?.let { m -> MoneyFormat.toMajorUnits(m) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val startingCash: StateFlow<Double> = openingCash
     val actualCashCount: StateFlow<Double> = closingCash
     val isActualCashEntered: StateFlow<Boolean> = closingCashInput.combine(actualCashCountInput) { close, actual ->
-        (close.isNotBlank() && close.toDoubleOrNull() != null) || (actual.isNotBlank() && actual.toDoubleOrNull() != null)
+        (close.isNotBlank() && MoneyFormat.parseMoneyInput(close) != null) ||
+            (actual.isNotBlank() && MoneyFormat.parseMoneyInput(actual) != null)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     // Dynamic Section Lists
@@ -306,8 +364,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun isValidDecimal(input: String): Boolean {
         if (input.isBlank()) return true
-        val value = input.toDoubleOrNull()
-        return value != null && value >= 0
+        return MoneyFormat.parseMoneyInput(input) != null
     }
 
     fun isValidInteger(input: String): Boolean {
@@ -337,13 +394,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     val isOutdoorShishaValid: StateFlow<Boolean> = outdoorShishaQtyInput.map { isValidDecimal(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    val grossCash = grossCashInput.map { it.toDoubleOrNull() ?: 0.0 }
+    val grossCash = grossCashInput.map { MoneyFormat.parseMoneyInput(it)?.let { m -> MoneyFormat.toMajorUnits(m) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
-    val madaPayments = madaPaymentsInput.map { it.toDoubleOrNull() ?: 0.0 }
+    val madaPayments = madaPaymentsInput.map { MoneyFormat.parseMoneyInput(it)?.let { m -> MoneyFormat.toMajorUnits(m) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
-    val digitalWallet = digitalWalletInput.map { it.toDoubleOrNull() ?: 0.0 }
+    val digitalWallet = digitalWalletInput.map { MoneyFormat.parseMoneyInput(it)?.let { m -> MoneyFormat.toMajorUnits(m) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
-    val totalExpenses = totalExpensesInput.map { it.toDoubleOrNull() ?: 0.0 }
+    val totalExpenses = totalExpensesInput.map { MoneyFormat.parseMoneyInput(it)?.let { m -> MoneyFormat.toMajorUnits(m) } ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     // Dynamic Lists Sums
@@ -414,7 +471,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         val s = MoneyFormat.toMinorUnits(sales)
         val d = MoneyFormat.toMinorUnits(disc)
         val r = MoneyFormat.toMinorUnits(ret)
-        val netMinor = (s - d - r).coerceAtLeast(0L)
+        val netMinor = MoneyFormat.calculateNetSalesMinor(s, d, r)
         MoneyFormat.toMajorUnits(netMinor)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
@@ -621,15 +678,15 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 selectedCashier.value = draft.cashierName
                 selectedShift.value = draft.shift
                 selectedDateInMillis.value = draft.dateInMillis
-                openingCashInput.value = if (draft.openingCash > 0) draft.openingCash.toString() else ""
-                closingCashInput.value = if (draft.closingCash > 0) draft.closingCash.toString() else ""
-                grossCashInput.value = if (draft.grossCash > 0) draft.grossCash.toString() else ""
-                madaPaymentsInput.value = if (draft.madaPayments > 0) draft.madaPayments.toString() else ""
-                digitalWalletInput.value = if (draft.digitalWallet > 0) draft.digitalWallet.toString() else ""
-                totalDiscountsInput.value = if (draft.totalDiscounts > 0) draft.totalDiscounts.toString() else ""
-                salesReturnsInput.value = if (draft.salesReturns > 0) draft.salesReturns.toString() else ""
+                openingCashInput.value = if (draft.openingCash > 0) draftFieldText(draft.openingCash) else ""
+                closingCashInput.value = if (draft.closingCash > 0) draftFieldText(draft.closingCash) else ""
+                grossCashInput.value = if (draft.grossCash > 0) draftFieldText(draft.grossCash) else ""
+                madaPaymentsInput.value = if (draft.madaPayments > 0) draftFieldText(draft.madaPayments) else ""
+                digitalWalletInput.value = if (draft.digitalWallet > 0) draftFieldText(draft.digitalWallet) else ""
+                totalDiscountsInput.value = if (draft.totalDiscounts > 0) draftFieldText(draft.totalDiscounts) else ""
+                salesReturnsInput.value = if (draft.salesReturns > 0) draftFieldText(draft.salesReturns) else ""
                 staffMealsCountInput.value = draft.staffMealsCount.toString()
-                totalExpensesInput.value = if (draft.totalExpenses > 0) draft.totalExpenses.toString() else ""
+                totalExpensesInput.value = if (draft.totalExpenses > 0) draftFieldText(draft.totalExpenses) else ""
                 muasselQtyInput.value = if (draft.muasselQty > 0) draft.muasselQty.toString() else ""
                 outdoorShishaQtyInput.value = if (draft.outdoorShishaQty > 0) draft.outdoorShishaQty.toString() else ""
                 notesInput.value = draft.notes
@@ -643,17 +700,29 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun validateAll(): Boolean {
-        return isValidDecimal(openingCashInput.value) &&
-                isValidDecimal(closingCashInput.value) &&
-                isValidDecimal(grossCashInput.value) &&
-                isValidDecimal(madaPaymentsInput.value) &&
-                isValidDecimal(digitalWalletInput.value) &&
-                isValidDecimal(totalDiscountsInput.value) &&
-                isValidDecimal(salesReturnsInput.value) &&
-                isValidDecimal(totalExpensesInput.value) &&
+        return classifyMoneyInput(openingCashInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(startingCashInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(closingCashInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(actualCashCountInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(grossCashInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(madaPaymentsInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(digitalWalletInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(totalDiscountsInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(salesReturnsInput.value) != MoneyInput.Invalid &&
+                classifyMoneyInput(totalExpensesInput.value) != MoneyInput.Invalid &&
                 isValidInteger(staffMealsCountInput.value) &&
                 isValidDecimal(muasselQtyInput.value) &&
                 isValidDecimal(outdoorShishaQtyInput.value)
+    }
+
+    private fun minorFromValidOrEmpty(raw: String): Long = when (val classified = classifyMoneyInput(raw)) {
+        is MoneyInput.Valid -> classified.minor
+        MoneyInput.Empty, MoneyInput.Invalid -> 0L
+    }
+
+    private fun majorFromValidOrEmpty(raw: String): Double = when (val classified = classifyMoneyInput(raw)) {
+        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(classified.minor)
+        MoneyInput.Empty, MoneyInput.Invalid -> 0.0
     }
 
     fun saveDraft() {
@@ -664,20 +733,24 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
+            val openingMinor = (classifyMoneyInput(openingCashInput.value) as? MoneyInput.Valid)?.minor
+                ?: minorFromValidOrEmpty(startingCashInput.value)
+            val closingMinor = (classifyMoneyInput(closingCashInput.value) as? MoneyInput.Valid)?.minor
+                ?: minorFromValidOrEmpty(actualCashCountInput.value)
             val draft = DraftReport(
                 id = 1,
                 cashierName = selectedCashier.value,
                 shift = selectedShift.value,
                 dateInMillis = selectedDateInMillis.value,
-                openingCash = MoneyFormat.toMinorUnits(openingCashInput.value.toDoubleOrNull() ?: startingCashInput.value.toDoubleOrNull() ?: 0.0),
-                closingCash = MoneyFormat.toMinorUnits(closingCashInput.value.toDoubleOrNull() ?: actualCashCountInput.value.toDoubleOrNull() ?: 0.0),
-                grossCash = MoneyFormat.toMinorUnits(grossCashInput.value.toDoubleOrNull() ?: 0.0),
-                madaPayments = MoneyFormat.toMinorUnits(madaPaymentsInput.value.toDoubleOrNull() ?: 0.0),
-                digitalWallet = MoneyFormat.toMinorUnits(digitalWalletInput.value.toDoubleOrNull() ?: 0.0),
-                totalDiscounts = MoneyFormat.toMinorUnits(totalDiscountsInput.value.toDoubleOrNull() ?: 0.0),
-                salesReturns = MoneyFormat.toMinorUnits(salesReturnsInput.value.toDoubleOrNull() ?: 0.0),
+                openingCash = openingMinor,
+                closingCash = closingMinor,
+                grossCash = minorFromValidOrEmpty(grossCashInput.value),
+                madaPayments = minorFromValidOrEmpty(madaPaymentsInput.value),
+                digitalWallet = minorFromValidOrEmpty(digitalWalletInput.value),
+                totalDiscounts = minorFromValidOrEmpty(totalDiscountsInput.value),
+                salesReturns = minorFromValidOrEmpty(salesReturnsInput.value),
                 staffMealsCount = staffMealsCountInput.value.toIntOrNull() ?: 0,
-                totalExpenses = MoneyFormat.toMinorUnits(totalExpensesInput.value.toDoubleOrNull() ?: 0.0),
+                totalExpenses = minorFromValidOrEmpty(totalExpensesInput.value),
                 muasselQty = muasselQtyInput.value.toDoubleOrNull() ?: 0.0,
                 outdoorShishaQty = outdoorShishaQtyInput.value.toDoubleOrNull() ?: 0.0,
                 dueCreditEntriesJson = serializeDueCredits(dueCreditItems.value),
@@ -731,14 +804,16 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        val openingVal = openingCashInput.value.toDoubleOrNull() ?: startingCashInput.value.toDoubleOrNull() ?: 0.0
-        val closingVal = closingCashInput.value.toDoubleOrNull() ?: actualCashCountInput.value.toDoubleOrNull() ?: 0.0
-        val grossVal = grossCashInput.value.toDoubleOrNull() ?: 0.0
-        val madaVal = madaPaymentsInput.value.toDoubleOrNull() ?: 0.0
-        val walletVal = digitalWalletInput.value.toDoubleOrNull() ?: 0.0
-        val discountsVal = totalDiscountsInput.value.toDoubleOrNull() ?: 0.0
-        val returnsVal = salesReturnsInput.value.toDoubleOrNull() ?: 0.0
-        val expVal = totalExpensesInput.value.toDoubleOrNull() ?: 0.0
+        val openingVal = (classifyMoneyInput(openingCashInput.value) as? MoneyInput.Valid)?.let { MoneyFormat.toMajorUnits(it.minor) }
+            ?: majorFromValidOrEmpty(startingCashInput.value)
+        val closingVal = (classifyMoneyInput(closingCashInput.value) as? MoneyInput.Valid)?.let { MoneyFormat.toMajorUnits(it.minor) }
+            ?: majorFromValidOrEmpty(actualCashCountInput.value)
+        val grossVal = majorFromValidOrEmpty(grossCashInput.value)
+        val madaVal = majorFromValidOrEmpty(madaPaymentsInput.value)
+        val walletVal = majorFromValidOrEmpty(digitalWalletInput.value)
+        val discountsVal = majorFromValidOrEmpty(totalDiscountsInput.value)
+        val returnsVal = majorFromValidOrEmpty(salesReturnsInput.value)
+        val expVal = majorFromValidOrEmpty(totalExpensesInput.value)
         val muasselVal = muasselQtyInput.value.toDoubleOrNull() ?: 0.0
         val outdoorVal = outdoorShishaQtyInput.value.toDoubleOrNull() ?: 0.0
 
@@ -756,13 +831,14 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch(Dispatchers.IO) {
             val cashier = if (selectedCashier.value.isBlank()) "Standard Cashier" else selectedCashier.value
-            val actualCountVal = if (closingVal > 0.0) closingVal else actualCashCountInput.value.toDoubleOrNull()
+            val actualCountVal = if (closingVal > 0.0) closingVal else MoneyFormat.parseMoneyInput(actualCashCountInput.value)?.let { MoneyFormat.toMajorUnits(it) }
+            val digits = MoneyFormat.minorUnitDigits(syncManager.currentCurrency.value)
             val noteParts = mutableListOf<String>()
             if (openingVal > 0.0) {
-                noteParts.add("Starting Float: %.2f".format(Locale.US, openingVal))
+                noteParts.add("Starting Float: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(openingVal, digits), digits)}")
             }
             if (actualCountVal != null && actualCountVal > 0.0) {
-                noteParts.add("Actual Cash Count: %.2f".format(Locale.US, actualCountVal))
+                noteParts.add("Actual Cash Count: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(actualCountVal, digits), digits)}")
             }
             if (managerSignedBy.value != null) {
                 noteParts.add("Manager Signed: ${managerSignedBy.value}")
@@ -850,7 +926,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
             if (preferencesRepository.isPreserveDataOnUninstall()) {
                 try {
-                    OfflineBackupManager.createAutoBackup(context, db)
+                    AutoBackupScheduler.enqueueOneTimeAutoBackup(context)
                 } catch (_: Exception) {}
             }
 
@@ -875,65 +951,85 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     // Shift Drawer Operations (Open Shift / Close Shift / Pay In / Pay Out)
     fun openShift(cashierName: String, shiftName: String, startingCash: Double) {
         viewModelScope.launch(Dispatchers.IO) {
-            val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
-            val newSession = ShiftSession(
-                cashierName = cashierName.ifBlank { "Cashier" },
-                shiftName = shiftName,
-                status = "OPEN",
-                openedAt = System.currentTimeMillis(),
-                startingCash = startingCashMinor,
-                expectedCash = startingCashMinor
-            )
-            reportDao.insertShiftSession(newSession)
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = cashierName.ifBlank { "Cashier" },
-                    action = "OPEN_SHIFT",
-                    details = "Opened $shiftName shift. Starting Float: $startingCash"
+            serialUpdater.update {
+                val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
+                val newSession = ShiftSession(
+                    cashierName = cashierName.ifBlank { "Cashier" },
+                    shiftName = shiftName,
+                    status = "OPEN",
+                    openedAt = System.currentTimeMillis(),
+                    startingCash = startingCashMinor,
+                    expectedCash = startingCashMinor
+                )
+                reportDao.insertShiftSession(newSession)
+                reportDao.insertAuditLog(
+                    AuditLog(
+                        username = cashierName.ifBlank { "Cashier" },
+                        action = "OPEN_SHIFT",
+                        details = "Opened $shiftName shift. Starting Float: $startingCash"
+                    )
+                )
+            }
+            val curr = syncManager.currentCurrency.value
+            val digits = MoneyFormat.minorUnitDigits(curr)
+            NotificationHelper.sendShiftOpenedNotification(context, cashierName, startingCash, curr)
+            _uiMessage.emit(
+                UiText.StringResource(
+                    R.string.toast_shift_opened_cash,
+                    MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(startingCash, digits), digits),
+                    curr
                 )
             )
-            val curr = syncManager.currentCurrency.value
-            NotificationHelper.sendShiftOpenedNotification(context, cashierName, startingCash, curr)
-            _uiMessage.emit(UiText.StringResource(R.string.toast_shift_opened_cash, startingCash.toString(), curr))
         }
     }
 
     fun closeShift(session: ShiftSession, actualCashCount: Double, notes: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount)
-            val varianceMinor = MoneyFormat.calculateVarianceMinor(actualCashCountMinor, session.expectedCash)
-            val varianceMajor = MoneyFormat.toMajorUnits(varianceMinor)
-            val updated = session.copy(
-                status = "CLOSED",
-                closedAt = System.currentTimeMillis(),
-                actualCashCount = actualCashCountMinor,
-                variance = varianceMinor,
-                notes = notes
-            )
-            reportDao.updateShiftSession(updated)
+            val (latestSession, varianceMinor, varianceMajor) = serialUpdater.update {
+                val currentSession = reportDao.getActiveShiftSessionOnce()?.takeIf { it.id == session.id } ?: session
+                val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount)
+                val vMinor = MoneyFormat.calculateVarianceMinor(actualCashCountMinor, currentSession.expectedCash)
+                val vMajor = MoneyFormat.toMajorUnits(vMinor)
+                val updated = currentSession.copy(
+                    status = "CLOSED",
+                    closedAt = System.currentTimeMillis(),
+                    actualCashCount = actualCashCountMinor,
+                    variance = vMinor,
+                    notes = notes
+                )
+                reportDao.updateShiftSession(updated)
+                Triple(currentSession, vMinor, vMajor)
+            }
             reportDao.insertAuditLog(
                 AuditLog(
-                    username = session.cashierName,
+                    username = latestSession.cashierName,
                     action = "CLOSE_SHIFT",
-                    details = "Closed ${session.shiftName} shift. Expected Cash: ${MoneyFormat.toMajorUnits(session.expectedCash)}, Actual Count: $actualCashCount, Variance: $varianceMajor. Notes: $notes"
+                    details = "Closed ${latestSession.shiftName} shift. Expected Cash: ${MoneyFormat.toMajorUnits(latestSession.expectedCash)}, Actual Count: $actualCashCount, Variance: $varianceMajor. Notes: $notes"
                 )
             )
             if (varianceMinor != 0L) {
                 reportDao.insertAuditLog(
                     AuditLog(
-                        username = session.cashierName,
+                        username = latestSession.cashierName,
                         action = "VARIANCE_RECORDED",
                         details = "Shift Cash Variance: $varianceMajor (${if (varianceMinor > 0) "Over" else "Short"})"
                     )
                 )
             }
             val curr = syncManager.currentCurrency.value
-            NotificationHelper.sendShiftClosedNotification(context, session.cashierName, varianceMajor, curr)
-            _uiMessage.emit(UiText.StringResource(R.string.toast_shift_closed_variance, "%.2f".format(varianceMajor), curr))
+            val digits = MoneyFormat.minorUnitDigits(curr)
+            NotificationHelper.sendShiftClosedNotification(context, latestSession.cashierName, varianceMajor, curr)
+            _uiMessage.emit(
+                UiText.StringResource(
+                    R.string.toast_shift_closed_variance,
+                    MoneyFormat.toPlainDecimal(varianceMinor, digits),
+                    curr
+                )
+            )
 
             if (preferencesRepository.isPreserveDataOnUninstall()) {
                 try {
-                    OfflineBackupManager.createAutoBackup(context, db)
+                    AutoBackupScheduler.enqueueOneTimeAutoBackup(context)
                 } catch (_: Exception) {}
             }
         }
@@ -946,30 +1042,35 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onReportCreated: (ShiftReport) -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount)
-            val varianceMinor = MoneyFormat.calculateVarianceMinor(actualCashCountMinor, session.expectedCash)
-            val varianceMajor = MoneyFormat.toMajorUnits(varianceMinor)
-            val updated = session.copy(
-                status = "CLOSED",
-                closedAt = System.currentTimeMillis(),
-                actualCashCount = actualCashCountMinor,
-                variance = varianceMinor,
-                notes = notes
-            )
-            reportDao.updateShiftSession(updated)
+            val (latestSession, actualCashCountMinor, variancePair) = serialUpdater.update {
+                val currentSession = reportDao.getActiveShiftSessionOnce()?.takeIf { it.id == session.id } ?: session
+                val actualMinor = MoneyFormat.toMinorUnits(actualCashCount)
+                val vMinor = MoneyFormat.calculateVarianceMinor(actualMinor, currentSession.expectedCash)
+                val vMajor = MoneyFormat.toMajorUnits(vMinor)
+                val updated = currentSession.copy(
+                    status = "CLOSED",
+                    closedAt = System.currentTimeMillis(),
+                    actualCashCount = actualMinor,
+                    variance = vMinor,
+                    notes = notes
+                )
+                reportDao.updateShiftSession(updated)
+                Triple(currentSession, actualMinor, Pair(vMinor, vMajor))
+            }
+            val (varianceMinor, varianceMajor) = variancePair
 
             val report = ShiftReport(
-                cashierName = session.cashierName,
-                shift = session.shiftName,
+                cashierName = latestSession.cashierName,
+                shift = latestSession.shiftName,
                 dateInMillis = System.currentTimeMillis(),
-                openingCash = session.startingCash,
+                openingCash = latestSession.startingCash,
                 closingCash = actualCashCountMinor,
-                grossCash = session.cashSales,
-                madaPayments = session.cardSales,
-                digitalWallet = session.digitalSales,
-                totalDiscounts = session.totalDiscounts,
-                salesReturns = session.salesReturns,
-                totalExpenses = session.totalPayOut,
+                grossCash = latestSession.cashSales,
+                madaPayments = latestSession.cardSales,
+                digitalWallet = latestSession.digitalSales,
+                totalDiscounts = latestSession.totalDiscounts,
+                salesReturns = latestSession.salesReturns,
+                totalExpenses = latestSession.totalPayOut,
                 notes = notes
             )
             val id = repository.insertReport(report)
@@ -977,16 +1078,16 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
             reportDao.insertAuditLog(
                 AuditLog(
-                    username = session.cashierName,
+                    username = latestSession.cashierName,
                     action = "CLOSE_SHIFT_Z_REPORT",
-                    details = "Closed ${session.shiftName} shift with Z-Report #${finalReport.id}. Total Sales: ${MoneyFormat.toMajorUnits(finalReport.totalSales)}, Expected Cash: ${MoneyFormat.toMajorUnits(session.expectedCash)}, Actual Count: $actualCashCount, Variance: $varianceMajor"
+                    details = "Closed ${latestSession.shiftName} shift with Z-Report #${finalReport.id}. Total Sales: ${MoneyFormat.toMajorUnits(finalReport.totalSales)}, Expected Cash: ${MoneyFormat.toMajorUnits(latestSession.expectedCash)}, Actual Count: $actualCashCount, Variance: $varianceMajor"
                 )
             )
 
             if (varianceMinor != 0L) {
                 reportDao.insertAuditLog(
                     AuditLog(
-                        username = session.cashierName,
+                        username = latestSession.cashierName,
                         action = "VARIANCE_RECORDED",
                         details = "Z-Report #${finalReport.id} Cash Variance: $varianceMajor (${if (varianceMinor > 0) "Over" else "Short"})"
                     )
@@ -994,12 +1095,19 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             val curr = syncManager.currentCurrency.value
-            NotificationHelper.sendShiftClosedNotification(context, session.cashierName, varianceMajor, curr)
-            _uiMessage.emit(UiText.StringResource(R.string.toast_shift_closed_variance, "%.2f".format(varianceMajor), curr))
+            val digits = MoneyFormat.minorUnitDigits(curr)
+            NotificationHelper.sendShiftClosedNotification(context, latestSession.cashierName, varianceMajor, curr)
+            _uiMessage.emit(
+                UiText.StringResource(
+                    R.string.toast_shift_closed_variance,
+                    MoneyFormat.toPlainDecimal(varianceMinor, digits),
+                    curr
+                )
+            )
 
             if (preferencesRepository.isPreserveDataOnUninstall()) {
                 try {
-                    OfflineBackupManager.createAutoBackup(context, db)
+                    AutoBackupScheduler.enqueueOneTimeAutoBackup(context)
                 } catch (_: Exception) {}
             }
 
@@ -1009,30 +1117,39 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun addCashMovement(type: String, amount: Double, reason: String, cashierName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val active = activeShiftSession.value
-            val sessionId = active?.id ?: 0
-            val amountMinor = MoneyFormat.toMinorUnits(amount)
-            reportDao.insertCashMovement(
-                CashMovement(
-                    shiftSessionId = sessionId,
-                    type = type,
-                    amount = amountMinor,
-                    reason = reason,
-                    cashierName = cashierName
+            serialUpdater.update {
+                val active = reportDao.getActiveShiftSessionOnce() ?: activeShiftSession.value
+                val sessionId = active?.id ?: 0
+                val amountMinor = MoneyFormat.toMinorUnits(amount)
+                reportDao.insertCashMovement(
+                    CashMovement(
+                        shiftSessionId = sessionId,
+                        type = type,
+                        amount = amountMinor,
+                        reason = reason,
+                        cashierName = cashierName
+                    )
+                )
+                if (active != null) {
+                    val newPayIn = if (type == "PAY_IN") MoneyFormat.addMinor(active.totalPayIn, amountMinor) else active.totalPayIn
+                    val newPayOut = if (type == "PAY_OUT") MoneyFormat.addMinor(active.totalPayOut, amountMinor) else active.totalPayOut
+                    val newExpected = MoneyFormat.calculateExpectedCashMinor(
+                        startingCash = active.startingCash,
+                        cashSales = active.cashSales,
+                        payIn = newPayIn,
+                        payOut = newPayOut
+                    )
+                    reportDao.updateShiftSession(active.copy(totalPayIn = newPayIn, totalPayOut = newPayOut, expectedCash = newExpected))
+                }
+            }
+            val digits = MoneyFormat.minorUnitDigits(syncManager.currentCurrency.value)
+            _uiMessage.emit(
+                UiText.StringResource(
+                    R.string.toast_movement_recorded,
+                    type,
+                    MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(amount, digits), digits)
                 )
             )
-            if (active != null) {
-                val newPayIn = if (type == "PAY_IN") MoneyFormat.addMinor(active.totalPayIn, amountMinor) else active.totalPayIn
-                val newPayOut = if (type == "PAY_OUT") MoneyFormat.addMinor(active.totalPayOut, amountMinor) else active.totalPayOut
-                val newExpected = MoneyFormat.calculateExpectedCashMinor(
-                    startingCash = active.startingCash,
-                    cashSales = active.cashSales,
-                    payIn = newPayIn,
-                    payOut = newPayOut
-                )
-                reportDao.updateShiftSession(active.copy(totalPayIn = newPayIn, totalPayOut = newPayOut, expectedCash = newExpected))
-            }
-            _uiMessage.emit(UiText.StringResource(R.string.toast_movement_recorded, type, amount.toString()))
         }
     }
 

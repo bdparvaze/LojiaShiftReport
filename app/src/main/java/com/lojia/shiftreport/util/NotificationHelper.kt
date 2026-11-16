@@ -118,8 +118,11 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val digits = MoneyFormat.minorUnitDigits(currency)
+        val totalSalesStr = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(totalSales, digits), digits)} $currency"
+        val netCashStr = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(netCash, digits), digits)} $currency"
         val title = context.getString(R.string.notif_shift_summary_title, shift)
-        val message = context.getString(R.string.notif_shift_summary_desc, cashierName, "%.2f %s".format(totalSales, currency), "%.2f %s".format(netCash, currency))
+        val message = context.getString(R.string.notif_shift_summary_desc, cashierName, totalSalesStr, netCashStr)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SHIFT)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
@@ -145,8 +148,10 @@ object NotificationHelper {
         currency: String
     ) {
         initNotificationChannels(context)
+        val digits = MoneyFormat.minorUnitDigits(currency)
+        val startingCashStr = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(startingCash, digits), digits)} $currency"
         val title = context.getString(R.string.notif_shift_opened_title)
-        val message = context.getString(R.string.notif_shift_opened_desc, cashierName, "%.2f %s".format(startingCash, currency))
+        val message = context.getString(R.string.notif_shift_opened_desc, cashierName, startingCashStr)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SHIFT)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -170,7 +175,9 @@ object NotificationHelper {
         currency: String
     ) {
         initNotificationChannels(context)
-        val statusText = if (variance >= 0) "+%.2f %s".format(variance, currency) else "%.2f %s".format(variance, currency)
+        val digits = MoneyFormat.minorUnitDigits(currency)
+        val absVarStr = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(kotlin.math.abs(variance), digits), digits)
+        val statusText = if (variance >= 0) "+$absVarStr $currency" else "-$absVarStr $currency"
         val title = context.getString(R.string.notif_shift_closed_title)
         val message = context.getString(R.string.notif_drawer_closed, statusText)
 

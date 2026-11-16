@@ -16,6 +16,7 @@ android {
         versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Disabled. Known gaps before enabling: lastUpdated uses the shift date, no deletion propagation, no WorkManager retry on soft failure. See docs/SYNC_NOTES.md.
         buildConfigField("boolean", "CLOUD_SYNC_ENABLED", "false")
     }
 

@@ -3,7 +3,10 @@ package com.lojia.shiftreport.settings.backup
 import android.content.Context
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.BackupPasswordRequiredException
 import com.lojia.shiftreport.util.OfflineBackupManager
+import com.lojia.shiftreport.util.canCreatePortableBackup
+import com.lojia.shiftreport.util.withVaultPassword
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -75,7 +78,7 @@ class BackupManager(private val context: Context) {
 
     /**
      * Executes backup across chosen location(s).
-     * If location is BOTH, automatically backs up locally and to all connected cloud targets.
+     * Requires a backup password vault and always emits portable LSB2 payloads.
      */
     suspend fun backupNow(
         location: BackupLocation = getSelectedLocation(),
@@ -84,49 +87,63 @@ class BackupManager(private val context: Context) {
         val results = mutableMapOf<BackupLocation, Result<Boolean>>()
         AppLogger.i(TAG, "Starting backup execution for location: ${location.name}")
 
+        var tempFile: File? = null
         try {
-            // 1. Generate full database JSON payload
-            val (jsonContent, count) = OfflineBackupManager.generateBackupJson(database, isCloudBackup = (location != BackupLocation.LOCAL))
-
-            // 2. Write to a standard timestamped JSON file in cache
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-            val tempFile = File(context.cacheDir, "lojia_backup_$timeStamp.json")
-            FileOutputStream(tempFile).use { out ->
-                out.write(jsonContent.toByteArray())
+            if (!canCreatePortableBackup(context)) {
+                val err = BackupPasswordRequiredException("Set a backup password first")
+                results[location] = Result.failure(err)
+                return@withContext results
             }
 
-            // 3. Dispatch to destination provider(s)
+            val encryptedPair = withVaultPassword(context) { vaultPassword ->
+                OfflineBackupManager.createPortableBackupBytes(
+                    database = database,
+                    password = vaultPassword,
+                    isCloudBackup = (location != BackupLocation.LOCAL)
+                )
+            }.getOrElse { err ->
+                results[location] = Result.failure(err)
+                return@withContext results
+            }
+
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val outFile = File(context.cacheDir, "lojia_backup_$timeStamp.lsb")
+            tempFile = outFile
+            FileOutputStream(outFile).use { out ->
+                out.write(encryptedPair.first)
+            }
+
+            // Dispatch encrypted LSB2 archive to destination provider(s)
             when (location) {
                 BackupLocation.LOCAL -> {
-                    results[BackupLocation.LOCAL] = localProvider.backup(tempFile)
+                    results[BackupLocation.LOCAL] = localProvider.backup(outFile)
                 }
 
                 BackupLocation.GOOGLE_DRIVE -> {
-                    results[BackupLocation.GOOGLE_DRIVE] = googleDriveProvider.backup(tempFile)
+                    results[BackupLocation.GOOGLE_DRIVE] = googleDriveProvider.backup(outFile)
                 }
 
                 BackupLocation.ONEDRIVE -> {
-                    results[BackupLocation.ONEDRIVE] = oneDriveProvider.backup(tempFile)
+                    results[BackupLocation.ONEDRIVE] = oneDriveProvider.backup(outFile)
                 }
 
                 BackupLocation.BOTH -> {
-                    // Always back up locally first
-                    results[BackupLocation.LOCAL] = localProvider.backup(tempFile)
+                    results[BackupLocation.LOCAL] = localProvider.backup(outFile)
 
-                    // Also upload to Google Drive if connected
                     if (googleDriveProvider.isConnected()) {
-                        results[BackupLocation.GOOGLE_DRIVE] = googleDriveProvider.backup(tempFile)
+                        results[BackupLocation.GOOGLE_DRIVE] = googleDriveProvider.backup(outFile)
                     }
 
-                    // Also upload to OneDrive if connected
                     if (oneDriveProvider.isConnected()) {
-                        results[BackupLocation.ONEDRIVE] = oneDriveProvider.backup(tempFile)
+                        results[BackupLocation.ONEDRIVE] = oneDriveProvider.backup(outFile)
                     }
                 }
             }
         } catch (e: Exception) {
             AppLogger.e(TAG, "Global backup failure: ${e.message}", e)
             results[location] = Result.failure(e)
+        } finally {
+            tempFile?.delete()
         }
 
         results

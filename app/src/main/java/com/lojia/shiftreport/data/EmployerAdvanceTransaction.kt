@@ -24,7 +24,7 @@ data class EmployerAdvanceTransaction(
     val employeeId: String,
     val employeeName: String,
     val shiftId: String = "",
-    val amount: Double, // Positive for advance, negative for CORRECTION
+    val amountMinor: Long = 0L, // Positive for advance, negative for CORRECTION
     val paymentMethod: String = AdvancePaymentMethod.CASH.name, // CASH or BANK
     val type: String = AdvanceTransactionType.ADVANCE.name, // ADVANCE or CORRECTION
     val reason: String = "",

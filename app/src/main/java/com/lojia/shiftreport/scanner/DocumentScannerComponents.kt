@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.calculateInSampleSize
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -199,7 +200,16 @@ fun ScannedDocumentItemCard(
             val file = File(document.thumbnailPath)
             if (file.exists()) {
                 try {
-                    BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+                    val boundsOptions = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
+                    BitmapFactory.decodeFile(file.absolutePath, boundsOptions)
+                    val sampleSize = calculateInSampleSize(boundsOptions.outWidth, boundsOptions.outHeight)
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        inSampleSize = sampleSize
+                        inJustDecodeBounds = false
+                    }
+                    BitmapFactory.decodeFile(file.absolutePath, decodeOptions)?.asImageBitmap()
                 } catch (e: Exception) {
                     null
                 }

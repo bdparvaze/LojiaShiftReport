@@ -10,6 +10,7 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
+import com.lojia.shiftreport.util.paperWidthDots
 
 data class ParsedLine(
     val left: String? = null,
@@ -106,7 +107,7 @@ object ThermalBitmapRenderer {
      */
     fun renderLineToBitmap(
         rawLine: String,
-        widthPx: Int = 384,
+        widthPx: Int = paperWidthDots(null),
         fontSizePx: Float = 24f,
         typeface: Typeface = Typeface.DEFAULT
     ): Bitmap {
@@ -205,7 +206,7 @@ object ThermalBitmapRenderer {
         original: Bitmap,
         is58mm: Boolean = true
     ): Bitmap {
-        val maxWidth = if (is58mm) 384 else 576
+        val maxWidth = paperWidthDots(if (is58mm) 58 else 80)
         if (original.width <= maxWidth) {
             return original
         }

@@ -287,13 +287,14 @@ fun DashboardScreen(
             } else {
                 // Summary Metric Stat Cards Row 1
                 item {
+                    val dashDigits = MoneyFormat.minorUnitDigits(currency)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         MonthlyKpiCard(
                             title = stringResource(R.string.total_revenue),
-                            value = "%.2f %s".format(MoneyFormat.toMajorUnits(combinedGrossSales), currency),
+                            value = "${MoneyFormat.toPlainDecimal(combinedGrossSales, dashDigits)} $currency",
                             subtitle = stringResource(R.string.shifts_recorded_fmt, shiftReports.size),
                             icon = Icons.Default.MonetizationOn,
                             accentColor = Color(0xFF059669),
@@ -301,7 +302,7 @@ fun DashboardScreen(
                         )
                         MonthlyKpiCard(
                             title = stringResource(R.string.average_shift_sales),
-                            value = "%.2f %s".format(MoneyFormat.toMajorUnits(avgSalesPerShift), currency),
+                            value = "${MoneyFormat.toPlainDecimal(avgSalesPerShift, dashDigits)} $currency",
                             subtitle = stringResource(R.string.per_shift_average),
                             icon = Icons.Default.ShowChart,
                             accentColor = Color(0xFF2563EB),
@@ -312,13 +313,14 @@ fun DashboardScreen(
 
                 // Summary Metric Stat Cards Row 2
                 item {
+                    val dashDigits = MoneyFormat.minorUnitDigits(currency)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         MonthlyKpiCard(
                             title = stringResource(R.string.total_expenses),
-                            value = "%.2f %s".format(MoneyFormat.toMajorUnits(totalExpenses), currency),
+                            value = "${MoneyFormat.toPlainDecimal(totalExpenses, dashDigits)} $currency",
                             subtitle = stringResource(R.string.operational_costs),
                             icon = Icons.Default.MoneyOff,
                             accentColor = Color(0xFFDC2626),
@@ -486,8 +488,9 @@ fun DashboardScreen(
                                             color = TextSecondaryLight
                                         )
                                         Spacer(modifier = Modifier.height(6.dp))
+                                        val shiftDigits = MoneyFormat.minorUnitDigits(currency)
                                         Text(
-                                            text = stringResource(R.string.msg_2f_s_21).format(MoneyFormat.toMajorUnits(morningTotal), currency),
+                                            text = "${MoneyFormat.toPlainDecimal(morningTotal, shiftDigits)} $currency",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = PrimaryBlue
@@ -527,8 +530,9 @@ fun DashboardScreen(
                                             color = TextSecondaryLight
                                         )
                                         Spacer(modifier = Modifier.height(6.dp))
+                                        val shiftDigits = MoneyFormat.minorUnitDigits(currency)
                                         Text(
-                                            text = stringResource(R.string.msg_2f_s_21).format(MoneyFormat.toMajorUnits(eveningTotal), currency),
+                                            text = "${MoneyFormat.toPlainDecimal(eveningTotal, shiftDigits)} $currency",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFFD97706)
@@ -579,8 +583,10 @@ fun PaymentProgressBar(
                     )
                 )
             }
+            val barDigits = MoneyFormat.minorUnitDigits(currency)
+            val amountStr = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(amount, barDigits), barDigits)
             Text(
-                text = stringResource(R.string.msg_2f_s_d_1).format(amount, currency, percent),
+                text = "$amountStr $currency ($percent%)",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Bold,

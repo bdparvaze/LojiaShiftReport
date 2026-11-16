@@ -199,4 +199,28 @@ interface ReportDao {
 
     @Query("SELECT COUNT(*) FROM cashiers WHERE isActive = 1 AND isArchived = 0")
     suspend fun getCashierCount(): Int
+
+    @Query("SELECT COUNT(*) FROM shift_reports")
+    fun observeShiftReportCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM draft_reports")
+    fun observeDraftReportCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM shift_sessions")
+    fun observeShiftSessionCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM cash_movements")
+    fun observeCashMovementCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM shift_reports")
+    suspend fun getShiftReportCount(): Int
+
+    @Query("SELECT COUNT(*) FROM draft_reports")
+    suspend fun getDraftReportCount(): Int
+
+    @Query("SELECT COUNT(*) FROM shift_sessions")
+    suspend fun getShiftSessionCount(): Int
+
+    @Query("SELECT COUNT(*) FROM cash_movements")
+    suspend fun getCashMovementCount(): Int
 }

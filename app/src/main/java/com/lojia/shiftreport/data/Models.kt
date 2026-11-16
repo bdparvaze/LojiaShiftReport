@@ -149,7 +149,7 @@ data class ShiftReport(
 
     // Net Sales (Gross Sales minus Discounts and Returns)
     val netSales: Long
-        get() = MoneyFormat.subtractMinor(MoneyFormat.subtractMinor(grossSales, totalDiscounts), salesReturns).coerceAtLeast(0L)
+        get() = MoneyFormat.calculateNetSalesMinor(grossSales, totalDiscounts, salesReturns)
 
     // Parsed JSON Collection Lists
     val previousDueCollectionsList: List<PreviousDueCollectionItem>
@@ -339,22 +339,27 @@ data class ShiftReport(
 
     // High-Precision BigDecimal Computations
     val grossSalesBigDecimal: java.math.BigDecimal
-        get() = java.math.BigDecimal.valueOf(grossCash)
-            .add(java.math.BigDecimal.valueOf(madaPayments))
-            .add(java.math.BigDecimal.valueOf(digitalWallet))
-            .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+        get() {
+            val digits = MoneyFormat.activeDigits
+            return java.math.BigDecimal.valueOf(grossCash)
+                .add(java.math.BigDecimal.valueOf(madaPayments))
+                .add(java.math.BigDecimal.valueOf(digitalWallet))
+                .divide(java.math.BigDecimal.valueOf(MoneyFormat.minorFactor(digits)), digits, java.math.RoundingMode.HALF_UP)
+        }
 
     val netSalesBigDecimal: java.math.BigDecimal
         get() {
-            val discounts = java.math.BigDecimal.valueOf(totalDiscounts).divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
-            val returns = java.math.BigDecimal.valueOf(salesReturns).divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
-            val net = grossSalesBigDecimal.subtract(discounts).subtract(returns)
-            return if (net < java.math.BigDecimal.ZERO) java.math.BigDecimal.ZERO else net
+            val digits = MoneyFormat.activeDigits
+            val factor = java.math.BigDecimal.valueOf(MoneyFormat.minorFactor(digits))
+            return java.math.BigDecimal.valueOf(netSales).divide(factor, digits, java.math.RoundingMode.HALF_UP)
         }
 
     val expectedCashInDrawerBigDecimal: java.math.BigDecimal
-        get() = java.math.BigDecimal.valueOf(expectedCashInDrawer)
-            .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP)
+        get() {
+            val digits = MoneyFormat.activeDigits
+            return java.math.BigDecimal.valueOf(expectedCashInDrawer)
+                .divide(java.math.BigDecimal.valueOf(MoneyFormat.minorFactor(digits)), digits, java.math.RoundingMode.HALF_UP)
+        }
 
     fun varianceBigDecimal(actualCash: java.math.BigDecimal): java.math.BigDecimal =
         actualCash.subtract(expectedCashInDrawerBigDecimal)
@@ -388,7 +393,7 @@ data class DraftReport(
         get() = MoneyFormat.addMinor(grossCash, madaPayments, digitalWallet)
 
     val netSales: Long
-        get() = MoneyFormat.subtractMinor(MoneyFormat.subtractMinor(totalSales, totalDiscounts), salesReturns).coerceAtLeast(0L)
+        get() = MoneyFormat.calculateNetSalesMinor(totalSales, totalDiscounts, salesReturns)
 }
 
 data class DueCreditItem(
@@ -458,14 +463,7 @@ data class BusinessProfile(
     val isTaxEnabled: Boolean = false,
     val isTaxIncluded: Boolean = true,
     val logoUri: String = ""
-) {
-    @get:Ignore
-    val taxEnabled: Boolean get() = isTaxEnabled
-    @get:Ignore
-    val taxRatePercent: Double get() = vatRate
-    @get:Ignore
-    val taxInclusive: Boolean get() = isTaxIncluded
-}
+)
 
 data class UpdateBusinessRequest(
     val businessName: String? = null,
@@ -511,30 +509,29 @@ enum class AppCountry(
     @StringRes val nameRes: Int,
     val currencyCode: String,
     val currencySymbol: String,
-    val defaultVatRate: Double = 15.0,
     val dialCode: String = "+880"
 ) {
-    BANGLADESH("BD", "Bangladesh", R.string.country_bangladesh, "BDT", "BDT", 15.0, "+880"),
-    SAUDI_ARABIA("SA", "Saudi Arabia", R.string.country_saudi_arabia, "SAR", "SAR", 15.0, "+966"),
-    UNITED_ARAB_EMIRATES("AE", "United Arab Emirates", R.string.country_uae, "AED", "AED", 5.0, "+971"),
-    QATAR("QA", "Qatar", R.string.country_qatar, "QAR", "QAR", 0.0, "+974"),
-    KUWAIT("KW", "Kuwait", R.string.country_kuwait, "KWD", "KWD", 0.0, "+965"),
-    OMAN("OM", "Oman", R.string.country_oman, "OMR", "OMR", 5.0, "+968"),
-    BAHRAIN("BH", "Bahrain", R.string.country_bahrain, "BHD", "BHD", 10.0, "+973"),
-    UNITED_STATES("US", "United States", R.string.country_usa, "USD", "$", 8.25, "+1"),
-    UNITED_KINGDOM("GB", "United Kingdom", R.string.country_uk, "GBP", "£", 20.0, "+44"),
-    EUROPEAN_UNION("EU", "European Union", R.string.country_eu, "EUR", "€", 19.0, "+49"),
-    INDIA("IN", "India", R.string.country_india, "INR", "INR", 18.0, "+91"),
-    PAKISTAN("PK", "Pakistan", R.string.country_pakistan, "PKR", "PKR", 17.0, "+92"),
-    MALAYSIA("MY", "Malaysia", R.string.country_malaysia, "MYR", "RM", 6.0, "+60"),
-    SINGAPORE("SG", "Singapore", R.string.country_singapore, "SGD", "S$", 9.0, "+65"),
-    CANADA("CA", "Canada", R.string.country_canada, "CAD", "C$", 13.0, "+1"),
-    AUSTRALIA("AU", "Australia", R.string.country_australia, "AUD", "A$", 10.0, "+61"),
-    TURKEY("TR", "Turkey", R.string.country_turkey, "TRY", "TRY", 20.0, "+90"),
-    EGYPT("EG", "Egypt", R.string.country_egypt, "EGP", "EGP", 14.0, "+20"),
-    JAPAN("JP", "Japan", R.string.country_japan, "JPY", "¥", 10.0, "+81"),
-    CHINA("CN", "China", R.string.country_china, "CNY", "¥", 13.0, "+86"),
-    INDONESIA("ID", "Indonesia", R.string.country_indonesia, "IDR", "Rp", 11.0, "+62");
+    BANGLADESH("BD", "Bangladesh", R.string.country_bangladesh, "BDT", "BDT", "+880"),
+    SAUDI_ARABIA("SA", "Saudi Arabia", R.string.country_saudi_arabia, "SAR", "SAR", "+966"),
+    UNITED_ARAB_EMIRATES("AE", "United Arab Emirates", R.string.country_uae, "AED", "AED", "+971"),
+    QATAR("QA", "Qatar", R.string.country_qatar, "QAR", "QAR", "+974"),
+    KUWAIT("KW", "Kuwait", R.string.country_kuwait, "KWD", "KWD", "+965"),
+    OMAN("OM", "Oman", R.string.country_oman, "OMR", "OMR", "+968"),
+    BAHRAIN("BH", "Bahrain", R.string.country_bahrain, "BHD", "BHD", "+973"),
+    UNITED_STATES("US", "United States", R.string.country_usa, "USD", "$", "+1"),
+    UNITED_KINGDOM("GB", "United Kingdom", R.string.country_uk, "GBP", "£", "+44"),
+    EUROPEAN_UNION("EU", "European Union", R.string.country_eu, "EUR", "€", "+49"),
+    INDIA("IN", "India", R.string.country_india, "INR", "INR", "+91"),
+    PAKISTAN("PK", "Pakistan", R.string.country_pakistan, "PKR", "PKR", "+92"),
+    MALAYSIA("MY", "Malaysia", R.string.country_malaysia, "MYR", "RM", "+60"),
+    SINGAPORE("SG", "Singapore", R.string.country_singapore, "SGD", "S$", "+65"),
+    CANADA("CA", "Canada", R.string.country_canada, "CAD", "C$", "+1"),
+    AUSTRALIA("AU", "Australia", R.string.country_australia, "AUD", "A$", "+61"),
+    TURKEY("TR", "Turkey", R.string.country_turkey, "TRY", "TRY", "+90"),
+    EGYPT("EG", "Egypt", R.string.country_egypt, "EGP", "EGP", "+20"),
+    JAPAN("JP", "Japan", R.string.country_japan, "JPY", "¥", "+81"),
+    CHINA("CN", "China", R.string.country_china, "CNY", "¥", "+86"),
+    INDONESIA("ID", "Indonesia", R.string.country_indonesia, "IDR", "Rp", "+62");
 
     val displayNameEn: String get() = displayName
 

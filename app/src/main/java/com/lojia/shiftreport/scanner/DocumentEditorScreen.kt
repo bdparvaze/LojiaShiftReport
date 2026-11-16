@@ -96,7 +96,7 @@ fun DocumentEditorScreen(
 
     // Document Title & Saving
     val defaultTitle = remember {
-        "Doc_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        "Doc_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
     }
     var documentTitle by remember { mutableStateOf(defaultTitle) }
     var isEditingTitle by remember { mutableStateOf(false) }

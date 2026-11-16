@@ -23,9 +23,24 @@ import kotlinx.coroutines.flow.*
 
 
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.SecurityUtils
+
+fun canChangeCurrency(hasFinancialData: Boolean): Boolean = !hasFinancialData
+
+suspend fun hasFinancialData(database: AppDatabase): Boolean {
+    val reportDao = database.reportDao()
+    if (reportDao.getShiftReportCount() > 0) return true
+    if (reportDao.getDraftReportCount() > 0) return true
+    if (reportDao.getShiftSessionCount() > 0) return true
+    if (reportDao.getCashMovementCount() > 0) return true
+    if (database.employerAdvanceDao().getAdvanceCount() > 0) return true
+    if (database.employeeDao().getEmployeeCount() > 0) return true
+    return false
+}
 
 /**
  * Sync status descriptor for UI feedback across modules
@@ -61,8 +76,11 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     private val _currentCountry = MutableStateFlow(loadInitialCountry())
     val currentCountry: StateFlow<AppCountry> = _currentCountry.asStateFlow()
 
-    private val _currentCurrency = MutableStateFlow("USD")
+    private val _currentCurrency = MutableStateFlow(MoneyFormat.DEFAULT_CURRENCY_CODE)
     val currentCurrency: StateFlow<String> = _currentCurrency.asStateFlow()
+
+    private val _isCurrencyLocked = MutableStateFlow(false)
+    val isCurrencyLocked: StateFlow<Boolean> = _isCurrencyLocked.asStateFlow()
 
     // 3. Cashier Roster State
     val cashiers: StateFlow<List<Cashier>> = reportDao.getAllCashiers()
@@ -90,14 +108,33 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     val syncState: StateFlow<ConfigurationSyncState> = _syncState.asStateFlow()
 
     init {
-        _currentCurrency.value = prefs.getString(KEY_SELECTED_CURRENCY, "USD")
-            ?: "USD"
+        val initialCurrency = (prefs.getString(KEY_SELECTED_CURRENCY, MoneyFormat.DEFAULT_CURRENCY_CODE)
+            ?: MoneyFormat.DEFAULT_CURRENCY_CODE).trim().uppercase().ifEmpty { MoneyFormat.DEFAULT_CURRENCY_CODE }
+        _currentCurrency.value = initialCurrency
+        MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(initialCurrency)
 
         // Initial setup and DB sync verification
         scope.launch {
             verifyAndSeedDefaultCashiers()
             syncStoredSettingsFromDb()
+            refreshCurrencyLock()
             observeDatabaseSettings()
+        }
+
+        // Observe financial tables to keep currency lock reactive
+        scope.launch {
+            combine(
+                reportDao.observeShiftReportCount(),
+                reportDao.observeDraftReportCount(),
+                reportDao.observeShiftSessionCount(),
+                reportDao.observeCashMovementCount(),
+                db.employerAdvanceDao().observeAdvanceCount(),
+                db.employeeDao().observeEmployeeCount()
+            ) { counts ->
+                counts.any { it > 0 }
+            }.collect { locked ->
+                _isCurrencyLocked.value = locked
+            }
         }
 
         // Keep sync state updated as cashiers / language / country change
@@ -167,15 +204,25 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                 reportDao.setSetting(AppSetting(KEY_SELECTED_COUNTRY, _currentCountry.value.code))
             }
 
-            // Restore currency from Room DB if present
+            // Restore currency from Room DB (app_settings or business_profile)
             val dbCurrency = reportDao.getSetting(KEY_SELECTED_CURRENCY)
-            if (!dbCurrency.isNullOrBlank()) {
-                val normalized = dbCurrency.trim().uppercase()
-                if (normalized != _currentCurrency.value) {
-                    _currentCurrency.value = normalized
-                    prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
+            val profileCurrency = reportDao.getBusinessProfileOnce()?.currency?.trim()?.uppercase().orEmpty()
+            val resolvedDbCurrency = when {
+                !dbCurrency.isNullOrBlank() -> dbCurrency.trim().uppercase()
+                profileCurrency.isNotEmpty() -> profileCurrency
+                else -> ""
+            }
+            if (resolvedDbCurrency.isNotEmpty()) {
+                if (resolvedDbCurrency != _currentCurrency.value) {
+                    _currentCurrency.value = resolvedDbCurrency
+                    prefs.edit().putString(KEY_SELECTED_CURRENCY, resolvedDbCurrency).apply()
+                }
+                MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(resolvedDbCurrency)
+                if (dbCurrency.isNullOrBlank()) {
+                    reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, resolvedDbCurrency))
                 }
             } else {
+                MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(_currentCurrency.value)
                 reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, _currentCurrency.value))
             }
 
@@ -227,9 +274,12 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                         }
                         KEY_SELECTED_CURRENCY -> {
                             val normalized = setting.value.trim().uppercase()
-                            if (normalized.isNotEmpty() && normalized != _currentCurrency.value) {
-                                _currentCurrency.value = normalized
-                                prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
+                            if (normalized.isNotEmpty()) {
+                                MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(normalized)
+                                if (normalized != _currentCurrency.value) {
+                                    _currentCurrency.value = normalized
+                                    prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
+                                }
                             }
                         }
                         KEY_ACTIVE_CASHIER -> {
@@ -275,73 +325,87 @@ class ConfigurationSyncManager private constructor(private val context: Context)
         }
     }
 
+    suspend fun refreshCurrencyLock(): Boolean = withContext(Dispatchers.IO) {
+        val locked = hasFinancialData(db)
+        _isCurrencyLocked.value = locked
+        locked
+    }
+
     /**
      * Change and synchronize country and currency setting across all modules, persist to DB & SharedPreferences,
-     * and automatically update the BusinessProfile currency and VAT rate.
+     * and automatically update the BusinessProfile currency.
+     * Blocked when the database already holds financial records.
      */
-    fun setCountry(country: AppCountry) {
+    suspend fun setCountry(country: AppCountry): Result<Unit> = withContext(Dispatchers.IO) {
+        if (!canChangeCurrency(hasFinancialData(db))) {
+            _isCurrencyLocked.value = true
+            return@withContext Result.failure(IllegalStateException("currency locked"))
+        }
+
         _currentCountry.value = country
         _currentCurrency.value = country.currencyCode
+        MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(country.currencyCode)
         prefs.edit()
             .putString(KEY_SELECTED_COUNTRY, country.code)
             .putString(KEY_SELECTED_CURRENCY, country.currencyCode)
             .apply()
-        scope.launch {
-            reportDao.setSetting(AppSetting(KEY_SELECTED_COUNTRY, country.code))
-            reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, country.currencyCode))
-            // Automatically update BusinessProfile with the selected country and currency
-            val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
-            val updatedProfile = currentProfile.copy(
-                country = country.displayNameEn,
-                currency = country.currencyCode,
-                vatRate = country.defaultVatRate
+
+        reportDao.setSetting(AppSetting(KEY_SELECTED_COUNTRY, country.code))
+        reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, country.currencyCode))
+        val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
+        val updatedProfile = currentProfile.copy(
+            country = country.displayNameEn,
+            currency = country.currencyCode
+        )
+        reportDao.saveBusinessProfile(updatedProfile)
+        reportDao.insertAuditLog(
+            AuditLog(
+                username = _activeCashier.value,
+                action = "COUNTRY_CHANGE",
+                details = "Country and Currency synchronized to ${country.displayNameEn} (${country.currencyCode} ${country.currencySymbol})"
             )
-            reportDao.saveBusinessProfile(updatedProfile)
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = _activeCashier.value,
-                    action = "COUNTRY_CHANGE",
-                    details = "Country and Currency synchronized to ${country.displayNameEn} (${country.currencyCode} ${country.currencySymbol})"
-                )
-            )
-        }
+        )
+        Result.success(Unit)
     }
 
     /**
      * Change and synchronize currency setting independently across all modules.
+     * Blocked when the database already holds financial records.
      */
-    fun setCurrency(currencyCode: String) {
+    suspend fun setCurrency(currencyCode: String): Result<Unit> = withContext(Dispatchers.IO) {
         val normalized = currencyCode.trim().uppercase()
-        if (normalized.isEmpty()) return
+        if (normalized.isEmpty()) {
+            return@withContext Result.failure(IllegalArgumentException("empty currency"))
+        }
+        if (!canChangeCurrency(hasFinancialData(db))) {
+            _isCurrencyLocked.value = true
+            return@withContext Result.failure(IllegalStateException("currency locked"))
+        }
 
-        // 1. Update StateFlow immediately (reactive)
+        // 1. Update StateFlow and activeDigits
         _currentCurrency.value = normalized
+        MoneyFormat.activeDigits = MoneyFormat.minorUnitDigits(normalized)
 
         // 2. Persist to SharedPreferences
         prefs.edit().putString(KEY_SELECTED_CURRENCY, normalized).apply()
 
         // 3. Update BusinessProfile
-        scope.launch {
-            val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
-            val matchedCountry = AppCountry.entries.find {
-                it.currencyCode.equals(normalized, ignoreCase = true)
-            }
-            val updatedProfile = currentProfile.copy(
-                currency = normalized,
-                vatRate = matchedCountry?.defaultVatRate ?: currentProfile.vatRate
-            )
-            reportDao.saveBusinessProfile(updatedProfile)
+        val currentProfile = reportDao.getBusinessProfileOnce() ?: BusinessProfile()
+        val updatedProfile = currentProfile.copy(
+            currency = normalized
+        )
+        reportDao.saveBusinessProfile(updatedProfile)
 
-            // 4. Persist to Room app_settings
-            reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, normalized))
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = _activeCashier.value,
-                    action = "CURRENCY_CHANGE",
-                    details = "Currency set to $normalized"
-                )
+        // 4. Persist to Room app_settings
+        reportDao.setSetting(AppSetting(KEY_SELECTED_CURRENCY, normalized))
+        reportDao.insertAuditLog(
+            AuditLog(
+                username = _activeCashier.value,
+                action = "CURRENCY_CHANGE",
+                details = "Currency set to $normalized"
             )
-        }
+        )
+        Result.success(Unit)
     }
 
     /**
@@ -485,6 +549,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             try {
                 verifyAndSeedDefaultCashiers()
                 syncStoredSettingsFromDb()
+                refreshCurrencyLock()
                 val list = reportDao.getAllCashiers().first()
                 val currentLang = _currentLanguage.value
                 val message = "Successfully synchronized ${list.size} cashiers and ${currentLang.displayName} language."

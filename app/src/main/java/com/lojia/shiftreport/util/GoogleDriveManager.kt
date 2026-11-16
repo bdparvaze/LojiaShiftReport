@@ -347,25 +347,54 @@ object GoogleDriveManager {
     }
 
     /**
-     * Uploads a business data backup to Google Drive App Folder.
-     * Note: Requirement 5 states passwords and PINs must never be uploaded.
+     * Uploads a password-encrypted portable LSB2 business backup to Google Drive App Folder.
+     * Fails closed with [BackupPasswordRequiredException] if no password/vault is set.
      */
     suspend fun uploadBackup(
         context: Context,
-        database: AppDatabase
+        database: AppDatabase,
+        password: CharArray? = null
     ): Result<DriveBackupItem> = withContext(Dispatchers.IO) {
         try {
+            val payloadPair = if (password != null) {
+                Result.success(
+                    OfflineBackupManager.createPortableBackupBytes(
+                        database = database,
+                        password = password,
+                        isCloudBackup = true
+                    )
+                )
+            } else {
+                withVaultPassword(context) { vaultPassword ->
+                    OfflineBackupManager.createPortableBackupBytes(
+                        database = database,
+                        password = vaultPassword,
+                        isCloudBackup = true
+                    )
+                }
+            }
+            val (encryptedBytes, totalRecords) = payloadPair.getOrElse { err ->
+                return@withContext Result.failure(err)
+            }
+            uploadBackupBytes(context, encryptedBytes, totalRecords)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadBackupBytes(
+        context: Context,
+        encryptedBytes: ByteArray,
+        totalRecords: Int,
+        fileName: String = "Lojia_Backup_${DateTimeFormatUtils.formatFileTimestampDash()}.lsb"
+    ): Result<DriveBackupItem> = withContext(Dispatchers.IO) {
+        try {
+            if (backupTierOf(encryptedBytes) != TIER_PORTABLE) {
+                return@withContext Result.failure(BackupFormatException("Portable LSB2 payload required for cloud upload"))
+            }
             val token = getValidAccessToken(context)
                 ?: return@withContext Result.failure(IllegalStateException("Google Drive is not connected"))
 
-            // Generate clean business-only backup json (plain passwords/PINs stripped)
-            val (jsonString, totalRecords) = OfflineBackupManager.generateBackupJson(database, isCloudBackup = true)
-            val jsonBytes = jsonString.toByteArray(StandardCharsets.UTF_8)
-
-            val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
-            val fileName = "Lojia_Backup_$timeStampStr.json"
-
-            // Multipart upload to Google Drive v3
             val boundary = "-------LojiaDriveBoundary" + System.currentTimeMillis()
             val url = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
             val conn = url.openConnection() as HttpURLConnection
@@ -376,8 +405,8 @@ object GoogleDriveManager {
 
             val metadata = JSONObject().apply {
                 put("name", fileName)
-                put("mimeType", "application/json")
-                put("description", "Lojia POS Cloud Backup (Records: $totalRecords)")
+                put("mimeType", "application/octet-stream")
+                put("description", "Lojia POS Encrypted Cloud Backup (Records: $totalRecords)")
                 put("parents", JSONArray().put("appDataFolder"))
             }.toString()
 
@@ -391,11 +420,11 @@ object GoogleDriveManager {
             writer.write("\r\n")
             writer.flush()
 
-            // Part 2: Media content
+            // Part 2: Encrypted LSB2 binary content
             writer.write("--$boundary\r\n")
-            writer.write("Content-Type: application/json\r\n\r\n")
+            writer.write("Content-Type: application/octet-stream\r\n\r\n")
             writer.flush()
-            os.write(jsonBytes)
+            os.write(encryptedBytes)
             os.flush()
 
             // End boundary
@@ -410,7 +439,7 @@ object GoogleDriveManager {
                 val item = DriveBackupItem(
                     id = respJson.getString("id"),
                     name = respJson.optString("name", fileName),
-                    size = jsonBytes.size.toLong(),
+                    size = encryptedBytes.size.toLong(),
                     modifiedTime = DateTimeFormatUtils.formatIsoDateTime(),
                     description = "$totalRecords records"
                 )
@@ -432,7 +461,7 @@ object GoogleDriveManager {
             val token = getValidAccessToken(context)
                 ?: return@withContext Result.failure(IllegalStateException("Google Drive is not connected"))
 
-            val query = "trashed=false and (name contains 'Lojia_Backup' or mimeType='application/json')"
+            val query = "trashed=false and (name contains 'Lojia_Backup' or mimeType='application/octet-stream' or mimeType='application/json')"
             val encodedQuery = URLEncoder.encode(query, "UTF-8")
             val urlString = "https://www.googleapis.com/drive/v3/files?" +
                     "spaces=appDataFolder,drive" +
@@ -472,9 +501,9 @@ object GoogleDriveManager {
     }
 
     /**
-     * Downloads backup file content from Google Drive.
+     * Downloads raw backup bytes from Google Drive without String conversion.
      */
-    suspend fun downloadBackup(context: Context, fileId: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun downloadBackupBytes(context: Context, fileId: String): Result<ByteArray> = withContext(Dispatchers.IO) {
         try {
             val token = getValidAccessToken(context)
                 ?: return@withContext Result.failure(IllegalStateException("Google Drive is not connected"))
@@ -486,8 +515,8 @@ object GoogleDriveManager {
 
             val responseCode = conn.responseCode
             if (responseCode in 200..299) {
-                val text = conn.inputStream.bufferedReader().use { it.readText() }
-                Result.success(text)
+                val bytes = conn.inputStream.use { it.readBytes() }
+                Result.success(bytes)
             } else {
                 val errorMsg = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "HTTP $responseCode"
                 Result.failure(Exception("Failed to download backup ($responseCode): $errorMsg"))

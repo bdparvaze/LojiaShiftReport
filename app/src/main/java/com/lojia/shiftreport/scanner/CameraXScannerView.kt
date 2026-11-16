@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.calculateInSampleSize
 import android.view.HapticFeedbackConstants
 import android.widget.Toast
 import androidx.camera.core.*
@@ -706,9 +707,7 @@ private fun takePhoto(
                     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, boundsOpts)
 
                     val maxDim = 2048
-                    var sampleSize = 1
-                    var larger = maxOf(boundsOpts.outWidth, boundsOpts.outHeight)
-                    while (larger / sampleSize > maxDim) sampleSize *= 2
+                    val sampleSize = calculateInSampleSize(boundsOpts.outWidth, boundsOpts.outHeight, maxDim)
 
                     val decodeOpts = BitmapFactory.Options().apply {
                         inSampleSize = sampleSize

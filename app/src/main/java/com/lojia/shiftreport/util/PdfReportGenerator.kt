@@ -32,7 +32,6 @@ import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 
 import com.lojia.shiftreport.data.ShiftReport
-import com.lojia.shiftreport.report.invoice.*
 import org.json.JSONArray
 
 import java.io.File
@@ -72,7 +71,7 @@ object PdfReportGenerator {
         if (value is Number) {
             val d = value.toDouble()
             if (value is Double && d % 1.0 != 0.0) {
-                return Math.round(d * 100)
+                return MoneyFormat.toMinorUnits(d)
             }
             return value.toLong()
         }
@@ -424,37 +423,37 @@ object PdfReportGenerator {
             appendLine("${pStr.shift}: ${getLocalizedShiftName(language, report.shift)} | ${pStr.cashier}: ${report.cashierName}")
             appendLine("--------------------------------")
             appendLine("[1. SALES SUMMARY]")
-            appendLine("${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency)}")
-            appendLine("${pStr.cardMadaSales}: ${MoneyFormat.formatMinor(report.madaPayments, currency)}")
+            appendLine("${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, Locale.US)}")
+            appendLine("${pStr.cardMadaSales}: ${MoneyFormat.formatMinor(report.madaPayments, currency, Locale.US)}")
             if (report.digitalWallet > 0L) {
-                appendLine("${pStr.digitalWallet}: ${MoneyFormat.formatMinor(report.digitalWallet, currency)}")
+                appendLine("${pStr.digitalWallet}: ${MoneyFormat.formatMinor(report.digitalWallet, currency, Locale.US)}")
             }
-            appendLine("${pStr.grossTotalSales}: ${MoneyFormat.formatMinor(report.totalSales, currency)}")
+            appendLine("${pStr.grossTotalSales}: ${MoneyFormat.formatMinor(report.totalSales, currency, Locale.US)}")
             appendLine("--------------------------------")
             appendLine("[2. CASH DRAWER RECONCILIATION]")
             if (startingCash > 0L) {
-                appendLine("${pStr.startingCash}: ${MoneyFormat.formatMinor(startingCash, currency)}")
+                appendLine("${pStr.startingCash}: ${MoneyFormat.formatMinor(startingCash, currency, Locale.US)}")
             }
-            appendLine("(+) ${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency)}")
+            appendLine("(+) ${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, Locale.US)}")
             if (cashIn > 0L) {
-                appendLine("(+) ${pStr.cashIn}: ${MoneyFormat.formatMinor(cashIn, currency)}")
+                appendLine("(+) ${pStr.cashIn}: ${MoneyFormat.formatMinor(cashIn, currency, Locale.US)}")
             }
-            appendLine("(-) ${pStr.cashOut}: ${MoneyFormat.formatMinor(cashOut, currency)}")
-            appendLine("${pStr.expectedCashInDrawer}: ${MoneyFormat.formatMinor(expectedCashInDrawer, currency)}")
+            appendLine("(-) ${pStr.cashOut}: ${MoneyFormat.formatMinor(cashOut, currency, Locale.US)}")
+            appendLine("${pStr.expectedCashInDrawer}: ${MoneyFormat.formatMinor(expectedCashInDrawer, currency, Locale.US)}")
             if (actualCashCount != null) {
-                appendLine("${pStr.actualCashCount}: ${MoneyFormat.formatMinor(actualCashCount, currency)}")
+                appendLine("${pStr.actualCashCount}: ${MoneyFormat.formatMinor(actualCashCount, currency, Locale.US)}")
                 val varStr = if (variance != null) {
                     when {
-                        variance == 0L -> "${MoneyFormat.formatMinor(0L, currency)} (Balanced)"
-                        variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency)} (Over)"
-                        else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency)} (Short)"
+                        variance == 0L -> "${MoneyFormat.formatMinor(0L, currency, Locale.US)} (Balanced)"
+                        variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency, Locale.US)} (Over)"
+                        else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency, Locale.US)} (Short)"
                     }
                 } else "N/A"
                 appendLine("${pStr.variance}: $varStr")
             }
             appendLine("--------------------------------")
             appendLine("[3. OTHER TRACKING]")
-            appendLine("${pStr.dueSales}: ${MoneyFormat.formatMinor(report.totalDueCredit, currency)} (${dueCreditEntries.size})")
+            appendLine("${pStr.dueSales}: ${MoneyFormat.formatMinor(report.totalDueCredit, currency, Locale.US)} (${dueCreditEntries.size})")
             appendLine("${pStr.staffMeals}: ${report.staffMealsCount}")
             if (displayNotes.isNotBlank()) {
                 appendLine("${pStr.notes}: $displayNotes")
@@ -471,203 +470,6 @@ object PdfReportGenerator {
         val displayPath: String,
         val errorMessage: String? = null
     )
-
-    /**
-     * Professional Foodics POS style invoice generator orchestrator.
-     * Sequentially executes Header -> Items -> Payment -> Footer renderers.
-     * Supports A4, 80mm thermal, and 58mm thermal paper formats with multi-currency
-     * and Noto Sans Bengali / Noto Naskh Arabic font rendering.
-     */
-    fun generateInvoicePdf(
-        context: Context,
-        invoiceData: InvoiceData
-    ): ExportResult {
-        PdfFontManager.init(context)
-
-        val paperSize = invoiceData.paperSize
-        val pageWidth = paperSize.widthPt
-        val pageHeight = paperSize.heightPt
-
-        val pdfDocument = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
-        val page = pdfDocument.startPage(pageInfo)
-        val canvas = page.canvas
-
-        canvas.drawColor(PdfPalette.SURFACE)
-
-        try {
-            // 1. Header (Logo, 3-language store names, VAT, metadata)
-            var currentY = InvoiceHeaderRenderer.drawHeader(
-                canvas = canvas,
-                context = context,
-                data = invoiceData,
-                pageWidth = pageWidth.toFloat(),
-                startY = 0f
-            )
-
-            // 2. Items Table (Columns, prices, Arabic RTL)
-            currentY = InvoiceItemsRenderer.drawItemsTable(
-                canvas = canvas,
-                context = context,
-                data = invoiceData,
-                pageWidth = pageWidth.toFloat(),
-                startY = currentY
-            )
-
-            // 3. Payment Reconciliation Breakdown (Gross cash, MADA, Digital, Expenses, Variance, Net, VAT 15%, Total)
-            currentY = InvoicePaymentRenderer.drawPaymentBreakdown(
-                canvas = canvas,
-                context = context,
-                data = invoiceData,
-                pageWidth = pageWidth.toFloat(),
-                startY = currentY
-            )
-
-            // 4. Footer (Styled QR code, 3-language thank you notes, page numbering)
-            InvoiceFooterRenderer.drawFooter(
-                canvas = canvas,
-                context = context,
-                data = invoiceData,
-                pageWidth = pageWidth.toFloat(),
-                pageHeight = pageHeight.toFloat(),
-                startY = currentY,
-                pageNumber = 1,
-                totalPages = 1
-            )
-
-            pdfDocument.finishPage(page)
-
-            val fileName = "Invoice_${invoiceData.invoiceNo}_${System.currentTimeMillis()}.pdf"
-            val file = File(context.cacheDir, fileName)
-            FileOutputStream(file).use { out ->
-                pdfDocument.writeTo(out)
-            }
-            pdfDocument.close()
-
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-
-            return ExportResult(
-                isSuccess = true,
-                file = file,
-                uri = uri,
-                displayPath = file.absolutePath
-            )
-        } catch (e: Exception) {
-            AppLogger.e("PdfReportGenerator", "Failed to generate invoice PDF", e)
-            try {
-                pdfDocument.close()
-            } catch (ex: Exception) {
-                // ignore
-            }
-            return ExportResult(
-                isSuccess = false,
-                file = null,
-                uri = null,
-                displayPath = "",
-                errorMessage = e.message ?: "Failed to generate invoice PDF"
-            )
-        }
-    }
-
-    /**
-     * Converts a domain ShiftReport into standardized POS InvoiceData with 15% VAT and multi-currency.
-     */
-    fun convertShiftReportToInvoiceData(
-        report: ShiftReport,
-        businessProfile: BusinessProfile?,
-        paperSize: InvoicePaperSize = InvoicePaperSize.A4
-    ): InvoiceData {
-        val currCode = MoneyFormat.resolveCurrency(businessProfile?.currency)
-        val currSym = currCode
-
-        val parsedItems = parsePurchasedItems(report.purchasedItemsJson)
-        val invoiceItems = parsedItems.mapIndexed { idx, itm ->
-            InvoiceItem(
-                no = idx + 1,
-                description = itm.itemName,
-                qty = itm.quantity,
-                unitPrice = itm.unitPrice / 100.0,
-                total = itm.totalAmount / 100.0,
-                vatRate = 0.0
-            )
-        }
-
-        val startingCash = if (report.openingCash > 0L) report.openingCash else extractStartingCashMinor(report)
-        val actualCashCount = if (report.closingCash > 0L) report.closingCash else extractActualCashMinor(report)
-        val calculatedVariance = if (actualCashCount != null) report.variance(actualCashCount) else 0L
-
-        val grossCashMajor = report.grossCash / 100.0
-        val madaCardMajor = report.madaPayments / 100.0
-        val digitalWalletMajor = report.digitalWallet / 100.0
-        val expensesMajor = report.totalExpenses / 100.0
-        // Never invent money from meal count or muassel qty
-        val staffMealMajor = 0.0
-        val muasselMajor = 0.0
-        val varianceMajor = calculatedVariance / 100.0
-        val netSalesMajor = report.netSales / 100.0
-
-        val isTax = businessProfile?.isTaxEnabled ?: false
-        val rawVatRate = if (isTax) (businessProfile?.vatRate ?: 0.0).coerceAtLeast(0.0) else 0.0
-        val vatRateDecimal = rawVatRate / 100.0
-        val isTaxIncluded = businessProfile?.isTaxIncluded ?: true
-
-        val (vatAmount, totalPayable) = if (isTax && rawVatRate > 0.0) {
-            val vatMinor = MoneyFormat.calculateTaxMinor(report.totalSales, rawVatRate, isTaxIncluded)
-            val vatVal = vatMinor / 100.0
-            val totalVal = if (isTaxIncluded) {
-                report.totalSales / 100.0
-            } else {
-                (report.totalSales + vatMinor) / 100.0
-            }
-            Pair(vatVal, totalVal)
-        } else {
-            Pair(0.0, report.totalSales / 100.0)
-        }
-
-        val paymentSummary = PaymentSummary(
-            grossCash = grossCashMajor,
-            madaCard = madaCardMajor,
-            digitalWallet = digitalWalletMajor,
-            expenses = expensesMajor,
-            staffMeal = staffMealMajor,
-            muassel = muasselMajor,
-            variance = varianceMajor,
-            netSales = netSalesMajor,
-            vatRate = vatRateDecimal,
-            vatAmount = vatAmount,
-            totalPayable = totalPayable
-        )
-
-        val shiftId = if (report.id > 0) report.id.toString() else "—"
-        val shiftDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(report.dateInMillis))
-        val storeName = businessProfile?.businessName?.ifBlank { "—" } ?: "—"
-        val vatNo = vatNumberForPrint(businessProfile?.vatNumber)
-        val cashier = report.cashierName.ifBlank { "—" }
-
-        val qrVatPart = if (vatNo != null) " | VAT: $vatNo" else ""
-        return InvoiceData(
-            storeName = storeName,
-            storeNameArabic = "",
-            storeNameBengali = "",
-            vatNo = vatNo.orEmpty(),
-            invoiceNo = "INV-$shiftId-${shiftDateStr.replace("-", "")}",
-            date = "$shiftDateStr (${report.shift})",
-            cashier = cashier,
-            storeAddress = businessProfile?.address.orEmpty(),
-            logoUri = businessProfile?.logoUri,
-            shiftId = shiftId,
-            currencyCode = currCode,
-            currencySymbol = currSym,
-            items = invoiceItems,
-            payment = paymentSummary,
-            qrData = "Shift #$shiftId | Cashier: $cashier | Net: $netSalesMajor $currCode | Total: $totalPayable $currCode$qrVatPart",
-            paperSize = paperSize
-        )
-    }
 
     /**
      * Generates a comprehensive Multi-Entry Shift & Sales Summary PDF from database entries.
@@ -917,16 +719,17 @@ object PdfReportGenerator {
             canvas.drawText(truncatedCashier, colCashier, rowY, textPaint)
             canvas.drawText(getLocalizedShiftName(language, report.shift), colShift, rowY, textPaint)
 
-            val cashValStr = context.getString(R.string.msg_2f_2).format(report.grossCash)
+            val digits = MoneyFormat.minorUnitDigits(currency)
+            val cashValStr = MoneyFormat.toPlainDecimal(report.grossCash, digits)
             canvas.drawText(cashValStr, colCashRight - textPaint.measureText(cashValStr), rowY, textPaint)
 
-            val madaValStr = context.getString(R.string.msg_2f_2).format(report.madaPayments + report.digitalWallet)
+            val madaValStr = MoneyFormat.toPlainDecimal(report.madaPayments + report.digitalWallet, digits)
             canvas.drawText(madaValStr, colMadaRight - textPaint.measureText(madaValStr), rowY, textPaint)
 
-            val expValStr = context.getString(R.string.msg_2f_2).format(report.totalExpenses)
+            val expValStr = MoneyFormat.toPlainDecimal(report.totalExpenses, digits)
             canvas.drawText(expValStr, colExpRight - textPaint.measureText(expValStr), rowY, textPaint)
 
-            val totValStr = context.getString(R.string.msg_2f_2).format(report.totalSales)
+            val totValStr = MoneyFormat.toPlainDecimal(report.totalSales, digits)
             canvas.drawText(totValStr, colTotalRight - textBoldPaint.measureText(totValStr), rowY, textBoldPaint)
 
             canvas.drawLine(margin, currentY + 18f, PAGE_WIDTH - margin, currentY + 18f, linePaint)
@@ -965,16 +768,17 @@ object PdfReportGenerator {
         val totalY = currentY + 19f
         canvas.drawText(context.getString(R.string.grand_totals), colDate, totalY, textBoldPaint)
 
-        val totCashStr = context.getString(R.string.msg_2f_2).format(MoneyFormat.toMajorUnits(totalGrossCash))
+        val summaryDigits = MoneyFormat.minorUnitDigits(currency)
+        val totCashStr = MoneyFormat.toPlainDecimal(totalGrossCash, summaryDigits)
         canvas.drawText(totCashStr, colCashRight - textBoldPaint.measureText(totCashStr), totalY, textBoldPaint)
 
-        val totMadaStr = context.getString(R.string.msg_2f_2).format(MoneyFormat.toMajorUnits(totalMada + totalWallet))
+        val totMadaStr = MoneyFormat.toPlainDecimal(totalMada + totalWallet, summaryDigits)
         canvas.drawText(totMadaStr, colMadaRight - textBoldPaint.measureText(totMadaStr), totalY, textBoldPaint)
 
-        val totExpStr = context.getString(R.string.msg_2f_2).format(MoneyFormat.toMajorUnits(totalExp))
+        val totExpStr = MoneyFormat.toPlainDecimal(totalExp, summaryDigits)
         canvas.drawText(totExpStr, colExpRight - textBoldPaint.measureText(totExpStr), totalY, textBoldPaint)
 
-        val totRevStr = context.getString(R.string.msg_2f_s_21).format(MoneyFormat.toMajorUnits(totalGrossRevenue), currency)
+        val totRevStr = "${MoneyFormat.toPlainDecimal(totalGrossRevenue, summaryDigits)} $currency"
         canvas.drawText(totRevStr, colTotalRight - accentGreenPaint.measureText(totRevStr), totalY, accentGreenPaint)
 
         currentY += 40f
@@ -1208,7 +1012,7 @@ object PdfReportGenerator {
 
         val bizName = businessProfile?.businessName?.ifBlank { context.getString(R.string.default_business_name) }
             ?: context.getString(R.string.default_business_name)
-        val vatNo = vatNumberForPrint(businessProfile?.vatNumber)
+        val vatLines = vatHeaderLines(businessProfile?.vatNumber)
         val phone = businessProfile?.phone.orEmpty()
         val address = businessProfile?.address.orEmpty()
 
@@ -1219,17 +1023,17 @@ object PdfReportGenerator {
 
         drawTextSafe(bizName, margin + 14f, currentY + 22f, headerTextPaint, isBold = true)
 
-        var headerSubY = currentY + 38f
-        val metaParts = mutableListOf<String>()
-        if (vatNo != null) metaParts.add(context.getString(R.string.pdf_vat_only, vatNo))
-        if (phone.isNotBlank()) metaParts.add(context.getString(R.string.pdf_tel_only, phone))
-        val metaLine = metaParts.joinToString(" · ")
-        if (metaLine.isNotBlank()) {
-            drawTextSafe(metaLine, margin + 14f, headerSubY, subheaderTextPaint)
-            headerSubY += 14f
+        var headerSubY = currentY + 36f
+        vatLines.forEach { vatNo ->
+            drawTextSafe(context.getString(R.string.pdf_vat_only, vatNo), margin + 14f, headerSubY, subheaderTextPaint)
+            headerSubY += 12f
         }
-        if (address.isNotBlank()) {
-            drawTextSafe(address, margin + 14f, headerSubY, subheaderTextPaint)
+        val contactParts = mutableListOf<String>()
+        if (phone.isNotBlank()) contactParts.add(context.getString(R.string.pdf_tel_only, phone))
+        if (address.isNotBlank()) contactParts.add(address)
+        val contactLine = contactParts.joinToString(" · ")
+        if (contactLine.isNotBlank()) {
+            drawTextSafe(contactLine, margin + 14f, headerSubY, subheaderTextPaint)
         }
 
         // Official Shift Closing Report badge pill
@@ -1445,39 +1249,8 @@ object PdfReportGenerator {
 
         currentY += 8f
 
-        // 5. Section 3: Tax / VAT Summary (Only if isTaxEnabled and vatRate > 0)
-        var nextSectionNum = 3
-        if (businessProfile?.isTaxEnabled == true) {
-            val vatRate = businessProfile.vatRate.coerceAtLeast(0.0)
-            if (vatRate > 0.0) {
-                val isTaxIncluded = businessProfile.isTaxIncluded
-                val rateFormatted = String.format(Locale.US, "%.1f", vatRate).trimEnd('0').trimEnd('.')
-                val taxTitle = "${context.getString(R.string.tax_vat_summary_title)} ($rateFormatted%)"
-                val netTaxableStr = context.getString(R.string.pdf_net_taxable_sales_label)
-                val vatStr = "${context.getString(R.string.vat_tax)} ($rateFormatted%)"
-                val grossTaxStr = context.getString(R.string.pdf_gross_total_sales_label)
-
-                val (netTaxableVal, vatVal, grossTaxVal) = if (isTaxIncluded) {
-                    val vat = MoneyFormat.calculateTaxMinor(report.totalSales, vatRate, true)
-                    val net = MoneyFormat.subtractMinor(report.totalSales, vat)
-                    Triple(net, vat, report.totalSales)
-                } else {
-                    val vat = MoneyFormat.calculateTaxMinor(report.totalSales, vatRate, false)
-                    val gross = MoneyFormat.addMinor(report.totalSales, vat)
-                    Triple(report.totalSales, vat, gross)
-                }
-
-                drawSectionHeader(nextSectionNum.toString(), taxTitle)
-                drawDataRow(netTaxableStr, MoneyFormat.formatMinor(netTaxableVal, currency))
-                drawDataRow(vatStr, MoneyFormat.formatMinor(vatVal, currency))
-                drawDataRow(grossTaxStr, MoneyFormat.formatMinor(grossTaxVal, currency), isBold = true, isHighlight = true, rowHeight = 17f)
-                currentY += 8f
-                nextSectionNum++
-            }
-        }
-
-        // 6. Section 4: Operational Metrics & Key Totals
-        drawSectionHeader(nextSectionNum.toString(), pStr.otherTracking)
+        // 5. Section 3: Operational Metrics & Key Totals
+        drawSectionHeader("3", pStr.otherTracking)
 
         val dueCountStr = if (dueCreditEntries.isNotEmpty()) " (${dueCreditEntries.size} ${pStr.customer})" else ""
         drawDataRow("${pStr.dueSales}$dueCountStr", MoneyFormat.formatMinor(report.totalDueCredit, currency))

@@ -175,8 +175,10 @@ fun MonthlySalesSummaryView(
 
     val isCurrentCalendarMonth = remember(calendarMonthOffset) { calendarMonthOffset == 0 }
 
+    val summaryDigits = MoneyFormat.minorUnitDigits(currency)
+
     // Calculate aggregated daily data for the selected month
-    val dailyDataList = remember(shiftReports, currentYear, currentMonth, daysInMonth, activeLocale) {
+    val dailyDataList = remember(shiftReports, currentYear, currentMonth, daysInMonth, activeLocale, summaryDigits) {
         val list = mutableListOf<DaySalesData>()
         val cal = Calendar.getInstance()
         val dayNameFmt = SimpleDateFormat("EEE", activeLocale)
@@ -207,13 +209,13 @@ fun MonthlySalesSummaryView(
                     dayNumber = day,
                     dateString = dateFmt.format(cal.time),
                     dayName = dayNameFmt.format(cal.time),
-                    shiftSales = MoneyFormat.toMajorUnits(shiftTotal),
+                    shiftSales = MoneyFormat.toMajorUnits(shiftTotal, summaryDigits),
                     posSales = 0.0,
-                    totalRevenue = MoneyFormat.toMajorUnits(combined),
+                    totalRevenue = MoneyFormat.toMajorUnits(combined, summaryDigits),
                     transactionsCount = shiftsOnDay.size,
-                    cashAmount = MoneyFormat.toMajorUnits(cash),
-                    madaAmount = MoneyFormat.toMajorUnits(mada),
-                    walletAmount = MoneyFormat.toMajorUnits(wallet)
+                    cashAmount = MoneyFormat.toMajorUnits(cash, summaryDigits),
+                    madaAmount = MoneyFormat.toMajorUnits(mada, summaryDigits),
+                    walletAmount = MoneyFormat.toMajorUnits(wallet, summaryDigits)
                 )
             )
         }
@@ -253,7 +255,7 @@ fun MonthlySalesSummaryView(
         }
     }
 
-    val monthTotalIssuedDue = remember(monthShiftReports) {
+    val monthTotalIssuedDue = remember(monthShiftReports, summaryDigits) {
         val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.dueCreditEntriesJson)
@@ -264,10 +266,10 @@ fun MonthlySalesSummaryView(
                 sum
             } catch (e: Exception) { 0L }
         }
-        MoneyFormat.toMajorUnits(minorSum)
+        MoneyFormat.toMajorUnits(minorSum, summaryDigits)
     }
 
-    val monthTotalCollectedDue = remember(monthShiftReports) {
+    val monthTotalCollectedDue = remember(monthShiftReports, summaryDigits) {
         val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.previousDueCollectionsJson)
@@ -278,15 +280,15 @@ fun MonthlySalesSummaryView(
                 sum
             } catch (e: Exception) { 0L }
         }
-        MoneyFormat.toMajorUnits(minorSum)
+        MoneyFormat.toMajorUnits(minorSum, summaryDigits)
     }
 
-    val monthTotalExpenses = remember(monthShiftReports) {
+    val monthTotalExpenses = remember(monthShiftReports, summaryDigits) {
         val minorSum = monthShiftReports.sumOf { it.totalExpenses }
-        MoneyFormat.toMajorUnits(minorSum)
+        MoneyFormat.toMajorUnits(minorSum, summaryDigits)
     }
 
-    val monthTotalPurchases = remember(monthShiftReports) {
+    val monthTotalPurchases = remember(monthShiftReports, summaryDigits) {
         val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.purchasedItemsJson)
@@ -297,10 +299,10 @@ fun MonthlySalesSummaryView(
                 sum
             } catch (e: Exception) { 0L }
         }
-        MoneyFormat.toMajorUnits(minorSum)
+        MoneyFormat.toMajorUnits(minorSum, summaryDigits)
     }
 
-    val monthTotalStaffAdvances = remember(monthShiftReports) {
+    val monthTotalStaffAdvances = remember(monthShiftReports, summaryDigits) {
         val minorSum = monthShiftReports.sumOf { report ->
             try {
                 val arr = org.json.JSONArray(report.staffAdvancesJson)
@@ -311,7 +313,7 @@ fun MonthlySalesSummaryView(
                 sum
             } catch (e: Exception) { 0L }
         }
-        MoneyFormat.toMajorUnits(minorSum)
+        MoneyFormat.toMajorUnits(minorSum, summaryDigits)
     }
 
     val monthTotalCashIn = dailyDataList.sumOf { it.cashAmount }
@@ -460,7 +462,7 @@ fun MonthlySalesSummaryView(
         ) {
             MonthlyKpiCard(
                 title = stringResource(R.string.total_revenue),
-                value = "%.2f %s".format(totalMonthRevenue, currency),
+                value = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(totalMonthRevenue, summaryDigits), summaryDigits)} $currency",
                 subtitle = stringResource(R.string.sales_shifts_count_fmt, dailyDataList.sumOf { it.transactionsCount }),
                 icon = Icons.Default.Paid,
                 accentColor = Color(0xFF059669),
@@ -468,7 +470,7 @@ fun MonthlySalesSummaryView(
             )
             MonthlyKpiCard(
                 title = stringResource(R.string.daily_average),
-                value = "%.2f %s".format(dailyAverageRevenue, currency),
+                value = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(dailyAverageRevenue, summaryDigits), summaryDigits)} $currency",
                 subtitle = stringResource(R.string.across_active_days_fmt, actualActiveDays),
                 icon = Icons.Default.TrendingUp,
                 accentColor = Color(0xFF2563EB),
@@ -482,7 +484,7 @@ fun MonthlySalesSummaryView(
         ) {
             MonthlyKpiCard(
                 title = stringResource(R.string.peak_sales_day),
-                value = if (peakDay != null && peakDay.totalRevenue > 0) "%.2f %s".format(peakDay.totalRevenue, currency) else "0.00 $currency",
+                value = if (peakDay != null && peakDay.totalRevenue > 0) "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(peakDay.totalRevenue, summaryDigits), summaryDigits)} $currency" else "${MoneyFormat.zeroPlaceholder(summaryDigits)} $currency",
                 subtitle = if (peakDay != null && peakDay.totalRevenue > 0) "${peakDay.dateString} (${peakDay.dayName})" else stringResource(R.string.no_data_available),
                 icon = Icons.Default.Star,
                 accentColor = Color(0xFFD97706),
@@ -495,7 +497,7 @@ fun MonthlySalesSummaryView(
             }
             MonthlyKpiCard(
                 title = stringResource(R.string.projected_monthly),
-                value = "%.2f %s".format(projectedMonthClose, currency),
+                value = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(projectedMonthClose, summaryDigits), summaryDigits)} $currency",
                 subtitle = projectedSubtitle,
                 icon = Icons.Default.QueryStats,
                 accentColor = Color(0xFF6366F1),
@@ -695,7 +697,7 @@ fun MonthlySalesSummaryView(
                                     if (showShiftBreakdown && d.shiftSales > 0) {
                                         Column(horizontalAlignment = Alignment.End) {
                                             Text(
-                                                text = stringResource(R.string.shift_2f).format(d.shiftSales),
+                                                text = "${stringResource(R.string.shift_2)}: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(d.shiftSales, summaryDigits), summaryDigits)}",
                                                 color = AccentGold,
                                                 fontSize = 11.5.sp,
                                                 fontWeight = FontWeight.SemiBold
@@ -719,7 +721,7 @@ fun MonthlySalesSummaryView(
                                                 fontWeight = FontWeight.Medium
                                             )
                                             Text(
-                                                text = stringResource(R.string.msg_2f_s_21).format(d.totalRevenue, currency),
+                                                text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(d.totalRevenue, summaryDigits), summaryDigits)} $currency",
                                                 color = PureWhite,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 13.sp
@@ -782,8 +784,8 @@ fun MonthlySalesSummaryView(
                     icon = Icons.Default.Payments,
                     iconTint = Color(0xFF059669),
                     label = stringResource(R.string.total_cash_in),
-                    detail = stringResource(R.string.bank_mada_fmt, "%.2f".format(monthTotalBankIn), currency),
-                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalCashIn, currency),
+                    detail = stringResource(R.string.bank_mada_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalBankIn, summaryDigits), summaryDigits), currency),
+                    amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalCashIn, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFF059669)
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
@@ -794,7 +796,7 @@ fun MonthlySalesSummaryView(
                     iconTint = Color(0xFF2563EB),
                     label = stringResource(R.string.mada_payments) + " / " + stringResource(R.string.digital_wallet),
                     detail = "MADA & digital settlements",
-                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalBankIn, currency),
+                    amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalBankIn, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFF2563EB)
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
@@ -804,8 +806,8 @@ fun MonthlySalesSummaryView(
                     icon = Icons.Default.AccountBalanceWallet,
                     iconTint = Color(0xFFEA580C),
                     label = stringResource(R.string.total_issued_due),
-                    detail = stringResource(R.string.due_collected_fmt, "%.2f".format(monthTotalCollectedDue), currency),
-                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalIssuedDue, currency),
+                    detail = stringResource(R.string.due_collected_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalCollectedDue, summaryDigits), summaryDigits), currency),
+                    amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalIssuedDue, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFFEA580C)
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
@@ -816,7 +818,7 @@ fun MonthlySalesSummaryView(
                     iconTint = Color(0xFFDC2626),
                     label = stringResource(R.string.total_expenses),
                     detail = stringResource(R.string.operational_costs),
-                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalExpenses, currency),
+                    amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalExpenses, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFFDC2626)
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
@@ -827,7 +829,7 @@ fun MonthlySalesSummaryView(
                     iconTint = Color(0xFF7C3AED),
                     label = stringResource(R.string.product_purchases),
                     detail = stringResource(R.string.inventory_investment),
-                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalPurchases, currency),
+                    amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalPurchases, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFF7C3AED)
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
@@ -836,9 +838,9 @@ fun MonthlySalesSummaryView(
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.People,
                     iconTint = Color(0xFFD97706),
-                    label = stringResource(R.string.staff_advances_fmt, "%.2f".format(monthTotalStaffAdvances), currency).substringBefore(":"),
+                    label = stringResource(R.string.staff_advances_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalStaffAdvances, summaryDigits), summaryDigits), currency).substringBefore(":"),
                     detail = "Salary advance payouts",
-                    amount = stringResource(R.string.msg_2f_s_21).format(monthTotalStaffAdvances, currency),
+                    amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalStaffAdvances, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFFD97706)
                 )
 
@@ -879,7 +881,7 @@ fun MonthlySalesSummaryView(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.msg_2f_s_21).format(monthNetCashflow, currency),
+                            text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthNetCashflow, summaryDigits), summaryDigits)} $currency",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = if (isNetPositive) Color(0xFF067647) else Color(0xFFB42318)

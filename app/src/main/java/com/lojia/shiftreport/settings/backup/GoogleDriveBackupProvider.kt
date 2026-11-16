@@ -43,13 +43,23 @@ class GoogleDriveBackupProvider(private val context: Context) : BackupProvider {
         if (!isConnected()) {
             return@withContext Result.failure(IllegalStateException("Google Drive account is not connected."))
         }
+        if (!com.lojia.shiftreport.util.canCreatePortableBackup(context)) {
+            return@withContext Result.failure(com.lojia.shiftreport.util.BackupPasswordRequiredException("Set a backup password first"))
+        }
 
         try {
-            val database = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
-            val uploadResult = GoogleDriveManager.uploadBackup(
-                context = context,
-                database = database
-            )
+            val uploadResult = if (file.exists()) {
+                val bytes = file.readBytes()
+                if (com.lojia.shiftreport.util.backupTierOf(bytes) == com.lojia.shiftreport.util.TIER_PORTABLE) {
+                    GoogleDriveManager.uploadBackupBytes(context, bytes, totalRecords = 0)
+                } else {
+                    val database = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                    GoogleDriveManager.uploadBackup(context = context, database = database)
+                }
+            } else {
+                val database = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                GoogleDriveManager.uploadBackup(context = context, database = database)
+            }
 
             if (uploadResult.isSuccess) {
                 val now = System.currentTimeMillis()
@@ -73,12 +83,12 @@ class GoogleDriveBackupProvider(private val context: Context) : BackupProvider {
             val list = backupsResult.getOrNull() ?: return@withContext null
             val latestItem = list.firstOrNull() ?: return@withContext null
 
-            val downloadResult = GoogleDriveManager.downloadBackup(context, latestItem.id)
-            val jsonString = downloadResult.getOrNull() ?: return@withContext null
+            val downloadResult = GoogleDriveManager.downloadBackupBytes(context, latestItem.id)
+            val payloadBytes = downloadResult.getOrNull() ?: return@withContext null
 
             val cacheFile = File(context.cacheDir, "drive_restore_${latestItem.name}")
             FileOutputStream(cacheFile).use { out ->
-                out.write(jsonString.toByteArray())
+                out.write(payloadBytes)
             }
             cacheFile
         } catch (e: Exception) {

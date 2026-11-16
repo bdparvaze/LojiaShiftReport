@@ -16,15 +16,18 @@ object CurrencyFormatter {
      */
     fun formatMoney(
         amount: BigDecimal,
-        currencyCode: String = MoneyFormat.DEFAULT_CURRENCY_CODE
+        currencyCode: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
+        locale: Locale = Locale.getDefault(),
+        digits: Int? = null
     ): String {
-        val rounded = amount.setScale(2, RoundingMode.HALF_UP)
-        val symbol = MoneyFormat.resolveSymbol(currencyCode)
-        val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
+        val effectiveDigits = (digits ?: MoneyFormat.resolveDigitsForFormatting(currencyCode)).coerceAtLeast(0)
+        val rounded = amount.setScale(effectiveDigits, RoundingMode.HALF_UP)
+        val symbol = MoneyFormat.resolveSymbol(currencyCode, locale)
+        val numberFormat = NumberFormat.getNumberInstance(locale).apply {
+            minimumFractionDigits = effectiveDigits
+            maximumFractionDigits = effectiveDigits
         }
-        val formattedNumber = numberFormat.format(rounded.toDouble())
+        val formattedNumber = numberFormat.format(rounded)
 
         return when {
             symbol == "$" || symbol == "€" || symbol == "£" || symbol == "¥" -> "$symbol$formattedNumber"
@@ -36,17 +39,22 @@ object CurrencyFormatter {
 
     fun formatMoney(
         amount: Double,
-        currencyCode: String = MoneyFormat.DEFAULT_CURRENCY_CODE
+        currencyCode: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
+        locale: Locale = Locale.getDefault(),
+        digits: Int? = null
     ): String {
-        return formatMoney(BigDecimal.valueOf(amount), currencyCode)
+        return formatMoney(BigDecimal.valueOf(amount), currencyCode, locale, digits)
     }
 
     fun formatMoney(
         amountMinor: Long,
-        currencyCode: String = MoneyFormat.DEFAULT_CURRENCY_CODE
+        currencyCode: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
+        locale: Locale = Locale.getDefault(),
+        digits: Int? = null
     ): String {
+        val effectiveDigits = (digits ?: MoneyFormat.resolveDigitsForFormatting(currencyCode)).coerceAtLeast(0)
         val major = BigDecimal.valueOf(amountMinor)
-            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
-        return formatMoney(major, currencyCode)
+            .divide(BigDecimal.valueOf(MoneyFormat.minorFactor(effectiveDigits)), effectiveDigits, RoundingMode.HALF_UP)
+        return formatMoney(major, currencyCode, locale, effectiveDigits)
     }
 }

@@ -81,10 +81,11 @@ fun PaidOutShoppingLedgerTab(
 ) {
     val list = remember(reports) { parsePaidOutItems(reports) }
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val numberFormatter = remember {
+    val ledgerDigits = MoneyFormat.minorUnitDigits(currency)
+    val numberFormatter = remember(ledgerDigits) {
         NumberFormat.getNumberInstance(Locale.US).apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
+            minimumFractionDigits = ledgerDigits
+            maximumFractionDigits = ledgerDigits
         }
     }
     val totalExpense = list.sumOf { it.totalAmountMinor }

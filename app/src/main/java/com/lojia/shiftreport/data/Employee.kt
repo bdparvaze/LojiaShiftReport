@@ -17,7 +17,7 @@ import java.util.UUID
 data class Employee(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
-    val monthlySalary: Double,
+    val monthlySalaryMinor: Long = 0L,
     val phone: String? = null,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
@@ -46,4 +46,10 @@ interface EmployeeDao {
 
     @Query("UPDATE employees SET isActive = :isActive WHERE id = :id")
     suspend fun setActive(id: String, isActive: Boolean)
+
+    @Query("SELECT COUNT(*) FROM employees")
+    fun observeEmployeeCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM employees")
+    suspend fun getEmployeeCount(): Int
 }

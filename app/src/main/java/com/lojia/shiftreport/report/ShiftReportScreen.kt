@@ -245,10 +245,10 @@ fun ShiftReportScreen(
 
             val noteParts = mutableListOf<String>()
             if (data.startingCash > java.math.BigDecimal.ZERO) {
-                noteParts.add("Starting Float: %.2f".format(Locale.US, data.startingCash.toDouble()))
+                noteParts.add("Starting Float: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(data.startingCash))}")
             }
             if (data.actualCash != null) {
-                noteParts.add("Actual Cash Count: %.2f".format(Locale.US, data.actualCash.toDouble()))
+                noteParts.add("Actual Cash Count: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(data.actualCash))}")
             }
             if (data.notes.isNotBlank() && data.notes != "Saved from Shift Closing Ledger") {
                 noteParts.add(data.notes)

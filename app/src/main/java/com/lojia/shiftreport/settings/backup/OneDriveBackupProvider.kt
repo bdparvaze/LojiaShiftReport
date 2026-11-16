@@ -72,23 +72,28 @@ class OneDriveBackupProvider(private val context: Context) : BackupProvider {
         if (!isConnected()) {
             return@withContext Result.failure(IllegalStateException("Microsoft OneDrive is not connected."))
         }
+        if (!com.lojia.shiftreport.util.canCreatePortableBackup(context)) {
+            return@withContext Result.failure(com.lojia.shiftreport.util.BackupPasswordRequiredException("Set a backup password first"))
+        }
 
         val token = getStoredAccessToken()
         try {
+            val payloadBytes = file.readBytes()
+            if (com.lojia.shiftreport.util.backupTierOf(payloadBytes) != com.lojia.shiftreport.util.TIER_PORTABLE) {
+                return@withContext Result.failure(com.lojia.shiftreport.util.BackupFormatException("Portable LSB2 payload required"))
+            }
             val endpoint = "$GRAPH_BASE_URL/me/drive/root:/$BACKUP_FOLDER_PATH/${file.name}:/content"
             val url = URL(endpoint)
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "PUT"
             connection.setRequestProperty("Authorization", "Bearer $token")
-            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("Content-Type", "application/octet-stream")
             connection.doOutput = true
             connection.connectTimeout = 15000
             connection.readTimeout = 20000
 
-            file.inputStream().use { input ->
-                connection.outputStream.use { output ->
-                    input.copyTo(output)
-                }
+            connection.outputStream.use { output ->
+                output.write(payloadBytes)
             }
 
             val responseCode = connection.responseCode

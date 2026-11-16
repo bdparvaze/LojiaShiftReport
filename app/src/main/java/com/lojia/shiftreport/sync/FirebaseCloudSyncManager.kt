@@ -443,10 +443,7 @@ object FirebaseCloudSyncManager {
                         address = remoteProfileObj.optString("address", localBusinessProfile.address),
                         workingHours = remoteProfileObj.optString("workingHours", localBusinessProfile.workingHours),
                         currency = remoteProfileObj.optString("currency", localBusinessProfile.currency),
-                        country = remoteProfileObj.optString("country", localBusinessProfile.country),
-                        vatRate = remoteProfileObj.optDouble("vatRate", localBusinessProfile.vatRate),
-                        isTaxEnabled = remoteProfileObj.optBoolean("isTaxEnabled", localBusinessProfile.isTaxEnabled),
-                        isTaxIncluded = remoteProfileObj.optBoolean("isTaxIncluded", localBusinessProfile.isTaxIncluded)
+                        country = remoteProfileObj.optString("country", localBusinessProfile.country)
                     )
                     reportDao.saveBusinessProfile(updatedProfile)
                     recordEntityUpdated(context, "business_profile", 1, rProfileTs)
@@ -505,9 +502,6 @@ object FirebaseCloudSyncManager {
                 put("workingHours", freshProfile.workingHours)
                 put("currency", freshProfile.currency)
                 put("country", freshProfile.country)
-                put("vatRate", freshProfile.vatRate)
-                put("isTaxEnabled", freshProfile.isTaxEnabled)
-                put("isTaxIncluded", freshProfile.isTaxIncluded)
                 put("updatedAt", bpTs)
             }
             uploadPayload.put("businessProfile", bpObj)

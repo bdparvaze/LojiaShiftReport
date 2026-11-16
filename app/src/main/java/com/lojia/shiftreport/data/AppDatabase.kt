@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
         Employee::class,
         EmployerAdvanceTransaction::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -430,7 +430,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_18_19 = object : Migration(18, 19) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("UPDATE advance_transactions SET amount = amount / 100.0 WHERE amount > 5000")
+                // Heuristic removed in Stage 20C. No data change.
             }
         }
 
@@ -472,6 +472,99 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val currencyCode = try {
+                    db.query("SELECT currency FROM business_profile LIMIT 1").use { cursor ->
+                        if (cursor.moveToFirst()) cursor.getString(0) else null
+                    }
+                } catch (_: Exception) {
+                    null
+                }
+                val digits = if (currencyCode.isNullOrBlank()) {
+                    2
+                } else {
+                    com.lojia.shiftreport.util.MoneyFormat.minorUnitDigits(currencyCode)
+                }
+
+                // 1. Rebuild employees table converting monthlySalary (REAL) -> monthlySalaryMinor (INTEGER)
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `employees_new` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `monthlySalaryMinor` INTEGER NOT NULL,
+                        `phone` TEXT,
+                        `isActive` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `createdByAdminId` TEXT NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+                db.query("SELECT id, name, monthlySalary, phone, isActive, createdAt, createdByAdminId FROM employees").use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getString(0)
+                        val name = cursor.getString(1)
+                        val salaryMinor = com.lojia.shiftreport.util.MoneyFormat.majorDoubleToMinor(cursor.getDouble(2), digits)
+                        val phone: String? = if (cursor.isNull(3)) null else cursor.getString(3)
+                        val isActive = cursor.getInt(4)
+                        val createdAt = cursor.getLong(5)
+                        val createdByAdminId = cursor.getString(6)
+                        db.execSQL(
+                            "INSERT INTO `employees_new` (`id`, `name`, `monthlySalaryMinor`, `phone`, `isActive`, `createdAt`, `createdByAdminId`) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            arrayOf<Any?>(id, name, salaryMinor, phone, isActive, createdAt, createdByAdminId)
+                        )
+                    }
+                }
+                db.execSQL("DROP TABLE `employees`")
+                db.execSQL("ALTER TABLE `employees_new` RENAME TO `employees`")
+
+                // 2. Rebuild advance_transactions table converting amount (REAL) -> amountMinor (INTEGER)
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `advance_transactions_new` (
+                        `id` TEXT NOT NULL,
+                        `employeeId` TEXT NOT NULL,
+                        `employeeName` TEXT NOT NULL,
+                        `shiftId` TEXT NOT NULL,
+                        `amountMinor` INTEGER NOT NULL,
+                        `paymentMethod` TEXT NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `reason` TEXT NOT NULL,
+                        `originalTransactionId` TEXT,
+                        `isVoid` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `createdByAdminId` TEXT NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+                db.query("SELECT id, employeeId, employeeName, shiftId, amount, paymentMethod, type, reason, originalTransactionId, isVoid, createdAt, createdByAdminId FROM advance_transactions").use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getString(0)
+                        val employeeId = cursor.getString(1)
+                        val employeeName = cursor.getString(2)
+                        val shiftId = cursor.getString(3)
+                        val amountMinor = com.lojia.shiftreport.util.MoneyFormat.majorDoubleToMinor(cursor.getDouble(4), digits)
+                        val paymentMethod = cursor.getString(5)
+                        val type = cursor.getString(6)
+                        val reason = cursor.getString(7)
+                        val originalTransactionId: String? = if (cursor.isNull(8)) null else cursor.getString(8)
+                        val isVoid = cursor.getInt(9)
+                        val createdAt = cursor.getLong(10)
+                        val createdByAdminId = cursor.getString(11)
+                        db.execSQL(
+                            "INSERT INTO `advance_transactions_new` (`id`, `employeeId`, `employeeName`, `shiftId`, `amountMinor`, `paymentMethod`, `type`, `reason`, `originalTransactionId`, `isVoid`, `createdAt`, `createdByAdminId`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            arrayOf<Any?>(id, employeeId, employeeName, shiftId, amountMinor, paymentMethod, type, reason, originalTransactionId, isVoid, createdAt, createdByAdminId)
+                        )
+                    }
+                }
+                db.execSQL("DROP TABLE `advance_transactions`")
+                db.execSQL("ALTER TABLE `advance_transactions_new` RENAME TO `advance_transactions`")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val builder = Room.databaseBuilder(
@@ -487,20 +580,17 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
                     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
                     MIGRATION_17_18,
-                    MIGRATION_18_19
+                    MIGRATION_18_19,
+                    MIGRATION_19_20
                 )
 
                 builder.addCallback(DatabaseCallback(scope) { INSTANCE })
                 val instance = builder.build()
                 INSTANCE = instance
 
-                scope.launch(Dispatchers.IO) {
-                    try {
-                        if (PreferencesRepository.getInstance(context).isPreserveDataOnUninstall()) {
-                            com.lojia.shiftreport.util.OfflineBackupManager.createAutoBackup(context.applicationContext, instance)
-                        }
-                    } catch (_: Exception) {}
-                }
+                com.lojia.shiftreport.sync.AutoBackupScheduler.schedulePeriodicAutoBackup(
+                    context.applicationContext
+                )
 
                 instance
             }
@@ -594,9 +684,6 @@ abstract class AppDatabase : RoomDatabase() {
                         workingHours = "08:00 AM - 10:00 PM",
                         currency = "USD",
                         country = "United States",
-                        vatRate = 5.0,
-                        isTaxEnabled = false,
-                        isTaxIncluded = true,
                         logoUri = ""
                     )
                 )
@@ -607,7 +694,6 @@ abstract class AppDatabase : RoomDatabase() {
                         shopLogo = "store_logo_default",
                         customHeader = "Demo Store",
                         customFooterText = "Thank you for shopping with us!",
-                        showTaxNumber = true,
                         showCashierName = true,
                         showBarcode = true,
                         showCustomerMemo = true
@@ -696,10 +782,7 @@ abstract class AppDatabase : RoomDatabase() {
                         email = "",
                         address = "",
                         currency = "USD",
-                        country = "United States",
-                        vatRate = 0.0,
-                        isTaxEnabled = false,
-                        isTaxIncluded = true
+                        country = "United States"
                     )
                 )
                 reportDao.saveReceiptConfig(
@@ -708,7 +791,6 @@ abstract class AppDatabase : RoomDatabase() {
                         shopLogo = "store_logo_default",
                         customHeader = "Welcome",
                         customFooterText = "Thank you, visit again!",
-                        showTaxNumber = true,
                         showCashierName = true,
                         showBarcode = true,
                         showCustomerMemo = true

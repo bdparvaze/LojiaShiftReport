@@ -11,6 +11,7 @@ import android.graphics.RectF
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.calculateInSampleSize
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -38,14 +39,7 @@ object ImageCropUtils {
                 BitmapFactory.decodeStream(stream, null, options)
             }
 
-            var inSampleSize = 1
-            if (options.outHeight > maxDimension || options.outWidth > maxDimension) {
-                val halfHeight = options.outHeight / 2
-                val halfWidth = options.outWidth / 2
-                while ((halfHeight / inSampleSize) >= maxDimension && (halfWidth / inSampleSize) >= maxDimension) {
-                    inSampleSize *= 2
-                }
-            }
+            val inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, maxDimension)
 
             // 2. Decode sampled bitmap
             options.inJustDecodeBounds = false

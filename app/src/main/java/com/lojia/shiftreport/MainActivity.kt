@@ -192,6 +192,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             }
 
             var pendingMainRestoreAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+            var mainRestoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
+            var mainRestoreFile by remember { mutableStateOf<java.io.File?>(null) }
+            var mainRestoreLabel by remember { mutableStateOf<String?>(null) }
+            var isMainRestoreUnlocking by remember { mutableStateOf(false) }
+            var mainRestorePasswordError by remember { mutableStateOf<String?>(null) }
 
             val backupPickerLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
@@ -203,13 +208,31 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                         prefsRepo.setHasRunBefore(true)
                         scope.launch {
                             prefsRepo.setHasSeenRestoreDialog(true)
-                            val db = AppDatabase.getInstance(context)
-                            val res = OfflineBackupManager.restoreBackup(context, uri, db)
-                            res.onSuccess { count ->
-                                val msg = context.getString(R.string.data_restored_success, count)
-                                android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                            }.onFailure { err ->
-                                android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+                            val requiresPassword = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                val bytes = runCatching {
+                                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                                }.getOrNull()
+                                bytes != null && com.lojia.shiftreport.util.backupTierOf(bytes) == com.lojia.shiftreport.util.TIER_PORTABLE
+                            }
+                            if (requiresPassword) {
+                                mainRestorePasswordError = null
+                                mainRestoreUri = uri
+                                mainRestoreFile = null
+                                mainRestoreLabel = uri.lastPathSegment
+                            } else {
+                                val db = AppDatabase.getInstance(context)
+                                val res = OfflineBackupManager.restoreBackup(context, uri, db)
+                                res.onSuccess { count ->
+                                    val msg = context.getString(R.string.data_restored_success, count)
+                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                }.onFailure { err ->
+                                    val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                                        context.getString(R.string.backup_pw_wrong_or_damaged)
+                                    } else {
+                                        err.localizedMessage ?: context.getString(R.string.restore_failed)
+                                    }
+                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                         Unit
@@ -449,13 +472,29 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                             prefsRepo.setHasRunBefore(true)
                                                             val fileToRestore = decision.backupFile ?: backupManager.restoreLatest()
                                                             if (fileToRestore != null) {
-                                                                val db = AppDatabase.getInstance(context)
-                                                                val res = OfflineBackupManager.restoreBackupFromFile(context, db, fileToRestore)
-                                                                res.onSuccess { count ->
-                                                                    val msg = context.getString(R.string.data_restored_success, count)
-                                                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                                                                }.onFailure { err ->
-                                                                    android.widget.Toast.makeText(context, err.localizedMessage ?: context.getString(R.string.restore_failed), android.widget.Toast.LENGTH_SHORT).show()
+                                                                val requiresPassword = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                                                    val bytes = runCatching { fileToRestore.readBytes() }.getOrNull()
+                                                                    bytes != null && com.lojia.shiftreport.util.backupTierOf(bytes) == com.lojia.shiftreport.util.TIER_PORTABLE
+                                                                }
+                                                                if (requiresPassword) {
+                                                                    mainRestorePasswordError = null
+                                                                    mainRestoreFile = fileToRestore
+                                                                    mainRestoreUri = null
+                                                                    mainRestoreLabel = fileToRestore.name
+                                                                } else {
+                                                                    val db = AppDatabase.getInstance(context)
+                                                                    val res = OfflineBackupManager.restoreBackupFromFile(context, db, fileToRestore)
+                                                                    res.onSuccess { count ->
+                                                                        val msg = context.getString(R.string.data_restored_success, count)
+                                                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                                                    }.onFailure { err ->
+                                                                        val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                                                                            context.getString(R.string.backup_pw_wrong_or_damaged)
+                                                                        } else {
+                                                                            err.localizedMessage ?: context.getString(R.string.restore_failed)
+                                                                        }
+                                                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -468,7 +507,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                     }
                                                 },
                                                 onBrowseBackups = {
-                                                    backupPickerLauncher.launch(arrayOf("application/json", "*/*"))
+                                                    backupPickerLauncher.launch(arrayOf("application/octet-stream", "application/json", "*/*"))
                                                 },
                                                 onStartFresh = {
                                                     restoreDecision = null
@@ -478,6 +517,61 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                         prefsRepo.setHasRunBefore(true)
                                                         // Navigate to Dashboard
                                                         navState = AppNavState.ShiftReportState.Analytics
+                                                    }
+                                                }
+                                            )
+                                        }
+
+                                        if (mainRestoreUri != null || mainRestoreFile != null) {
+                                            com.lojia.shiftreport.settings.BackupRestorePasswordDialog(
+                                                fileName = mainRestoreLabel,
+                                                isRestoring = isMainRestoreUnlocking,
+                                                errorMessage = mainRestorePasswordError,
+                                                onDismiss = {
+                                                    mainRestoreUri = null
+                                                    mainRestoreFile = null
+                                                    mainRestoreLabel = null
+                                                    mainRestorePasswordError = null
+                                                },
+                                                onSubmitPassword = { enteredPassword ->
+                                                    val uriTarget = mainRestoreUri
+                                                    val fileTarget = mainRestoreFile
+                                                    mainRestorePasswordError = null
+                                                    isMainRestoreUnlocking = true
+                                                    scope.launch {
+                                                        val db = AppDatabase.getInstance(context)
+                                                        val res = when {
+                                                            uriTarget != null -> OfflineBackupManager.restoreBackup(
+                                                                context = context,
+                                                                uri = uriTarget,
+                                                                database = db,
+                                                                password = enteredPassword
+                                                            )
+                                                            fileTarget != null -> OfflineBackupManager.restoreBackupFromFile(
+                                                                context = context,
+                                                                database = db,
+                                                                backupFile = fileTarget,
+                                                                password = enteredPassword
+                                                            )
+                                                            else -> Result.failure(IllegalStateException("No backup selected"))
+                                                        }
+                                                        isMainRestoreUnlocking = false
+                                                        res.onSuccess { count ->
+                                                            mainRestoreUri = null
+                                                            mainRestoreFile = null
+                                                            mainRestoreLabel = null
+                                                            mainRestorePasswordError = null
+                                                            val msg = context.getString(R.string.data_restored_success, count)
+                                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                                        }.onFailure { err ->
+                                                            val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                                                                context.getString(R.string.backup_pw_wrong_or_damaged)
+                                                            } else {
+                                                                err.localizedMessage ?: context.getString(R.string.restore_failed)
+                                                            }
+                                                            mainRestorePasswordError = msg
+                                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                                        }
                                                     }
                                                 }
                                             )

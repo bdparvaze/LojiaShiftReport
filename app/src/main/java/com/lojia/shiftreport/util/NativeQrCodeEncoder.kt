@@ -145,6 +145,46 @@ object NativeQrCodeEncoder {
         14 to intArrayOf(6, 26, 46, 66)
     )
 
+    // ISO/IEC 18004 Annex D: 18-bit version information sequences for versions 7 to 40
+    private val VERSION_INFO_BITS = mapOf(
+        7 to 0x07C94,
+        8 to 0x085BC,
+        9 to 0x09A99,
+        10 to 0x0A4D3,
+        11 to 0x0BBF6,
+        12 to 0x0C762,
+        13 to 0x0D847,
+        14 to 0x0E60D,
+        15 to 0x0F928,
+        16 to 0x10B78,
+        17 to 0x1145D,
+        18 to 0x12A17,
+        19 to 0x13532,
+        20 to 0x149A6,
+        21 to 0x15683,
+        22 to 0x168C9,
+        23 to 0x177EC,
+        24 to 0x18EC4,
+        25 to 0x191E1,
+        26 to 0x1AFAB,
+        27 to 0x1B08E,
+        28 to 0x1CC1A,
+        29 to 0x1D33F,
+        30 to 0x1ED75,
+        31 to 0x1F250,
+        32 to 0x209D5,
+        33 to 0x216F0,
+        34 to 0x228BA,
+        35 to 0x2379F,
+        36 to 0x24B0B,
+        37 to 0x2542E,
+        38 to 0x26A64,
+        39 to 0x27541,
+        40 to 0x28C69
+    )
+
+    fun versionInfoBits(version: Int): Int? = VERSION_INFO_BITS[version]
+
     // Galois Field GF(256) tables
     private val EXP_TABLE = IntArray(512)
     private val LOG_TABLE = IntArray(256)
@@ -375,6 +415,18 @@ object NativeQrCodeEncoder {
         for (i in 0..7) {
             isFunction[8][size - 1 - i] = true
             isFunction[size - 1 - i][8] = true
+        }
+
+        // 5b. Version information blocks (versions 7 and above; reserved as function patterns)
+        val verBits = versionInfoBits(version)
+        if (verBits != null) {
+            for (i in 0..17) {
+                val isDark = ((verBits shr i) and 1) == 1
+                // Top-right 6x3 block: rows 0..5, cols (size - 11)..(size - 9)
+                setModule(i / 3, (size - 11) + (i % 3), isDark)
+                // Bottom-left 3x6 block: rows (size - 11)..(size - 9), cols 0..5
+                setModule((size - 11) + (i % 3), i / 3, isDark)
+            }
         }
 
         // 6. Place data bits in zigzag order

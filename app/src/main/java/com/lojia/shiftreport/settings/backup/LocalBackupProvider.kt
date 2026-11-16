@@ -3,11 +3,15 @@ package com.lojia.shiftreport.settings.backup
 import android.content.Context
 import android.os.Environment
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.BackupFormatException
+import com.lojia.shiftreport.util.BackupPasswordRequiredException
 import com.lojia.shiftreport.util.OfflineBackupManager
+import com.lojia.shiftreport.util.TIER_PORTABLE
+import com.lojia.shiftreport.util.backupTierOf
+import com.lojia.shiftreport.util.canCreatePortableBackup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 
 /**
@@ -73,14 +77,21 @@ class LocalBackupProvider(private val context: Context) : BackupProvider {
     }
 
     override suspend fun backup(file: File): Result<Boolean> = withContext(Dispatchers.IO) {
+        if (!canCreatePortableBackup(context)) {
+            return@withContext Result.failure(BackupPasswordRequiredException("Set a backup password first"))
+        }
         try {
+            val payloadBytes = file.readBytes()
+            if (backupTierOf(payloadBytes) != TIER_PORTABLE) {
+                return@withContext Result.failure(BackupFormatException("Portable LSB2 payload required"))
+            }
+
             val targetDir = getBackupDirectory()
             val destFile = File(targetDir, file.name)
 
-            FileInputStream(file).use { input ->
-                FileOutputStream(destFile).use { output ->
-                    input.copyTo(output)
-                }
+            FileOutputStream(destFile).use { output ->
+                output.write(payloadBytes)
+                output.flush()
             }
 
             val now = System.currentTimeMillis()
@@ -100,7 +111,7 @@ class LocalBackupProvider(private val context: Context) : BackupProvider {
     fun getLatestBackupFile(): File? {
         return try {
             val dir = getBackupDirectory()
-            dir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
+            dir.listFiles { f -> f.isFile && (f.name.endsWith(".lsb") || f.name.endsWith(".json")) }
                 ?.maxByOrNull { it.lastModified() }
         } catch (e: Exception) {
             null
@@ -110,7 +121,7 @@ class LocalBackupProvider(private val context: Context) : BackupProvider {
     fun listBackupFiles(): List<File> {
         return try {
             val dir = getBackupDirectory()
-            dir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
+            dir.listFiles { f -> f.isFile && (f.name.endsWith(".lsb") || f.name.endsWith(".json")) }
                 ?.sortedByDescending { it.lastModified() } ?: emptyList()
         } catch (e: Exception) {
             emptyList()

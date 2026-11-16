@@ -21,7 +21,11 @@ class RestorePolicyManager(private val prefs: PreferencesRepository, private val
         }
         val latestFile = backupManager.getLatestLocalBackupFile() ?: return RestoreDecision(false, null, "", false)
         return try {
-            val fullText = latestFile.readText()
+            val bytes = latestFile.readBytes()
+            if (backupTierOf(bytes) == TIER_PORTABLE) {
+                return RestoreDecision(true, latestFile, "Encrypted backup found", true)
+            }
+            val fullText = OfflineBackupManager.decodeBackupToJson(bytes, password = null)
             val json = try {
                 JSONObject(fullText)
             } catch (_: Exception) {

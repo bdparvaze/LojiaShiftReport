@@ -2,6 +2,7 @@ package com.lojia.shiftreport.util
 
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.util.Locale
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
@@ -55,8 +56,8 @@ object CryptoUtils {
         val skf = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
         val hashBytes = skf.generateSecret(spec).encoded
 
-        val saltHex = actualSalt.joinToString("") { "%02x".format(it) }
-        val hashHex = hashBytes.joinToString("") { "%02x".format(it) }
+        val saltHex = actualSalt.joinToString("") { "%02x".format(Locale.US, it) }
+        val hashHex = hashBytes.joinToString("") { "%02x".format(Locale.US, it) }
 
         return "pbkdf2:sha256:$iterations:$saltHex:$hashHex"
     }
@@ -66,7 +67,7 @@ object CryptoUtils {
      */
     fun generateSalt(): String {
         val bytes = ByteArray(16).apply { SecureRandom().nextBytes(this) }
-        return bytes.joinToString("") { "%02x".format(it) }
+        return bytes.joinToString("") { "%02x".format(Locale.US, it) }
     }
 
     /**
@@ -116,7 +117,7 @@ object CryptoUtils {
         val saltedInput = "$salt:$trimmed"
         val md = MessageDigest.getInstance("SHA-256")
         val hashBytes = md.digest(saltedInput.toByteArray(Charsets.UTF_8))
-        return hashBytes.joinToString("") { "%02x".format(it) }
+        return hashBytes.joinToString("") { "%02x".format(Locale.US, it) }
     }
 
     /**
@@ -127,7 +128,7 @@ object CryptoUtils {
         if (trimmed.isEmpty()) return ""
         val md = MessageDigest.getInstance("SHA-256")
         val hashBytes = md.digest(trimmed.toByteArray(Charsets.UTF_8))
-        return hashBytes.joinToString("") { "%02x".format(it) }
+        return hashBytes.joinToString("") { "%02x".format(Locale.US, it) }
     }
 
     /**

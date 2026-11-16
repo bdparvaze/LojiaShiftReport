@@ -7,8 +7,8 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.calculateInSampleSize
 import java.io.File
-import kotlin.math.max
 
 /**
  * Lightweight, zero-dependency image preprocessor designed to enhance text edge contrast
@@ -41,11 +41,7 @@ object OcrImagePreprocessor {
             if (rawWidth <= 0 || rawHeight <= 0) return null
 
             // Calculate sample size for downscaling if image is huge
-            var sampleSize = 1
-            val maxSide = max(rawWidth, rawHeight)
-            while (maxSide / sampleSize > MAX_DIMENSION) {
-                sampleSize *= 2
-            }
+            val sampleSize = calculateInSampleSize(rawWidth, rawHeight, MAX_DIMENSION)
 
             val decodeOptions = BitmapFactory.Options().apply {
                 inSampleSize = sampleSize

@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.calculateInSampleSize
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -488,11 +489,8 @@ fun decodeUriToBitmap(context: Context, uri: Uri): Bitmap? {
         BitmapFactory.decodeStream(inputStream, null, boundsOptions)
         inputStream.close()
 
-        var sampleSize = 1
         val maxDim = 2560
-        while (boundsOptions.outWidth / sampleSize > maxDim || boundsOptions.outHeight / sampleSize > maxDim) {
-            sampleSize *= 2
-        }
+        val sampleSize = calculateInSampleSize(boundsOptions.outWidth, boundsOptions.outHeight, maxDim)
 
         val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
         val stream = context.contentResolver.openInputStream(uri) ?: return null

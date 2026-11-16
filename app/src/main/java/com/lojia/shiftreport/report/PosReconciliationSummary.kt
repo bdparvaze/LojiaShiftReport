@@ -21,6 +21,8 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.MoneyInput
+import com.lojia.shiftreport.util.classifyMoneyInput
 import java.util.Locale
 
 /* ----------------------------------------------------------------------
@@ -53,7 +55,7 @@ fun PosReconciliationSummary(
 ) {
     val currency = currentCurrency
     val totalSales = MoneyFormat.addMinor(cashSales, madaSales, digitalWalletSales)
-    val netSales = (totalSales - totalDiscounts - salesReturns).coerceAtLeast(0L)
+    val netSales = MoneyFormat.calculateNetSalesMinor(totalSales, totalDiscounts, salesReturns)
     val totalCashIn = MoneyFormat.addMinor(startingCash, cashSales, totalDueCollectedCash)
     val totalCashOut = MoneyFormat.addMinor(totalExpenses, totalStaffAdvanceCash, totalPurchasesCash)
     val expectedCash = MoneyFormat.calculateExpectedCashMinor(
@@ -62,7 +64,9 @@ fun PosReconciliationSummary(
         payIn = totalDueCollectedCash,
         payOut = totalCashOut
     )
-    val actualCountVal = actualCashCount.toDoubleOrNull()?.let { MoneyFormat.toMinorUnits(it) }
+    val actualCountClass = classifyMoneyInput(actualCashCount)
+    val actualCountVal = (actualCountClass as? MoneyInput.Valid)?.minor
+    val isActualCountInvalid = actualCountClass is MoneyInput.Invalid
     val variance = actualCountVal?.let { MoneyFormat.calculateVarianceMinor(it, expectedCash) }
 
     Column(
@@ -336,6 +340,7 @@ fun PosReconciliationSummary(
                     label = stringResource(R.string.actual_cash_count_currency, currency),
                     value = actualCashCount,
                     onChange = onActualCashCountChange,
+                    errorText = if (isActualCountInvalid) stringResource(R.string.valid_amount_error) else null,
                     modifier = Modifier.fillMaxWidth()
                 )
 

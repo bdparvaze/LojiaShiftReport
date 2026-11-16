@@ -77,9 +77,6 @@ object OfflineBackupManager {
                 put("workingHours", businessProfile.workingHours)
                 put("currency", businessProfile.currency)
                 put("country", businessProfile.country)
-                put("vatRate", businessProfile.vatRate)
-                put("isTaxEnabled", businessProfile.isTaxEnabled)
-                put("isTaxIncluded", businessProfile.isTaxIncluded)
                 put("logoUri", businessProfile.logoUri)
             }
             rootJson.put("businessProfile", bpObj)
@@ -115,7 +112,6 @@ object OfflineBackupManager {
                 put("shopLogo", receiptConfig.shopLogo)
                 put("customHeader", receiptConfig.customHeader)
                 put("customFooterText", receiptConfig.customFooterText)
-                put("showTaxNumber", receiptConfig.showTaxNumber)
                 put("showCashierName", receiptConfig.showCashierName)
                 put("showBarcode", receiptConfig.showBarcode)
                 put("showCustomerMemo", receiptConfig.showCustomerMemo)
@@ -215,28 +211,10 @@ object OfflineBackupManager {
         Pair(rootJson.toString(2), totalRecords)
     }
 
-    const val BACKUP_MAGIC_HEADER = "LOJIA_ENC_V1"
-    private const val DEFAULT_BACKUP_SECRET = "LojiaSecureMasterKey@2026#Aes256"
+    private const val BACKUP_MAGIC_HEADER = "LOJIA_ENC_V1"
+    private const val LEGACY_READ_ONLY_SECRET = "LojiaSecureMasterKey@2026#Aes256"
 
-    fun encryptPayload(plainJson: String, password: String = DEFAULT_BACKUP_SECRET): ByteArray {
-        val salt = ByteArray(16).apply { java.security.SecureRandom().nextBytes(this) }
-        val iv = ByteArray(12).apply { java.security.SecureRandom().nextBytes(this) }
-        val keySpec = javax.crypto.spec.PBEKeySpec(password.toCharArray(), salt, 10000, 256)
-        val secretKey = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(keySpec)
-        val aesKey = javax.crypto.spec.SecretKeySpec(secretKey.encoded, "AES")
-        val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, aesKey, javax.crypto.spec.GCMParameterSpec(128, iv))
-        val ciphertext = cipher.doFinal(plainJson.toByteArray(Charsets.UTF_8))
-        val headerBytes = BACKUP_MAGIC_HEADER.toByteArray(Charsets.UTF_8)
-        val output = ByteArray(headerBytes.size + salt.size + iv.size + ciphertext.size)
-        System.arraycopy(headerBytes, 0, output, 0, headerBytes.size)
-        System.arraycopy(salt, 0, output, headerBytes.size, salt.size)
-        System.arraycopy(iv, 0, output, headerBytes.size + salt.size, iv.size)
-        System.arraycopy(ciphertext, 0, output, headerBytes.size + salt.size + iv.size, ciphertext.size)
-        return output
-    }
-
-    fun decryptPayload(payloadBytes: ByteArray, password: String = DEFAULT_BACKUP_SECRET): String {
+    private fun legacyDecryptPayload(payloadBytes: ByteArray, password: String): String {
         val headerBytes = BACKUP_MAGIC_HEADER.toByteArray(Charsets.UTF_8)
         if (payloadBytes.size >= headerBytes.size + 16 + 12 &&
             payloadBytes.take(headerBytes.size).toByteArray().contentEquals(headerBytes)) {
@@ -253,17 +231,72 @@ object OfflineBackupManager {
         return String(payloadBytes, Charsets.UTF_8)
     }
 
+    internal fun decodeBackupToJson(bytes: ByteArray, password: String?): String {
+        val passwordChars = password?.toCharArray()
+        return try {
+            BackupFileDecoder.decodeToJson(
+                bytes = bytes,
+                kekFor = { tier, salt ->
+                    when (tier) {
+                        TIER_DEVICE -> getOrCreateDeviceKek()
+                            ?: throw BackupFormatException("device key unavailable")
+                        TIER_PORTABLE -> {
+                            val chars = passwordChars
+                                ?: throw BackupPasswordRequiredException("password required")
+                            deriveBackupKek(chars.copyOf(), salt)
+                        }
+                        else -> throw BackupFormatException("unknown tier")
+                    }
+                },
+                legacyDecrypt = { raw ->
+                    legacyDecryptPayload(raw, password ?: LEGACY_READ_ONLY_SECRET)
+                }
+            )
+        } finally {
+            passwordChars?.fill('\u0000')
+        }
+    }
+
+    internal suspend fun createPortableBackupBytes(
+        database: AppDatabase,
+        password: CharArray,
+        isCloudBackup: Boolean = false
+    ): Pair<ByteArray, Int> = withContext(Dispatchers.IO) {
+        val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = isCloudBackup)
+        val plainJsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+        val salt = generateBackupSalt()
+        val kek = deriveBackupKek(password.copyOf(), salt)
+        val encryptedBytes = encryptBackup(plainJsonBytes, kek, TIER_PORTABLE, salt)
+        Pair(encryptedBytes, totalRecords)
+    }
+
+    fun isBackupPasswordOrFormatError(error: Throwable?): Boolean {
+        return generateSequence(error) { it.cause }.any { cause ->
+            cause is BackupPasswordRequiredException ||
+                cause is BackupFormatException ||
+                cause is javax.crypto.AEADBadTagException ||
+                cause is javax.crypto.BadPaddingException ||
+                cause is java.security.GeneralSecurityException
+        }
+    }
+
     suspend fun createBackup(
         context: Context,
         database: AppDatabase,
-        password: String? = null
+        password: CharArray? = null
     ): Result<BackupInfo> = withContext(Dispatchers.IO) {
         try {
+            if (password == null) {
+                return@withContext Result.failure(BackupPasswordRequiredException("password required"))
+            }
             val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = false)
-            val jsonBytes = encryptPayload(jsonString, password ?: DEFAULT_BACKUP_SECRET)
+            val plainJsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+            val salt = ByteArray(16).apply { java.security.SecureRandom().nextBytes(this) }
+            val kek = deriveBackupKek(password.copyOf(), salt)
+            val encryptedBytes = encryptBackup(plainJsonBytes, kek, TIER_PORTABLE, salt)
 
             val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
-            val fileName = "Lojia_ShiftReport_Backup_$timeStampStr.json"
+            val fileName = "Lojia_ShiftReport_Backup_$timeStampStr.lsb"
 
             var savedUri: Uri? = null
             var savedPath = ""
@@ -271,14 +304,14 @@ object OfflineBackupManager {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
                     put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Lojia")
                 }
                 val resolver = context.contentResolver
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
                 if (uri != null) {
                     resolver.openOutputStream(uri)?.use { os ->
-                        os.write(jsonBytes)
+                        os.write(encryptedBytes)
                         os.flush()
                     }
                     savedUri = uri
@@ -288,7 +321,7 @@ object OfflineBackupManager {
                 val downloadsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Lojia").apply { mkdirs() }
                 val targetFile = File(downloadsDir, fileName)
                 FileOutputStream(targetFile).use { fos ->
-                    fos.write(jsonBytes)
+                    fos.write(encryptedBytes)
                     fos.flush()
                 }
                 savedPath = targetFile.absolutePath
@@ -296,7 +329,7 @@ object OfflineBackupManager {
 
             val cacheExportDir = File(context.cacheDir, "backups").apply { mkdirs() }
             val cacheFile = File(cacheExportDir, fileName)
-            cacheFile.writeBytes(jsonBytes)
+            cacheFile.writeBytes(encryptedBytes)
             if (savedPath.isEmpty()) {
                 savedPath = cacheFile.absolutePath
             }
@@ -330,11 +363,28 @@ object OfflineBackupManager {
     private fun rotateAutoBackups(backupsDir: File) {
         try {
             val autoFiles = backupsDir.listFiles { f ->
-                f.isFile && f.name.startsWith("lojia_auto_backup_") && f.name.endsWith(".json")
+                f.isFile && (
+                    (f.name.startsWith("portable_backup_") && f.name.endsWith(".lsb")) ||
+                        (f.name.startsWith("lojia_auto_backup_") && f.name.endsWith(".json"))
+                    )
             }?.sortedByDescending { it.lastModified() } ?: emptyList()
 
             if (autoFiles.size > 5) {
                 for (oldFile in autoFiles.drop(5)) {
+                    oldFile.delete()
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun rotateDeviceSnapshots(snapshotDir: File) {
+        try {
+            val snapshotFiles = snapshotDir.listFiles { f ->
+                f.isFile && f.name.startsWith("device_snapshot_") && f.name.endsWith(".lsb")
+            }?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+            if (snapshotFiles.size > 3) {
+                for (oldFile in snapshotFiles.drop(3)) {
                     oldFile.delete()
                 }
             }
@@ -378,30 +428,50 @@ object OfflineBackupManager {
     }
 
     /**
-     * Explicitly exports a backup before uninstalling and stores it in the Backups folder.
+     * Creates a device-encrypted snapshot in app-private storage and, if the password vault
+     * can be opened, also writes a portable backup copy to the uninstall Backups folder.
      */
-    suspend fun createUninstallBackup(
+    suspend fun createAutoBackup(
         context: Context,
         database: AppDatabase
     ): Result<BackupInfo> = withContext(Dispatchers.IO) {
         try {
+            val deviceKek = getOrCreateDeviceKek()
+                ?: return@withContext Result.failure(IllegalStateException("device key unavailable"))
             val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = false)
-            val jsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+            val plainJsonBytes = jsonString.toByteArray(Charsets.UTF_8)
 
-            val timeStampStr = DateTimeFormatUtils.formatFileTimestampDash()
-            val fileName = "lojia_auto_backup_$timeStampStr.json"
+            val timeStampStr = DateTimeFormatUtils.formatFileTimestamp()
+            val snapshotDir = File(context.filesDir, "backups").apply { mkdirs() }
+            val snapshotFile = File(snapshotDir, "device_snapshot_$timeStampStr.lsb")
+            val deviceBytes = encryptBackup(plainJsonBytes, deviceKek, TIER_DEVICE, null)
+            snapshotFile.writeBytes(deviceBytes)
+            rotateDeviceSnapshots(snapshotDir)
 
-            val backupsDir = getBackupsDirectory(context)
-            val targetFile = File(backupsDir, fileName)
-            targetFile.writeBytes(jsonBytes)
-
-            saveReinstallMeta(context, true)
-            rotateAutoBackups(backupsDir)
+            val vaultBlob = loadVault(context)
+            if (vaultBlob != null) {
+                var passwordChars: CharArray? = null
+                try {
+                    passwordChars = open(vaultBlob, deviceKek)
+                    val salt = ByteArray(16).apply { java.security.SecureRandom().nextBytes(this) }
+                    val portableKek = deriveBackupKek(passwordChars.copyOf(), salt)
+                    val portableBytes = encryptBackup(plainJsonBytes, portableKek, TIER_PORTABLE, salt)
+                    val backupsDir = getBackupsDirectory(context)
+                    val portableFile = File(backupsDir, "portable_backup_$timeStampStr.lsb")
+                    portableFile.writeBytes(portableBytes)
+                    saveReinstallMeta(context, true)
+                    rotateAutoBackups(backupsDir)
+                } catch (_: Exception) {
+                    // Vault missing/unreadable in Stage 19B skips portable copy silently without deleting vault.
+                } finally {
+                    passwordChars?.fill('\u0000')
+                }
+            }
 
             Result.success(
                 BackupInfo(
-                    fileName = fileName,
-                    savedPath = targetFile.absolutePath,
+                    fileName = snapshotFile.name,
+                    savedPath = snapshotFile.absolutePath,
                     uri = null,
                     totalRecords = totalRecords,
                     timestamp = System.currentTimeMillis()
@@ -413,28 +483,18 @@ object OfflineBackupManager {
     }
 
     /**
-     * Creates a periodic auto-backup file surviving app deletion if external storage is available.
-     */
-    suspend fun createAutoBackup(
-        context: Context,
-        database: AppDatabase
-    ): Result<BackupInfo> = withContext(Dispatchers.IO) {
-        createUninstallBackup(context, database)
-    }
-
-    /**
      * Locates the latest available JSON backup file in the Backups or Reports directories.
      */
     fun findLatestBackupFile(context: Context): File? {
         return try {
             val backupsDir = getBackupsDirectory(context)
             val filesInBackups = backupsDir.listFiles { f ->
-                f.isFile && f.name.endsWith(".json")
+                f.isFile && (f.name.endsWith(".lsb") || f.name.endsWith(".json"))
             }?.toList() ?: emptyList()
 
             val baseDir = PdfShareUtils.getAppReportsDirectory(context)
             val filesInBase = baseDir.listFiles { f ->
-                f.isFile && f.name.endsWith(".json")
+                f.isFile && (f.name.endsWith(".lsb") || f.name.endsWith(".json"))
             }?.toList() ?: emptyList()
 
             val allFiles = (filesInBackups + filesInBase).distinctBy { it.absolutePath }
@@ -457,7 +517,7 @@ object OfflineBackupManager {
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val bytes = backupFile.readBytes()
-            val jsonString = decryptPayload(bytes, password ?: DEFAULT_BACKUP_SECRET)
+            val jsonString = decodeBackupToJson(bytes, password)
             restoreBackupFromString(jsonString, database, backupFile.name)
         } catch (e: Exception) {
             Result.failure(e)
@@ -475,6 +535,7 @@ object OfflineBackupManager {
             database.clearAllTables()
             PreferencesRepository.getInstance(context).clearAll()
             saveReinstallMeta(context, false)
+            ConfigurationSyncManager.getInstance(context).refreshCurrencyLock()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -484,16 +545,23 @@ object OfflineBackupManager {
     suspend fun writeBackupToUri(
         context: Context,
         database: AppDatabase,
-        targetUri: Uri
+        targetUri: Uri,
+        password: CharArray? = null
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
+            if (password == null) {
+                return@withContext Result.failure(BackupPasswordRequiredException("password required"))
+            }
             val (jsonString, totalRecords) = generateBackupJson(database, isCloudBackup = false)
-            val jsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+            val plainJsonBytes = jsonString.toByteArray(Charsets.UTF_8)
+            val salt = ByteArray(16).apply { java.security.SecureRandom().nextBytes(this) }
+            val kek = deriveBackupKek(password.copyOf(), salt)
+            val encryptedBytes = encryptBackup(plainJsonBytes, kek, TIER_PORTABLE, salt)
 
             context.contentResolver.openOutputStream(targetUri)?.use { os ->
-                os.write(jsonBytes)
+                os.write(encryptedBytes)
                 os.flush()
-            }
+            } ?: throw IllegalStateException("Could not open backup output stream")
 
             Result.success(totalRecords)
         } catch (e: Exception) {
@@ -527,14 +595,26 @@ object OfflineBackupManager {
         }
     }
 
+    fun parseBackupSummaryFromBytes(bytes: ByteArray): Result<BackupSummary> {
+        return try {
+            if (backupTierOf(bytes) == TIER_PORTABLE) {
+                return Result.failure(BackupPasswordRequiredException("password required"))
+            }
+            val jsonString = decodeBackupToJson(bytes, password = null)
+            parseBackupSummaryFromString(jsonString)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun parseBackupSummary(
         context: Context,
         uri: Uri
     ): Result<BackupSummary> = withContext(Dispatchers.IO) {
         try {
-            val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-            val jsonString = inputStream?.bufferedReader()?.use { it.readText() } ?: throw IllegalArgumentException("Could not read backup file")
-            parseBackupSummaryFromString(jsonString)
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: throw IllegalArgumentException("Could not read backup file")
+            parseBackupSummaryFromBytes(bytes)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -699,9 +779,6 @@ object OfflineBackupManager {
                         workingHours = obj.optString("workingHours", "08:00 AM - 10:00 PM"),
                         currency = obj.optString("currency", "USD"),
                         country = obj.optString("country", "United States"),
-                        vatRate = obj.optDouble("vatRate", 0.0),
-                        isTaxEnabled = obj.optBoolean("isTaxEnabled", false),
-                        isTaxIncluded = obj.optBoolean("isTaxIncluded", true),
                         logoUri = obj.optString("logoUri", "")
                     )
                     reportDao.saveBusinessProfile(bp)
@@ -751,7 +828,6 @@ object OfflineBackupManager {
                         shopLogo = obj.optString("shopLogo", "store_logo_default"),
                         customHeader = obj.optString("customHeader", "Welcome"),
                         customFooterText = obj.optString("customFooterText", "Thank you, visit again!"),
-                        showTaxNumber = obj.optBoolean("showTaxNumber", true),
                         showCashierName = obj.optBoolean("showCashierName", true),
                         showBarcode = obj.optBoolean("showBarcode", true),
                         showCustomerMemo = obj.optBoolean("showCustomerMemo", true)
@@ -944,7 +1020,7 @@ object OfflineBackupManager {
         try {
             val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                 ?: throw IllegalArgumentException("Could not read backup file")
-            val jsonString = decryptPayload(bytes, password ?: DEFAULT_BACKUP_SECRET)
+            val jsonString = decodeBackupToJson(bytes, password)
             restoreBackupFromString(jsonString, database, uri.lastPathSegment ?: "backup.json", adminUser)
         } catch (e: Exception) {
             Result.failure(e)

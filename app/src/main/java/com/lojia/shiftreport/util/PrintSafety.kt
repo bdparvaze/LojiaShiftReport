@@ -9,6 +9,15 @@ fun vatNumberForPrint(raw: String?): String? {
     return trimmed.ifEmpty { null }
 }
 
+/**
+ * Returns a single formatted header line for the VAT registration number, or emptyList()
+ * when missing or blank so callers print nothing at all (no label, placeholder, or fallback).
+ */
+fun vatHeaderLines(vat: String?): List<String> {
+    val clean = vatNumberForPrint(vat) ?: return emptyList()
+    return listOf(clean)
+}
+
 const val RECEIPT_UNSPECIFIED = "Unspecified"
 
 fun isUnspecifiedReceipt(normalizedReceipt: String): Boolean {
@@ -61,3 +70,14 @@ fun chooseHeaderMetaLabelKind(rawVat: String?, rawPhone: String?): HeaderMetaLab
 fun shouldSeedDemoData(isDebugBuild: Boolean, databaseIsEmpty: Boolean): Boolean {
     return isDebugBuild && databaseIsEmpty
 }
+
+/**
+ * Pure width-in-dots mapping for ESC/POS thermal printers (203 dpi).
+ * 80 mm -> 576 dots; 58 mm, null, or any other value -> 384 dots.
+ */
+fun paperWidthDots(paperMm: Int?): Int = when (paperMm) {
+    80 -> 576
+    58 -> 384
+    else -> 384
+}
+

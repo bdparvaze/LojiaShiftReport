@@ -15,15 +15,12 @@ com.lojia.shiftreport
 │
 ├── auth/                          # 🔐 Authentication & Security Layer
 │   ├── AdminAuthDialog.kt         # PIN authorization dialog for restricted operations
-│   ├── BiometricAuthManager.kt    # Android BiometricPrompt wrapper
-│   ├── BiometricHelper.kt         # Helpers for biometric registration and states
-│   ├── BiometricLockScreen.kt     # App auto-lock and PIN unlock screen
+│   ├── BiometricManager.kt        # Unified biometric prompt wrapper, state, and lock screen
 │   ├── LojiaAuthComponents.kt     # Registration, login fields & country dial picker
-│   ├── LojiaAuthDialogs.kt        # Security and lockout management dialogs
 │   ├── LojiaAuthModels.kt         # User profile and registration state models
 │   ├── LojiaRegisterScreen.kt     # Registration flow for first time administrator setup
 │   ├── QuickPinScreen.kt          # PIN passcode screen for cashiers and admin
-│   └── SecurityHelper.kt          # Security and verification functions
+│   └── SecureStorageManager.kt    # Secure encrypted hardware storage (AES-256-GCM MasterKey)
 │
 ├── data/                          # 💾 Data & Persistence Layer
 │   ├── AppDatabase.kt             # Room Database with automated migration handlers
@@ -117,14 +114,13 @@ com.lojia.shiftreport
     ├── ExportHelper.kt            # Saves files to local scoped folders
     ├── GoogleDriveManager.kt      # Handles backup transfers to remote cloud drive
     ├── LanguagePreferences.kt     # Key-value storage for selected interface language
-    ├── LocaleManager.kt           # Runtime language switching & RTL direction support
     ├── MoneyFormat.kt             # Safe financial calculations using minor units (Long)
     ├── NotificationHelper.kt      # Builds app system notifications
-    ├── OfflineBackupManager.kt    # Encryption-safe database JSON backup and recovery
+    ├── OfflineBackupManager.kt    # Encryption-safe database backup and recovery
     ├── PdfPalette.kt              # Standard color palette for PDF report visual themes
     ├── PdfReportGenerator.kt      # Vector-based PDF receipt & shift summary builder
     ├── PdfShareUtils.kt           # Native Android document sharing & opening utility
-    ├── SecurityUtils.kt           # PBKDF2/SHA-256 secret hashing & cryptographic helpers
+    ├── CryptoUtils.kt             # PBKDF2/SHA-256 secret hashing & cryptographic helpers
     └── UiText.kt                  # UI text wrapper supporting translatable strings
 ```
 

@@ -89,25 +89,6 @@ fun ShiftReportPreviewDialog(
     val businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName
     val cleanNotes = PdfReportGenerator.cleanDisplayNotes(report.notes)
 
-    val isTax = businessProfile?.isTaxEnabled ?: false
-    val isTaxIncluded = businessProfile?.isTaxIncluded ?: true
-    val vatRate = if (isTax) (businessProfile?.vatRate ?: 0.0) else 0.0
-    val totalSalesMajor = MoneyFormat.toMajorUnits(report.totalSales)
-    val (netTax, vatTax, grossTax) = if (isTax && vatRate > 0.0) {
-        if (isTaxIncluded) {
-            val divisor = 1.0 + (vatRate / 100.0)
-            val net = totalSalesMajor / divisor
-            val vat = totalSalesMajor - net
-            Triple(net, vat, totalSalesMajor)
-        } else {
-            val net = totalSalesMajor
-            val vat = net * (vatRate / 100.0)
-            Triple(net, vat, net + vat)
-        }
-    } else {
-        Triple(totalSalesMajor, 0.0, totalSalesMajor)
-    }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -273,39 +254,6 @@ fun ShiftReportPreviewDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Tax & VAT section
-                PreviewSection(title = "Tax & VAT Summary") {
-                    if (isTax && vatRate > 0.0) {
-                        PreviewRow(
-                            label = "Net Taxable Sales",
-                            value = MoneyFormat.format(netTax, currencyCode)
-                        )
-                        PreviewRow(
-                            label = "VAT Amount (${String.format(Locale.US, "%.1f", vatRate)}%)",
-                            value = MoneyFormat.format(vatTax, currencyCode)
-                        )
-                        val inclLabel = if (isTaxIncluded) "Incl. VAT" else "Excl. VAT"
-                        PreviewDivider()
-                        PreviewRow(
-                            label = "Total Gross ($inclLabel)",
-                            value = MoneyFormat.format(grossTax, currencyCode),
-                            bold = true
-                        )
-                    } else {
-                        PreviewRow(
-                            label = "Tax Status",
-                            value = "Non-Taxable / Tax Exempt"
-                        )
-                        PreviewRow(
-                            label = "Net Total Sales",
-                            value = MoneyFormat.formatMinor(report.totalSales, currencyCode),
-                            bold = true
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 // Other Tracking section
                 PreviewSection(title = "Other Tracking") {
                     PreviewRow(
@@ -359,7 +307,7 @@ fun ShiftReportPreviewDialog(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Printer Warning",
+                                    text = stringResource(R.string.printer_warning_title),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = ErrorRedLight
@@ -474,17 +422,18 @@ fun ShiftReportPreviewDialog(
                                             businessPhone = businessProfile?.phone ?: "",
                                             vatNumber = businessProfile?.vatNumber ?: "",
                                             report = report,
-                                            currencySymbol = MoneyFormat.resolveCurrency(businessProfile?.currency),
-                                            vatRate = if (businessProfile?.isTaxEnabled == true) (businessProfile?.vatRate ?: 0.0) else 0.0,
-                                            isTaxEnabled = businessProfile?.isTaxEnabled ?: false,
-                                            isTaxIncluded = businessProfile?.isTaxIncluded ?: true
+                                            currencySymbol = MoneyFormat.resolveCurrency(businessProfile?.currency)
                                         )
 
                                         val res = printerManager.printFormattedText(zReportText)
                                         isPrinting = false
                                         res.fold(
-                                            onSuccess = {
-                                                Toast.makeText(context, context.getString(R.string.printer_zreport_sent), Toast.LENGTH_SHORT).show()
+                                            onSuccess = { fullSuccess ->
+                                                if (fullSuccess) {
+                                                    Toast.makeText(context, context.getString(R.string.printer_zreport_sent), Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    printerErrorMessage = context.getString(R.string.printer_warning_message)
+                                                }
                                             },
                                             onFailure = { err ->
                                                 printerErrorMessage = context.getString(

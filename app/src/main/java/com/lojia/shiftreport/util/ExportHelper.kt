@@ -32,13 +32,20 @@ object ExportHelper {
         val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
         val csvFile = File(exportDir, "Shift_Reports_$timeStamp.csv")
 
+        val digits = MoneyFormat.minorUnitDigits(currency)
         FileWriter(csvFile).use { writer ->
             writer.append("Report ID,Cashier Name,Shift,Date,Gross Cash ($currency),Mada/Card ($currency),Digital Wallet ($currency),Staff Meals,Expenses ($currency),Net Cash ($currency),Total Sales ($currency),Notes\n")
 
             for (r in reports) {
                 val dateStr = DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US)
                 val sanitizedNotes = r.notes.replace("\"", "\"\"")
-                writer.append("${r.id},\"${r.cashierName}\",${r.shift},$dateStr,${r.grossCash},${r.madaPayments},${r.digitalWallet},${r.staffMealsCount},${r.totalExpenses},${r.netCash},${r.totalSales},\"$sanitizedNotes\"\n")
+                val grossCashStr = MoneyFormat.toPlainDecimal(r.grossCash, digits)
+                val madaStr = MoneyFormat.toPlainDecimal(r.madaPayments, digits)
+                val walletStr = MoneyFormat.toPlainDecimal(r.digitalWallet, digits)
+                val expensesStr = MoneyFormat.toPlainDecimal(r.totalExpenses, digits)
+                val netCashStr = MoneyFormat.toPlainDecimal(r.netCash, digits)
+                val totalSalesStr = MoneyFormat.toPlainDecimal(r.totalSales, digits)
+                writer.append("${r.id},\"${r.cashierName}\",${r.shift},$dateStr,$grossCashStr,$madaStr,$walletStr,${r.staffMealsCount},$expensesStr,$netCashStr,$totalSalesStr,\"$sanitizedNotes\"\n")
             }
             writer.flush()
         }
@@ -55,6 +62,7 @@ object ExportHelper {
     }
 
     fun exportReportsAsPdf(context: Context, reports: List<ShiftReport>, currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE) {
+        val digits = MoneyFormat.minorUnitDigits(currency)
         try {
             val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
             val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
@@ -223,11 +231,11 @@ object ExportHelper {
                 canvas.drawText(r.shift, colShift, textY, textPaint)
                 canvas.drawText(DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US), colDate, textY, textSecondaryPaint)
 
-                val netStr = context.getString(R.string.msg_2f_s_21).format(r.netCash, currency)
+                val netStr = "${MoneyFormat.toPlainDecimal(r.netCash, digits)} $currency"
                 val netW = textPaint.measureText(netStr)
                 canvas.drawText(netStr, colNetRight - netW, textY, textPaint)
 
-                val salesStr = context.getString(R.string.msg_2f_s_21).format(r.totalSales, currency)
+                val salesStr = "${MoneyFormat.toPlainDecimal(r.totalSales, digits)} $currency"
                 val salesW = textBoldPaint.measureText(salesStr)
                 canvas.drawText(salesStr, colSalesRight - salesW, textY, textBoldPaint)
 
@@ -257,11 +265,11 @@ object ExportHelper {
             val totalNet = reports.sumOf { it.netCash }
             val totalSales = reports.sumOf { it.totalSales }
 
-            val totalNetStr = context.getString(R.string.msg_2f_s_21).format(totalNet, currency)
+            val totalNetStr = "${MoneyFormat.toPlainDecimal(totalNet, digits)} $currency"
             val totalNetW = textBoldPaint.measureText(totalNetStr)
             canvas.drawText(totalNetStr, colNetRight - totalNetW, totalBaseline, textBoldPaint)
 
-            val totalSalesStr = context.getString(R.string.msg_2f_s_21).format(totalSales, currency)
+            val totalSalesStr = "${MoneyFormat.toPlainDecimal(totalSales, digits)} $currency"
             val totalSalesW = successBoldPaint.measureText(totalSalesStr)
             canvas.drawText(totalSalesStr, colSalesRight - totalSalesW, totalBaseline, successBoldPaint)
 

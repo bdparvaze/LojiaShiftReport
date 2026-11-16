@@ -131,6 +131,13 @@ class ReportBackupManager(
     ) {
         if (_isDriveUploading.value || _isBackingUp.value) return
         scope.launch(Dispatchers.IO) {
+            if (!canCreatePortableBackup(context)) {
+                val msg = context.getString(R.string.backup_pw_set_first_title)
+                emitUiMessage(UiText.DynamicString(msg))
+                withContext(Dispatchers.Main) { onFailure(msg) }
+                return@launch
+            }
+
             _isDriveUploading.value = true
             _isBackingUp.value = true
             _backupProgress.value = 0.2f
@@ -175,8 +182,85 @@ class ReportBackupManager(
         }
     }
 
+    fun prepareGoogleDriveRestore(
+        item: DriveBackupItem,
+        onReady: (bytes: ByteArray, requiresPassword: Boolean) -> Unit,
+        onFailure: (String) -> Unit = {}
+    ) {
+        if (_isDriveDownloading.value) return
+        scope.launch(Dispatchers.IO) {
+            _isDriveDownloading.value = true
+            _isBackingUp.value = true
+            _backupProgress.value = 0.25f
+            emitUiMessage(UiText.StringResource(R.string.drive_restore_in_progress))
+
+            val downloadResult = GoogleDriveManager.downloadBackupBytes(context, item.id)
+            _isDriveDownloading.value = false
+            _isBackingUp.value = false
+
+            downloadResult.onSuccess { bytes ->
+                val requiresPassword = backupTierOf(bytes) == TIER_PORTABLE
+                withContext(Dispatchers.Main) {
+                    onReady(bytes, requiresPassword)
+                }
+            }.onFailure { err ->
+                val msg = err.localizedMessage ?: "Drive download failed"
+                emitUiMessage(UiText.DynamicString(msg))
+                withContext(Dispatchers.Main) { onFailure(msg) }
+            }
+        }
+    }
+
+    fun restoreGoogleDriveBytes(
+        item: DriveBackupItem,
+        bytes: ByteArray,
+        password: String? = null,
+        onSuccess: (Int) -> Unit = {},
+        onFailure: (String) -> Unit = {}
+    ) {
+        if (_isDriveDownloading.value) return
+        scope.launch(Dispatchers.IO) {
+            _isDriveDownloading.value = true
+            _isBackingUp.value = true
+            _backupProgress.value = 0.6f
+
+            val restoreResult = try {
+                val jsonString = OfflineBackupManager.decodeBackupToJson(bytes, password)
+                OfflineBackupManager.restoreBackupFromString(jsonString, db, item.name)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+
+            _isDriveDownloading.value = false
+            _isBackingUp.value = false
+            _backupProgress.value = 1.0f
+
+            restoreResult.onSuccess { count ->
+                val now = System.currentTimeMillis()
+                lastBackupTime.value = now
+                prefs.edit().putLong("last_backup_time", now).apply()
+                syncManager.forceSync { _: Boolean, _: String -> }
+                NotificationHelper.sendTestPushNotification(
+                    context,
+                    "☁️ Google Drive Restore Complete",
+                    "Restored $count records from Google Drive (${item.name})."
+                )
+                withContext(Dispatchers.Main) { onSuccess(count) }
+            }.onFailure { err ->
+                val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                    context.getString(R.string.backup_pw_wrong_or_damaged)
+                } else {
+                    err.localizedMessage ?: context.getString(R.string.restore_failed)
+                }
+                emitUiMessage(UiText.DynamicString(msg))
+                withContext(Dispatchers.Main) { onFailure(msg) }
+            }
+        }
+    }
+
     fun restoreFromGoogleDrive(
         item: DriveBackupItem,
+        password: String? = null,
         onSuccess: (Int) -> Unit = {},
         onFailure: (String) -> Unit = {}
     ) {
@@ -187,10 +271,15 @@ class ReportBackupManager(
             _backupProgress.value = 0.3f
             emitUiMessage(UiText.StringResource(R.string.drive_restore_in_progress))
 
-            val downloadResult = GoogleDriveManager.downloadBackup(context, item.id)
+            val downloadResult = GoogleDriveManager.downloadBackupBytes(context, item.id)
 
-            downloadResult.onSuccess { jsonString ->
-                val restoreResult = OfflineBackupManager.restoreBackupFromString(jsonString, db, item.name)
+            downloadResult.onSuccess { bytes ->
+                val restoreResult = try {
+                    val jsonString = OfflineBackupManager.decodeBackupToJson(bytes, password)
+                    OfflineBackupManager.restoreBackupFromString(jsonString, db, item.name)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
                 _isDriveDownloading.value = false
                 _isBackingUp.value = false
 
@@ -206,7 +295,11 @@ class ReportBackupManager(
                     )
                     withContext(Dispatchers.Main) { onSuccess(count) }
                 }.onFailure { err ->
-                    val msg = err.localizedMessage ?: "Failed to restore backup"
+                    val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                        context.getString(R.string.backup_pw_wrong_or_damaged)
+                    } else {
+                        err.localizedMessage ?: context.getString(R.string.restore_failed)
+                    }
                     emitUiMessage(UiText.DynamicString(msg))
                     withContext(Dispatchers.Main) { onFailure(msg) }
                 }
@@ -225,9 +318,9 @@ class ReportBackupManager(
         onResult: (BackupSummary?) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
-            val downloadResult = GoogleDriveManager.downloadBackup(context, item.id)
-            val summary = downloadResult.mapCatching { json ->
-                OfflineBackupManager.parseBackupSummaryFromString(json).getOrThrow()
+            val downloadResult = GoogleDriveManager.downloadBackupBytes(context, item.id)
+            val summary = downloadResult.mapCatching { bytes ->
+                OfflineBackupManager.parseBackupSummaryFromBytes(bytes).getOrThrow()
             }.getOrNull()
             withContext(Dispatchers.Main) { onResult(summary) }
         }
@@ -308,6 +401,13 @@ class ReportBackupManager(
     ) {
         if (_isBackingUp.value) return
         scope.launch(Dispatchers.IO) {
+            if (!canCreatePortableBackup(context)) {
+                val msg = context.getString(R.string.backup_pw_set_first_title)
+                emitUiMessage(UiText.DynamicString(msg))
+                withContext(Dispatchers.Main) { onFailure(msg) }
+                return@launch
+            }
+
             _isBackingUp.value = true
             _backupProgress.value = 0.1f
             emitUiMessage(UiText.StringResource(R.string.backup_in_progress))
@@ -315,7 +415,9 @@ class ReportBackupManager(
             delay(200)
             _backupProgress.value = 0.4f
 
-            val result = OfflineBackupManager.createBackup(context, db)
+            val result = withVaultPassword(context) { passwordChars ->
+                OfflineBackupManager.createBackup(context, db, passwordChars).getOrThrow()
+            }
 
             delay(200)
             _backupProgress.value = 1.0f
@@ -348,6 +450,7 @@ class ReportBackupManager(
 
     fun restoreOfflineBackup(
         uri: Uri,
+        password: String? = null,
         onSuccess: (Int) -> Unit = {},
         onFailure: (String) -> Unit = {}
     ) {
@@ -359,7 +462,7 @@ class ReportBackupManager(
             delay(300)
             _backupProgress.value = 0.6f
 
-            val result = OfflineBackupManager.restoreBackup(context, uri, db)
+            val result = OfflineBackupManager.restoreBackup(context, uri, db, password = password)
 
             _backupProgress.value = 1.0f
             _isBackingUp.value = false
@@ -376,7 +479,11 @@ class ReportBackupManager(
                 )
                 withContext(Dispatchers.Main) { onSuccess(count) }
             }.onFailure { error ->
-                val msg = error.localizedMessage ?: "Failed to restore backup"
+                val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(error)) {
+                    context.getString(R.string.backup_pw_wrong_or_damaged)
+                } else {
+                    error.localizedMessage ?: context.getString(R.string.restore_failed)
+                }
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }

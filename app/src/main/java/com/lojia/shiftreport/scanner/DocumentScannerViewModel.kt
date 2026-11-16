@@ -65,7 +65,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
                 val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
 
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val title = customTitle?.ifBlank { null } ?: "Scan_$timeStamp"
                 val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
                 val destFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
@@ -176,7 +176,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
                 val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
 
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val title = customTitle?.ifBlank { null } ?: "PhotoScan_$timeStamp"
                 val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
                 val destPdfFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
@@ -199,24 +199,42 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 }
 
                 // 2. Create 1-page PDF using android.graphics.pdf.PdfDocument
-                val bitmap = android.graphics.BitmapFactory.decodeFile(pageFile.absolutePath)
-                if (bitmap != null) {
-                    val pdfDocument = android.graphics.pdf.PdfDocument()
-                    val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(
-                        bitmap.width.coerceAtLeast(1),
-                        bitmap.height.coerceAtLeast(1),
-                        1
-                    ).create()
-                    val pdfPage = pdfDocument.startPage(pageInfo)
-                    val canvas = pdfPage.canvas
-                    canvas.drawBitmap(bitmap, 0f, 0f, null)
-                    pdfDocument.finishPage(pdfPage)
-
-                    FileOutputStream(destPdfFile).use { fos ->
-                        pdfDocument.writeTo(fos)
-                    }
-                    pdfDocument.close()
+                val boundsOptions = android.graphics.BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
                 }
+                android.graphics.BitmapFactory.decodeFile(pageFile.absolutePath, boundsOptions)
+                val sampleSize = com.lojia.shiftreport.util.calculateInSampleSize(
+                    boundsOptions.outWidth,
+                    boundsOptions.outHeight
+                )
+                val decodeOptions = android.graphics.BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                    inJustDecodeBounds = false
+                }
+                val bitmap = android.graphics.BitmapFactory.decodeFile(pageFile.absolutePath, decodeOptions)
+                if (bitmap == null) {
+                    AppLogger.e("DocumentScannerVM", "Failed to decode captured photo bitmap")
+                    withContext(Dispatchers.Main) {
+                        onComplete?.invoke(ScannedDocument(title = "error"))
+                    }
+                    return@launch
+                }
+                val pdfDocument = android.graphics.pdf.PdfDocument()
+                val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(
+                    bitmap.width.coerceAtLeast(1),
+                    bitmap.height.coerceAtLeast(1),
+                    1
+                ).create()
+                val pdfPage = pdfDocument.startPage(pageInfo)
+                val canvas = pdfPage.canvas
+                canvas.drawBitmap(bitmap, 0f, 0f, null)
+                pdfDocument.finishPage(pdfPage)
+
+                FileOutputStream(destPdfFile).use { fos ->
+                    pdfDocument.writeTo(fos)
+                }
+                pdfDocument.close()
+                bitmap.recycle()
 
                 // 3. Save thumbnail
                 var thumbPath = ""
@@ -294,7 +312,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
                 val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
 
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val title = customTitle?.ifBlank { null } ?: "Scan_$timeStamp"
                 val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
                 val destPdfFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
@@ -413,7 +431,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
 
             if (text.isNotBlank() && docxPath.isBlank()) {
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
                 val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
                 val docxFile = File(docxDir, "${document.title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")}_$timeStamp.docx")
                 val success = DocxExporter.createDocxFile(docxFile, document.title, text)

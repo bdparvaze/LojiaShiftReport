@@ -37,6 +37,9 @@ import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.data.Employee
 import com.lojia.shiftreport.data.PreferencesRepository
+import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.MoneyInput
+import com.lojia.shiftreport.util.classifyMoneyInput
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -291,6 +294,7 @@ fun EmployeeManagementSection(
                     key(emp.id) {
                         EmployeeItemCard(
                             employee = emp,
+                            activeCurrency = activeCurrency,
                             onEditClick = { employeePendingEditAuth = emp }
                         )
                     }
@@ -326,17 +330,18 @@ fun EmployeeManagementSection(
     if (showAddEditDialog) {
         AddEditEmployeeDialog(
             existing = editingEmployee,
+            activeCurrency = activeCurrency,
             onDismiss = { showAddEditDialog = false },
-            onSave = { name, salary, phone, isActive ->
+            onSave = { name, salaryMinor, phone, isActive ->
                 coroutineScope.launch {
                     val emp = editingEmployee?.copy(
                         name = name,
-                        monthlySalary = salary,
+                        monthlySalaryMinor = salaryMinor,
                         phone = phone,
                         isActive = isActive
                     ) ?: Employee(
                         name = name,
-                        monthlySalary = salary,
+                        monthlySalaryMinor = salaryMinor,
                         phone = phone,
                         isActive = isActive,
                         createdByAdminId = adminId
@@ -403,6 +408,7 @@ private fun EmployeeStatCard(
 @Composable
 private fun EmployeeItemCard(
     employee: Employee,
+    activeCurrency: String,
     onEditClick: () -> Unit
 ) {
     val initial = employee.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
@@ -472,7 +478,7 @@ private fun EmployeeItemCard(
                 }
 
                 Text(
-                    text = "${com.lojia.shiftreport.util.MoneyFormat.format(employee.monthlySalary)} / month",
+                    text = "${com.lojia.shiftreport.util.MoneyFormat.formatMinor(employee.monthlySalaryMinor, activeCurrency)} / month",
                     fontSize = 14.sp,
                     color = FoodicsTextGray
                 )
@@ -519,22 +525,26 @@ private fun EmployeeItemCard(
 @Composable
 private fun AddEditEmployeeDialog(
     existing: Employee?,
+    activeCurrency: String,
     onDismiss: () -> Unit,
-    onSave: (name: String, salary: Double, phone: String?, isActive: Boolean) -> Unit
+    onSave: (name: String, salaryMinor: Long, phone: String?, isActive: Boolean) -> Unit
 ) {
+    val activeDigits = MoneyFormat.minorUnitDigits(activeCurrency)
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var salaryText by remember {
         mutableStateOf(
-            existing?.monthlySalary?.let {
-                if (it % 1.0 == 0.0) it.toInt().toString() else it.toString()
+            existing?.monthlySalaryMinor?.let {
+                MoneyFormat.toPlainDecimal(it, activeDigits)
             } ?: ""
         )
     }
     var phone by remember { mutableStateOf(existing?.phone ?: "") }
     var isActive by remember { mutableStateOf(existing?.isActive ?: true) }
 
-    val salaryVal = salaryText.toDoubleOrNull()
-    val canSave = name.isNotBlank() && salaryVal != null && salaryVal > 0.0
+    val salaryClass = classifyMoneyInput(salaryText, activeDigits)
+    val salaryMinor = (salaryClass as? MoneyInput.Valid)?.minor
+    val isSalaryInvalid = salaryClass is MoneyInput.Invalid
+    val canSave = name.isNotBlank() && salaryMinor != null && salaryMinor > 0L
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -567,8 +577,14 @@ private fun AddEditEmployeeDialog(
                     onValueChange = { salaryText = it },
                     label = { Text("Monthly Salary *") },
                     placeholder = { Text("e.g., 1500") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text(com.lojia.shiftreport.util.MoneyFormat.DEFAULT_CURRENCY_CODE) },
+                    isError = isSalaryInvalid,
+                    supportingText = if (isSalaryInvalid) {
+                        { Text(stringResource(R.string.valid_amount_error)) }
+                    } else null,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = if (activeDigits == 0) KeyboardType.Number else KeyboardType.Decimal
+                    ),
+                    suffix = { Text(activeCurrency) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -606,8 +622,10 @@ private fun AddEditEmployeeDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val s = salaryText.toDoubleOrNull() ?: return@Button
-                    onSave(name.trim(), s, phone.trim().ifBlank { null }, isActive)
+                    if (salaryClass !is MoneyInput.Valid) return@Button
+                    val sMinor = salaryClass.minor
+                    if (sMinor <= 0L) return@Button
+                    onSave(name.trim(), sMinor, phone.trim().ifBlank { null }, isActive)
                 },
                 enabled = canSave,
                 colors = ButtonDefaults.buttonColors(containerColor = FoodicsBlue),

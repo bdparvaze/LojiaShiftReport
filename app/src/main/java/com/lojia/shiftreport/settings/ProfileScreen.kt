@@ -63,6 +63,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.lojia.shiftreport.auth.AdminAuthDialog
+import com.lojia.shiftreport.util.calculateInSampleSize
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
@@ -173,8 +174,19 @@ fun ProfileScreen(
             val uri = profileImageUri
             profileBitmap = if (uri != null) {
                 runCatching {
+                    val boundsOptions = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
                     context.contentResolver.openInputStream(uri)?.use { stream ->
-                        BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                        BitmapFactory.decodeStream(stream, null, boundsOptions)
+                    }
+                    val sampleSize = calculateInSampleSize(boundsOptions.outWidth, boundsOptions.outHeight)
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        inSampleSize = sampleSize
+                        inJustDecodeBounds = false
+                    }
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        BitmapFactory.decodeStream(stream, null, decodeOptions)?.asImageBitmap()
                     }
                 }.getOrNull()
             } else {

@@ -32,6 +32,8 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.MoneyInput
+import com.lojia.shiftreport.util.classifyMoneyInput
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
 import com.lojia.shiftreport.util.normalizeReceiptNumber
 import java.text.SimpleDateFormat
@@ -89,16 +91,31 @@ fun ReportEntryTab(
     var showResetConfirm by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    fun d(s: String) = s.toDoubleOrNull() ?: 0.0
+    val invalidAmountError = stringResource(R.string.valid_amount_error)
 
-    val startingCash = d(startingCashInput)
-    val cash = d(cashReceipts)
-    val mada = d(madaPayments)
-    val digitalWallet = d(digitalWalletInput)
-    val totalDiscounts = d(totalDiscountsInput)
-    val salesReturns = d(salesReturnsInput)
-    val actualCashVal = actualCashCountInput.toDoubleOrNull()
-    val expenses = d(totalExpenses)
+    val startingCashClass = classifyMoneyInput(startingCashInput)
+    val cashClass = classifyMoneyInput(cashReceipts)
+    val madaClass = classifyMoneyInput(madaPayments)
+    val digitalWalletClass = classifyMoneyInput(digitalWalletInput)
+    val totalDiscountsClass = classifyMoneyInput(totalDiscountsInput)
+    val salesReturnsClass = classifyMoneyInput(salesReturnsInput)
+    val actualCashClass = classifyMoneyInput(actualCashCountInput)
+    val expensesClass = classifyMoneyInput(totalExpenses)
+
+    fun majorFromClassified(input: MoneyInput): Double = when (input) {
+        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(input.minor)
+        MoneyInput.Empty, MoneyInput.Invalid -> 0.0
+    }
+
+    val startingCash = majorFromClassified(startingCashClass)
+    val cash = majorFromClassified(cashClass)
+    val mada = majorFromClassified(madaClass)
+    val digitalWallet = majorFromClassified(digitalWalletClass)
+    val totalDiscounts = majorFromClassified(totalDiscountsClass)
+    val salesReturns = majorFromClassified(salesReturnsClass)
+    val actualCashMinor = (actualCashClass as? MoneyInput.Valid)?.minor
+    val actualCashVal = actualCashMinor?.let { MoneyFormat.toMajorUnits(it) }
+    val expenses = majorFromClassified(expensesClass)
 
     val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
     val cashMinor = MoneyFormat.toMinorUnits(cash)
@@ -106,7 +123,6 @@ fun ReportEntryTab(
     val digitalWalletMinor = MoneyFormat.toMinorUnits(digitalWallet)
     val totalDiscountsMinor = MoneyFormat.toMinorUnits(totalDiscounts)
     val salesReturnsMinor = MoneyFormat.toMinorUnits(salesReturns)
-    val actualCashMinor = actualCashVal?.let { MoneyFormat.toMinorUnits(it) }
     val expensesMinor = MoneyFormat.toMinorUnits(expenses)
 
     val totalCreditMinor = MoneyFormat.sumOfMinor(creditEntries.map { MoneyFormat.toMinorUnits(it.amount) })
@@ -141,7 +157,18 @@ fun ReportEntryTab(
             staffEntries.isNotEmpty() || walkoutEntries.isNotEmpty() ||
             itemEntries.isNotEmpty()
 
-    val canSave = cashier.isNotBlank() && (
+    val hasInvalidMoneyInput = listOf(
+        startingCashClass,
+        cashClass,
+        madaClass,
+        digitalWalletClass,
+        totalDiscountsClass,
+        salesReturnsClass,
+        actualCashClass,
+        expensesClass
+    ).any { it is MoneyInput.Invalid }
+
+    val canSave = cashier.isNotBlank() && !hasInvalidMoneyInput && (
             cash > 0.0 || mada > 0.0 || digitalWallet > 0.0 || expenses > 0.0 || startingCash > 0.0 ||
             totalDiscounts > 0.0 || salesReturns > 0.0 ||
             (muassel.toIntOrNull() ?: 0) > 0 || (outdoorMuassel.toIntOrNull() ?: 0) > 0 ||
@@ -268,18 +295,54 @@ fun ReportEntryTab(
                         // ---- Starting Cash & Payment Methods ----
                         SectionHeader("💰", stringResource(R.string.sales_summary), ShiftColors.BrassLight, ShiftColors.Brass, ShiftColors.Brass)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            NumberField(stringResource(R.string.starting_cash), startingCashInput, { startingCashInput = it }, Modifier.weight(1f))
-                            NumberField(stringResource(R.string.cash), cashReceipts, { cashReceipts = it }, Modifier.weight(1f))
+                            NumberField(
+                                stringResource(R.string.starting_cash),
+                                startingCashInput,
+                                { startingCashInput = it },
+                                Modifier.weight(1f),
+                                errorText = if (startingCashClass is MoneyInput.Invalid) invalidAmountError else null
+                            )
+                            NumberField(
+                                stringResource(R.string.cash),
+                                cashReceipts,
+                                { cashReceipts = it },
+                                Modifier.weight(1f),
+                                errorText = if (cashClass is MoneyInput.Invalid) invalidAmountError else null
+                            )
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            NumberField(stringResource(R.string.mada_bank), madaPayments, { madaPayments = it }, Modifier.weight(1f))
-                            NumberField(stringResource(R.string.digital_wallet), digitalWalletInput, { digitalWalletInput = it }, Modifier.weight(1f))
+                            NumberField(
+                                stringResource(R.string.mada_bank),
+                                madaPayments,
+                                { madaPayments = it },
+                                Modifier.weight(1f),
+                                errorText = if (madaClass is MoneyInput.Invalid) invalidAmountError else null
+                            )
+                            NumberField(
+                                stringResource(R.string.digital_wallet),
+                                digitalWalletInput,
+                                { digitalWalletInput = it },
+                                Modifier.weight(1f),
+                                errorText = if (digitalWalletClass is MoneyInput.Invalid) invalidAmountError else null
+                            )
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            NumberField(stringResource(R.string.total_discounts_label), totalDiscountsInput, { totalDiscountsInput = it }, Modifier.weight(1f))
-                            NumberField(stringResource(R.string.sales_returns_label), salesReturnsInput, { salesReturnsInput = it }, Modifier.weight(1f))
+                            NumberField(
+                                stringResource(R.string.total_discounts_label),
+                                totalDiscountsInput,
+                                { totalDiscountsInput = it },
+                                Modifier.weight(1f),
+                                errorText = if (totalDiscountsClass is MoneyInput.Invalid) invalidAmountError else null
+                            )
+                            NumberField(
+                                stringResource(R.string.sales_returns_label),
+                                salesReturnsInput,
+                                { salesReturnsInput = it },
+                                Modifier.weight(1f),
+                                errorText = if (salesReturnsClass is MoneyInput.Invalid) invalidAmountError else null
+                            )
                         }
 
                         // ---- Operational Expenses ----
@@ -301,7 +364,8 @@ fun ReportEntryTab(
                             Box(Modifier.weight(1f)) {
                                 NumberField(
                                     stringResource(R.string.total_expense), totalExpenses, { totalExpenses = it },
-                                    Modifier.fillMaxWidth(), enabled = staffCount != 0
+                                    Modifier.fillMaxWidth(), enabled = staffCount != 0,
+                                    errorText = if (expensesClass is MoneyInput.Invalid) invalidAmountError else null
                                 )
                             }
                         }
@@ -313,6 +377,7 @@ fun ReportEntryTab(
                             NumberField(stringResource(R.string.outdoor_muassel), outdoorMuassel, { outdoorMuassel = it }, Modifier.weight(1f), isInteger = true)
                         }
 
+                        val entryDigits = MoneyFormat.minorUnitDigits(currentCurrency)
                         // ---- Due Sales (credit) ----
                         SectionHeader("📒", stringResource(R.string.due_sales), ShiftColors.DangerLight, ShiftColors.Danger, ShiftColors.Danger) {
                             modalType = ModalType.CREDIT
@@ -326,7 +391,7 @@ fun ReportEntryTab(
                             }
                             EntryRow(
                                 left = receiptLabel,
-                                right = "%.2f $currentCurrency".format(e.amount),
+                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency",
                                 onRemove = { creditEntries.removeAt(i) }
                             )
                         }
@@ -344,7 +409,7 @@ fun ReportEntryTab(
                             }
                             EntryRow(
                                 left = receiptLabel,
-                                right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.amount),
+                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency (${e.type.name.lowercase()})",
                                 onRemove = { oldDueEntries.removeAt(i) }
                             )
                         }
@@ -392,40 +457,56 @@ fun ReportEntryTab(
                             onTypeChange = { advancePaymentType = it },
                             currency = currentCurrency,
                             onAddAdvance = {
-                                val amt = advanceAmountText.trim().toDoubleOrNull()
-                                if (amt == null || amt <= 0.0 || amt > 5000.0) {
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        "Enter valid amount (1 - 10000 $currentCurrency)",
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    showAdminAuthForAdvance = true
+                                when (val classified = classifyMoneyInput(advanceAmountText, entryDigits)) {
+                                    is MoneyInput.Valid -> {
+                                        val emp = selectedAdvanceEmployee
+                                        val amountMinor = classified.minor
+                                        if (emp == null || amountMinor <= 0L || amountMinor > emp.monthlySalaryMinor) {
+                                            val formattedSalary = MoneyFormat.formatMinor(emp?.monthlySalaryMinor ?: 0L, currentCurrency)
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                context.getString(R.string.advance_over_salary_error, formattedSalary),
+                                                android.widget.Toast.LENGTH_SHORT
+                                            ).show()
+                                        } else {
+                                            showAdminAuthForAdvance = true
+                                        }
+                                    }
+                                    MoneyInput.Empty, MoneyInput.Invalid -> {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            invalidAmountError,
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
                             }
                         )
 
                         if (showAdminAuthForAdvance && selectedAdvanceEmployee != null) {
                             val emp = selectedAdvanceEmployee!!
-                            val amt = advanceAmountText.trim().toDoubleOrNull() ?: 0.0
+                            val advanceClassified = classifyMoneyInput(advanceAmountText, entryDigits)
                             val isBank = advancePaymentType == "Bank"
                             com.lojia.shiftreport.auth.AdminAuthDialog(
                                 onDismissRequest = { showAdminAuthForAdvance = false },
                                 onAuthSuccess = {
                                     showAdminAuthForAdvance = false
-                                    staffEntries.add(
-                                        StaffEntry(
-                                            name = emp.name,
-                                            amount = java.math.BigDecimal.valueOf(amt),
-                                            type = if (isBank) PayType.BANK else PayType.CASH
+                                    if (advanceClassified is MoneyInput.Valid) {
+                                        val amt = MoneyFormat.toMajorUnits(advanceClassified.minor, entryDigits)
+                                        staffEntries.add(
+                                            StaffEntry(
+                                                name = emp.name,
+                                                amount = java.math.BigDecimal.valueOf(amt),
+                                                type = if (isBank) PayType.BANK else PayType.CASH
+                                            )
                                         )
-                                    )
-                                    advanceAmountText = ""
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        "Added ${MoneyFormat.format(amt, currentCurrency)} to ${emp.name}",
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
+                                        advanceAmountText = ""
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Added ${MoneyFormat.format(amt, currentCurrency)} to ${emp.name}",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
                             )
                         }
@@ -433,7 +514,7 @@ fun ReportEntryTab(
                         staffEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = e.name,
-                                right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.amount),
+                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency (${e.type.name.lowercase()})",
                                 onRemove = { staffEntries.removeAt(i) }
                             )
                         }
@@ -445,7 +526,7 @@ fun ReportEntryTab(
                         walkoutEntries.forEachIndexed { i, e ->
                             EntryRow(
                                 left = e.description,
-                                right = "%.2f $currentCurrency".format(e.amount),
+                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency",
                                 onRemove = { walkoutEntries.removeAt(i) }
                             )
                         }
@@ -458,7 +539,7 @@ fun ReportEntryTab(
                             val leftText = if (e.qty > 0) "${e.name} (${e.qty} pcs)" else e.name
                             EntryRow(
                                 left = leftText,
-                                right = "%.2f $currentCurrency (${e.type.name.lowercase()})".format(e.total),
+                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.total, entryDigits), entryDigits)} $currentCurrency (${e.type.name.lowercase()})",
                                 onRemove = { itemEntries.removeAt(i) }
                             )
                         }
@@ -534,6 +615,7 @@ fun ReportEntryTab(
 
                             Button(
                                 onClick = {
+                                    if (hasInvalidMoneyInput) return@Button
                                     onSave(
                                         ShiftReportData(
                                             cashier = cashier,
@@ -774,11 +856,18 @@ fun EmployerAdvanceSection(
             }
         }
 
+        val advanceAmountClass = classifyMoneyInput(amount)
+        val isAdvanceAmountInvalid = advanceAmountClass is MoneyInput.Invalid
+
         OutlinedTextField(
             value = amount,
             onValueChange = onAmountChange,
             label = { Text("Advance Amount") },
             enabled = selectedEmployee != null,
+            isError = isAdvanceAmountInvalid,
+            supportingText = if (isAdvanceAmountInvalid) {
+                { Text(stringResource(R.string.valid_amount_error), color = ErrorRedLight) }
+            } else null,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
             ),
@@ -806,7 +895,7 @@ fun EmployerAdvanceSection(
 
         Button(
             onClick = onAddAdvance,
-            enabled = selectedEmployee != null && amount.isNotEmpty(),
+            enabled = selectedEmployee != null && amount.isNotEmpty() && !isAdvanceAmountInvalid,
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {

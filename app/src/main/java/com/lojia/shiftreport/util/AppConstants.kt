@@ -32,8 +32,6 @@ object AppConstants {
     // =========================================================================
     const val DEFAULT_CURRENCY_CODE = "USD"
     const val DEFAULT_CURRENCY_SYMBOL = "$"
-    const val DEFAULT_TAX_RATE_PERCENT = 15.0
-    const val MINOR_UNIT_SCALE = 100L
 
     // =========================================================================
     // 4. TIMEOUTS & INTERVALS

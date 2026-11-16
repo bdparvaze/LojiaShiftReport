@@ -78,17 +78,6 @@ class MoneyAndSecurityUnitTest {
     }
 
     @Test
-    fun moneyFormat_calculateTax_inclusiveAndExclusive() {
-        // Exclusive tax: 100.00 (10000L) at 15% = 1500L
-        val taxExclusive = MoneyFormat.calculateTaxMinor(10000L, 15.0, isTaxInclusive = false)
-        assertEquals(1500L, taxExclusive)
-
-        // Inclusive tax: 115.00 (11500L) at 15% tax-inclusive = 115 * 15 / 115 = 1500L
-        val taxInclusive = MoneyFormat.calculateTaxMinor(11500L, 15.0, isTaxInclusive = true)
-        assertEquals(1500L, taxInclusive)
-    }
-
-    @Test
     fun moneyFormat_roundTrip_toMinorAndMajor() {
         // 0.01 -> 1L -> 0.01
         val m1 = MoneyFormat.toMinorUnits(0.01)
@@ -115,36 +104,6 @@ class MoneyAndSecurityUnitTest {
         // 100L * 0.124 = 12.4 -> rounds HALF_UP to 12L
         val r2 = MoneyFormat.multiplyMinor(100L, 0.124)
         assertEquals(12L, r2)
-    }
-
-    @Test
-    fun moneyFormat_calculateTaxMinor_matrix() {
-        val rates = doubleArrayOf(0.0, 5.0, 15.0, 8.25)
-        val amounts = longArrayOf(1L, 99L, 100L, 12345L)
-
-        for (rate in rates) {
-            for (amount in amounts) {
-                // Exclusive
-                val taxExc = MoneyFormat.calculateTaxMinor(amount, rate, isTaxInclusive = false)
-                val expectedExc = java.math.BigDecimal.valueOf(amount)
-                    .multiply(java.math.BigDecimal.valueOf(rate))
-                    .divide(java.math.BigDecimal.valueOf(100.0), 4, java.math.RoundingMode.HALF_UP)
-                    .setScale(0, java.math.RoundingMode.HALF_UP)
-                    .toLong()
-                assertEquals("Tax exclusive mismatch for amount=$amount, rate=$rate", expectedExc, taxExc)
-
-                // Inclusive
-                val taxInc = MoneyFormat.calculateTaxMinor(amount, rate, isTaxInclusive = true)
-                val expectedInc = if (rate <= 0.0) 0L else {
-                    java.math.BigDecimal.valueOf(amount)
-                        .multiply(java.math.BigDecimal.valueOf(rate))
-                        .divide(java.math.BigDecimal.valueOf(100.0 + rate), 4, java.math.RoundingMode.HALF_UP)
-                        .setScale(0, java.math.RoundingMode.HALF_UP)
-                        .toLong()
-                }
-                assertEquals("Tax inclusive mismatch for amount=$amount, rate=$rate", expectedInc, taxInc)
-            }
-        }
     }
 
     @Test

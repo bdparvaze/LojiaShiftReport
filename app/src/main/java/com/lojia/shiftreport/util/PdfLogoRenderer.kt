@@ -71,13 +71,33 @@ object PdfLogoRenderer {
                 generatePresetLogoBitmap(logoUri, targetSize)
             } else if (logoUri.startsWith("content://") || logoUri.startsWith("file://")) {
                 val uri = Uri.parse(logoUri)
+                val boundsOptions = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
                 context.contentResolver.openInputStream(uri)?.use { stream ->
-                    BitmapFactory.decodeStream(stream)
+                    BitmapFactory.decodeStream(stream, null, boundsOptions)
+                }
+                val sampleSize = calculateInSampleSize(boundsOptions.outWidth, boundsOptions.outHeight)
+                val decodeOptions = BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                    inJustDecodeBounds = false
+                }
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream, null, decodeOptions)
                 }
             } else {
                 val file = File(logoUri)
                 if (file.exists()) {
-                    BitmapFactory.decodeFile(file.absolutePath)
+                    val boundsOptions = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
+                    BitmapFactory.decodeFile(file.absolutePath, boundsOptions)
+                    val sampleSize = calculateInSampleSize(boundsOptions.outWidth, boundsOptions.outHeight)
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        inSampleSize = sampleSize
+                        inJustDecodeBounds = false
+                    }
+                    BitmapFactory.decodeFile(file.absolutePath, decodeOptions)
                 } else null
             }
         } catch (e: Exception) {

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.paperWidthDots
 import kotlinx.coroutines.launch
 
 /**
@@ -214,7 +215,7 @@ fun PrinterSetupScreen(
                                         val testText = "Lojia Test - تم اختبار الطباعة - টেস্ট"
                                         val bmp = ThermalBitmapRenderer.renderLineToBitmap(
                                             rawLine = "<b>[C]$testText</b>",
-                                            widthPx = 384,
+                                            widthPx = paperWidthDots(prefs.getPrinterPaperWidth()),
                                             fontSizePx = 28f
                                         )
                                         bluetoothPrinterManager.printBitmap(bmp)

@@ -46,12 +46,29 @@ import com.lojia.shiftreport.util.BackupSummary
 import com.lojia.shiftreport.util.DriveBackupItem
 import com.lojia.shiftreport.util.OfflineBackupManager
 import com.lojia.shiftreport.util.PdfShareUtils
+import com.lojia.shiftreport.util.TIER_PORTABLE
+import com.lojia.shiftreport.util.backupTierOf
+import com.lojia.shiftreport.util.canCreatePortableBackup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+private sealed interface PendingPasswordRestoreTarget {
+    val label: String?
+
+    data class LocalFile(val file: File) : PendingPasswordRestoreTarget {
+        override val label: String get() = file.name
+    }
+
+    data class PickedUri(val uri: Uri, override val label: String?) : PendingPasswordRestoreTarget
+
+    class DriveBytes(val item: DriveBackupItem, val bytes: ByteArray) : PendingPasswordRestoreTarget {
+        override val label: String get() = item.name
+    }
+}
 
 @Composable
 fun SettingsBackupSubSection(
@@ -89,6 +106,8 @@ fun SettingsBackupSubSection(
     var isLocalBackingUp by remember { mutableStateOf(false) }
     var isOneDriveBackingUp by remember { mutableStateOf(false) }
 
+    var hasBackupPassword by remember { mutableStateOf(false) }
+
     // Dialog controllers
     var showLocalFilesDialog by remember { mutableStateOf(false) }
     var showOneDriveConnectDialog by remember { mutableStateOf(false) }
@@ -96,10 +115,20 @@ fun SettingsBackupSubSection(
     var showRestoreConfirmDialog by remember { mutableStateOf(false) }
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
     var pendingRestoreFile by remember { mutableStateOf<File?>(null) }
+    var pendingRestoreRequiresPassword by remember { mutableStateOf(false) }
     var pendingBackupSummary by remember { mutableStateOf<BackupSummary?>(null) }
     var showDangerZoneDialog by remember { mutableStateOf(false) }
+    var showBackupPasswordDialog by remember { mutableStateOf(false) }
+    var showSetPasswordFirstDialog by remember { mutableStateOf(false) }
+    var restorePwTarget by remember { mutableStateOf<PendingPasswordRestoreTarget?>(null) }
+    var isRestoreUnlocking by remember { mutableStateOf(false) }
+    var restorePasswordError by remember { mutableStateOf<String?>(null) }
     var pendingAdminAuthTitle by remember { mutableStateOf<String?>(null) }
     var pendingAdminAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    LaunchedEffect(Unit) {
+        hasBackupPassword = canCreatePortableBackup(context)
+    }
 
     val refreshStatus = {
         localLastBackupTime = backupManager.localProvider.getLastBackupTime()
@@ -108,6 +137,32 @@ fun SettingsBackupSubSection(
         oneDriveLastBackupTime = backupManager.oneDriveProvider.getLastBackupTime()
         isOneDriveConnected = backupManager.oneDriveProvider.isConnected()
         oneDriveAccountEmail = backupManager.oneDriveProvider.getConnectedAccountEmail()
+        coroutineScope.launch {
+            hasBackupPassword = canCreatePortableBackup(context)
+        }
+        Unit
+    }
+
+    val openAdminForBackupPassword: () -> Unit = {
+        pendingAdminAuthTitle = context.getString(
+            if (hasBackupPassword) R.string.backup_pw_dialog_change_title
+            else R.string.backup_pw_dialog_set_title
+        )
+        pendingAdminAuthAction = {
+            showBackupPasswordDialog = true
+        }
+    }
+
+    fun runWithPortableBackupGate(action: () -> Unit) {
+        coroutineScope.launch {
+            val ready = canCreatePortableBackup(context)
+            hasBackupPassword = ready
+            if (ready) {
+                action()
+            } else {
+                showSetPasswordFirstDialog = true
+            }
+        }
     }
 
     val restoreFileLauncher = rememberLauncherForActivityResult(
@@ -116,7 +171,24 @@ fun SettingsBackupSubSection(
         if (uri != null) {
             pendingRestoreUri = uri
             pendingRestoreFile = null
-            reportViewModel.parseBackupSummary(uri) { summary ->
+            coroutineScope.launch {
+                val (requiresPassword, summary) = withContext(Dispatchers.IO) {
+                    val bytes = runCatching {
+                        context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    }.getOrNull()
+                    if (bytes == null) {
+                        false to null
+                    } else {
+                        val portable = backupTierOf(bytes) == TIER_PORTABLE
+                        val parsedSummary = if (!portable) {
+                            OfflineBackupManager.parseBackupSummaryFromBytes(bytes).getOrNull()
+                        } else {
+                            null
+                        }
+                        portable to parsedSummary
+                    }
+                }
+                pendingRestoreRequiresPassword = requiresPassword
                 pendingBackupSummary = summary
                 showRestoreConfirmDialog = true
             }
@@ -165,6 +237,16 @@ fun SettingsBackupSubSection(
                 )
             }
         }
+
+        // ==========================================
+        // 0. BACKUP ENCRYPTION PASSWORD (ADMIN-GATED)
+        // ==========================================
+        LojiaSectionHeader(text = stringResource(R.string.backup_pw_section_header))
+
+        BackupPasswordCard(
+            hasBackupPassword = hasBackupPassword,
+            onManagePasswordClick = openAdminForBackupPassword
+        )
 
         // ==========================================
         // 1. TOP: BACKUP LOCATION SELECTOR
@@ -266,16 +348,18 @@ fun SettingsBackupSubSection(
                 totalSize = localTotalSize,
                 isBackingUp = isLocalBackingUp || isBackingUp,
                 onBackupNow = {
-                    coroutineScope.launch {
-                        isLocalBackingUp = true
-                        val res = backupManager.backupNow(BackupLocation.LOCAL)
-                        isLocalBackingUp = false
-                        refreshStatus()
-                        if (res[BackupLocation.LOCAL]?.isSuccess == true) {
-                            Toast.makeText(context, "Local backup saved to Documents folder!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val err = res[BackupLocation.LOCAL]?.exceptionOrNull()?.message ?: "Backup failed"
-                            Toast.makeText(context, "Backup failed: $err", Toast.LENGTH_SHORT).show()
+                    runWithPortableBackupGate {
+                        coroutineScope.launch {
+                            isLocalBackingUp = true
+                            val res = backupManager.backupNow(BackupLocation.LOCAL)
+                            isLocalBackingUp = false
+                            refreshStatus()
+                            if (res[BackupLocation.LOCAL]?.isSuccess == true) {
+                                Toast.makeText(context, "Local backup saved to Documents folder!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val err = res[BackupLocation.LOCAL]?.exceptionOrNull()?.message ?: "Backup failed"
+                                Toast.makeText(context, "Backup failed: $err", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 },
@@ -300,15 +384,17 @@ fun SettingsBackupSubSection(
                     reportViewModel.connectGoogleDrive(context)
                 },
                 onBackupNow = {
-                    reportViewModel.backupToGoogleDrive(
-                        onSuccess = {
-                            Toast.makeText(context, "Google Drive backup uploaded!", Toast.LENGTH_SHORT).show()
-                            refreshStatus()
-                        },
-                        onFailure = { err ->
-                            Toast.makeText(context, "Upload failed: $err", Toast.LENGTH_SHORT).show()
-                        }
-                    )
+                    runWithPortableBackupGate {
+                        reportViewModel.backupToGoogleDrive(
+                            onSuccess = {
+                                Toast.makeText(context, "Google Drive backup uploaded!", Toast.LENGTH_SHORT).show()
+                                refreshStatus()
+                            },
+                            onFailure = { err ->
+                                Toast.makeText(context, "Upload failed: $err", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
                 },
                 onRestore = {
                     reportViewModel.fetchGoogleDriveBackups(
@@ -337,16 +423,18 @@ fun SettingsBackupSubSection(
                     showOneDriveConnectDialog = true
                 },
                 onBackupNow = {
-                    coroutineScope.launch {
-                        isOneDriveBackingUp = true
-                        val res = backupManager.backupNow(BackupLocation.ONEDRIVE)
-                        isOneDriveBackingUp = false
-                        refreshStatus()
-                        if (res[BackupLocation.ONEDRIVE]?.isSuccess == true) {
-                            Toast.makeText(context, "OneDrive backup uploaded successfully!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val err = res[BackupLocation.ONEDRIVE]?.exceptionOrNull()?.message ?: "Upload failed"
-                            Toast.makeText(context, "OneDrive: $err", Toast.LENGTH_LONG).show()
+                    runWithPortableBackupGate {
+                        coroutineScope.launch {
+                            isOneDriveBackingUp = true
+                            val res = backupManager.backupNow(BackupLocation.ONEDRIVE)
+                            isOneDriveBackingUp = false
+                            refreshStatus()
+                            if (res[BackupLocation.ONEDRIVE]?.isSuccess == true) {
+                                Toast.makeText(context, "OneDrive backup uploaded successfully!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val err = res[BackupLocation.ONEDRIVE]?.exceptionOrNull()?.message ?: "Upload failed"
+                                Toast.makeText(context, "OneDrive: $err", Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 },
@@ -356,9 +444,21 @@ fun SettingsBackupSubSection(
                         if (file != null) {
                             pendingRestoreFile = file
                             pendingRestoreUri = null
-                            val summary = withContext(Dispatchers.IO) {
-                                OfflineBackupManager.parseBackupSummaryFromString(file.readText()).getOrNull()
+                            val (requiresPassword, summary) = withContext(Dispatchers.IO) {
+                                val bytes = runCatching { file.readBytes() }.getOrNull()
+                                if (bytes == null) {
+                                    false to null
+                                } else {
+                                    val portable = backupTierOf(bytes) == TIER_PORTABLE
+                                    val parsedSummary = if (!portable) {
+                                        OfflineBackupManager.parseBackupSummaryFromBytes(bytes).getOrNull()
+                                    } else {
+                                        null
+                                    }
+                                    portable to parsedSummary
+                                }
                             }
+                            pendingRestoreRequiresPassword = requiresPassword
                             pendingBackupSummary = summary
                             showRestoreConfirmDialog = true
                         } else {
@@ -590,9 +690,21 @@ fun SettingsBackupSubSection(
                                             pendingRestoreFile = file
                                             pendingRestoreUri = null
                                             coroutineScope.launch {
-                                                val summary = withContext(Dispatchers.IO) {
-                                                    OfflineBackupManager.parseBackupSummaryFromString(file.readText()).getOrNull()
+                                                val (requiresPassword, summary) = withContext(Dispatchers.IO) {
+                                                    val bytes = runCatching { file.readBytes() }.getOrNull()
+                                                    if (bytes == null) {
+                                                        false to null
+                                                    } else {
+                                                        val portable = backupTierOf(bytes) == TIER_PORTABLE
+                                                        val parsedSummary = if (!portable) {
+                                                            OfflineBackupManager.parseBackupSummaryFromBytes(bytes).getOrNull()
+                                                        } else {
+                                                            null
+                                                        }
+                                                        portable to parsedSummary
+                                                    }
                                                 }
+                                                pendingRestoreRequiresPassword = requiresPassword
                                                 pendingBackupSummary = summary
                                                 showLocalFilesDialog = false
                                                 showRestoreConfirmDialog = true
@@ -708,14 +820,29 @@ fun SettingsBackupSubSection(
                                         showDriveBackupsPicker = false
                                         pendingAdminAuthTitle = context.getString(R.string.restore_from_drive_title)
                                         pendingAdminAuthAction = {
-                                            reportViewModel.restoreFromGoogleDrive(
+                                            reportViewModel.prepareGoogleDriveRestore(
                                                 item = item,
-                                                onSuccess = { count ->
-                                                    Toast.makeText(context, "Restored $count records from Drive!", Toast.LENGTH_LONG).show()
-                                                    refreshStatus()
+                                                onReady = { bytes, requiresPassword ->
+                                                    if (requiresPassword) {
+                                                        restorePasswordError = null
+                                                        restorePwTarget = PendingPasswordRestoreTarget.DriveBytes(item, bytes)
+                                                    } else {
+                                                        reportViewModel.restoreGoogleDriveBytes(
+                                                            item = item,
+                                                            bytes = bytes,
+                                                            password = null,
+                                                            onSuccess = { count ->
+                                                                Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_LONG).show()
+                                                                refreshStatus()
+                                                            },
+                                                            onFailure = { err ->
+                                                                Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                                            }
+                                                        )
+                                                    }
                                                 },
                                                 onFailure = { err ->
-                                                    Toast.makeText(context, "Drive restore error: $err", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
                                                 }
                                             )
                                         }
@@ -754,6 +881,7 @@ fun SettingsBackupSubSection(
                 showRestoreConfirmDialog = false
                 pendingRestoreUri = null
                 pendingRestoreFile = null
+                pendingRestoreRequiresPassword = false
             },
             icon = {
                 Icon(Icons.Outlined.Restore, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(32.dp))
@@ -765,7 +893,33 @@ fun SettingsBackupSubSection(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.restore_confirm_message), fontSize = 13.sp, color = TextSecondaryLight)
 
-                    if (summary != null) {
+                    if (pendingRestoreRequiresPassword) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = PrimaryContainerLight,
+                            border = BorderStroke(1.dp, OutlineLight),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Lock,
+                                    contentDescription = null,
+                                    tint = PrimaryIndigoLight,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.backup_pw_encrypted_badge),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PrimaryIndigoLight
+                                )
+                            }
+                        }
+                    } else if (summary != null) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = PrimaryContainerLight,
@@ -794,20 +948,30 @@ fun SettingsBackupSubSection(
                     onClick = {
                         val uri = pendingRestoreUri
                         val file = pendingRestoreFile
+                        val requiresPassword = pendingRestoreRequiresPassword
                         showRestoreConfirmDialog = false
                         pendingRestoreUri = null
                         pendingRestoreFile = null
+                        pendingRestoreRequiresPassword = false
                         pendingAdminAuthTitle = context.getString(R.string.restore_confirm_title)
                         pendingAdminAuthAction = {
-                            if (uri != null) {
+                            if (requiresPassword) {
+                                restorePasswordError = null
+                                restorePwTarget = when {
+                                    uri != null -> PendingPasswordRestoreTarget.PickedUri(uri, uri.lastPathSegment)
+                                    file != null -> PendingPasswordRestoreTarget.LocalFile(file)
+                                    else -> null
+                                }
+                            } else if (uri != null) {
                                 reportViewModel.restoreOfflineBackup(
                                     uri = uri,
+                                    password = null,
                                     onSuccess = { count ->
-                                        Toast.makeText(context, "Restored $count records successfully!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
                                         refreshStatus()
                                     },
                                     onFailure = { err ->
-                                        Toast.makeText(context, "Restore failed: $err", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
                                     }
                                 )
                             } else if (file != null) {
@@ -815,14 +979,21 @@ fun SettingsBackupSubSection(
                                     val res = OfflineBackupManager.restoreBackupFromFile(
                                         context = context,
                                         database = AppDatabase.getInstance(context),
-                                        backupFile = file
+                                        backupFile = file,
+                                        password = null
                                     )
                                     if (res.isSuccess) {
                                         val count = res.getOrDefault(0)
-                                        Toast.makeText(context, "Restored $count records from ${file.name}!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
                                         refreshStatus()
                                     } else {
-                                        Toast.makeText(context, "Restore error: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                        val err = res.exceptionOrNull()
+                                        val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                                            context.getString(R.string.backup_pw_wrong_or_damaged)
+                                        } else {
+                                            err?.localizedMessage ?: context.getString(R.string.restore_failed)
+                                        }
+                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -839,6 +1010,7 @@ fun SettingsBackupSubSection(
                         showRestoreConfirmDialog = false
                         pendingRestoreUri = null
                         pendingRestoreFile = null
+                        pendingRestoreRequiresPassword = false
                     }
                 ) {
                     Text(stringResource(R.string.action_cancel))
@@ -927,6 +1099,110 @@ fun SettingsBackupSubSection(
             dismissButton = {
                 TextButton(onClick = { showDangerZoneDialog = false }) {
                     Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    if (showSetPasswordFirstDialog) {
+        BackupPasswordRequiredDialog(
+            onDismiss = { showSetPasswordFirstDialog = false },
+            onSetPasswordClick = {
+                showSetPasswordFirstDialog = false
+                openAdminForBackupPassword()
+            }
+        )
+    }
+
+    if (showBackupPasswordDialog) {
+        BackupPasswordSetupDialog(
+            isChange = hasBackupPassword,
+            onDismiss = { showBackupPasswordDialog = false },
+            onSaved = {
+                showBackupPasswordDialog = false
+                hasBackupPassword = true
+                refreshStatus()
+            }
+        )
+    }
+
+    restorePwTarget?.let { activeTarget ->
+        BackupRestorePasswordDialog(
+            fileName = activeTarget.label,
+            isRestoring = isRestoreUnlocking,
+            errorMessage = restorePasswordError,
+            onDismiss = {
+                restorePwTarget = null
+                restorePasswordError = null
+            },
+            onSubmitPassword = { enteredPassword ->
+                restorePasswordError = null
+                when (activeTarget) {
+                    is PendingPasswordRestoreTarget.PickedUri -> {
+                        isRestoreUnlocking = true
+                        reportViewModel.restoreOfflineBackup(
+                            uri = activeTarget.uri,
+                            password = enteredPassword,
+                            onSuccess = { count ->
+                                isRestoreUnlocking = false
+                                restorePwTarget = null
+                                restorePasswordError = null
+                                Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_LONG).show()
+                                refreshStatus()
+                            },
+                            onFailure = { err ->
+                                isRestoreUnlocking = false
+                                restorePasswordError = err
+                                Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                    is PendingPasswordRestoreTarget.LocalFile -> {
+                        isRestoreUnlocking = true
+                        coroutineScope.launch {
+                            val res = OfflineBackupManager.restoreBackupFromFile(
+                                context = context,
+                                database = AppDatabase.getInstance(context),
+                                backupFile = activeTarget.file,
+                                password = enteredPassword
+                            )
+                            isRestoreUnlocking = false
+                            res.onSuccess { count ->
+                                restorePwTarget = null
+                                restorePasswordError = null
+                                Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_LONG).show()
+                                refreshStatus()
+                            }.onFailure { err ->
+                                val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
+                                    context.getString(R.string.backup_pw_wrong_or_damaged)
+                                } else {
+                                    err.localizedMessage ?: context.getString(R.string.restore_failed)
+                                }
+                                restorePasswordError = msg
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                    is PendingPasswordRestoreTarget.DriveBytes -> {
+                        isRestoreUnlocking = true
+                        reportViewModel.restoreGoogleDriveBytes(
+                            item = activeTarget.item,
+                            bytes = activeTarget.bytes,
+                            password = enteredPassword,
+                            onSuccess = { count ->
+                                isRestoreUnlocking = false
+                                restorePwTarget = null
+                                restorePasswordError = null
+                                Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_LONG).show()
+                                refreshStatus()
+                            },
+                            onFailure = { err ->
+                                isRestoreUnlocking = false
+                                restorePasswordError = err
+                                Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
                 }
             }
         )

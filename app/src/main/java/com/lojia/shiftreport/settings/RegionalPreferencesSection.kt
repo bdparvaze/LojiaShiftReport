@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Search
@@ -40,6 +41,9 @@ import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.common.LojiaDimens
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.MoneyFormat
+import java.util.Currency
+import java.util.Locale
 
 /**
  * Converts a 2-letter Country ISO code (e.g., "BD", "SA", "US", "AE") into its corresponding Flag Emoji.
@@ -87,42 +91,72 @@ fun getCurrencySymbol(currencyCode: String): String {
     }
 }
 
-/**
- * Dedicated Currency catalog keeping Currency strictly separate from Country.
- */
-private enum class AppCurrency(
+private data class IsoCurrencyInfo(
     val code: String,
     val symbol: String,
-    val fullName: String
-) {
-    BDT("BDT", "৳", "Bangladeshi Taka"),
-    SAR("SAR", "﷼", "Saudi Riyal"),
-    AED("AED", "د.إ", "UAE Dirham"),
-    QAR("QAR", "﷼", "Qatari Riyal"),
-    KWD("KWD", "د.ك", "Kuwaiti Dinar"),
-    OMR("OMR", "﷼", "Omani Rial"),
-    BHD("BHD", "د.ب", "Bahraini Dinar"),
-    USD("USD", "$", "US Dollar"),
-    GBP("GBP", "£", "British Pound"),
-    EUR("EUR", "€", "Euro"),
-    INR("INR", "₹", "Indian Rupee"),
-    PKR("PKR", "Rs", "Pakistani Rupee"),
-    MYR("MYR", "RM", "Malaysian Ringgit"),
-    SGD("SGD", "S$", "Singapore Dollar"),
-    CAD("CAD", "C$", "Canadian Dollar"),
-    AUD("AUD", "A$", "Australian Dollar"),
-    TRY("TRY", "₺", "Turkish Lira"),
-    EGP("EGP", "E£", "Egyptian Pound"),
-    JPY("JPY", "¥", "Japanese Yen"),
-    CNY("CNY", "¥", "Chinese Yuan"),
-    IDR("IDR", "Rp", "Indonesian Rupiah");
+    val fullName: String,
+    val digits: Int
+)
 
-    companion object {
-        fun fromCode(code: String?): AppCurrency {
-            if (code.isNullOrBlank()) return BDT
-            return entries.find { it.code.equals(code.trim(), ignoreCase = true) } ?: BDT
-        }
+private val COMMON_CURRENCY_ORDER = listOf(
+    "USD", "SAR", "BDT", "AED", "QAR", "KWD", "BHD", "OMR",
+    "EUR", "GBP", "INR", "PKR", "EGP", "MYR", "SGD", "CAD",
+    "AUD", "TRY", "JPY", "CNY", "IDR"
+)
+
+private val COMMON_CURRENCY_NAMES = mapOf(
+    "BDT" to "Bangladeshi Taka",
+    "SAR" to "Saudi Riyal",
+    "AED" to "UAE Dirham",
+    "QAR" to "Qatari Riyal",
+    "KWD" to "Kuwaiti Dinar",
+    "OMR" to "Omani Rial",
+    "BHD" to "Bahraini Dinar",
+    "USD" to "US Dollar",
+    "GBP" to "British Pound",
+    "EUR" to "Euro",
+    "INR" to "Indian Rupee",
+    "PKR" to "Pakistani Rupee",
+    "MYR" to "Malaysian Ringgit",
+    "SGD" to "Singapore Dollar",
+    "CAD" to "Canadian Dollar",
+    "AUD" to "Australian Dollar",
+    "TRY" to "Turkish Lira",
+    "EGP" to "Egyptian Pound",
+    "JPY" to "Japanese Yen",
+    "CNY" to "Chinese Yuan",
+    "IDR" to "Indonesian Rupiah"
+)
+
+private fun resolveIsoCurrencyInfo(code: String?, locale: Locale = Locale.getDefault()): IsoCurrencyInfo {
+    val upper = code?.trim()?.uppercase(Locale.US).orEmpty().ifEmpty { MoneyFormat.DEFAULT_CURRENCY_CODE }
+    val digits = MoneyFormat.minorUnitDigits(upper)
+    val symbol = getCurrencySymbol(upper)
+    val displayName = COMMON_CURRENCY_NAMES[upper] ?: try {
+        Currency.getInstance(upper).getDisplayName(locale)
+    } catch (_: Exception) {
+        upper
     }
+    return IsoCurrencyInfo(
+        code = upper,
+        symbol = symbol,
+        fullName = displayName,
+        digits = digits
+    )
+}
+
+private fun allIso4217Currencies(locale: Locale = Locale.getDefault()): List<IsoCurrencyInfo> {
+    val nonCirculating = setOf("XXX", "XTS", "XBA", "XBB", "XBC", "XBD", "XAU", "XAG", "XPD", "XPT", "XSU", "XUA")
+    val availableCodes = Currency.getAvailableCurrencies()
+        .asSequence()
+        .map { it.currencyCode.uppercase(Locale.US) }
+        .filter { it.length == 3 && it.all { ch -> ch in 'A'..'Z' } && it !in nonCirculating }
+        .toMutableSet()
+    availableCodes.addAll(COMMON_CURRENCY_ORDER)
+    val priorityIndex = COMMON_CURRENCY_ORDER.withIndex().associate { (i, c) -> c to i }
+    return availableCodes
+        .map { resolveIsoCurrencyInfo(it, locale) }
+        .sortedWith(compareBy<IsoCurrencyInfo> { priorityIndex[it.code] ?: Int.MAX_VALUE }.thenBy { it.code })
 }
 
 private data class LanguageDisplayInfo(
@@ -170,7 +204,7 @@ fun RegionalPreferencesCard(
     modifier: Modifier = Modifier
 ) {
     val activeCurrencyCode = businessProfile?.currency?.ifBlank { currentCountry.currencyCode } ?: currentCountry.currencyCode
-    val activeCurrency = AppCurrency.fromCode(activeCurrencyCode)
+    val activeCurrency = resolveIsoCurrencyInfo(activeCurrencyCode)
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
     val langInfo = getLanguageDisplayInfo(currentLanguage)
 
@@ -265,15 +299,23 @@ fun RegionalPreferencesDetailView(
     val currentLanguage by reportViewModel.currentLanguage.collectAsState()
     val currentCountry by reportViewModel.currentCountry.collectAsState()
     val currentCurrency by reportViewModel.currentCurrency.collectAsState()
+    val isCurrencyLocked by reportViewModel.isCurrencyLocked.collectAsState()
 
     val activeCurrencyCode = currentCurrency.ifBlank { currentCountry.currencyCode }
-    val activeCurrency = AppCurrency.fromCode(activeCurrencyCode)
+    val activeCurrency = resolveIsoCurrencyInfo(activeCurrencyCode)
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
     val langInfo = getLanguageDisplayInfo(currentLanguage)
+    val allCurrencies = remember(currentLanguage) { allIso4217Currencies() }
 
     var activeSheet by remember { mutableStateOf<RegionalSheetType?>(null) }
     var pendingAuthSubtitle by remember { mutableStateOf<String?>(null) }
     var pendingAuthAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    LaunchedEffect(isCurrencyLocked) {
+        if (isCurrencyLocked && (activeSheet == RegionalSheetType.COUNTRY || activeSheet == RegionalSheetType.CURRENCY)) {
+            activeSheet = null
+        }
+    }
 
     BackHandler(enabled = activeSheet != null) {
         activeSheet = null
@@ -318,36 +360,69 @@ fun RegionalPreferencesDetailView(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Row 1: Country selector — shows current country + flag ONLY
+                    // Row 1: Country selector (disabled when financial data exists)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Public,
                         label = "Country",
                         valueText = "$countryFlag  ${stringResource(currentCountry.nameRes)}",
-                        onClick = { activeSheet = RegionalSheetType.COUNTRY },
+                        enabled = !isCurrencyLocked,
+                        onClick = { if (!isCurrencyLocked) activeSheet = RegionalSheetType.COUNTRY },
                         testTag = "row_select_country"
                     )
 
                     HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
 
-                    // Row 2: Language selector — shows current language ONLY
+                    // Row 2: Language selector (always unlocked)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Translate,
                         label = "Language",
                         valueText = "${langInfo.flag}  ${langInfo.nativeLabel}",
+                        enabled = true,
                         onClick = { activeSheet = RegionalSheetType.LANGUAGE },
                         testTag = "row_select_language"
                     )
 
                     HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
 
-                    // Row 3: Currency selector — shows current currency ONLY
+                    // Row 3: Currency selector (disabled when financial data exists)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Payments,
                         label = "Currency",
                         valueText = "${activeCurrency.symbol}  ${activeCurrency.code} — ${activeCurrency.fullName}",
-                        onClick = { activeSheet = RegionalSheetType.CURRENCY },
+                        enabled = !isCurrencyLocked,
+                        onClick = { if (!isCurrencyLocked) activeSheet = RegionalSheetType.CURRENCY },
                         testTag = "row_select_currency"
                     )
+                }
+            }
+
+            if (isCurrencyLocked) {
+                Card(
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = WarningContainer),
+                    border = BorderStroke(1.dp, WarningOrange.copy(alpha = 0.35f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("currency_locked_banner")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = null,
+                            tint = WarningOrange,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.currency_locked_message),
+                            fontSize = 12.5.sp,
+                            lineHeight = 17.sp,
+                            color = OnSurfaceLight
+                        )
+                    }
                 }
             }
         }
@@ -476,9 +551,8 @@ fun RegionalPreferencesDetailView(
                                 .clickable {
                                     pendingAuthSubtitle = countryName
                                     pendingAuthAction = {
-                                        // Select country and auto-select its matching currency
+                                        // Select country (also synchronizes its matching currency)
                                         reportViewModel.setCountry(country)
-                                        reportViewModel.setCurrency(country.currencyCode)
                                         activeSheet = null
                                     }
                                 }
@@ -633,11 +707,11 @@ fun RegionalPreferencesDetailView(
     // =========================================================================
     // BOTTOM SHEET 3: CURRENCY SELECTOR
     // =========================================================================
-    if (activeSheet == RegionalSheetType.CURRENCY) {
+    if (activeSheet == RegionalSheetType.CURRENCY && !isCurrencyLocked) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         var searchQuery by remember { mutableStateOf("") }
-        val filteredCurrencies = remember(searchQuery) {
-            AppCurrency.entries.filter { currency ->
+        val filteredCurrencies = remember(searchQuery, allCurrencies) {
+            allCurrencies.filter { currency ->
                 if (searchQuery.isBlank()) {
                     true
                 } else {
@@ -742,7 +816,7 @@ fun RegionalPreferencesDetailView(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(filteredCurrencies, key = { it.code }) { currency ->
-                        val isSelected = currency == activeCurrency
+                        val isSelected = currency.code.equals(activeCurrency.code, ignoreCase = true)
 
                         Row(
                             modifier = Modifier
@@ -829,13 +903,14 @@ private fun SimpleRegionalSelectorRow(
     valueText: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     testTag: String = ""
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 60.dp)
-            .clickable { onClick() }
+            .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically,
@@ -849,14 +924,14 @@ private fun SimpleRegionalSelectorRow(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = OnSurfaceVariantLight,
+                tint = if (enabled) OnSurfaceVariantLight else TextDisabledColor,
                 modifier = Modifier.size(20.dp)
             )
             Text(
                 text = label,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                color = OnSurfaceLight
+                color = if (enabled) OnSurfaceLight else TextDisabledColor
             )
         }
 
@@ -868,12 +943,12 @@ private fun SimpleRegionalSelectorRow(
                 text = valueText,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = OnSurfaceVariantLight,
+                color = if (enabled) OnSurfaceVariantLight else TextDisabledColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Icon(
-                imageVector = Icons.Outlined.ChevronRight,
+                imageVector = if (enabled) Icons.Outlined.ChevronRight else Icons.Outlined.Lock,
                 contentDescription = null,
                 tint = TextHintColor,
                 modifier = Modifier.size(18.dp)

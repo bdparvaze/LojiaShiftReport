@@ -146,6 +146,21 @@ fun fieldColors() = OutlinedTextFieldDefaults.colors(
     cursorColor = ShiftColors.Primary
 )
 
+private val COMMA_THREE_DIGITS_REGEX = Regex("[,\\u060C]\\d{3}(?!\\d)")
+private val DOT_THREE_DIGITS_REGEX = Regex("\\.\\d{3}(?!\\d)")
+
+internal fun shouldShowAmountCommaHint(
+    value: String,
+    isInteger: Boolean,
+    errorText: String?,
+    commaUsedAsSeparator: Boolean
+): Boolean {
+    if (isInteger) return false
+    val normalizedValue = value.replace('\u060C', ',')
+    return COMMA_THREE_DIGITS_REGEX.containsMatchIn(normalizedValue) ||
+        (errorText != null && commaUsedAsSeparator && DOT_THREE_DIGITS_REGEX.containsMatchIn(normalizedValue))
+}
+
 @Composable
 fun NumberField(
     label: String,
@@ -153,8 +168,18 @@ fun NumberField(
     onChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    isInteger: Boolean = false
+    isInteger: Boolean = false,
+    errorText: String? = null
 ) {
+    var commaUsedAsSeparator by remember { mutableStateOf(false) }
+    val showCommaHint = shouldShowAmountCommaHint(
+        value = value,
+        isInteger = isInteger,
+        errorText = errorText,
+        commaUsedAsSeparator = commaUsedAsSeparator
+    )
+    val displayMessage = if (showCommaHint) stringResource(R.string.amount_comma_hint) else errorText
+    val hasError = displayMessage != null
     Column(modifier) {
         FieldLabel(label)
         Box(
@@ -165,7 +190,11 @@ fun NumberField(
                 .background(if (enabled) Color.White else SurfaceVariantLight)
                 .border(
                     width = 1.dp,
-                    color = if (enabled) OutlineLight else OutlineVariantLight,
+                    color = when {
+                        hasError -> ErrorRedLight
+                        enabled -> OutlineLight
+                        else -> OutlineVariantLight
+                    },
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(horizontal = 10.dp, vertical = 6.dp),
@@ -177,12 +206,18 @@ fun NumberField(
                     val filtered = if (isInteger) {
                         new.filter { it.isDigit() }
                     } else {
+                        val normalizedNew = new.replace('\u060C', ',')
+                        if (COMMA_THREE_DIGITS_REGEX.containsMatchIn(normalizedNew) ||
+                            (normalizedNew.contains(',') && !value.contains('.'))
+                        ) {
+                            commaUsedAsSeparator = true
+                        }
                         var hasDot = false
-                        buildString {
-                            for (char in new) {
+                        val result = buildString {
+                            for (char in normalizedNew) {
                                 if (char.isDigit()) {
                                     append(char)
-                                } else if (char == '.' || char == ',') {
+                                } else if (char == '.' || char == ',' || char == '\u066B') {
                                     if (!hasDot) {
                                         append('.')
                                         hasDot = true
@@ -190,6 +225,10 @@ fun NumberField(
                                 }
                             }
                         }
+                        if (!hasDot) {
+                            commaUsedAsSeparator = false
+                        }
+                        result
                     }
                     onChange(filtered)
                 },
@@ -210,7 +249,7 @@ fun NumberField(
                     ) {
                         if (value.isEmpty()) {
                             Text(
-                                text = if (isInteger) "0" else "0.00",
+                                text = if (isInteger) "0" else com.lojia.shiftreport.util.MoneyFormat.zeroPlaceholder(),
                                 fontSize = 13.sp,
                                 lineHeight = 18.sp,
                                 color = TextHintColor
@@ -219,6 +258,16 @@ fun NumberField(
                         innerTextField()
                     }
                 }
+            )
+        }
+        if (displayMessage != null) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = displayMessage,
+                color = ErrorRedLight,
+                fontSize = 11.sp,
+                lineHeight = 14.sp,
+                modifier = Modifier.padding(start = 2.dp)
             )
         }
     }

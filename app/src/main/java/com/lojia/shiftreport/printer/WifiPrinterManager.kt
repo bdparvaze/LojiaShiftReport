@@ -2,7 +2,9 @@ package com.lojia.shiftreport.printer
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.util.AppLogger
+import com.lojia.shiftreport.util.paperWidthDots
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,8 @@ import java.nio.charset.StandardCharsets
  * Implements ESC/POS commands with 5-second connection timeout, identical to Foodics POS.
  */
 class WifiPrinterManager(private val context: Context) : PrinterManager {
+
+    private val prefsRepository = PreferencesRepository.getInstance(context)
 
     companion object {
         private const val TAG = "WifiPrinterManager"
@@ -123,10 +127,11 @@ class WifiPrinterManager(private val context: Context) : PrinterManager {
 
         try {
             out.write(ESC_INIT)
+            val widthPx = paperWidthDots(prefsRepository.getPrinterPaperWidth())
             val lines = text.split("\n")
             for (line in lines) {
                 if (ThermalBitmapRenderer.containsNonLatin(line)) {
-                    val bmp = ThermalBitmapRenderer.renderLineToBitmap(line, widthPx = 384)
+                    val bmp = ThermalBitmapRenderer.renderLineToBitmap(line, widthPx = widthPx)
                     val raster = bitmapToRasterEscPos(bmp)
                     out.write(raster)
                 } else {
@@ -155,9 +160,10 @@ class WifiPrinterManager(private val context: Context) : PrinterManager {
         AppLogger.i(TAG, "Triggering POS multilingual test print: $testText")
 
         // Render full test line to bitmap to guarantee pristine Arabic and Bengali typography
+        val widthPx = paperWidthDots(prefsRepository.getPrinterPaperWidth())
         val bmp = ThermalBitmapRenderer.renderLineToBitmap(
             rawLine = "<b>[C]$testText</b>",
-            widthPx = 384,
+            widthPx = widthPx,
             fontSizePx = 28f
         )
         printBitmap(bmp)
