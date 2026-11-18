@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.ui.theme.*
 
+private const val DEFAULT_CHART_MIN_REVENUE = 100.0
+private const val CHART_Y_AXIS_HEADROOM = 1.15
+
 @Composable
 fun MonthlyKpiCard(
     title: String,
@@ -143,7 +146,8 @@ fun RechartsAreaTrendCanvas(
     onHoverIndexChange: (Int?) -> Unit
 ) {
     val maxRevenue = remember(data) {
-        (data.maxOfOrNull { it.totalRevenue } ?: 100.0).coerceAtLeast(100.0) * 1.15
+        (data.maxOfOrNull { it.totalRevenue } ?: DEFAULT_CHART_MIN_REVENUE)
+            .coerceAtLeast(DEFAULT_CHART_MIN_REVENUE) * CHART_Y_AXIS_HEADROOM
     }
 
     Canvas(
@@ -314,7 +318,8 @@ fun RechartsBarChartCanvas(
     onHoverIndexChange: (Int?) -> Unit
 ) {
     val maxRevenue = remember(data) {
-        (data.maxOfOrNull { it.totalRevenue } ?: 100.0).coerceAtLeast(100.0) * 1.15
+        (data.maxOfOrNull { it.totalRevenue } ?: DEFAULT_CHART_MIN_REVENUE)
+            .coerceAtLeast(DEFAULT_CHART_MIN_REVENUE) * CHART_Y_AXIS_HEADROOM
     }
 
     Canvas(

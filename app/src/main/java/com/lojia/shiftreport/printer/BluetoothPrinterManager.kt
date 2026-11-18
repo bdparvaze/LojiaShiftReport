@@ -571,9 +571,10 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
         businessPhone: String = "",
         vatNumber: String = "",
         report: com.lojia.shiftreport.data.ShiftReport,
-        currencySymbol: String = ""
+        currencySymbol: String = "",
+        currencyCode: String
     ): String = buildShiftReportText(
-        businessName, businessAddress, businessPhone, vatNumber, report, currencySymbol
+        businessName, businessAddress, businessPhone, vatNumber, report, currencySymbol, currencyCode
     )
 
     fun buildShiftReportText(
@@ -582,14 +583,16 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
         businessPhone: String = "",
         vatNumber: String = "",
         report: com.lojia.shiftreport.data.ShiftReport,
-        currencySymbol: String = ""
+        currencySymbol: String = "",
+        currencyCode: String
     ): String {
         val paperWidth = PrinterPaperWidth.fromWidthMm(getSavedPaperWidthMm())
         val lineSeparator = "-".repeat(paperWidth.charsPerLine)
         val formattedDate = DateTimeFormatUtils.formatDateTime(report.dateInMillis)
+        val reportDigits = MoneyFormat.minorUnitDigits(currencyCode)
 
-        val startingCashMinor = if (report.openingCash > 0L) report.openingCash else com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashMinor(report)
-        val actualCashCountMinor = if (report.closingCash > 0L) report.closingCash else com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashMinor(report)
+        val startingCashMinor = if (report.openingCash > 0L) report.openingCash else com.lojia.shiftreport.util.PdfReportGenerator.extractStartingCashMinor(report, reportDigits)
+        val actualCashCountMinor = if (report.closingCash > 0L) report.closingCash else com.lojia.shiftreport.util.PdfReportGenerator.extractActualCashMinor(report, reportDigits)
         val cashInMinor = report.totalPreviousDueCash
         val cashOutMinor = report.totalCashOut
         val grossCashMinor = report.grossCash
@@ -619,8 +622,6 @@ class BluetoothPrinterManager(private val context: Context) : PrinterManager {
         sb.append("[L]${context.getString(R.string.zreport_shift)}[R]${report.shift}\n")
         sb.append("[L]${context.getString(R.string.zreport_cashier)}[R]${report.cashierName}\n")
         sb.append("[C]$lineSeparator\n")
-
-        val reportDigits = MoneyFormat.resolveDigitsForFormatting(currencySymbol)
 
         // 1. SALES BY PAYMENT METHOD
         sb.append("[L]<b>${context.getString(R.string.zreport_sec_sales)}</b>\n")

@@ -40,6 +40,7 @@ import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
 import com.lojia.shiftreport.util.normalizeReceiptNumber
+import com.lojia.shiftreport.util.summarizeDueMinor
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -120,7 +121,7 @@ data class DueReceiptSummary(
     val initialDueMinor: Long,
     val totalCollectedMinor: Long
 ) {
-    val remainingDueMinor: Long get() = (initialDueMinor - totalCollectedMinor).coerceAtLeast(0L)
+    val remainingDueMinor: Long get() = initialDueMinor - totalCollectedMinor
 }
 
 /* ----------------------------------------------------------------------
@@ -153,7 +154,11 @@ fun DueLedgerTab(
 
     val totalIssuedDue = salesList.sumOf { it.amountMinor }
     val totalCollectedDue = collectionsList.sumOf { it.amountMinor }
-    val netOutstandingDue = (totalIssuedDue - totalCollectedDue).coerceAtLeast(0L)
+    val dueSummary = remember(receiptMap) {
+        summarizeDueMinor(receiptMap.map { it.remainingDueMinor })
+    }
+    val netOutstandingDue = dueSummary.outstandingMinor
+    val extraCollectedDue = dueSummary.extraCollectedMinor
 
     val filteredReceipts = remember(receiptMap, searchQuery) {
         if (searchQuery.isBlank()) receiptMap
@@ -331,54 +336,84 @@ fun DueLedgerTab(
             border = BorderStroke(1.dp, WarningOrange.copy(alpha = 0.35f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(14.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(WarningOrange.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.HourglassEmpty,
-                        contentDescription = null,
-                        tint = WarningOrange,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(WarningOrange.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.HourglassEmpty,
+                            contentDescription = null,
+                            tint = WarningOrange,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Net Outstanding Due",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = WarningOrange,
+                            letterSpacing = 0.3.sp,
+                            maxLines = 1
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = "Collections automatically deduct from same receipt #",
+                            fontSize = 10.sp,
+                            color = OnSurfaceVariantLight,
+                            maxLines = 2
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    // Value — never wraps
                     Text(
-                        text = "Net Outstanding Due",
-                        fontSize = 12.sp,
+                        text = MoneyFormat.formatMinor(netOutstandingDue, currency),
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = WarningOrange,
-                        letterSpacing = 0.3.sp,
-                        maxLines = 1
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = "Collections automatically deduct from same receipt #",
-                        fontSize = 10.sp,
-                        color = OnSurfaceVariantLight,
-                        maxLines = 2
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
-                Spacer(Modifier.width(8.dp))
-                // Value — never wraps
-                Text(
-                    text = MoneyFormat.formatMinor(netOutstandingDue, currency),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = WarningOrange,
-                    maxLines = 1,
-                    softWrap = false
-                )
+                if (extraCollectedDue > 0L) {
+                    Spacer(Modifier.height(10.dp))
+                    HorizontalDivider(thickness = 0.5.dp, color = WarningOrange.copy(alpha = 0.25f))
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = stringResource(R.string.due_extra_collected_label),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SuccessGreen,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = MoneyFormat.formatMinor(extraCollectedDue, currency),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SuccessGreen,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
             }
         }
 

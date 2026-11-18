@@ -5,6 +5,8 @@ import com.lojia.shiftreport.settings.backup.BackupManager
 import java.io.File
 import org.json.JSONObject
 
+private const val JSON_PREVIEW_FALLBACK_CHAR_LIMIT = 2000
+
 class RestorePolicyManager(private val prefs: PreferencesRepository, private val backupManager: BackupManager) {
     data class RestoreDecision(
         val shouldShowDialog: Boolean,
@@ -29,7 +31,7 @@ class RestorePolicyManager(private val prefs: PreferencesRepository, private val
             val json = try {
                 JSONObject(fullText)
             } catch (_: Exception) {
-                JSONObject(fullText.take(2000))
+                JSONObject(fullText.take(JSON_PREVIEW_FALLBACK_CHAR_LIMIT))
             }
             val ownerId = json.optString("ownerId", "anonymous")
             if (ownerId != "anonymous" && ownerId != currentUserId) return RestoreDecision(false, null, "", false)

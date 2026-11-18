@@ -73,8 +73,10 @@ fun ShiftReportPreviewDialog(
     val staffMealsLabel = stringResource(R.string.staff_meals_count)
     val notesLabel = stringResource(R.string.notes)
 
-    val startingCash = PdfReportGenerator.extractStartingCashMinor(report)
-    val actualCashCount = PdfReportGenerator.extractActualCashMinor(report)
+    val resolvedCurrencyCode = MoneyFormat.resolveCurrency(currencyCode)
+    val currencyDigits = MoneyFormat.minorUnitDigits(resolvedCurrencyCode)
+    val startingCash = PdfReportGenerator.extractStartingCashMinor(report, currencyDigits)
+    val actualCashCount = PdfReportGenerator.extractActualCashMinor(report, currencyDigits)
     val cashIn = report.totalDueCollectedCash
     val cashOut = report.totalCashOut
     val expectedCashInDrawer = MoneyFormat.calculateExpectedCashMinor(
@@ -422,7 +424,8 @@ fun ShiftReportPreviewDialog(
                                             businessPhone = businessProfile?.phone ?: "",
                                             vatNumber = businessProfile?.vatNumber ?: "",
                                             report = report,
-                                            currencySymbol = MoneyFormat.resolveCurrency(businessProfile?.currency)
+                                            currencySymbol = resolvedCurrencyCode,
+                                            currencyCode = resolvedCurrencyCode
                                         )
 
                                         val res = printerManager.printFormattedText(zReportText)

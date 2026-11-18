@@ -29,7 +29,6 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -81,13 +80,6 @@ fun PaidOutShoppingLedgerTab(
 ) {
     val list = remember(reports) { parsePaidOutItems(reports) }
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val ledgerDigits = MoneyFormat.minorUnitDigits(currency)
-    val numberFormatter = remember(ledgerDigits) {
-        NumberFormat.getNumberInstance(Locale.US).apply {
-            minimumFractionDigits = ledgerDigits
-            maximumFractionDigits = ledgerDigits
-        }
-    }
     val totalExpense = list.sumOf { it.totalAmountMinor }
 
     Column(

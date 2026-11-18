@@ -165,7 +165,7 @@ fun MonthlySalesSummaryView(
     val currentMonth = targetCalendar.get(Calendar.MONTH)
     val daysInMonth = targetCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
 
-    val activeLocale = remember(language) { Locale(language.code) }
+    val activeLocale = remember(language) { Locale.forLanguageTag(language.code) }
     val monthNameFormatter = remember(language) {
         SimpleDateFormat("MMMM yyyy", activeLocale)
     }

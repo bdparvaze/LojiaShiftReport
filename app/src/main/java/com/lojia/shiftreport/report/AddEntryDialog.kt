@@ -28,7 +28,8 @@ import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
-import java.util.Locale
+
+private const val MAX_ITEM_DESCRIPTION_LENGTH = 100
 
 enum class PayType { CASH, BANK }
 
@@ -144,7 +145,7 @@ fun AddEntryDialog(
                         // 1. Item / Description * (Required, max 100 chars)
                         LojiaTextField(
                             value = name,
-                            onValueChange = { if (it.length <= 100) name = it },
+                            onValueChange = { if (it.length <= MAX_ITEM_DESCRIPTION_LENGTH) name = it },
                             label = {
                                 Text(
                                     text = "${stringResource(R.string.item_description)} *",

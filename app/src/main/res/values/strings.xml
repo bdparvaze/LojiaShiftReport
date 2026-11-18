@@ -393,6 +393,7 @@
     <string name="total_issued_due">Total Issued Due</string>
     <string name="total_collected">Total Collected</string>
     <string name="net_outstanding_due">Net Outstanding Due</string>
+    <string name="due_extra_collected_label">Extra collected</string>
     <string name="deduct_auto_hint">Collections automatically deduct from same receipt #</string>
     <string name="receipt_breakdown_count">Receipt Ledger Breakdown (%d)</string>
     <string name="no_due_records">No due history records found</string>
@@ -404,7 +405,8 @@
     <string name="issued_due">Issued Due</string>
     <string name="collected_minus">Collected (-)</string>
     <string name="net_remaining">Net Remaining</string>
-    <string name="total_advances">Total Advances</string>
+    <string name="employee_advance_subtitle">Salary %1$s • Advances this month %2$s • Balance %3$s</string>
+    <string name="employee_name_exists_error">An employee with this name already exists</string>
     <string name="cash_bank_label">Cash / Bank</string>
     <string name="employer_advances_count">Employer Advance Transactions (%d)</string>
     <string name="no_employer_advance_records">No employer advance records found</string>
@@ -1769,4 +1771,8 @@
     <string name="amount_comma_hint">Use a decimal point (.) instead of a comma as a thousands separator.</string>
     <string name="currency_locked_message">Currency is locked because the database contains financial records. Clear all data in Backup &amp; Reset to change currency.</string>
     <string name="advance_over_salary_error">Advance cannot exceed the employee\'s monthly salary (%1$s)</string>
+    <string name="no_cashiers_dropdown_hint">No cashiers available. Add one in Settings.</string>
+    <string name="draft_restored_message">Unfinished shift restored</string>
+    <string name="draft_discard_action">Discard</string>
+    <string name="employee_name_hint">e.g., full name</string>
 </resources>

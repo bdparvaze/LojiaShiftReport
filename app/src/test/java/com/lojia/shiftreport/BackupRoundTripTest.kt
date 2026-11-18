@@ -3,6 +3,7 @@ package com.lojia.shiftreport
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.data.ShiftSession
+import com.lojia.shiftreport.util.AppConstants
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.OfflineBackupManager
 import com.lojia.shiftreport.util.BackupFileDecoder
@@ -57,7 +58,7 @@ class BackupRoundTripTest {
         )
 
         val json = OfflineBackupManager.shiftReportToJson(original)
-        val restored = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false)
+        val restored = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
 
         assertEquals("Restored ShiftReport must exactly equal original", original, restored)
     }
@@ -89,7 +90,7 @@ class BackupRoundTripTest {
         )
 
         val json = OfflineBackupManager.shiftSessionToJson(original)
-        val restored = OfflineBackupManager.jsonToShiftSession(json, isLegacyBackup = false)
+        val restored = OfflineBackupManager.jsonToShiftSession(json, isLegacyBackup = false, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
 
         assertEquals("Restored ShiftSession must exactly equal original", original, restored)
     }
@@ -121,7 +122,7 @@ class BackupRoundTripTest {
             put("isLocked", false)
         }
 
-        val restored = OfflineBackupManager.jsonToShiftReport(legacyJson, isLegacyBackup = true)
+        val restored = OfflineBackupManager.jsonToShiftReport(legacyJson, isLegacyBackup = true, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
 
         assertEquals(5000L, restored.openingCash)
         assertEquals(15075L, restored.closingCash)
@@ -149,18 +150,18 @@ class BackupRoundTripTest {
         val defaultMinor = 54321L
 
         // Non-legacy: missing key returns defaultMinor directly
-        val nonLegacyResult = OfflineBackupManager.getMoneyVal(emptyObj, "missingKey", defaultMinor, isLegacy = false)
+        val nonLegacyResult = OfflineBackupManager.getMoneyVal(emptyObj, "missingKey", defaultMinor, isLegacy = false, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
         assertEquals(54321L, nonLegacyResult)
 
         // Legacy: missing key returns defaultMinor directly without 100x scaling error
-        val legacyResult = OfflineBackupManager.getMoneyVal(emptyObj, "missingKey", defaultMinor, isLegacy = true)
+        val legacyResult = OfflineBackupManager.getMoneyVal(emptyObj, "missingKey", defaultMinor, isLegacy = true, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
         assertEquals(54321L, legacyResult)
 
         // Non-legacy with key
         val populatedObj = JSONObject().apply {
             put("grossCash", 98765L)
         }
-        val populatedResult = OfflineBackupManager.getMoneyVal(populatedObj, "grossCash", 0L, isLegacy = false)
+        val populatedResult = OfflineBackupManager.getMoneyVal(populatedObj, "grossCash", 0L, isLegacy = false, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
         assertEquals(98765L, populatedResult)
     }
 
@@ -220,12 +221,12 @@ class BackupRoundTripTest {
         val json = OfflineBackupManager.shiftReportToJson(original)
         assertEquals("cashier_77_uid", json.getString("cashierId"))
 
-        val restored = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false)
+        val restored = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
         assertEquals("cashier_77_uid", restored.cashierId)
 
         // Old backup with no cashierId key falls back to default ""
         json.remove("cashierId")
-        val restoredOld = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false)
+        val restoredOld = OfflineBackupManager.jsonToShiftReport(json, isLegacyBackup = false, digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS)
         assertEquals("", restoredOld.cashierId)
     }
 
@@ -281,8 +282,8 @@ class BackupRoundTripTest {
         assertEquals(rootJson, decodedJson)
 
         val parsed = JSONObject(decodedJson)
-        val restoredReport = OfflineBackupManager.jsonToShiftReport(parsed.getJSONArray("shiftReports").getJSONObject(0), false)
-        val restoredSession = OfflineBackupManager.jsonToShiftSession(parsed.getJSONArray("shiftSessions").getJSONObject(0), false)
+        val restoredReport = OfflineBackupManager.jsonToShiftReport(parsed.getJSONArray("shiftReports").getJSONObject(0), false, AppConstants.ISO_DEFAULT_MINOR_DIGITS)
+        val restoredSession = OfflineBackupManager.jsonToShiftSession(parsed.getJSONArray("shiftSessions").getJSONObject(0), false, AppConstants.ISO_DEFAULT_MINOR_DIGITS)
         assertEquals(report, restoredReport)
         assertEquals(session, restoredSession)
 
@@ -333,7 +334,8 @@ class BackupRoundTripTest {
 
         val restoredReport = OfflineBackupManager.jsonToShiftReport(
             JSONObject(decodedJson).getJSONArray("shiftReports").getJSONObject(0),
-            isLegacyBackup = false
+            isLegacyBackup = false,
+            digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS
         )
         assertEquals(report, restoredReport)
     }
@@ -364,7 +366,8 @@ class BackupRoundTripTest {
 
         val restoredReport = OfflineBackupManager.jsonToShiftReport(
             JSONObject(decodedJson).getJSONArray("shiftReports").getJSONObject(0),
-            isLegacyBackup = false
+            isLegacyBackup = false,
+            digits = AppConstants.ISO_DEFAULT_MINOR_DIGITS
         )
         assertEquals(report, restoredReport)
     }

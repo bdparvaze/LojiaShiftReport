@@ -1,5 +1,10 @@
 package com.lojia.shiftreport.report
 
+import com.lojia.shiftreport.data.DueCreditItem
+import com.lojia.shiftreport.data.PreviousDueCollectionItem
+import com.lojia.shiftreport.data.PurchasedInventoryItem
+import com.lojia.shiftreport.data.StaffAdvanceItem
+import com.lojia.shiftreport.data.UnpaidBillItem
 import java.math.BigDecimal
 
 /* ----------------------------------------------------------------------
@@ -12,11 +17,6 @@ data class CreditEntry(val receiptNo: String, val amount: BigDecimal) {
 
 data class OldDueEntry(val receiptNo: String, val amount: BigDecimal, val type: PayType) {
     constructor(receiptNo: String, amountDouble: Double, type: PayType) : this(receiptNo, BigDecimal.valueOf(amountDouble), type)
-    val amountDouble: Double get() = amount.toDouble()
-}
-
-data class StaffEntry(val name: String, val amount: BigDecimal, val type: PayType) {
-    constructor(name: String, amountDouble: Double, type: PayType) : this(name, BigDecimal.valueOf(amountDouble), type)
     val amountDouble: Double get() = amount.toDouble()
 }
 
@@ -66,7 +66,6 @@ data class ShiftReportData(
     val outdoorMuassel: Int,
     val creditEntries: List<CreditEntry>,
     val oldDueEntries: List<OldDueEntry>,
-    val staffEntries: List<StaffEntry>,
     val walkoutEntries: List<WalkoutEntry>,
     val itemEntries: List<ItemEntry>,
     val netCash: BigDecimal,
@@ -96,7 +95,6 @@ data class ShiftReportData(
         outdoorMuassel: Int,
         creditEntries: List<CreditEntry>,
         oldDueEntries: List<OldDueEntry>,
-        staffEntries: List<StaffEntry>,
         walkoutEntries: List<WalkoutEntry>,
         itemEntries: List<ItemEntry>,
         netCash: Double,
@@ -125,7 +123,6 @@ data class ShiftReportData(
         outdoorMuassel = outdoorMuassel,
         creditEntries = creditEntries,
         oldDueEntries = oldDueEntries,
-        staffEntries = staffEntries,
         walkoutEntries = walkoutEntries,
         itemEntries = itemEntries,
         netCash = BigDecimal.valueOf(netCash),
@@ -136,3 +133,55 @@ data class ShiftReportData(
         dateMillis = dateMillis
     )
 }
+
+data class ShiftFormState(
+    val cashier: String = "",
+    val shift: String = "Day",
+    val dateMillis: Long = System.currentTimeMillis(),
+    val startingCashInput: String = "",
+    val cashReceipts: String = "",
+    val madaPayments: String = "",
+    val digitalWalletInput: String = "",
+    val totalDiscountsInput: String = "",
+    val salesReturnsInput: String = "",
+    val actualCashCountInput: String = "",
+    val notesInput: String = "",
+    val staffCount: Int = 0,
+    val totalExpenses: String = "",
+    val muassel: String = "",
+    val outdoorMuassel: String = "",
+    val dueCreditItems: List<DueCreditItem> = emptyList(),
+    val previousDueCollections: List<PreviousDueCollectionItem> = emptyList(),
+    val staffAdvances: List<StaffAdvanceItem> = emptyList(),
+    val unpaidBills: List<UnpaidBillItem> = emptyList(),
+    val purchasedItems: List<PurchasedInventoryItem> = emptyList()
+)
+
+data class ShiftFormActions(
+    val onCashierChange: (String) -> Unit = {},
+    val onShiftChange: (String) -> Unit = {},
+    val onDateMillisChange: (Long) -> Unit = {},
+    val onStartingCashChange: (String) -> Unit = {},
+    val onCashReceiptsChange: (String) -> Unit = {},
+    val onMadaPaymentsChange: (String) -> Unit = {},
+    val onDigitalWalletChange: (String) -> Unit = {},
+    val onTotalDiscountsChange: (String) -> Unit = {},
+    val onSalesReturnsChange: (String) -> Unit = {},
+    val onActualCashCountChange: (String) -> Unit = {},
+    val onNotesChange: (String) -> Unit = {},
+    val onStaffCountChange: (Int) -> Unit = {},
+    val onTotalExpensesChange: (String) -> Unit = {},
+    val onMuasselChange: (String) -> Unit = {},
+    val onOutdoorMuasselChange: (String) -> Unit = {},
+    val onAddDueCredit: (String, Double, Int) -> Unit = { _, _, _ -> },
+    val onRemoveDueCredit: (String) -> Unit = {},
+    val onAddPreviousDue: (String, Double, Int, String) -> Unit = { _, _, _, _ -> },
+    val onRemovePreviousDue: (String) -> Unit = {},
+    val onAddStaffAdvance: (String, Double, Int, String) -> Unit = { _, _, _, _ -> },
+    val onRemoveStaffAdvance: (String) -> Unit = {},
+    val onAddUnpaidBill: (String, Double, Int) -> Unit = { _, _, _ -> },
+    val onRemoveUnpaidBill: (String) -> Unit = {},
+    val onAddPurchasedItem: (String, Int, Double, Double, Int, String) -> Unit = { _, _, _, _, _, _ -> },
+    val onRemovePurchasedItem: (String) -> Unit = {},
+    val onClearForm: () -> Unit = {}
+)

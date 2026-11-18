@@ -317,11 +317,15 @@ object FirebaseCloudSyncManager {
             val schemaVersion = remoteJson?.optInt("schemaVersion", 1) ?: 1
             val isLegacy = schemaVersion < 15
 
+            val syncCurrency = remoteProfileObj?.optString("currency")?.takeIf { it.isNotBlank() }
+                ?: localBusinessProfile.currency
+            val syncDigits = MoneyFormat.minorUnitDigits(syncCurrency)
+
             fun getMoneyVal(obj: JSONObject, key: String, defaultMinorVal: Long = 0L): Long {
                 if (!obj.has(key) || obj.isNull(key)) return defaultMinorVal
                 return if (isLegacy) {
-                    val value = obj.optDouble(key, MoneyFormat.toMajorUnits(defaultMinorVal))
-                    MoneyFormat.toMinorUnits(value)
+                    val value = obj.optDouble(key, MoneyFormat.toMajorUnits(defaultMinorVal, syncDigits))
+                    MoneyFormat.majorDoubleToMinor(value, syncDigits)
                 } else {
                     obj.optLong(key, defaultMinorVal)
                 }
@@ -345,11 +349,11 @@ object FirebaseCloudSyncManager {
                 val rawUnpaid = repObj.optString("unpaidBillsJson", local?.unpaidBillsJson ?: "[]")
                 val rawPurchased = repObj.optString("purchasedItemsJson", local?.purchasedItemsJson ?: "[]")
 
-                val dueCreditJson = if (isLegacy && repObj.has("dueCreditEntriesJson")) AppDatabase.migrateJsonArraySingleAmount(rawDueCredit) else rawDueCredit
-                val prevDueJson = if (isLegacy && repObj.has("previousDueCollectionsJson")) AppDatabase.migrateJsonArraySingleAmount(rawPrevDue) else rawPrevDue
-                val staffJson = if (isLegacy && repObj.has("staffAdvancesJson")) AppDatabase.migrateJsonArraySingleAmount(rawStaff) else rawStaff
-                val unpaidJson = if (isLegacy && repObj.has("unpaidBillsJson")) AppDatabase.migrateJsonArraySingleAmount(rawUnpaid) else rawUnpaid
-                val purchasedJson = if (isLegacy && repObj.has("purchasedItemsJson")) AppDatabase.migrateJsonArrayPurchased(rawPurchased) else rawPurchased
+                val dueCreditJson = if (isLegacy && repObj.has("dueCreditEntriesJson")) AppDatabase.migrateJsonArraySingleAmount(rawDueCredit, syncDigits) else rawDueCredit
+                val prevDueJson = if (isLegacy && repObj.has("previousDueCollectionsJson")) AppDatabase.migrateJsonArraySingleAmount(rawPrevDue, syncDigits) else rawPrevDue
+                val staffJson = if (isLegacy && repObj.has("staffAdvancesJson")) AppDatabase.migrateJsonArraySingleAmount(rawStaff, syncDigits) else rawStaff
+                val unpaidJson = if (isLegacy && repObj.has("unpaidBillsJson")) AppDatabase.migrateJsonArraySingleAmount(rawUnpaid, syncDigits) else rawUnpaid
+                val purchasedJson = if (isLegacy && repObj.has("purchasedItemsJson")) AppDatabase.migrateJsonArrayPurchased(rawPurchased, syncDigits) else rawPurchased
 
                 if (local == null) {
                     val newReport = ShiftReport(
@@ -368,11 +372,11 @@ object FirebaseCloudSyncManager {
                         totalExpenses = getMoneyVal(repObj, "totalExpenses", 0L),
                         muasselQty = repObj.optDouble("muasselQty", 0.0),
                         outdoorShishaQty = repObj.optDouble("outdoorShishaQty", 0.0),
-                        dueCreditEntriesJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("dueCreditEntriesJson", "[]")) else repObj.optString("dueCreditEntriesJson", "[]"),
-                        previousDueCollectionsJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("previousDueCollectionsJson", "[]")) else repObj.optString("previousDueCollectionsJson", "[]"),
-                        staffAdvancesJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("staffAdvancesJson", "[]")) else repObj.optString("staffAdvancesJson", "[]"),
-                        unpaidBillsJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("unpaidBillsJson", "[]")) else repObj.optString("unpaidBillsJson", "[]"),
-                        purchasedItemsJson = if (isLegacy) AppDatabase.migrateJsonArrayPurchased(repObj.optString("purchasedItemsJson", "[]")) else repObj.optString("purchasedItemsJson", "[]"),
+                        dueCreditEntriesJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("dueCreditEntriesJson", "[]"), syncDigits) else repObj.optString("dueCreditEntriesJson", "[]"),
+                        previousDueCollectionsJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("previousDueCollectionsJson", "[]"), syncDigits) else repObj.optString("previousDueCollectionsJson", "[]"),
+                        staffAdvancesJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("staffAdvancesJson", "[]"), syncDigits) else repObj.optString("staffAdvancesJson", "[]"),
+                        unpaidBillsJson = if (isLegacy) AppDatabase.migrateJsonArraySingleAmount(repObj.optString("unpaidBillsJson", "[]"), syncDigits) else repObj.optString("unpaidBillsJson", "[]"),
+                        purchasedItemsJson = if (isLegacy) AppDatabase.migrateJsonArrayPurchased(repObj.optString("purchasedItemsJson", "[]"), syncDigits) else repObj.optString("purchasedItemsJson", "[]"),
                         notes = repObj.optString("notes", ""),
                         isLocked = repObj.optBoolean("isLocked", false),
                         managerSignedBy = if (repObj.has("managerSignedBy") && !repObj.isNull("managerSignedBy")) repObj.getString("managerSignedBy") else null,

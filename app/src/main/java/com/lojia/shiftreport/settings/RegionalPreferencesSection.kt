@@ -41,6 +41,7 @@ import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.common.LojiaDimens
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.AppConstants
 import com.lojia.shiftreport.util.MoneyFormat
 import java.util.Currency
 import java.util.Locale
@@ -65,7 +66,7 @@ fun countryCodeToFlagEmoji(countryCode: String): String {
  * Resolves the actual Currency Symbol (e.g. ﷼, ৳, $, €, £, ₹) based on a currency code.
  */
 fun getCurrencySymbol(currencyCode: String): String {
-    if (currencyCode.isBlank()) return "$"
+    if (currencyCode.isBlank()) return AppConstants.DEFAULT_CURRENCY_SYMBOL
     val upper = currencyCode.trim().uppercase()
     return when (upper) {
         "SAR", "QAR", "OMR" -> "﷼"

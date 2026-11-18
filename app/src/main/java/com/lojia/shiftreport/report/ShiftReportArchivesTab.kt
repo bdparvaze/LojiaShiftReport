@@ -35,9 +35,6 @@ import com.lojia.shiftreport.ui.common.SecureDeleteModal
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun MetricCard(
@@ -96,14 +93,6 @@ fun ShiftReportArchivesTab(
             it.cashierName.contains(searchQuery, ignoreCase = true) ||
             it.shift.contains(searchQuery, ignoreCase = true) ||
             it.id.toString().contains(searchQuery)
-        }
-    }
-
-    val archiveDigits = MoneyFormat.minorUnitDigits(currentCurrency)
-    val numberFormatter = remember(archiveDigits) {
-        NumberFormat.getNumberInstance(Locale.US).apply {
-            minimumFractionDigits = archiveDigits
-            maximumFractionDigits = archiveDigits
         }
     }
 

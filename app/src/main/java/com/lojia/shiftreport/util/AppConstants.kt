@@ -32,12 +32,15 @@ object AppConstants {
     // =========================================================================
     const val DEFAULT_CURRENCY_CODE = "USD"
     const val DEFAULT_CURRENCY_SYMBOL = "$"
+    const val DEFAULT_COUNTRY_CODE = "US"
+    const val ISO_DEFAULT_MINOR_DIGITS = 2
 
     // =========================================================================
     // 4. TIMEOUTS & INTERVALS
     // =========================================================================
     const val DEFAULT_AUTO_LOCK_MINUTES = 5
     const val IDLE_CHECK_INTERVAL_MILLIS = 10_000L
+    const val DRAFT_SAVE_DEBOUNCE_MS = 1000L
     const val ONE_DAY_MILLIS = 86_400_000L
     const val ONE_HOUR_MILLIS = 3_600_000L
 

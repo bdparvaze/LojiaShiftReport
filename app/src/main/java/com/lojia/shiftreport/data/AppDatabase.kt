@@ -6,11 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.lojia.shiftreport.BuildConfig
 import com.lojia.shiftreport.scanner.DocumentScannerDao
 import com.lojia.shiftreport.scanner.ScannedDocument
+import com.lojia.shiftreport.util.AppConstants
+import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.SecurityUtils
-import com.lojia.shiftreport.util.shouldSeedDemoData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -160,6 +160,20 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_14_15 = object : Migration(14, 15) {
             override fun migrate(db: SupportSQLiteDatabase) {
+                val currencyCode = try {
+                    db.query("SELECT currency FROM business_profile LIMIT 1").use { cursor ->
+                        if (cursor.moveToFirst()) cursor.getString(0) else null
+                    }
+                } catch (_: Exception) {
+                    null
+                }
+                val digits = if (currencyCode.isNullOrBlank()) {
+                    AppConstants.ISO_DEFAULT_MINOR_DIGITS
+                } else {
+                    MoneyFormat.minorUnitDigits(currencyCode)
+                }
+                val factor = MoneyFormat.minorFactor(digits)
+
                 // 1. Recreate shift_sessions
                 db.execSQL("ALTER TABLE `shift_sessions` RENAME TO `shift_sessions_old`")
                 db.execSQL("""
@@ -195,14 +209,14 @@ abstract class AppDatabase : RoomDatabase() {
                         managerSignedBy, managerSignTime
                     ) SELECT 
                         id, cashierName, shiftName, status, openedAt, closedAt,
-                        CAST(ROUND(startingCash * 100) AS INTEGER), CAST(ROUND(cashSales * 100) AS INTEGER),
-                        CAST(ROUND(cardSales * 100) AS INTEGER), CAST(ROUND(digitalSales * 100) AS INTEGER),
-                        CAST(ROUND(totalDiscounts * 100) AS INTEGER), CAST(ROUND(salesReturns * 100) AS INTEGER),
-                        CAST(ROUND(totalPayIn * 100) AS INTEGER), CAST(ROUND(totalPayOut * 100) AS INTEGER),
-                        CAST(ROUND(expectedCash * 100) AS INTEGER), CAST(ROUND(actualCashCount * 100) AS INTEGER),
-                        CAST(ROUND(variance * 100) AS INTEGER), notes, isLocked, managerSignedBy, managerSignTime
+                        CAST(ROUND(startingCash * ?) AS INTEGER), CAST(ROUND(cashSales * ?) AS INTEGER),
+                        CAST(ROUND(cardSales * ?) AS INTEGER), CAST(ROUND(digitalSales * ?) AS INTEGER),
+                        CAST(ROUND(totalDiscounts * ?) AS INTEGER), CAST(ROUND(salesReturns * ?) AS INTEGER),
+                        CAST(ROUND(totalPayIn * ?) AS INTEGER), CAST(ROUND(totalPayOut * ?) AS INTEGER),
+                        CAST(ROUND(expectedCash * ?) AS INTEGER), CAST(ROUND(actualCashCount * ?) AS INTEGER),
+                        CAST(ROUND(variance * ?) AS INTEGER), notes, isLocked, managerSignedBy, managerSignTime
                     FROM `shift_sessions_old`
-                """.trimIndent())
+                """.trimIndent(), Array<Any>(11) { factor })
                 db.execSQL("DROP TABLE `shift_sessions_old`")
 
                 // 2. Recreate cash_movements
@@ -220,9 +234,9 @@ abstract class AppDatabase : RoomDatabase() {
                 """.trimIndent())
                 db.execSQL("""
                     INSERT INTO `cash_movements` (id, shiftSessionId, type, amount, reason, cashierName, timestamp)
-                    SELECT id, shiftSessionId, type, CAST(ROUND(amount * 100) AS INTEGER), reason, cashierName, timestamp
+                    SELECT id, shiftSessionId, type, CAST(ROUND(amount * ?) AS INTEGER), reason, cashierName, timestamp
                     FROM `cash_movements_old`
-                """.trimIndent())
+                """.trimIndent(), arrayOf<Any>(factor))
                 db.execSQL("DROP TABLE `cash_movements_old`")
 
                 // 3. Recreate shift_reports
@@ -264,15 +278,15 @@ abstract class AppDatabase : RoomDatabase() {
                         managerSignedBy, managerSignTime
                     ) SELECT 
                         id, cashierName, shift, dateInMillis,
-                        CAST(ROUND(openingCash * 100) AS INTEGER), CAST(ROUND(closingCash * 100) AS INTEGER),
-                        CAST(ROUND(grossCash * 100) AS INTEGER), CAST(ROUND(madaPayments * 100) AS INTEGER),
-                        CAST(ROUND(digitalWallet * 100) AS INTEGER), CAST(ROUND(totalDiscounts * 100) AS INTEGER),
-                        CAST(ROUND(salesReturns * 100) AS INTEGER), staffMealsCount,
-                        CAST(ROUND(totalExpenses * 100) AS INTEGER), muasselQty, outdoorShishaQty,
+                        CAST(ROUND(openingCash * ?) AS INTEGER), CAST(ROUND(closingCash * ?) AS INTEGER),
+                        CAST(ROUND(grossCash * ?) AS INTEGER), CAST(ROUND(madaPayments * ?) AS INTEGER),
+                        CAST(ROUND(digitalWallet * ?) AS INTEGER), CAST(ROUND(totalDiscounts * ?) AS INTEGER),
+                        CAST(ROUND(salesReturns * ?) AS INTEGER), staffMealsCount,
+                        CAST(ROUND(totalExpenses * ?) AS INTEGER), muasselQty, outdoorShishaQty,
                         dueCreditEntriesJson, previousDueCollectionsJson, staffAdvancesJson,
                         unpaidBillsJson, purchasedItemsJson, notes, isLocked, managerSignedBy, managerSignTime
                     FROM `shift_reports_old`
-                """.trimIndent())
+                """.trimIndent(), Array<Any>(8) { factor })
                 db.execSQL("DROP TABLE `shift_reports_old`")
 
                 // 4. Recreate draft_reports
@@ -310,23 +324,23 @@ abstract class AppDatabase : RoomDatabase() {
                         staffAdvancesJson, unpaidBillsJson, purchasedItemsJson, notes
                     ) SELECT 
                         id, cashierName, shift, dateInMillis,
-                        CAST(ROUND(openingCash * 100) AS INTEGER), CAST(ROUND(closingCash * 100) AS INTEGER),
-                        CAST(ROUND(grossCash * 100) AS INTEGER), CAST(ROUND(madaPayments * 100) AS INTEGER),
-                        CAST(ROUND(digitalWallet * 100) AS INTEGER), CAST(ROUND(totalDiscounts * 100) AS INTEGER),
-                        CAST(ROUND(salesReturns * 100) AS INTEGER), staffMealsCount,
-                        CAST(ROUND(totalExpenses * 100) AS INTEGER), muasselQty, outdoorShishaQty,
+                        CAST(ROUND(openingCash * ?) AS INTEGER), CAST(ROUND(closingCash * ?) AS INTEGER),
+                        CAST(ROUND(grossCash * ?) AS INTEGER), CAST(ROUND(madaPayments * ?) AS INTEGER),
+                        CAST(ROUND(digitalWallet * ?) AS INTEGER), CAST(ROUND(totalDiscounts * ?) AS INTEGER),
+                        CAST(ROUND(salesReturns * ?) AS INTEGER), staffMealsCount,
+                        CAST(ROUND(totalExpenses * ?) AS INTEGER), muasselQty, outdoorShishaQty,
                         dueCreditEntriesJson, previousDueCollectionsJson, staffAdvancesJson,
                         unpaidBillsJson, purchasedItemsJson, notes
                     FROM `draft_reports_old`
-                """.trimIndent())
+                """.trimIndent(), Array<Any>(8) { factor })
                 db.execSQL("DROP TABLE `draft_reports_old`")
 
                 // Convert legacy JSON amounts from double to long minor units
-                migrateJsonColumns(db)
+                migrateJsonColumns(db, digits)
             }
         }
 
-        private fun migrateJsonColumns(db: SupportSQLiteDatabase) {
+        private fun migrateJsonColumns(db: SupportSQLiteDatabase, digits: Int) {
             val cursorReports = db.query("SELECT id, dueCreditEntriesJson, previousDueCollectionsJson, staffAdvancesJson, unpaidBillsJson, purchasedItemsJson FROM shift_reports")
             while (cursorReports.moveToNext()) {
                 val id = cursorReports.getInt(0)
@@ -336,11 +350,11 @@ abstract class AppDatabase : RoomDatabase() {
                 val unpaid = cursorReports.getString(4)
                 val purchased = cursorReports.getString(5)
 
-                val updatedDueCredit = migrateJsonArraySingleAmount(dueCredit)
-                val updatedPrevDue = migrateJsonArraySingleAmount(prevDue)
-                val updatedStaff = migrateJsonArraySingleAmount(staff)
-                val updatedUnpaid = migrateJsonArraySingleAmount(unpaid)
-                val updatedPurchased = migrateJsonArrayPurchased(purchased)
+                val updatedDueCredit = migrateJsonArraySingleAmount(dueCredit, digits)
+                val updatedPrevDue = migrateJsonArraySingleAmount(prevDue, digits)
+                val updatedStaff = migrateJsonArraySingleAmount(staff, digits)
+                val updatedUnpaid = migrateJsonArraySingleAmount(unpaid, digits)
+                val updatedPurchased = migrateJsonArrayPurchased(purchased, digits)
 
                 db.execSQL(
                     "UPDATE shift_reports SET dueCreditEntriesJson = ?, previousDueCollectionsJson = ?, staffAdvancesJson = ?, unpaidBillsJson = ?, purchasedItemsJson = ? WHERE id = ?",
@@ -358,11 +372,11 @@ abstract class AppDatabase : RoomDatabase() {
                 val unpaid = cursorDrafts.getString(4)
                 val purchased = cursorDrafts.getString(5)
 
-                val updatedDueCredit = migrateJsonArraySingleAmount(dueCredit)
-                val updatedPrevDue = migrateJsonArraySingleAmount(prevDue)
-                val updatedStaff = migrateJsonArraySingleAmount(staff)
-                val updatedUnpaid = migrateJsonArraySingleAmount(unpaid)
-                val updatedPurchased = migrateJsonArrayPurchased(purchased)
+                val updatedDueCredit = migrateJsonArraySingleAmount(dueCredit, digits)
+                val updatedPrevDue = migrateJsonArraySingleAmount(prevDue, digits)
+                val updatedStaff = migrateJsonArraySingleAmount(staff, digits)
+                val updatedUnpaid = migrateJsonArraySingleAmount(unpaid, digits)
+                val updatedPurchased = migrateJsonArrayPurchased(purchased, digits)
 
                 db.execSQL(
                     "UPDATE draft_reports SET dueCreditEntriesJson = ?, previousDueCollectionsJson = ?, staffAdvancesJson = ?, unpaidBillsJson = ?, purchasedItemsJson = ? WHERE id = ?",
@@ -372,7 +386,7 @@ abstract class AppDatabase : RoomDatabase() {
             cursorDrafts.close()
         }
 
-        internal fun migrateJsonArraySingleAmount(jsonStr: String?): String {
+        internal fun migrateJsonArraySingleAmount(jsonStr: String?, digits: Int): String {
             if (jsonStr.isNullOrBlank()) return "[]"
             return try {
                 val arr = org.json.JSONArray(jsonStr)
@@ -380,7 +394,7 @@ abstract class AppDatabase : RoomDatabase() {
                     val obj = arr.getJSONObject(i)
                     if (obj.has("amount")) {
                         val amtDouble = obj.getDouble("amount")
-                        val amtLong = Math.round(amtDouble * 100)
+                        val amtLong = MoneyFormat.majorDoubleToMinor(amtDouble, digits)
                         obj.put("amount", amtLong)
                     }
                 }
@@ -390,7 +404,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        internal fun migrateJsonArrayPurchased(jsonStr: String?): String {
+        internal fun migrateJsonArrayPurchased(jsonStr: String?, digits: Int): String {
             if (jsonStr.isNullOrBlank()) return "[]"
             return try {
                 val arr = org.json.JSONArray(jsonStr)
@@ -398,11 +412,11 @@ abstract class AppDatabase : RoomDatabase() {
                     val obj = arr.getJSONObject(i)
                     if (obj.has("unitPrice")) {
                         val priceDouble = obj.getDouble("unitPrice")
-                        obj.put("unitPrice", Math.round(priceDouble * 100))
+                        obj.put("unitPrice", MoneyFormat.majorDoubleToMinor(priceDouble, digits))
                     }
                     if (obj.has("totalAmount")) {
                         val totalDouble = obj.getDouble("totalAmount")
-                        obj.put("totalAmount", Math.round(totalDouble * 100))
+                        obj.put("totalAmount", MoneyFormat.majorDoubleToMinor(totalDouble, digits))
                     }
                 }
                 arr.toString()
@@ -482,7 +496,7 @@ abstract class AppDatabase : RoomDatabase() {
                     null
                 }
                 val digits = if (currencyCode.isNullOrBlank()) {
-                    2
+                    AppConstants.ISO_DEFAULT_MINOR_DIGITS
                 } else {
                     com.lojia.shiftreport.util.MoneyFormat.minorUnitDigits(currencyCode)
                 }
@@ -646,108 +660,7 @@ abstract class AppDatabase : RoomDatabase() {
             val databaseIsEmpty = reportDao.getAllShiftReportsList().isEmpty() &&
                 reportDao.getAllShiftSessionsList().isEmpty() &&
                 reportDao.getBusinessProfileOnce() == null
-            if (shouldSeedDemoData(isDebugBuild = BuildConfig.DEBUG, databaseIsEmpty = databaseIsEmpty)) {
-                reportDao.saveUserProfile(
-                    UserProfile(
-                        id = 1,
-                        fullName = "Store Owner",
-                        username = "admin",
-                        email = "",
-                        passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
-                        securityQuestion = "",
-                        securityAnswer = "",
-                        phone = "",
-                        designation = "Store Owner & Manager",
-                        nationalIdOrPassport = "",
-                        address = "",
-                        profilePictureUri = "",
-                        avatarIndex = 0,
-                        dateOfBirthOrJoin = "",
-                        emergencyContact = "",
-                        pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
-                        isBiometricEnabled = false,
-                        autoLockMinutes = 5,
-                        currentRole = "ADMIN",
-                        registeredAt = System.currentTimeMillis(),
-                        isRegistered = true
-                    )
-                )
-
-                reportDao.saveBusinessProfile(
-                    BusinessProfile(
-                        id = 1,
-                        businessName = "Demo Store (Debug)",
-                        vatNumber = "",
-                        phone = "+1 555 0100",
-                        email = "store@example.com",
-                        address = "123 Commercial Avenue",
-                        workingHours = "08:00 AM - 10:00 PM",
-                        currency = "USD",
-                        country = "United States",
-                        logoUri = ""
-                    )
-                )
-
-                reportDao.saveReceiptConfig(
-                    ShopReceiptConfig(
-                        id = 1,
-                        shopLogo = "store_logo_default",
-                        customHeader = "Demo Store",
-                        customFooterText = "Thank you for shopping with us!",
-                        showCashierName = true,
-                        showBarcode = true,
-                        showCustomerMemo = true
-                    )
-                )
-
-                val activeSessionId = reportDao.insertShiftSession(
-                    ShiftSession(
-                        cashierName = "Demo Staff",
-                        shiftName = "Morning",
-                        status = "OPEN",
-                        openedAt = System.currentTimeMillis() - 14400000L,
-                        startingCash = 100000L,
-                        cashSales = 450000L,
-                        cardSales = 680000L,
-                        digitalSales = 210000L,
-                        totalPayIn = 20000L,
-                        totalPayOut = 15000L,
-                        expectedCash = 555000L,
-                        actualCashCount = 0L,
-                        variance = 0L,
-                        notes = "Morning shift running smoothly"
-                    )
-                )
-
-                reportDao.insertCashMovement(
-                    CashMovement(
-                        shiftSessionId = activeSessionId.toInt(),
-                        type = "PAY_IN",
-                        amount = 20000L,
-                        reason = "Added small change coins to drawer",
-                        cashierName = "Demo Staff"
-                    )
-                )
-
-                reportDao.insertCashMovement(
-                    CashMovement(
-                        shiftSessionId = activeSessionId.toInt(),
-                        type = "PAY_OUT",
-                        amount = 15000L,
-                        reason = "Cleaning supplies cash purchase",
-                        cashierName = "Demo Staff"
-                    )
-                )
-
-                val now = System.currentTimeMillis()
-                val oneDay = 86400000L
-                reportDao.insertShiftReport(ShiftReport(cashierName = "Ahmed Al-Harbi", shift = "Morning", dateInMillis = now - (3 * oneDay), grossCash = 1450000L, madaPayments = 3200000L, digitalWallet = 850000L, staffMealsCount = 4, totalExpenses = 180000L, muasselQty = 0.0, notes = "Smooth morning shift"))
-                reportDao.insertShiftReport(ShiftReport(cashierName = "Fahad Al-Otaibi", shift = "Evening", dateInMillis = now - (3 * oneDay), grossCash = 2100000L, madaPayments = 5100000L, digitalWallet = 1350000L, staffMealsCount = 6, totalExpenses = 320000L, muasselQty = 0.0, notes = "High footfall evening"))
-                reportDao.insertShiftReport(ShiftReport(cashierName = "Sultan Al-Ghamdi", shift = "Morning", dateInMillis = now - (2 * oneDay), grossCash = 1680000L, madaPayments = 3450000L, digitalWallet = 920000L, staffMealsCount = 3, totalExpenses = 150000L, muasselQty = 0.0, notes = "Morning rush handled"))
-                reportDao.insertShiftReport(ShiftReport(cashierName = "Demo Staff", shift = "Evening", dateInMillis = now - (1 * oneDay), grossCash = 2750000L, madaPayments = 6400000L, digitalWallet = 1850000L, staffMealsCount = 8, totalExpenses = 450000L, muasselQty = 0.0, notes = "Superb sales volume"))
-
-                reportDao.insertAuditLog(AuditLog(username = "System", action = "INITIALIZATION", details = "LojiaShiftReport database initialized"))
-            } else if (databaseIsEmpty) {
+            if (databaseIsEmpty) {
                 reportDao.saveUserProfile(
                     UserProfile(
                         id = 1,
@@ -781,7 +694,7 @@ abstract class AppDatabase : RoomDatabase() {
                         phone = "",
                         email = "",
                         address = "",
-                        currency = "USD",
+                        currency = AppConstants.DEFAULT_CURRENCY_CODE,
                         country = "United States"
                     )
                 )

@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.util.AppConstants
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.SecurityUtils
 
@@ -457,7 +458,7 @@ data class BusinessProfile(
     val mapLat: Double = 0.0,
     val mapLng: Double = 0.0,
     val workingHours: String = "08:00 AM - 10:00 PM",
-    val currency: String = "USD",
+    val currency: String = AppConstants.DEFAULT_CURRENCY_CODE,
     val country: String = "United States",
     val vatRate: Double = 0.0,
     val isTaxEnabled: Boolean = false,
@@ -537,8 +538,15 @@ enum class AppCountry(
 
     companion object {
         fun fromCode(code: String?): AppCountry {
-            if (code.isNullOrBlank()) return BANGLADESH
-            return entries.find { it.code.equals(code, ignoreCase = true) || it.currencyCode.equals(code, ignoreCase = true) || it.name.equals(code, ignoreCase = true) } ?: BANGLADESH
+            val defaultCountry = entries.find {
+                it.code.equals(AppConstants.DEFAULT_COUNTRY_CODE, ignoreCase = true)
+            } ?: UNITED_STATES
+            if (code.isNullOrBlank()) return defaultCountry
+            return entries.find {
+                it.code.equals(code, ignoreCase = true) ||
+                    it.currencyCode.equals(code, ignoreCase = true) ||
+                    it.name.equals(code, ignoreCase = true)
+            } ?: defaultCountry
         }
     }
 }

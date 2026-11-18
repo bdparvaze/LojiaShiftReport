@@ -29,12 +29,23 @@ import com.lojia.shiftreport.util.NotificationHelper
 
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-internal fun draftFieldText(minor: Long): String = MoneyFormat.toPlainDecimal(minor)
+internal fun draftFieldText(minor: Long, digits: Int = MoneyFormat.activeDigits): String =
+    MoneyFormat.toPlainDecimal(minor, digits)
+
+internal fun draftQtyText(qty: Double): String =
+    if (qty <= 0.0) "" else if (qty % 1.0 == 0.0) qty.toInt().toString() else qty.toString()
+
+fun staffAdvanceMinor(amount: Double, digits: Int): Long = MoneyFormat.toMinorUnits(amount, digits)
 
 class ReportViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
@@ -451,12 +462,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         madaPayments,
         digitalWallet
     ) { cash, mada, wallet ->
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
         val sumMinor = MoneyFormat.addMinor(
-            MoneyFormat.toMinorUnits(cash),
-            MoneyFormat.toMinorUnits(mada),
-            MoneyFormat.toMinorUnits(wallet)
+            MoneyFormat.toMinorUnits(cash, digits),
+            MoneyFormat.toMinorUnits(mada, digits),
+            MoneyFormat.toMinorUnits(wallet, digits)
         )
-        MoneyFormat.toMajorUnits(sumMinor)
+        MoneyFormat.toMajorUnits(sumMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedTotalGrossSales: StateFlow<Double> = totalSales
@@ -468,11 +480,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalDiscounts,
         salesReturns
     ) { sales, disc, ret ->
-        val s = MoneyFormat.toMinorUnits(sales)
-        val d = MoneyFormat.toMinorUnits(disc)
-        val r = MoneyFormat.toMinorUnits(ret)
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
+        val s = MoneyFormat.toMinorUnits(sales, digits)
+        val d = MoneyFormat.toMinorUnits(disc, digits)
+        val r = MoneyFormat.toMinorUnits(ret, digits)
         val netMinor = MoneyFormat.calculateNetSalesMinor(s, d, r)
-        MoneyFormat.toMajorUnits(netMinor)
+        MoneyFormat.toMajorUnits(netMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     // 2. Cash In & Outflows
@@ -481,12 +494,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         grossCash,
         totalPreviousDueCash
     ) { open, cashSales, prevDueCash ->
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
         val sumMinor = MoneyFormat.addMinor(
-            MoneyFormat.toMinorUnits(open),
-            MoneyFormat.toMinorUnits(cashSales),
-            MoneyFormat.toMinorUnits(prevDueCash)
+            MoneyFormat.toMinorUnits(open, digits),
+            MoneyFormat.toMinorUnits(cashSales, digits),
+            MoneyFormat.toMinorUnits(prevDueCash, digits)
         )
-        MoneyFormat.toMajorUnits(sumMinor)
+        MoneyFormat.toMajorUnits(sumMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalCashOut: StateFlow<Double> = combine(
@@ -494,12 +508,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalStaffAdvancesCash,
         totalPurchasedCash
     ) { exp, advCash, purchCash ->
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
         val sumMinor = MoneyFormat.addMinor(
-            MoneyFormat.toMinorUnits(exp),
-            MoneyFormat.toMinorUnits(advCash),
-            MoneyFormat.toMinorUnits(purchCash)
+            MoneyFormat.toMinorUnits(exp, digits),
+            MoneyFormat.toMinorUnits(advCash, digits),
+            MoneyFormat.toMinorUnits(purchCash, digits)
         )
-        MoneyFormat.toMajorUnits(sumMinor)
+        MoneyFormat.toMajorUnits(sumMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedTotalExpenses: StateFlow<Double> = totalCashOut
@@ -510,11 +525,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalCashIn,
         totalCashOut
     ) { cin, cout ->
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
         val expectedMinor = MoneyFormat.calculateExpectedCashMinor(
-            totalCashIn = MoneyFormat.toMinorUnits(cin),
-            totalCashOut = MoneyFormat.toMinorUnits(cout)
+            totalCashIn = MoneyFormat.toMinorUnits(cin, digits),
+            totalCashOut = MoneyFormat.toMinorUnits(cout, digits)
         )
-        MoneyFormat.toMajorUnits(expectedMinor)
+        MoneyFormat.toMajorUnits(expectedMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedCashInDrawer: StateFlow<Double> = expectedCashInDrawer
@@ -525,11 +541,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         actualCashCount,
         expectedCashInDrawer
     ) { actual, expected ->
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
         val varMinor = MoneyFormat.calculateVarianceMinor(
-            MoneyFormat.toMinorUnits(actual),
-            MoneyFormat.toMinorUnits(expected)
+            MoneyFormat.toMinorUnits(actual, digits),
+            MoneyFormat.toMinorUnits(expected, digits)
         )
-        MoneyFormat.toMajorUnits(varMinor)
+        MoneyFormat.toMajorUnits(varMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedCardAndDigital: StateFlow<Double> = combine(
@@ -537,12 +554,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalPreviousDueCard,
         digitalWallet
     ) { mada, prevCard, wallet ->
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
         val sumMinor = MoneyFormat.addMinor(
-            MoneyFormat.toMinorUnits(mada),
-            MoneyFormat.toMinorUnits(prevCard),
-            MoneyFormat.toMinorUnits(wallet)
+            MoneyFormat.toMinorUnits(mada, digits),
+            MoneyFormat.toMinorUnits(prevCard, digits),
+            MoneyFormat.toMinorUnits(wallet, digits)
         )
-        MoneyFormat.toMajorUnits(sumMinor)
+        MoneyFormat.toMajorUnits(sumMinor, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val calculatedNetBalance: StateFlow<Double> = combine(
@@ -550,39 +568,307 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         totalCashOut,
         totalUnpaidLoss
     ) { sales, exp, unpaid ->
-        val s = MoneyFormat.toMinorUnits(sales)
-        val e = MoneyFormat.toMinorUnits(exp)
-        val u = MoneyFormat.toMinorUnits(unpaid)
-        MoneyFormat.toMajorUnits(s - e - u)
+        val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
+        val s = MoneyFormat.toMinorUnits(sales, digits)
+        val e = MoneyFormat.toMinorUnits(exp, digits)
+        val u = MoneyFormat.toMinorUnits(unpaid, digits)
+        MoneyFormat.toMajorUnits(s - e - u, digits)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     private val _uiMessage = MutableSharedFlow<com.lojia.shiftreport.util.UiText>()
     val uiMessage = _uiMessage.asSharedFlow()
 
+    private val _draftSaveError = MutableSharedFlow<String>()
+    val draftSaveError = _draftSaveError.asSharedFlow()
+
+    private val _showDraftRestoredNotice = MutableStateFlow(false)
+    val showDraftRestoredNotice: StateFlow<Boolean> = _showDraftRestoredNotice.asStateFlow()
+
+    private val draftMutex = Mutex()
+    private var lastSavedSnapshot: DraftFormSnapshot? = null
+    private var autosaveJob: Job? = null
+    @Volatile
+    private var isRestoringDraft = false
+    private var hasShownInitialRestoreNotice = false
+
+    private data class DraftMetaSnapshot(
+        val cashier: String,
+        val shift: String,
+        val dateInMillis: Long,
+        val notes: String,
+        val staffMealsCount: String,
+        val muasselQty: String,
+        val outdoorShishaQty: String
+    )
+
+    private data class DraftAmountsASnapshot(
+        val openingCash: String,
+        val startingCash: String,
+        val closingCash: String,
+        val actualCashCount: String,
+        val grossCash: String
+    )
+
+    private data class DraftAmountsBSnapshot(
+        val madaPayments: String,
+        val digitalWallet: String,
+        val totalDiscounts: String,
+        val salesReturns: String,
+        val totalExpenses: String
+    )
+
+    private data class DraftListsSnapshot(
+        val dueCredits: List<DueCreditItem>,
+        val previousDues: List<PreviousDueCollectionItem>,
+        val staffAdvances: List<StaffAdvanceItem>,
+        val unpaidBills: List<UnpaidBillItem>,
+        val purchasedItems: List<PurchasedInventoryItem>
+    )
+
+    data class DraftFormSnapshot(
+        val cashierName: String,
+        val shift: String,
+        val dateInMillis: Long,
+        val openingCashInput: String,
+        val startingCashInput: String,
+        val closingCashInput: String,
+        val actualCashCountInput: String,
+        val grossCashInput: String,
+        val madaPaymentsInput: String,
+        val digitalWalletInput: String,
+        val totalDiscountsInput: String,
+        val salesReturnsInput: String,
+        val staffMealsCountInput: String,
+        val totalExpensesInput: String,
+        val muasselQtyInput: String,
+        val outdoorShishaQtyInput: String,
+        val notesInput: String,
+        val dueCreditItems: List<DueCreditItem>,
+        val previousDueCollections: List<PreviousDueCollectionItem>,
+        val staffAdvances: List<StaffAdvanceItem>,
+        val unpaidBills: List<UnpaidBillItem>,
+        val purchasedItems: List<PurchasedInventoryItem>
+    ) {
+        fun isEmpty(): Boolean =
+            cashierName.isBlank() &&
+                openingCashInput.isBlank() &&
+                startingCashInput.isBlank() &&
+                closingCashInput.isBlank() &&
+                actualCashCountInput.isBlank() &&
+                grossCashInput.isBlank() &&
+                madaPaymentsInput.isBlank() &&
+                digitalWalletInput.isBlank() &&
+                totalDiscountsInput.isBlank() &&
+                salesReturnsInput.isBlank() &&
+                (staffMealsCountInput.toIntOrNull() ?: 0) == 0 &&
+                totalExpensesInput.isBlank() &&
+                muasselQtyInput.isBlank() &&
+                outdoorShishaQtyInput.isBlank() &&
+                notesInput.isBlank() &&
+                dueCreditItems.isEmpty() &&
+                previousDueCollections.isEmpty() &&
+                staffAdvances.isEmpty() &&
+                unpaidBills.isEmpty() &&
+                purchasedItems.isEmpty()
+
+        fun toShiftFormState(): ShiftFormState = ShiftFormState(
+            cashier = cashierName,
+            shift = shift,
+            dateMillis = dateInMillis,
+            startingCashInput = openingCashInput,
+            cashReceipts = grossCashInput,
+            madaPayments = madaPaymentsInput,
+            digitalWalletInput = digitalWalletInput,
+            totalDiscountsInput = totalDiscountsInput,
+            salesReturnsInput = salesReturnsInput,
+            actualCashCountInput = closingCashInput,
+            notesInput = notesInput,
+            staffCount = staffMealsCountInput.toIntOrNull() ?: 0,
+            totalExpenses = totalExpensesInput,
+            muassel = muasselQtyInput,
+            outdoorMuassel = outdoorShishaQtyInput,
+            dueCreditItems = dueCreditItems,
+            previousDueCollections = previousDueCollections,
+            staffAdvances = staffAdvances,
+            unpaidBills = unpaidBills,
+            purchasedItems = purchasedItems
+        )
+    }
+
+    private fun currentFormSnapshot(): DraftFormSnapshot = DraftFormSnapshot(
+        cashierName = selectedCashier.value,
+        shift = selectedShift.value,
+        dateInMillis = selectedDateInMillis.value,
+        openingCashInput = openingCashInput.value,
+        startingCashInput = startingCashInput.value,
+        closingCashInput = closingCashInput.value,
+        actualCashCountInput = actualCashCountInput.value,
+        grossCashInput = grossCashInput.value,
+        madaPaymentsInput = madaPaymentsInput.value,
+        digitalWalletInput = digitalWalletInput.value,
+        totalDiscountsInput = totalDiscountsInput.value,
+        salesReturnsInput = salesReturnsInput.value,
+        staffMealsCountInput = staffMealsCountInput.value,
+        totalExpensesInput = totalExpensesInput.value,
+        muasselQtyInput = muasselQtyInput.value,
+        outdoorShishaQtyInput = outdoorShishaQtyInput.value,
+        notesInput = notesInput.value,
+        dueCreditItems = dueCreditItems.value,
+        previousDueCollections = previousDueCollections.value,
+        staffAdvances = staffAdvances.value,
+        unpaidBills = unpaidBills.value,
+        purchasedItems = purchasedItems.value
+    )
+
+    private fun formSnapshotFlow(): Flow<DraftFormSnapshot> {
+        val metaBasic = combine(
+            selectedCashier,
+            selectedShift,
+            selectedDateInMillis,
+            notesInput
+        ) { cashier, shift, date, notes ->
+            DraftMetaSnapshot(
+                cashier = cashier,
+                shift = shift,
+                dateInMillis = date,
+                notes = notes,
+                staffMealsCount = "0",
+                muasselQty = "",
+                outdoorShishaQty = ""
+            )
+        }
+        val metaFull = combine(
+            metaBasic,
+            staffMealsCountInput,
+            muasselQtyInput,
+            outdoorShishaQtyInput
+        ) { meta, meals, muassel, outdoor ->
+            meta.copy(
+                staffMealsCount = meals,
+                muasselQty = muassel,
+                outdoorShishaQty = outdoor
+            )
+        }
+        val amountsA = combine(
+            openingCashInput,
+            startingCashInput,
+            closingCashInput,
+            actualCashCountInput,
+            grossCashInput
+        ) { open, start, close, actual, gross ->
+            DraftAmountsASnapshot(open, start, close, actual, gross)
+        }
+        val amountsB = combine(
+            madaPaymentsInput,
+            digitalWalletInput,
+            totalDiscountsInput,
+            salesReturnsInput,
+            totalExpensesInput
+        ) { mada, wallet, discounts, returns, expenses ->
+            DraftAmountsBSnapshot(mada, wallet, discounts, returns, expenses)
+        }
+        val lists = combine(
+            dueCreditItems,
+            previousDueCollections,
+            staffAdvances,
+            unpaidBills,
+            purchasedItems
+        ) { credits, prevDues, advances, unpaid, purchased ->
+            DraftListsSnapshot(credits, prevDues, advances, unpaid, purchased)
+        }
+        return combine(metaFull, amountsA, amountsB, lists) { meta, a, b, l ->
+            DraftFormSnapshot(
+                cashierName = meta.cashier,
+                shift = meta.shift,
+                dateInMillis = meta.dateInMillis,
+                openingCashInput = a.openingCash,
+                startingCashInput = a.startingCash,
+                closingCashInput = a.closingCash,
+                actualCashCountInput = a.actualCashCount,
+                grossCashInput = a.grossCash,
+                madaPaymentsInput = b.madaPayments,
+                digitalWalletInput = b.digitalWallet,
+                totalDiscountsInput = b.totalDiscounts,
+                salesReturnsInput = b.salesReturns,
+                staffMealsCountInput = meta.staffMealsCount,
+                totalExpensesInput = b.totalExpenses,
+                muasselQtyInput = meta.muasselQty,
+                outdoorShishaQtyInput = meta.outdoorShishaQty,
+                notesInput = meta.notes,
+                dueCreditItems = l.dueCredits,
+                previousDueCollections = l.previousDues,
+                staffAdvances = l.staffAdvances,
+                unpaidBills = l.unpaidBills,
+                purchasedItems = l.purchasedItems
+            )
+        }
+    }
+
+    val draftFormState: StateFlow<ShiftFormState> = formSnapshotFlow()
+        .map { it.toShiftFormState() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ShiftFormState())
+
+    fun consumeDraftRestoredNotice() {
+        _showDraftRestoredNotice.value = false
+    }
+
+    fun discardRestoredDraft() {
+        _showDraftRestoredNotice.value = false
+        clearForm()
+    }
+
     // Add / Remove Handlers for Dynamic Sections
-    fun addDueCreditItem(customerName: String, amount: Double, note: String = "", phone: String = "") {
-        if (customerName.isBlank() || amount <= 0) return
-        dueCreditItems.value = dueCreditItems.value + DueCreditItem(customerName = customerName.trim(), amount = MoneyFormat.toMinorUnits(amount), note = note.trim(), phone = phone.trim())
+    fun addDueCreditItem(
+        customerName: String,
+        amount: Double,
+        digits: Int = MoneyFormat.minorUnitDigits(currentCurrency.value),
+        note: String = "",
+        phone: String = ""
+    ) {
+        if (amount <= 0) return
+        dueCreditItems.value = dueCreditItems.value + DueCreditItem(
+            customerName = customerName.trim(),
+            amount = MoneyFormat.toMinorUnits(amount, digits),
+            note = note.trim(),
+            phone = phone.trim()
+        )
     }
 
     fun removeDueCreditItem(id: String) {
         dueCreditItems.value = dueCreditItems.value.filter { it.id != id }
     }
 
-    fun addPreviousDueCollection(customerName: String, amount: Double, paymentMode: String = "CASH", note: String = "") {
-        if (customerName.isBlank() || amount <= 0) return
-        previousDueCollections.value = previousDueCollections.value + PreviousDueCollectionItem(customerName = customerName.trim(), amount = MoneyFormat.toMinorUnits(amount), paymentMode = paymentMode, note = note.trim())
+    fun addPreviousDueCollection(
+        customerName: String,
+        amount: Double,
+        digits: Int = MoneyFormat.minorUnitDigits(currentCurrency.value),
+        paymentMode: String = "CASH",
+        note: String = ""
+    ) {
+        if (amount <= 0) return
+        previousDueCollections.value = previousDueCollections.value + PreviousDueCollectionItem(
+            customerName = customerName.trim(),
+            amount = MoneyFormat.toMinorUnits(amount, digits),
+            paymentMode = paymentMode,
+            note = note.trim()
+        )
     }
 
     fun removePreviousDueCollection(id: String) {
         previousDueCollections.value = previousDueCollections.value.filter { it.id != id }
     }
 
-    fun addStaffAdvance(staffName: String, amount: Double, reason: String = "", paymentMode: String = "CASH") {
+    fun addStaffAdvance(
+        staffName: String,
+        amount: Double,
+        digits: Int,
+        reason: String = "",
+        paymentMode: String = "CASH"
+    ) {
         if (staffName.isBlank() || amount <= 0) return
         staffAdvances.value = staffAdvances.value + StaffAdvanceItem(
             staffName = staffName.trim(),
-            amount = MoneyFormat.toMinorUnits(amount),
+            amount = staffAdvanceMinor(amount, digits),
             reason = reason.trim(),
             paymentMode = paymentMode
         )
@@ -592,9 +878,22 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         staffAdvances.value = staffAdvances.value.filter { it.id != id }
     }
 
-    fun addUnpaidBill(tableOrOrderRef: String, amount: Double, reason: String = "") {
+    fun clearStaffAdvances() {
+        staffAdvances.value = emptyList()
+    }
+
+    fun addUnpaidBill(
+        tableOrOrderRef: String,
+        amount: Double,
+        digits: Int = MoneyFormat.minorUnitDigits(currentCurrency.value),
+        reason: String = ""
+    ) {
         if (tableOrOrderRef.isBlank() || amount <= 0) return
-        unpaidBills.value = unpaidBills.value + UnpaidBillItem(tableOrOrderRef = tableOrOrderRef.trim(), amount = MoneyFormat.toMinorUnits(amount), reason = reason.trim())
+        unpaidBills.value = unpaidBills.value + UnpaidBillItem(
+            tableOrOrderRef = tableOrOrderRef.trim(),
+            amount = MoneyFormat.toMinorUnits(amount, digits),
+            reason = reason.trim()
+        )
     }
 
     fun removeUnpaidBill(id: String) {
@@ -607,15 +906,16 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         unitPrice: Double = 0.0,
         paidVia: String = "CASH",
         supplier: String = "",
-        totalAmount: Double = 0.0
+        totalAmount: Double = 0.0,
+        digits: Int = MoneyFormat.minorUnitDigits(currentCurrency.value)
     ) {
         if (itemName.isBlank() || totalAmount <= 0) return
         val resolvedUnitPrice = if (unitPrice > 0) unitPrice else if (quantity > 0) (totalAmount / quantity) else 0.0
         purchasedItems.value = purchasedItems.value + PurchasedInventoryItem(
             itemName = itemName.trim(),
             quantity = quantity,
-            unitPrice = MoneyFormat.toMinorUnits(resolvedUnitPrice),
-            totalAmount = MoneyFormat.toMinorUnits(totalAmount),
+            unitPrice = MoneyFormat.toMinorUnits(resolvedUnitPrice, digits),
+            totalAmount = MoneyFormat.toMinorUnits(totalAmount, digits),
             paidVia = paidVia,
             supplier = supplier.trim()
         )
@@ -671,30 +971,64 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         ShiftReportSerializer.deserializePurchased(json)
 
 
+    @OptIn(FlowPreview::class)
+    private fun startDraftAutosave() {
+        autosaveJob?.cancel()
+        autosaveJob = viewModelScope.launch(Dispatchers.IO) {
+            formSnapshotFlow()
+                .drop(1)
+                .debounce(AppConstants.DRAFT_SAVE_DEBOUNCE_MS)
+                .distinctUntilChanged()
+                .collect { snapshot ->
+                    if (!isRestoringDraft) {
+                        saveDraftSilently(snapshot)
+                    }
+                }
+        }
+    }
+
     fun loadDraft() {
         viewModelScope.launch(Dispatchers.IO) {
-            val draft = repository.getDraft()
-            if (draft != null) {
-                selectedCashier.value = draft.cashierName
-                selectedShift.value = draft.shift
-                selectedDateInMillis.value = draft.dateInMillis
-                openingCashInput.value = if (draft.openingCash > 0) draftFieldText(draft.openingCash) else ""
-                closingCashInput.value = if (draft.closingCash > 0) draftFieldText(draft.closingCash) else ""
-                grossCashInput.value = if (draft.grossCash > 0) draftFieldText(draft.grossCash) else ""
-                madaPaymentsInput.value = if (draft.madaPayments > 0) draftFieldText(draft.madaPayments) else ""
-                digitalWalletInput.value = if (draft.digitalWallet > 0) draftFieldText(draft.digitalWallet) else ""
-                totalDiscountsInput.value = if (draft.totalDiscounts > 0) draftFieldText(draft.totalDiscounts) else ""
-                salesReturnsInput.value = if (draft.salesReturns > 0) draftFieldText(draft.salesReturns) else ""
-                staffMealsCountInput.value = draft.staffMealsCount.toString()
-                totalExpensesInput.value = if (draft.totalExpenses > 0) draftFieldText(draft.totalExpenses) else ""
-                muasselQtyInput.value = if (draft.muasselQty > 0) draft.muasselQty.toString() else ""
-                outdoorShishaQtyInput.value = if (draft.outdoorShishaQty > 0) draft.outdoorShishaQty.toString() else ""
-                notesInput.value = draft.notes
-                dueCreditItems.value = deserializeDueCredits(draft.dueCreditEntriesJson)
-                previousDueCollections.value = deserializePrevDues(draft.previousDueCollectionsJson)
-                staffAdvances.value = deserializeAdvances(draft.staffAdvancesJson)
-                unpaidBills.value = deserializeUnpaid(draft.unpaidBillsJson)
-                purchasedItems.value = deserializePurchased(draft.purchasedItemsJson)
+            isRestoringDraft = true
+            try {
+                val draft = repository.getDraft()
+                if (draft != null) {
+                    val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
+                    selectedCashier.value = draft.cashierName
+                    selectedShift.value = draft.shift.ifBlank { "Day" }
+                    selectedDateInMillis.value = draft.dateInMillis
+                    openingCashInput.value = if (draft.openingCash > 0) draftFieldText(draft.openingCash, digits) else ""
+                    closingCashInput.value = if (draft.closingCash > 0) draftFieldText(draft.closingCash, digits) else ""
+                    grossCashInput.value = if (draft.grossCash > 0) draftFieldText(draft.grossCash, digits) else ""
+                    madaPaymentsInput.value = if (draft.madaPayments > 0) draftFieldText(draft.madaPayments, digits) else ""
+                    digitalWalletInput.value = if (draft.digitalWallet > 0) draftFieldText(draft.digitalWallet, digits) else ""
+                    totalDiscountsInput.value = if (draft.totalDiscounts > 0) draftFieldText(draft.totalDiscounts, digits) else ""
+                    salesReturnsInput.value = if (draft.salesReturns > 0) draftFieldText(draft.salesReturns, digits) else ""
+                    staffMealsCountInput.value = draft.staffMealsCount.toString()
+                    totalExpensesInput.value = if (draft.totalExpenses > 0) draftFieldText(draft.totalExpenses, digits) else ""
+                    muasselQtyInput.value = draftQtyText(draft.muasselQty)
+                    outdoorShishaQtyInput.value = draftQtyText(draft.outdoorShishaQty)
+                    notesInput.value = draft.notes
+                    dueCreditItems.value = deserializeDueCredits(draft.dueCreditEntriesJson)
+                    previousDueCollections.value = deserializePrevDues(draft.previousDueCollectionsJson)
+                    staffAdvances.value = deserializeAdvances(draft.staffAdvancesJson)
+                    unpaidBills.value = deserializeUnpaid(draft.unpaidBillsJson)
+                    purchasedItems.value = deserializePurchased(draft.purchasedItemsJson)
+                    startingCashInput.value = ""
+                    actualCashCountInput.value = ""
+
+                    val restoredSnapshot = currentFormSnapshot()
+                    draftMutex.withLock {
+                        lastSavedSnapshot = restoredSnapshot
+                    }
+                    if (!hasShownInitialRestoreNotice && !restoredSnapshot.isEmpty()) {
+                        hasShownInitialRestoreNotice = true
+                        _showDraftRestoredNotice.value = true
+                    }
+                }
+            } finally {
+                isRestoringDraft = false
+                startDraftAutosave()
             }
         }
     }
@@ -715,54 +1049,72 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 isValidDecimal(outdoorShishaQtyInput.value)
     }
 
-    private fun minorFromValidOrEmpty(raw: String): Long = when (val classified = classifyMoneyInput(raw)) {
-        is MoneyInput.Valid -> classified.minor
-        MoneyInput.Empty, MoneyInput.Invalid -> 0L
-    }
-
-    private fun majorFromValidOrEmpty(raw: String): Double = when (val classified = classifyMoneyInput(raw)) {
-        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(classified.minor)
-        MoneyInput.Empty, MoneyInput.Invalid -> 0.0
-    }
-
-    fun saveDraft() {
-        if (!validateAll()) {
-            viewModelScope.launch {
-                _uiMessage.emit(UiText.StringResource(R.string.please_fix_invalid_numeric))
-            }
-            return
+    private fun minorFromValidOrEmpty(raw: String, digits: Int = MoneyFormat.activeDigits): Long =
+        when (val classified = classifyMoneyInput(raw, digits)) {
+            is MoneyInput.Valid -> classified.minor
+            MoneyInput.Empty, MoneyInput.Invalid -> 0L
         }
-        viewModelScope.launch(Dispatchers.IO) {
-            val openingMinor = (classifyMoneyInput(openingCashInput.value) as? MoneyInput.Valid)?.minor
-                ?: minorFromValidOrEmpty(startingCashInput.value)
-            val closingMinor = (classifyMoneyInput(closingCashInput.value) as? MoneyInput.Valid)?.minor
-                ?: minorFromValidOrEmpty(actualCashCountInput.value)
+
+    private fun majorFromValidOrEmpty(raw: String, digits: Int = MoneyFormat.activeDigits): Double =
+        when (val classified = classifyMoneyInput(raw, digits)) {
+            is MoneyInput.Valid -> MoneyFormat.toMajorUnits(classified.minor, digits)
+            MoneyInput.Empty, MoneyInput.Invalid -> 0.0
+        }
+
+    suspend fun saveDraftSilently(snapshot: DraftFormSnapshot = currentFormSnapshot()) {
+        draftMutex.withLock {
+            val empty = snapshot.isEmpty()
+            val changed = snapshot != lastSavedSnapshot
+            if (!shouldWriteDraft(isEmpty = empty, snapshotChanged = changed)) {
+                return
+            }
+            val digits = MoneyFormat.minorUnitDigits(currentCurrency.value)
+            val openingMinor = (classifyMoneyInput(snapshot.openingCashInput, digits) as? MoneyInput.Valid)?.minor
+                ?: minorFromValidOrEmpty(snapshot.startingCashInput, digits)
+            val closingMinor = (classifyMoneyInput(snapshot.closingCashInput, digits) as? MoneyInput.Valid)?.minor
+                ?: minorFromValidOrEmpty(snapshot.actualCashCountInput, digits)
             val draft = DraftReport(
                 id = 1,
-                cashierName = selectedCashier.value,
-                shift = selectedShift.value,
-                dateInMillis = selectedDateInMillis.value,
+                cashierName = snapshot.cashierName,
+                shift = snapshot.shift,
+                dateInMillis = snapshot.dateInMillis,
                 openingCash = openingMinor,
                 closingCash = closingMinor,
-                grossCash = minorFromValidOrEmpty(grossCashInput.value),
-                madaPayments = minorFromValidOrEmpty(madaPaymentsInput.value),
-                digitalWallet = minorFromValidOrEmpty(digitalWalletInput.value),
-                totalDiscounts = minorFromValidOrEmpty(totalDiscountsInput.value),
-                salesReturns = minorFromValidOrEmpty(salesReturnsInput.value),
-                staffMealsCount = staffMealsCountInput.value.toIntOrNull() ?: 0,
-                totalExpenses = minorFromValidOrEmpty(totalExpensesInput.value),
-                muasselQty = muasselQtyInput.value.toDoubleOrNull() ?: 0.0,
-                outdoorShishaQty = outdoorShishaQtyInput.value.toDoubleOrNull() ?: 0.0,
-                dueCreditEntriesJson = serializeDueCredits(dueCreditItems.value),
-                previousDueCollectionsJson = serializePrevDues(previousDueCollections.value),
-                staffAdvancesJson = serializeAdvances(staffAdvances.value),
-                unpaidBillsJson = serializeUnpaid(unpaidBills.value),
-                purchasedItemsJson = serializePurchased(purchasedItems.value),
-                notes = notesInput.value
+                grossCash = minorFromValidOrEmpty(snapshot.grossCashInput, digits),
+                madaPayments = minorFromValidOrEmpty(snapshot.madaPaymentsInput, digits),
+                digitalWallet = minorFromValidOrEmpty(snapshot.digitalWalletInput, digits),
+                totalDiscounts = minorFromValidOrEmpty(snapshot.totalDiscountsInput, digits),
+                salesReturns = minorFromValidOrEmpty(snapshot.salesReturnsInput, digits),
+                staffMealsCount = snapshot.staffMealsCountInput.toIntOrNull() ?: 0,
+                totalExpenses = minorFromValidOrEmpty(snapshot.totalExpensesInput, digits),
+                muasselQty = snapshot.muasselQtyInput.toDoubleOrNull() ?: 0.0,
+                outdoorShishaQty = snapshot.outdoorShishaQtyInput.toDoubleOrNull() ?: 0.0,
+                dueCreditEntriesJson = serializeDueCredits(snapshot.dueCreditItems),
+                previousDueCollectionsJson = serializePrevDues(snapshot.previousDueCollections),
+                staffAdvancesJson = serializeAdvances(snapshot.staffAdvances),
+                unpaidBillsJson = serializeUnpaid(snapshot.unpaidBills),
+                purchasedItemsJson = serializePurchased(snapshot.purchasedItems),
+                notes = snapshot.notesInput
             )
-            repository.saveDraft(draft)
-            _uiMessage.emit(UiText.StringResource(R.string.draft_saved_successfully))
+            try {
+                repository.saveDraft(draft)
+                lastSavedSnapshot = snapshot
+            } catch (e: Exception) {
+                AppLogger.e("ReportViewModel", "Failed to save draft", e)
+                val errorText = e.localizedMessage ?: "Failed to save draft"
+                _draftSaveError.emit(errorText)
+                _uiMessage.emit(UiText.DynamicString(errorText))
+            }
         }
+    }
+
+    suspend fun flushDraft() {
+        autosaveJob?.cancel()
+        val snapshot = currentFormSnapshot()
+        withContext(Dispatchers.IO + NonCancellable) {
+            saveDraftSilently(snapshot)
+        }
+        startDraftAutosave()
     }
 
     fun clearForm() {
@@ -791,117 +1143,24 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         staffAdvances.value = emptyList()
         unpaidBills.value = emptyList()
         purchasedItems.value = emptyList()
+        _showDraftRestoredNotice.value = false
         viewModelScope.launch(Dispatchers.IO) {
-            repository.clearDraft()
-        }
-    }
-
-    fun submitReport(onSuccess: (ShiftReport) -> Unit) {
-        if (!validateAll()) {
-            viewModelScope.launch {
-                _uiMessage.emit(UiText.StringResource(R.string.please_fix_invalid_numeric_1))
+            draftMutex.withLock {
+                repository.clearDraft()
+                lastSavedSnapshot = null
             }
-            return
-        }
-
-        val openingVal = (classifyMoneyInput(openingCashInput.value) as? MoneyInput.Valid)?.let { MoneyFormat.toMajorUnits(it.minor) }
-            ?: majorFromValidOrEmpty(startingCashInput.value)
-        val closingVal = (classifyMoneyInput(closingCashInput.value) as? MoneyInput.Valid)?.let { MoneyFormat.toMajorUnits(it.minor) }
-            ?: majorFromValidOrEmpty(actualCashCountInput.value)
-        val grossVal = majorFromValidOrEmpty(grossCashInput.value)
-        val madaVal = majorFromValidOrEmpty(madaPaymentsInput.value)
-        val walletVal = majorFromValidOrEmpty(digitalWalletInput.value)
-        val discountsVal = majorFromValidOrEmpty(totalDiscountsInput.value)
-        val returnsVal = majorFromValidOrEmpty(salesReturnsInput.value)
-        val expVal = majorFromValidOrEmpty(totalExpensesInput.value)
-        val muasselVal = muasselQtyInput.value.toDoubleOrNull() ?: 0.0
-        val outdoorVal = outdoorShishaQtyInput.value.toDoubleOrNull() ?: 0.0
-
-        if (openingVal == 0.0 && closingVal == 0.0 && grossVal == 0.0 && madaVal == 0.0 && walletVal == 0.0 &&
-            discountsVal == 0.0 && returnsVal == 0.0 && expVal == 0.0 &&
-            staffMealsCountInput.value.toIntOrNull() == 0 && muasselVal == 0.0 && outdoorVal == 0.0 &&
-            dueCreditItems.value.isEmpty() && previousDueCollections.value.isEmpty() &&
-            staffAdvances.value.isEmpty() && unpaidBills.value.isEmpty() && purchasedItems.value.isEmpty()
-        ) {
-            viewModelScope.launch {
-                _uiMessage.emit(UiText.StringResource(R.string.please_enter_shift_sales))
-            }
-            return
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val cashier = if (selectedCashier.value.isBlank()) "Standard Cashier" else selectedCashier.value
-            val actualCountVal = if (closingVal > 0.0) closingVal else MoneyFormat.parseMoneyInput(actualCashCountInput.value)?.let { MoneyFormat.toMajorUnits(it) }
-            val digits = MoneyFormat.minorUnitDigits(syncManager.currentCurrency.value)
-            val noteParts = mutableListOf<String>()
-            if (openingVal > 0.0) {
-                noteParts.add("Starting Float: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(openingVal, digits), digits)}")
-            }
-            if (actualCountVal != null && actualCountVal > 0.0) {
-                noteParts.add("Actual Cash Count: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(actualCountVal, digits), digits)}")
-            }
-            if (managerSignedBy.value != null) {
-                noteParts.add("Manager Signed: ${managerSignedBy.value}")
-            }
-            if (notesInput.value.isNotBlank()) {
-                noteParts.add(notesInput.value)
-            }
-            val formattedNotes = noteParts.joinToString(" | ")
-
-            val report = ShiftReport(
-                cashierName = cashier,
-                shift = selectedShift.value,
-                dateInMillis = selectedDateInMillis.value,
-                openingCash = MoneyFormat.toMinorUnits(openingVal),
-                closingCash = MoneyFormat.toMinorUnits(closingVal),
-                grossCash = MoneyFormat.toMinorUnits(grossVal),
-                madaPayments = MoneyFormat.toMinorUnits(madaVal),
-                digitalWallet = MoneyFormat.toMinorUnits(walletVal),
-                totalDiscounts = MoneyFormat.toMinorUnits(discountsVal),
-                salesReturns = MoneyFormat.toMinorUnits(returnsVal),
-                staffMealsCount = staffMealsCountInput.value.toIntOrNull() ?: 0,
-                totalExpenses = MoneyFormat.toMinorUnits(expVal),
-                muasselQty = muasselVal,
-                outdoorShishaQty = outdoorVal,
-                dueCreditEntriesJson = serializeDueCredits(dueCreditItems.value),
-                previousDueCollectionsJson = serializePrevDues(previousDueCollections.value),
-                staffAdvancesJson = serializeAdvances(staffAdvances.value),
-                unpaidBillsJson = serializeUnpaid(unpaidBills.value),
-                purchasedItemsJson = serializePurchased(purchasedItems.value),
-                notes = formattedNotes,
-                isLocked = false,
-                managerSignedBy = null,
-                managerSignTime = null
-            )
-            repository.insertReport(report)
-            reportDao.insertAuditLog(
-                AuditLog(
-                    username = cashier,
-                    action = if (report.isLocked) "LOCK_AND_FINALIZE_SHIFT" else "SUBMIT_REPORT",
-                    details = "Submitted ${report.shift} shift report. Net Sales: ${report.netSales}, Discrepancy: ${report.cashDiscrepancy} (${if (report.isExcess) "Excess" else if (report.isShortage) "Shortage" else "Balanced"}), Locked: ${report.isLocked}"
-                )
-            )
-
-            // Trigger Push Notification for Daily Report
-            val curr = syncManager.currentCurrency.value
-            NotificationHelper.sendShiftSummaryNotification(
-                context,
-                report.cashierName,
-                report.shift,
-                MoneyFormat.toMajorUnits(report.totalSales),
-                MoneyFormat.toMajorUnits(report.netCash),
-                curr
-            )
-
-            clearForm()
-            _uiMessage.emit(UiText.StringResource(R.string.shift_report_submitted_successfully))
-            withContext(Dispatchers.Main) { onSuccess(report) }
         }
     }
 
     fun saveShiftReportDirect(report: ShiftReport, onSuccess: (ShiftReport) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertReport(report)
+            draftMutex.withLock {
+                repository.clearDraft()
+                lastSavedSnapshot = null
+            }
+            staffAdvances.value = emptyList()
+            _showDraftRestoredNotice.value = false
             reportDao.insertAuditLog(
                 AuditLog(
                     username = report.cashierName,
@@ -951,8 +1210,10 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     // Shift Drawer Operations (Open Shift / Close Shift / Pay In / Pay Out)
     fun openShift(cashierName: String, shiftName: String, startingCash: Double) {
         viewModelScope.launch(Dispatchers.IO) {
+            val curr = syncManager.currentCurrency.value
+            val digits = MoneyFormat.minorUnitDigits(curr)
             serialUpdater.update {
-                val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
+                val startingCashMinor = MoneyFormat.toMinorUnits(startingCash, digits)
                 val newSession = ShiftSession(
                     cashierName = cashierName.ifBlank { "Cashier" },
                     shiftName = shiftName,
@@ -970,8 +1231,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 )
             }
-            val curr = syncManager.currentCurrency.value
-            val digits = MoneyFormat.minorUnitDigits(curr)
             NotificationHelper.sendShiftOpenedNotification(context, cashierName, startingCash, curr)
             _uiMessage.emit(
                 UiText.StringResource(
@@ -985,11 +1244,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun closeShift(session: ShiftSession, actualCashCount: Double, notes: String) {
         viewModelScope.launch(Dispatchers.IO) {
+            val curr = syncManager.currentCurrency.value
+            val digits = MoneyFormat.minorUnitDigits(curr)
             val (latestSession, varianceMinor, varianceMajor) = serialUpdater.update {
                 val currentSession = reportDao.getActiveShiftSessionOnce()?.takeIf { it.id == session.id } ?: session
-                val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount)
+                val actualCashCountMinor = MoneyFormat.toMinorUnits(actualCashCount, digits)
                 val vMinor = MoneyFormat.calculateVarianceMinor(actualCashCountMinor, currentSession.expectedCash)
-                val vMajor = MoneyFormat.toMajorUnits(vMinor)
+                val vMajor = MoneyFormat.toMajorUnits(vMinor, digits)
                 val updated = currentSession.copy(
                     status = "CLOSED",
                     closedAt = System.currentTimeMillis(),
@@ -1016,8 +1277,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 )
             }
-            val curr = syncManager.currentCurrency.value
-            val digits = MoneyFormat.minorUnitDigits(curr)
             NotificationHelper.sendShiftClosedNotification(context, latestSession.cashierName, varianceMajor, curr)
             _uiMessage.emit(
                 UiText.StringResource(
@@ -1042,11 +1301,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         onReportCreated: (ShiftReport) -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            val curr = syncManager.currentCurrency.value
+            val digits = MoneyFormat.minorUnitDigits(curr)
             val (latestSession, actualCashCountMinor, variancePair) = serialUpdater.update {
                 val currentSession = reportDao.getActiveShiftSessionOnce()?.takeIf { it.id == session.id } ?: session
-                val actualMinor = MoneyFormat.toMinorUnits(actualCashCount)
+                val actualMinor = MoneyFormat.toMinorUnits(actualCashCount, digits)
                 val vMinor = MoneyFormat.calculateVarianceMinor(actualMinor, currentSession.expectedCash)
-                val vMajor = MoneyFormat.toMajorUnits(vMinor)
+                val vMajor = MoneyFormat.toMajorUnits(vMinor, digits)
                 val updated = currentSession.copy(
                     status = "CLOSED",
                     closedAt = System.currentTimeMillis(),
@@ -1094,8 +1355,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 )
             }
 
-            val curr = syncManager.currentCurrency.value
-            val digits = MoneyFormat.minorUnitDigits(curr)
             NotificationHelper.sendShiftClosedNotification(context, latestSession.cashierName, varianceMajor, curr)
             _uiMessage.emit(
                 UiText.StringResource(
@@ -1117,10 +1376,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun addCashMovement(type: String, amount: Double, reason: String, cashierName: String) {
         viewModelScope.launch(Dispatchers.IO) {
+            val digits = MoneyFormat.minorUnitDigits(syncManager.currentCurrency.value)
             serialUpdater.update {
                 val active = reportDao.getActiveShiftSessionOnce() ?: activeShiftSession.value
                 val sessionId = active?.id ?: 0
-                val amountMinor = MoneyFormat.toMinorUnits(amount)
+                val amountMinor = MoneyFormat.toMinorUnits(amount, digits)
                 reportDao.insertCashMovement(
                     CashMovement(
                         shiftSessionId = sessionId,
@@ -1142,7 +1402,6 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                     reportDao.updateShiftSession(active.copy(totalPayIn = newPayIn, totalPayOut = newPayOut, expectedCash = newExpected))
                 }
             }
-            val digits = MoneyFormat.minorUnitDigits(syncManager.currentCurrency.value)
             _uiMessage.emit(
                 UiText.StringResource(
                     R.string.toast_movement_recorded,

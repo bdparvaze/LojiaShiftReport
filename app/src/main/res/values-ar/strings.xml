@@ -393,6 +393,7 @@
     <string name="total_issued_due">إجمالي الديون الصادرة</string>
     <string name="total_collected">إجمالي المحصل</string>
     <string name="net_outstanding_due">صافي الديون المتبقية</string>
+    <string name="due_extra_collected_label">مبلغ مدفوع زائد</string>
     <string name="deduct_auto_hint">يتم خصم التحصيلات تلقائياً من نفس رقم الفاتورة</string>
     <string name="receipt_breakdown_count">تفاصيل سجل الفواتير (%d)</string>
     <string name="no_due_records">لا يوجد سجل ديون</string>
@@ -404,7 +405,8 @@
     <string name="issued_due">دين صادر</string>
     <string name="collected_minus">محصل (-)</string>
     <string name="net_remaining">المتبقي الصافي</string>
-    <string name="total_advances">إجمالي السلفيات</string>
+    <string name="employee_advance_subtitle">الراتب %1$s • سلف هذا الشهر %2$s • الرصيد %3$s</string>
+    <string name="employee_name_exists_error">يوجد موظف بهذا الاسم بالفعل</string>
     <string name="cash_bank_label">نقدي / بنك</string>
     <string name="employer_advances_count">سجل سلفيات الموظفين (%d)</string>
     <string name="no_employer_advance_records">لا توجد سجلات سلفيات</string>
@@ -1769,4 +1771,8 @@
     <string name="amount_comma_hint">استخدم النقطة العشرية (.) بدلاً من الفاصلة كفاصل للآلاف.</string>
     <string name="currency_locked_message">تم قفل العملة لأن قاعدة البيانات تحتوي على سجلات مالية. لتغيير العملة، امسح جميع البيانات من النسخ الاحتياطي وإعادة الضبط.</string>
     <string name="advance_over_salary_error">لا يمكن أن تتجاوز السلفة الراتب الشهري للموظف (%1$s)</string>
+    <string name="no_cashiers_dropdown_hint">لا يوجد كاشير متاح. أضف واحداً من الإعدادات.</string>
+    <string name="draft_restored_message">تمت استعادة وردية غير مكتملة</string>
+    <string name="draft_discard_action">تجاهل</string>
+    <string name="employee_name_hint">مثال: الاسم الكامل</string>
 </resources>

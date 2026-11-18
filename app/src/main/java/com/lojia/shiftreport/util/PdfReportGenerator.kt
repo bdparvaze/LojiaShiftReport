@@ -65,20 +65,20 @@ object PdfReportGenerator {
     private data class WalkoutEntry(val tableOrOrderRef: String, val amount: Long)
     private data class PurchasedItemEntry(val itemName: String, val quantity: Double, val unitPrice: Long, val totalAmount: Long)
 
-    private fun getLongAmount(obj: org.json.JSONObject, key: String, default: Long = 0L): Long {
+    internal fun getLongAmount(obj: org.json.JSONObject, key: String, default: Long = 0L, digits: Int): Long {
         if (!obj.has(key)) return default
         val value = obj.get(key)
         if (value is Number) {
             val d = value.toDouble()
             if (value is Double && d % 1.0 != 0.0) {
-                return MoneyFormat.toMinorUnits(d)
+                return MoneyFormat.toMinorUnits(d, digits)
             }
             return value.toLong()
         }
         return default
     }
 
-    private fun parseDueCreditEntries(context: Context, jsonStr: String): List<DueCreditEntry> {
+    private fun parseDueCreditEntries(context: Context, jsonStr: String, digits: Int): List<DueCreditEntry> {
         val list = mutableListOf<DueCreditEntry>()
         try {
             if (jsonStr.isBlank() || jsonStr == "[]") return list
@@ -111,7 +111,7 @@ object PdfReportGenerator {
                     DueCreditEntry(
                         receiptNo = displayReceipt,
                         customerName = customerLabel,
-                        amount = getLongAmount(obj, "amount", 0L)
+                        amount = getLongAmount(obj, "amount", 0L, digits)
                     )
                 )
             }
@@ -121,7 +121,7 @@ object PdfReportGenerator {
         return list
     }
 
-    private fun parseDueCollectionEntries(context: Context, jsonStr: String): List<DueCollectionEntry> {
+    private fun parseDueCollectionEntries(context: Context, jsonStr: String, digits: Int): List<DueCollectionEntry> {
         val list = mutableListOf<DueCollectionEntry>()
         try {
             if (jsonStr.isBlank() || jsonStr == "[]") return list
@@ -154,7 +154,7 @@ object PdfReportGenerator {
                     DueCollectionEntry(
                         receiptNo = displayReceipt,
                         customerName = customerLabel,
-                        amount = getLongAmount(obj, "amount", 0L),
+                        amount = getLongAmount(obj, "amount", 0L, digits),
                         paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH"))
                     )
                 )
@@ -165,7 +165,7 @@ object PdfReportGenerator {
         return list
     }
 
-    private fun parseStaffAdvanceEntries(jsonStr: String): List<StaffAdvanceEntry> {
+    private fun parseStaffAdvanceEntries(jsonStr: String, digits: Int): List<StaffAdvanceEntry> {
         val list = mutableListOf<StaffAdvanceEntry>()
         try {
             if (jsonStr.isBlank() || jsonStr == "[]") return list
@@ -175,7 +175,7 @@ object PdfReportGenerator {
                 list.add(
                     StaffAdvanceEntry(
                         staffName = obj.optString("staffName", obj.optString("name", "Staff")),
-                        amount = getLongAmount(obj, "amount", 0L),
+                        amount = getLongAmount(obj, "amount", 0L, digits),
                         paymentMode = obj.optString("paymentMode", obj.optString("type", "CASH"))
                     )
                 )
@@ -186,7 +186,7 @@ object PdfReportGenerator {
         return list
     }
 
-    private fun parseWalkoutEntries(jsonStr: String): List<WalkoutEntry> {
+    private fun parseWalkoutEntries(jsonStr: String, digits: Int): List<WalkoutEntry> {
         val list = mutableListOf<WalkoutEntry>()
         try {
             if (jsonStr.isBlank() || jsonStr == "[]") return list
@@ -196,7 +196,7 @@ object PdfReportGenerator {
                 list.add(
                     WalkoutEntry(
                         tableOrOrderRef = obj.optString("tableOrOrderRef", obj.optString("name", obj.optString("description", "Walkout"))),
-                        amount = getLongAmount(obj, "amount", 0L)
+                        amount = getLongAmount(obj, "amount", 0L, digits)
                     )
                 )
             }
@@ -206,7 +206,7 @@ object PdfReportGenerator {
         return list
     }
 
-    private fun parsePurchasedItems(jsonStr: String): List<PurchasedItemEntry> {
+    private fun parsePurchasedItems(jsonStr: String, digits: Int): List<PurchasedItemEntry> {
         val list = mutableListOf<PurchasedItemEntry>()
         try {
             if (jsonStr.isBlank() || jsonStr == "[]") return list
@@ -217,8 +217,8 @@ object PdfReportGenerator {
                     PurchasedItemEntry(
                         itemName = obj.optString("itemName", obj.optString("name", "Item")),
                         quantity = obj.optDouble("quantity", obj.optDouble("qty", 0.0)),
-                        unitPrice = getLongAmount(obj, "unitPrice", 0L),
-                        totalAmount = getLongAmount(obj, "totalAmount", getLongAmount(obj, "amount", 0L))
+                        unitPrice = getLongAmount(obj, "unitPrice", 0L, digits),
+                        totalAmount = getLongAmount(obj, "totalAmount", getLongAmount(obj, "amount", 0L, digits), digits)
                     )
                 )
             }
@@ -276,11 +276,7 @@ object PdfReportGenerator {
     )
 
     private fun getLocalizedContext(context: Context, language: AppLanguage): Context {
-        val locale = try {
-            java.util.Locale.forLanguageTag(language.code)
-        } catch (_: Exception) {
-            java.util.Locale(language.code)
-        }
+        val locale = java.util.Locale.forLanguageTag(language.code)
         val config = android.content.res.Configuration(context.resources.configuration)
         config.setLocale(locale)
         return context.createConfigurationContext(config)
@@ -371,17 +367,11 @@ object PdfReportGenerator {
     fun extractActualCashFromNotes(notes: String): Double? =
         PdfNotesParser.extractActualCashFromNotes(notes)
 
-    fun extractStartingCashMinor(report: ShiftReport): Long =
-        PdfNotesParser.extractStartingCashMinor(report)
+    fun extractStartingCashMinor(report: ShiftReport, digits: Int): Long =
+        PdfNotesParser.extractStartingCashMinor(report, digits)
 
-    fun extractStartingCashMinor(notes: String): Long? =
-        PdfNotesParser.extractStartingCashMinor(notes)
-
-    fun extractActualCashMinor(report: ShiftReport): Long? =
-        PdfNotesParser.extractActualCashMinor(report)
-
-    fun extractActualCashMinor(notes: String): Long? =
-        PdfNotesParser.extractActualCashMinor(notes)
+    fun extractActualCashMinor(report: ShiftReport, digits: Int): Long? =
+        PdfNotesParser.extractActualCashMinor(report, digits)
 
     fun cleanDisplayNotes(notes: String): String =
         PdfNotesParser.cleanDisplayNotes(notes)
@@ -397,9 +387,10 @@ object PdfReportGenerator {
         val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
         val vatNo = vatNumberForPrint(businessProfile?.vatNumber)
         val pStr = getPdfStrings(context, language)
+        val digits = MoneyFormat.minorUnitDigits(currency)
 
-        val startingCash = if (report.openingCash > 0L) report.openingCash else extractStartingCashMinor(report)
-        val actualCashCount = if (report.closingCash > 0L) report.closingCash else extractActualCashMinor(report)
+        val startingCash = if (report.openingCash > 0L) report.openingCash else extractStartingCashMinor(report, digits)
+        val actualCashCount = if (report.closingCash > 0L) report.closingCash else extractActualCashMinor(report, digits)
         val cashIn = report.totalDueCollectedCash
         val cashOut = report.totalCashOut
         val expectedCashInDrawer = MoneyFormat.calculateExpectedCashMinor(
@@ -410,8 +401,9 @@ object PdfReportGenerator {
         )
         val variance = actualCashCount?.let { MoneyFormat.calculateVarianceMinor(it, expectedCashInDrawer) }
 
-        val dueCreditEntries = parseDueCreditEntries(context, report.dueCreditEntriesJson)
+        val dueCreditEntries = parseDueCreditEntries(context, report.dueCreditEntriesJson, digits)
         val displayNotes = cleanDisplayNotes(report.notes)
+        val receiptLocale = Locale.forLanguageTag(language.code)
 
         return buildString {
             appendLine("=== $bizName ===")
@@ -423,37 +415,37 @@ object PdfReportGenerator {
             appendLine("${pStr.shift}: ${getLocalizedShiftName(language, report.shift)} | ${pStr.cashier}: ${report.cashierName}")
             appendLine("--------------------------------")
             appendLine("[1. SALES SUMMARY]")
-            appendLine("${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, Locale.US)}")
-            appendLine("${pStr.cardMadaSales}: ${MoneyFormat.formatMinor(report.madaPayments, currency, Locale.US)}")
+            appendLine("${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, receiptLocale)}")
+            appendLine("${pStr.cardMadaSales}: ${MoneyFormat.formatMinor(report.madaPayments, currency, receiptLocale)}")
             if (report.digitalWallet > 0L) {
-                appendLine("${pStr.digitalWallet}: ${MoneyFormat.formatMinor(report.digitalWallet, currency, Locale.US)}")
+                appendLine("${pStr.digitalWallet}: ${MoneyFormat.formatMinor(report.digitalWallet, currency, receiptLocale)}")
             }
-            appendLine("${pStr.grossTotalSales}: ${MoneyFormat.formatMinor(report.totalSales, currency, Locale.US)}")
+            appendLine("${pStr.grossTotalSales}: ${MoneyFormat.formatMinor(report.totalSales, currency, receiptLocale)}")
             appendLine("--------------------------------")
             appendLine("[2. CASH DRAWER RECONCILIATION]")
             if (startingCash > 0L) {
-                appendLine("${pStr.startingCash}: ${MoneyFormat.formatMinor(startingCash, currency, Locale.US)}")
+                appendLine("${pStr.startingCash}: ${MoneyFormat.formatMinor(startingCash, currency, receiptLocale)}")
             }
-            appendLine("(+) ${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, Locale.US)}")
+            appendLine("(+) ${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, receiptLocale)}")
             if (cashIn > 0L) {
-                appendLine("(+) ${pStr.cashIn}: ${MoneyFormat.formatMinor(cashIn, currency, Locale.US)}")
+                appendLine("(+) ${pStr.cashIn}: ${MoneyFormat.formatMinor(cashIn, currency, receiptLocale)}")
             }
-            appendLine("(-) ${pStr.cashOut}: ${MoneyFormat.formatMinor(cashOut, currency, Locale.US)}")
-            appendLine("${pStr.expectedCashInDrawer}: ${MoneyFormat.formatMinor(expectedCashInDrawer, currency, Locale.US)}")
+            appendLine("(-) ${pStr.cashOut}: ${MoneyFormat.formatMinor(cashOut, currency, receiptLocale)}")
+            appendLine("${pStr.expectedCashInDrawer}: ${MoneyFormat.formatMinor(expectedCashInDrawer, currency, receiptLocale)}")
             if (actualCashCount != null) {
-                appendLine("${pStr.actualCashCount}: ${MoneyFormat.formatMinor(actualCashCount, currency, Locale.US)}")
+                appendLine("${pStr.actualCashCount}: ${MoneyFormat.formatMinor(actualCashCount, currency, receiptLocale)}")
                 val varStr = if (variance != null) {
                     when {
-                        variance == 0L -> "${MoneyFormat.formatMinor(0L, currency, Locale.US)} (Balanced)"
-                        variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency, Locale.US)} (Over)"
-                        else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency, Locale.US)} (Short)"
+                        variance == 0L -> "${MoneyFormat.formatMinor(0L, currency, receiptLocale)} (Balanced)"
+                        variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency, receiptLocale)} (Over)"
+                        else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency, receiptLocale)} (Short)"
                     }
                 } else "N/A"
                 appendLine("${pStr.variance}: $varStr")
             }
             appendLine("--------------------------------")
             appendLine("[3. OTHER TRACKING]")
-            appendLine("${pStr.dueSales}: ${MoneyFormat.formatMinor(report.totalDueCredit, currency, Locale.US)} (${dueCreditEntries.size})")
+            appendLine("${pStr.dueSales}: ${MoneyFormat.formatMinor(report.totalDueCredit, currency, receiptLocale)} (${dueCreditEntries.size})")
             appendLine("${pStr.staffMeals}: ${report.staffMealsCount}")
             if (displayNotes.isNotBlank()) {
                 appendLine("${pStr.notes}: $displayNotes")
@@ -828,10 +820,11 @@ object PdfReportGenerator {
         PdfFontManager.init(context)
         val pStr = getPdfStrings(context, language)
         val currency = MoneyFormat.resolveCurrency(businessProfile?.currency)
+        val digits = MoneyFormat.minorUnitDigits(currency)
 
         // Starting Cash & Actual Cash: prioritize dedicated ShiftReport fields, fallback to notes parser
-        val startingCash = if (report.openingCash > 0L) report.openingCash else extractStartingCashMinor(report)
-        val actualCashCount = if (report.closingCash > 0L) report.closingCash else extractActualCashMinor(report)
+        val startingCash = if (report.openingCash > 0L) report.openingCash else extractStartingCashMinor(report, digits)
+        val actualCashCount = if (report.closingCash > 0L) report.closingCash else extractActualCashMinor(report, digits)
         val cashIn = report.totalDueCollectedCash
         val cashOut = report.totalCashOut
         val expectedCashInDrawer = MoneyFormat.calculateExpectedCashMinor(
@@ -843,11 +836,11 @@ object PdfReportGenerator {
         val variance = actualCashCount?.let { MoneyFormat.calculateVarianceMinor(it, expectedCashInDrawer) }
 
         val localizedPdfContext = getLocalizedContext(context, language)
-        val dueCreditEntries = parseDueCreditEntries(localizedPdfContext, report.dueCreditEntriesJson)
-        val dueCollectionEntries = parseDueCollectionEntries(localizedPdfContext, report.previousDueCollectionsJson)
-        val staffAdvanceEntries = parseStaffAdvanceEntries(report.staffAdvancesJson)
-        val walkoutEntries = parseWalkoutEntries(report.unpaidBillsJson)
-        val purchasedItems = parsePurchasedItems(report.purchasedItemsJson)
+        val dueCreditEntries = parseDueCreditEntries(localizedPdfContext, report.dueCreditEntriesJson, digits)
+        val dueCollectionEntries = parseDueCollectionEntries(localizedPdfContext, report.previousDueCollectionsJson, digits)
+        val staffAdvanceEntries = parseStaffAdvanceEntries(report.staffAdvancesJson, digits)
+        val walkoutEntries = parseWalkoutEntries(report.unpaidBillsJson, digits)
+        val purchasedItems = parsePurchasedItems(report.purchasedItemsJson, digits)
         val displayNotes = cleanDisplayNotes(report.notes)
 
         val hasAnnex = dueCreditEntries.isNotEmpty() ||

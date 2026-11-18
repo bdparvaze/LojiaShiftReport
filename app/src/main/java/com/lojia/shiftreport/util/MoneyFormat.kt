@@ -31,22 +31,22 @@ object MoneyFormat {
     const val DEFAULT_CURRENCY_SYMBOL = AppConstants.DEFAULT_CURRENCY_SYMBOL
 
     @Volatile
-    var activeDigits: Int = 2
+    var activeDigits: Int = AppConstants.ISO_DEFAULT_MINOR_DIGITS
 
     /**
      * Single source of truth for decimal places (minor unit digits) by ISO 4217 currency code.
      * KWD, BHD, OMR = 3; JPY = 0; blank/null or unknown = 2; others use ISO default.
      */
     fun minorUnitDigits(currencyCode: String?): Int {
-        if (currencyCode.isNullOrBlank()) return 2
+        if (currencyCode.isNullOrBlank()) return AppConstants.ISO_DEFAULT_MINOR_DIGITS
         return when (val upper = currencyCode.trim().uppercase(Locale.US)) {
             "KWD", "BHD", "OMR" -> 3
             "JPY" -> 0
             else -> try {
                 val fractionDigits = Currency.getInstance(upper).defaultFractionDigits
-                if (fractionDigits < 0) 2 else fractionDigits
+                if (fractionDigits < 0) AppConstants.ISO_DEFAULT_MINOR_DIGITS else fractionDigits
             } catch (_: Exception) {
-                2
+                AppConstants.ISO_DEFAULT_MINOR_DIGITS
             }
         }
     }

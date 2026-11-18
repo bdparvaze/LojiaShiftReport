@@ -393,6 +393,7 @@
     <string name="total_issued_due">মোট প্রদত্ত বাকি</string>
     <string name="total_collected">মোট আদায়কৃত</string>
     <string name="net_outstanding_due">অবশিষ্ট বকেয়া</string>
+    <string name="due_extra_collected_label">অতিরিক্ত জমা</string>
     <string name="deduct_auto_hint">একই রসিদ নম্বরের আদায় স্বয়ংক্রিয়ভাবে সমন্বয় করা হয়</string>
     <string name="receipt_breakdown_count">রসিদ লেজার বিবরণ (%d)</string>
     <string name="no_due_records">কোনো বকেয়া রেকর্ড পাওয়া যায়নি</string>
@@ -404,7 +405,8 @@
     <string name="issued_due">প্রদত্ত বাকি</string>
     <string name="collected_minus">আদায়কৃত (-)</string>
     <string name="net_remaining">অবশিষ্ট নেট</string>
-    <string name="total_advances">মোট অ্যাডভান্স</string>
+    <string name="employee_advance_subtitle">আয় %1$s • এই মাসের অগ্রিম %2$s • বাকি %3$s</string>
+    <string name="employee_name_exists_error">এই নামের একজন কর্মচারী আগে থেকেই আছে</string>
     <string name="cash_bank_label">নগদ / ব্যাংক</string>
     <string name="employer_advances_count">এমপ্লয়ার অ্যাডভান্স লেনদেন (%d)</string>
     <string name="no_employer_advance_records">কোনো এমপ্লয়ার অ্যাডভান্স রেকর্ড নেই</string>
@@ -1769,4 +1771,8 @@
     <string name="amount_comma_hint">হাজারের বিভাজক হিসেবে কমার পরিবর্তে দশমিক বিন্দু (.) ব্যবহার করুন।</string>
     <string name="currency_locked_message">ডাটাবেসে আর্থিক রেকর্ড থাকায় মুদ্রা লক করা আছে। মুদ্রা পরিবর্তন করতে ব্যাকআপ ও রিসেট থেকে সব ডাটা মুছে ফেলুন।</string>
     <string name="advance_over_salary_error">অগ্রিম কর্মচারীর মাসিক বেতনের (%1$s) বেশি হতে পারবে না</string>
+    <string name="no_cashiers_dropdown_hint">কোনো ক্যাশিয়ার নেই। সেটিংস থেকে যোগ করুন।</string>
+    <string name="draft_restored_message">অসম্পূর্ণ শিফট ফিরে পাওয়া গেছে</string>
+    <string name="draft_discard_action">বাতিল</string>
+    <string name="employee_name_hint">যেমন: পুরো নাম</string>
 </resources>

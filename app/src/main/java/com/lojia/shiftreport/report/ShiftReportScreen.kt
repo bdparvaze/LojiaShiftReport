@@ -141,6 +141,9 @@ import java.util.*
 
 
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 
 /* ----------------------------------------------------------------------
@@ -160,17 +163,117 @@ fun ShiftReportScreen(
     val cashiersState by viewModel.cashiers.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
     val businessProfile by viewModel.businessProfile.collectAsState()
+    val formState by viewModel.draftFormState.collectAsState()
+    val showDraftRestoredNotice by viewModel.showDraftRestoredNotice.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val restoredMessage = stringResource(R.string.draft_restored_message)
+    val discardAction = stringResource(R.string.draft_discard_action)
+
+    DisposableEffect(lifecycleOwner, viewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                coroutineScope.launch {
+                    viewModel.flushDraft()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(showDraftRestoredNotice) {
+        if (showDraftRestoredNotice) {
+            viewModel.consumeDraftRestoredNotice()
+            val result = snackbarHostState.showSnackbar(
+                message = restoredMessage,
+                actionLabel = discardAction,
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.discardRestoredDraft()
+            }
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.draftSaveError.collect { errMsg ->
+            snackbarHostState.showSnackbar(
+                message = errMsg,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
+    val formActions = remember(viewModel) {
+        ShiftFormActions(
+            onCashierChange = { viewModel.selectedCashier.value = it },
+            onShiftChange = { viewModel.selectedShift.value = it },
+            onDateMillisChange = { viewModel.selectedDateInMillis.value = it },
+            onStartingCashChange = { viewModel.openingCashInput.value = it },
+            onCashReceiptsChange = { viewModel.grossCashInput.value = it },
+            onMadaPaymentsChange = { viewModel.madaPaymentsInput.value = it },
+            onDigitalWalletChange = { viewModel.digitalWalletInput.value = it },
+            onTotalDiscountsChange = { viewModel.totalDiscountsInput.value = it },
+            onSalesReturnsChange = { viewModel.salesReturnsInput.value = it },
+            onActualCashCountChange = { viewModel.closingCashInput.value = it },
+            onNotesChange = { viewModel.notesInput.value = it },
+            onStaffCountChange = { viewModel.staffMealsCountInput.value = it.toString() },
+            onTotalExpensesChange = { viewModel.totalExpensesInput.value = it },
+            onMuasselChange = { viewModel.muasselQtyInput.value = it },
+            onOutdoorMuasselChange = { viewModel.outdoorShishaQtyInput.value = it },
+            onAddDueCredit = { receipt, amount, digits ->
+                viewModel.addDueCreditItem(customerName = receipt, amount = amount, digits = digits)
+            },
+            onRemoveDueCredit = { id -> viewModel.removeDueCreditItem(id) },
+            onAddPreviousDue = { receipt, amount, digits, paymentMode ->
+                viewModel.addPreviousDueCollection(
+                    customerName = receipt,
+                    amount = amount,
+                    digits = digits,
+                    paymentMode = paymentMode
+                )
+            },
+            onRemovePreviousDue = { id -> viewModel.removePreviousDueCollection(id) },
+            onAddStaffAdvance = { name, amount, digits, paymentMode ->
+                viewModel.addStaffAdvance(name, amount, digits, paymentMode = paymentMode)
+            },
+            onRemoveStaffAdvance = { id -> viewModel.removeStaffAdvance(id) },
+            onAddUnpaidBill = { ref, amount, digits ->
+                viewModel.addUnpaidBill(tableOrOrderRef = ref, amount = amount, digits = digits)
+            },
+            onRemoveUnpaidBill = { id -> viewModel.removeUnpaidBill(id) },
+            onAddPurchasedItem = { name, qty, unitPrice, total, digits, paidVia ->
+                viewModel.addPurchasedItem(
+                    itemName = name,
+                    quantity = qty.toDouble(),
+                    unitPrice = unitPrice,
+                    paidVia = paidVia,
+                    totalAmount = total,
+                    digits = digits
+                )
+            },
+            onRemovePurchasedItem = { id -> viewModel.removePurchasedItem(id) },
+            onClearForm = { viewModel.clearForm() }
+        )
+    }
 
     val availableCashiers = remember(cashiersState) {
         val names = cashiersState
             .filter { !it.isArchived && it.isActive && it.active }
             .map { it.name }
             .filter { it.isNotBlank() }
-        if (names.isNotEmpty()) names else listOf("Noora", "Hassan", "Athar")
+        if (names.isNotEmpty()) names else emptyList()
     }
 
     ShiftReportScreenContent(
         shiftReports = shiftReports,
+        formState = formState,
+        formActions = formActions,
+        snackbarHostState = snackbarHostState,
         userProfile = userProfile,
         activeShiftSession = activeShiftSession,
         cashMovements = cashMovements,
@@ -179,76 +282,69 @@ fun ShiftReportScreen(
         currentCurrency = currentCurrency,
         onPreviewPdf = onPreviewPdf,
         onSaveReportData = { data ->
+            val digits = MoneyFormat.minorUnitDigits(currentCurrency)
             val dueJson = org.json.JSONArray().apply {
-                data.creditEntries.forEach { e ->
-                    val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                viewModel.dueCreditItems.value.forEach { item ->
+                    val normReceipt = normalizeReceiptNumber(item.customerName)
                     val customerLabel = when {
                         isUnspecifiedReceipt(normReceipt) -> context.getString(R.string.receipt_unspecified)
                         normReceipt.isNotEmpty() -> context.getString(R.string.receipt_num_tag, normReceipt)
                         else -> ""
                     }
                     put(org.json.JSONObject().apply {
-                        put("receiptNo", e.receiptNo)
+                        put("receiptNo", item.customerName)
                         put("customerName", customerLabel)
-                        put("amount", MoneyFormat.toMinorUnits(e.amount))
+                        put("amount", item.amount)
                     })
                 }
             }.toString()
 
             val prevDueJson = org.json.JSONArray().apply {
-                data.oldDueEntries.forEach { e ->
-                    val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                viewModel.previousDueCollections.value.forEach { item ->
+                    val normReceipt = normalizeReceiptNumber(item.customerName)
                     val customerLabel = when {
                         isUnspecifiedReceipt(normReceipt) -> context.getString(R.string.receipt_unspecified)
                         normReceipt.isNotEmpty() -> context.getString(R.string.receipt_num_tag, normReceipt)
                         else -> ""
                     }
                     put(org.json.JSONObject().apply {
-                        put("receiptNo", e.receiptNo)
+                        put("receiptNo", item.customerName)
                         put("customerName", customerLabel)
-                        put("amount", MoneyFormat.toMinorUnits(e.amount))
-                        put("paymentMode", e.type.name)
+                        put("amount", item.amount)
+                        put("paymentMode", item.paymentMode)
                     })
                 }
             }.toString()
 
-            val staffAdvJson = org.json.JSONArray().apply {
-                data.staffEntries.forEach { e ->
-                    put(org.json.JSONObject().apply {
-                        put("staffName", e.name)
-                        put("amount", MoneyFormat.toMinorUnits(e.amount))
-                        put("paymentMode", e.type.name)
-                    })
-                }
-            }.toString()
+            val staffAdvJson = viewModel.serializeAdvances(viewModel.staffAdvances.value)
 
             val walkoutJson = org.json.JSONArray().apply {
-                data.walkoutEntries.forEach { e ->
+                viewModel.unpaidBills.value.forEach { item ->
                     put(org.json.JSONObject().apply {
-                        put("tableOrOrderRef", e.description)
-                        put("amount", MoneyFormat.toMinorUnits(e.amount))
+                        put("tableOrOrderRef", item.tableOrOrderRef)
+                        put("amount", item.amount)
                     })
                 }
             }.toString()
 
             val itemsJson = org.json.JSONArray().apply {
-                data.itemEntries.forEach { e ->
+                viewModel.purchasedItems.value.forEach { item ->
                     put(org.json.JSONObject().apply {
-                        put("itemName", e.name)
-                        put("quantity", e.qty.toDouble())
-                        put("unitPrice", MoneyFormat.toMinorUnits(e.unitPrice))
-                        put("totalAmount", MoneyFormat.toMinorUnits(e.total))
-                        put("paidVia", e.type.name)
+                        put("itemName", item.itemName)
+                        put("quantity", item.quantity)
+                        put("unitPrice", item.unitPrice)
+                        put("totalAmount", item.totalAmount)
+                        put("paidVia", item.paidVia)
                     })
                 }
             }.toString()
 
             val noteParts = mutableListOf<String>()
             if (data.startingCash > java.math.BigDecimal.ZERO) {
-                noteParts.add("Starting Float: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(data.startingCash))}")
+                noteParts.add("Starting Float: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(data.startingCash, digits), digits)}")
             }
             if (data.actualCash != null) {
-                noteParts.add("Actual Cash Count: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(data.actualCash))}")
+                noteParts.add("Actual Cash Count: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(data.actualCash, digits), digits)}")
             }
             if (data.notes.isNotBlank() && data.notes != "Saved from Shift Closing Ledger") {
                 noteParts.add(data.notes)
@@ -263,15 +359,15 @@ fun ShiftReportScreen(
                 cashierId = resolvedCashierId,
                 shift = data.shift,
                 dateInMillis = data.dateMillis,
-                openingCash = MoneyFormat.toMinorUnits(if (data.openingCash > java.math.BigDecimal.ZERO) data.openingCash else data.startingCash),
-                closingCash = MoneyFormat.toMinorUnits(if (data.closingCash > java.math.BigDecimal.ZERO) data.closingCash else (data.actualCash ?: java.math.BigDecimal.ZERO)),
-                grossCash = MoneyFormat.toMinorUnits(data.cashReceipts),
-                madaPayments = MoneyFormat.toMinorUnits(data.madaPayments),
-                digitalWallet = MoneyFormat.toMinorUnits(data.digitalWallet),
-                totalDiscounts = MoneyFormat.toMinorUnits(data.totalDiscounts),
-                salesReturns = MoneyFormat.toMinorUnits(data.salesReturns),
+                openingCash = MoneyFormat.toMinorUnits(if (data.openingCash > java.math.BigDecimal.ZERO) data.openingCash else data.startingCash, digits),
+                closingCash = MoneyFormat.toMinorUnits(if (data.closingCash > java.math.BigDecimal.ZERO) data.closingCash else (data.actualCash ?: java.math.BigDecimal.ZERO), digits),
+                grossCash = MoneyFormat.toMinorUnits(data.cashReceipts, digits),
+                madaPayments = MoneyFormat.toMinorUnits(data.madaPayments, digits),
+                digitalWallet = MoneyFormat.toMinorUnits(data.digitalWallet, digits),
+                totalDiscounts = MoneyFormat.toMinorUnits(data.totalDiscounts, digits),
+                salesReturns = MoneyFormat.toMinorUnits(data.salesReturns, digits),
                 staffMealsCount = data.staffCount,
-                totalExpenses = MoneyFormat.toMinorUnits(data.totalExpenses),
+                totalExpenses = MoneyFormat.toMinorUnits(data.totalExpenses, digits),
                 muasselQty = data.muassel.toDouble(),
                 outdoorShishaQty = data.outdoorMuassel.toDouble(),
                 dueCreditEntriesJson = dueJson,
@@ -311,10 +407,13 @@ fun ShiftReportScreen(
 @Composable
 fun ShiftReportScreenContent(
     shiftReports: List<ShiftReport> = emptyList(),
+    formState: ShiftFormState = ShiftFormState(),
+    formActions: ShiftFormActions = ShiftFormActions(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     userProfile: com.lojia.shiftreport.data.UserProfile? = null,
     activeShiftSession: ShiftSession? = null,
     cashMovements: List<CashMovement> = emptyList(),
-    cashierOptions: List<String> = listOf("Noora", "Hassan", "Athar"),
+    cashierOptions: List<String> = emptyList(),
     language: AppLanguage = AppLanguage.BENGALI,
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onPreviewPdf: (ShiftReport) -> Unit = {},
@@ -363,17 +462,22 @@ fun ShiftReportScreenContent(
         Icons.Default.FolderZip
     )
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                })
-            }
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    })
+                }
+        ) {
         // ---- SCROLLABLE OPTIONS TAB ROW ----
         Surface(
             color = SurfaceLight,
@@ -448,6 +552,9 @@ fun ShiftReportScreenContent(
                 0 -> ReportEntryTab(
                     cashierOptions = cashierOptions,
                     currentCurrency = currentCurrency,
+                    shiftReports = shiftReports,
+                    formState = formState,
+                    formActions = formActions,
                     onSave = onSaveReportData
                 )
                 1 -> DueLedgerTab(
@@ -475,8 +582,13 @@ fun ShiftReportScreenContent(
                 )
             }
         }
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 76.dp)
+        )
     }
-
-
-
 }

@@ -30,13 +30,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
+import com.lojia.shiftreport.data.ShiftReport
+import com.lojia.shiftreport.data.StaffAdvanceItem
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.EmployeeAdvanceSummary
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
+import com.lojia.shiftreport.util.advancesInMonthMinor
+import com.lojia.shiftreport.util.balanceMinor
 import com.lojia.shiftreport.util.classifyMoneyInput
+import com.lojia.shiftreport.util.currentMonthRange
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
 import com.lojia.shiftreport.util.normalizeReceiptNumber
+import com.lojia.shiftreport.util.normalizeRestoreName
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -50,88 +58,97 @@ import kotlinx.coroutines.launch
 fun ReportEntryTab(
     cashierOptions: List<String>,
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
+    shiftReports: List<ShiftReport> = emptyList(),
+    formState: ShiftFormState = ShiftFormState(),
+    formActions: ShiftFormActions = ShiftFormActions(),
     onSave: (ShiftReportData) -> Unit
 ) {
     val shiftOptions = listOf(stringResource(R.string.shift_day), stringResource(R.string.shift_night_option))
 
-    var cashier by rememberSaveable { mutableStateOf("") }
+    val cashier = formState.cashier
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var shift by rememberSaveable { mutableStateOf("Day") }
-    var dateMillis by rememberSaveable { mutableStateOf(System.currentTimeMillis()) }
+    val shift = formState.shift
+    val dateMillis = formState.dateMillis
 
-    var startingCashInput by rememberSaveable { mutableStateOf("") }
-    var cashReceipts by rememberSaveable { mutableStateOf("") }
-    var madaPayments by rememberSaveable { mutableStateOf("") }
-    var digitalWalletInput by rememberSaveable { mutableStateOf("") }
-    var totalDiscountsInput by rememberSaveable { mutableStateOf("") }
-    var salesReturnsInput by rememberSaveable { mutableStateOf("") }
-    var actualCashCountInput by rememberSaveable { mutableStateOf("") }
-    var notesInput by rememberSaveable { mutableStateOf("") }
+    val startingCashInput = formState.startingCashInput
+    val cashReceipts = formState.cashReceipts
+    val madaPayments = formState.madaPayments
+    val digitalWalletInput = formState.digitalWalletInput
+    val totalDiscountsInput = formState.totalDiscountsInput
+    val salesReturnsInput = formState.salesReturnsInput
+    val actualCashCountInput = formState.actualCashCountInput
+    val notesInput = formState.notesInput
 
-    var isShiftLocked by rememberSaveable { mutableStateOf(false) }
-    var managerSignedBy by rememberSaveable { mutableStateOf<String?>(null) }
-    var managerSignTime by rememberSaveable { mutableStateOf<Long?>(null) }
-    var showManagerLockDialog by rememberSaveable { mutableStateOf(false) }
+    val staffCount = formState.staffCount
+    val totalExpenses = formState.totalExpenses
 
-    var staffCount by rememberSaveable { mutableStateOf(0) }
-    var totalExpenses by rememberSaveable { mutableStateOf("") }
+    val muassel = formState.muassel
+    val outdoorMuassel = formState.outdoorMuassel
 
-    var muassel by rememberSaveable { mutableStateOf("") }
-    var outdoorMuassel by rememberSaveable { mutableStateOf("") }
-
-    val creditEntries = remember { mutableStateListOf<CreditEntry>() }
-    val oldDueEntries = remember { mutableStateListOf<OldDueEntry>() }
-    val staffEntries = remember { mutableStateListOf<StaffEntry>() }
-    val walkoutEntries = remember { mutableStateListOf<WalkoutEntry>() }
-    val itemEntries = remember { mutableStateListOf<ItemEntry>() }
+    val dueCreditItems = formState.dueCreditItems
+    val previousDueCollections = formState.previousDueCollections
+    val staffAdvances = formState.staffAdvances
+    val unpaidBills = formState.unpaidBills
+    val purchasedItems = formState.purchasedItems
 
     var modalType by remember { mutableStateOf(ModalType.NONE) }
     var showResetConfirm by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val invalidAmountError = stringResource(R.string.valid_amount_error)
+    val entryDigits = MoneyFormat.minorUnitDigits(currentCurrency)
 
-    val startingCashClass = classifyMoneyInput(startingCashInput)
-    val cashClass = classifyMoneyInput(cashReceipts)
-    val madaClass = classifyMoneyInput(madaPayments)
-    val digitalWalletClass = classifyMoneyInput(digitalWalletInput)
-    val totalDiscountsClass = classifyMoneyInput(totalDiscountsInput)
-    val salesReturnsClass = classifyMoneyInput(salesReturnsInput)
-    val actualCashClass = classifyMoneyInput(actualCashCountInput)
-    val expensesClass = classifyMoneyInput(totalExpenses)
+    val startingCashClass = classifyMoneyInput(startingCashInput, entryDigits)
+    val cashClass = classifyMoneyInput(cashReceipts, entryDigits)
+    val madaClass = classifyMoneyInput(madaPayments, entryDigits)
+    val digitalWalletClass = classifyMoneyInput(digitalWalletInput, entryDigits)
+    val totalDiscountsClass = classifyMoneyInput(totalDiscountsInput, entryDigits)
+    val salesReturnsClass = classifyMoneyInput(salesReturnsInput, entryDigits)
+    val actualCashClass = classifyMoneyInput(actualCashCountInput, entryDigits)
+    val expensesClass = classifyMoneyInput(totalExpenses, entryDigits)
 
-    fun majorFromClassified(input: MoneyInput): Double = when (input) {
-        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(input.minor)
-        MoneyInput.Empty, MoneyInput.Invalid -> 0.0
+    fun minorFromClassified(input: MoneyInput): Long = when (input) {
+        is MoneyInput.Valid -> input.minor
+        MoneyInput.Empty, MoneyInput.Invalid -> 0L
     }
 
-    val startingCash = majorFromClassified(startingCashClass)
-    val cash = majorFromClassified(cashClass)
-    val mada = majorFromClassified(madaClass)
-    val digitalWallet = majorFromClassified(digitalWalletClass)
-    val totalDiscounts = majorFromClassified(totalDiscountsClass)
-    val salesReturns = majorFromClassified(salesReturnsClass)
+    val startingCashMinor = minorFromClassified(startingCashClass)
+    val cashMinor = minorFromClassified(cashClass)
+    val madaMinor = minorFromClassified(madaClass)
+    val digitalWalletMinor = minorFromClassified(digitalWalletClass)
+    val totalDiscountsMinor = minorFromClassified(totalDiscountsClass)
+    val salesReturnsMinor = minorFromClassified(salesReturnsClass)
     val actualCashMinor = (actualCashClass as? MoneyInput.Valid)?.minor
-    val actualCashVal = actualCashMinor?.let { MoneyFormat.toMajorUnits(it) }
-    val expenses = majorFromClassified(expensesClass)
+    val actualCashVal = actualCashMinor?.let { MoneyFormat.toMajorUnits(it, entryDigits) }
+    val expensesMinor = minorFromClassified(expensesClass)
 
-    val startingCashMinor = MoneyFormat.toMinorUnits(startingCash)
-    val cashMinor = MoneyFormat.toMinorUnits(cash)
-    val madaMinor = MoneyFormat.toMinorUnits(mada)
-    val digitalWalletMinor = MoneyFormat.toMinorUnits(digitalWallet)
-    val totalDiscountsMinor = MoneyFormat.toMinorUnits(totalDiscounts)
-    val salesReturnsMinor = MoneyFormat.toMinorUnits(salesReturns)
-    val expensesMinor = MoneyFormat.toMinorUnits(expenses)
+    val startingCash = MoneyFormat.toMajorUnits(startingCashMinor, entryDigits)
+    val cash = MoneyFormat.toMajorUnits(cashMinor, entryDigits)
+    val mada = MoneyFormat.toMajorUnits(madaMinor, entryDigits)
+    val digitalWallet = MoneyFormat.toMajorUnits(digitalWalletMinor, entryDigits)
+    val totalDiscounts = MoneyFormat.toMajorUnits(totalDiscountsMinor, entryDigits)
+    val salesReturns = MoneyFormat.toMajorUnits(salesReturnsMinor, entryDigits)
+    val expenses = MoneyFormat.toMajorUnits(expensesMinor, entryDigits)
 
-    val totalCreditMinor = MoneyFormat.sumOfMinor(creditEntries.map { MoneyFormat.toMinorUnits(it.amount) })
-    val totalOldDueCashMinor = MoneyFormat.sumOfMinor(oldDueEntries.filter { it.type == PayType.CASH }.map { MoneyFormat.toMinorUnits(it.amount) })
-    val totalOldDueBankMinor = MoneyFormat.sumOfMinor(oldDueEntries.filter { it.type == PayType.BANK }.map { MoneyFormat.toMinorUnits(it.amount) })
-    val totalStaffCashMinor = MoneyFormat.sumOfMinor(staffEntries.filter { it.type == PayType.CASH }.map { MoneyFormat.toMinorUnits(it.amount) })
-    val totalStaffBankMinor = MoneyFormat.sumOfMinor(staffEntries.filter { it.type == PayType.BANK }.map { MoneyFormat.toMinorUnits(it.amount) })
-    val totalWalkoutMinor = MoneyFormat.sumOfMinor(walkoutEntries.map { MoneyFormat.toMinorUnits(it.amount) })
-    val totalItemsCashMinor = MoneyFormat.sumOfMinor(itemEntries.filter { it.type == PayType.CASH }.map { MoneyFormat.toMinorUnits(it.total) })
+    val totalCreditMinor = MoneyFormat.sumOfMinor(dueCreditItems.map { it.amount })
+    val totalOldDueCashMinor = MoneyFormat.sumOfMinor(
+        previousDueCollections.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount }
+    )
+    val totalOldDueBankMinor = MoneyFormat.sumOfMinor(
+        previousDueCollections.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount }
+    )
+    val totalStaffCashMinor = MoneyFormat.sumOfMinor(
+        staffAdvances.filter { it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount }
+    )
+    val totalStaffBankMinor = MoneyFormat.sumOfMinor(
+        staffAdvances.filter { !it.paymentMode.equals("CASH", ignoreCase = true) }.map { it.amount }
+    )
+    val totalWalkoutMinor = MoneyFormat.sumOfMinor(unpaidBills.map { it.amount })
+    val totalItemsCashMinor = MoneyFormat.sumOfMinor(
+        purchasedItems.filter { it.paidVia.equals("CASH", ignoreCase = true) }.map { it.totalAmount }
+    )
 
     // International Standard Formulas
     val totalCashOutMinor = MoneyFormat.addMinor(expensesMinor, totalStaffCashMinor, totalItemsCashMinor)
@@ -153,9 +170,9 @@ fun ReportEntryTab(
             actualCashCountInput.isNotBlank() || notesInput.isNotBlank() ||
             totalExpenses.isNotBlank() || staffCount > 0 ||
             muassel.isNotBlank() || outdoorMuassel.isNotBlank() ||
-            creditEntries.isNotEmpty() || oldDueEntries.isNotEmpty() ||
-            staffEntries.isNotEmpty() || walkoutEntries.isNotEmpty() ||
-            itemEntries.isNotEmpty()
+            dueCreditItems.isNotEmpty() || previousDueCollections.isNotEmpty() ||
+            staffAdvances.isNotEmpty() || unpaidBills.isNotEmpty() ||
+            purchasedItems.isNotEmpty()
 
     val hasInvalidMoneyInput = listOf(
         startingCashClass,
@@ -172,21 +189,13 @@ fun ReportEntryTab(
             cash > 0.0 || mada > 0.0 || digitalWallet > 0.0 || expenses > 0.0 || startingCash > 0.0 ||
             totalDiscounts > 0.0 || salesReturns > 0.0 ||
             (muassel.toIntOrNull() ?: 0) > 0 || (outdoorMuassel.toIntOrNull() ?: 0) > 0 ||
-            creditEntries.isNotEmpty() || oldDueEntries.isNotEmpty() ||
-            staffEntries.isNotEmpty() || walkoutEntries.isNotEmpty() ||
-            itemEntries.isNotEmpty()
+            dueCreditItems.isNotEmpty() || previousDueCollections.isNotEmpty() ||
+            staffAdvances.isNotEmpty() || unpaidBills.isNotEmpty() ||
+            purchasedItems.isNotEmpty()
     )
 
     fun resetAll() {
-        cashier = ""; shift = "Day"; dateMillis = System.currentTimeMillis()
-        startingCashInput = ""; cashReceipts = ""; madaPayments = ""; digitalWalletInput = ""
-        totalDiscountsInput = ""; salesReturnsInput = ""
-        actualCashCountInput = ""; notesInput = ""
-        isShiftLocked = false; managerSignedBy = null; managerSignTime = null
-        staffCount = 0; totalExpenses = ""
-        muassel = ""; outdoorMuassel = ""
-        creditEntries.clear(); oldDueEntries.clear(); staffEntries.clear()
-        walkoutEntries.clear(); itemEntries.clear()
+        formActions.onClearForm()
     }
 
     val dateLabel = remember(dateMillis) {
@@ -239,8 +248,16 @@ fun ReportEntryTab(
                             label = stringResource(R.string.employee_cashier_name),
                             options = listOf(selectCashierText) + cashierOptions,
                             selected = cashier.ifEmpty { selectCashierText },
-                            onSelected = { cashier = if (it == selectCashierText) "" else it }
+                            onSelected = { formActions.onCashierChange(if (it == selectCashierText) "" else it) }
                         )
+                        if (cashierOptions.isEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.no_cashiers_dropdown_hint),
+                                fontSize = 11.sp,
+                                color = ShiftColors.TextMuted
+                            )
+                        }
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(Modifier.weight(1f)) {
@@ -248,7 +265,7 @@ fun ReportEntryTab(
                                     label = stringResource(R.string.shift),
                                     options = shiftOptions,
                                     selected = if (shift == "Day") dayShiftText else stringResource(R.string.shift_night_option),
-                                    onSelected = { shift = if (it == dayShiftText) "Day" else "Night" }
+                                    onSelected = { formActions.onShiftChange(if (it == dayShiftText) "Day" else "Night") }
                                 )
                             }
                             Box(Modifier.weight(1f)) {
@@ -298,14 +315,14 @@ fun ReportEntryTab(
                             NumberField(
                                 stringResource(R.string.starting_cash),
                                 startingCashInput,
-                                { startingCashInput = it },
+                                formActions.onStartingCashChange,
                                 Modifier.weight(1f),
                                 errorText = if (startingCashClass is MoneyInput.Invalid) invalidAmountError else null
                             )
                             NumberField(
                                 stringResource(R.string.cash),
                                 cashReceipts,
-                                { cashReceipts = it },
+                                formActions.onCashReceiptsChange,
                                 Modifier.weight(1f),
                                 errorText = if (cashClass is MoneyInput.Invalid) invalidAmountError else null
                             )
@@ -315,14 +332,14 @@ fun ReportEntryTab(
                             NumberField(
                                 stringResource(R.string.mada_bank),
                                 madaPayments,
-                                { madaPayments = it },
+                                formActions.onMadaPaymentsChange,
                                 Modifier.weight(1f),
                                 errorText = if (madaClass is MoneyInput.Invalid) invalidAmountError else null
                             )
                             NumberField(
                                 stringResource(R.string.digital_wallet),
                                 digitalWalletInput,
-                                { digitalWalletInput = it },
+                                formActions.onDigitalWalletChange,
                                 Modifier.weight(1f),
                                 errorText = if (digitalWalletClass is MoneyInput.Invalid) invalidAmountError else null
                             )
@@ -332,14 +349,14 @@ fun ReportEntryTab(
                             NumberField(
                                 stringResource(R.string.total_discounts_label),
                                 totalDiscountsInput,
-                                { totalDiscountsInput = it },
+                                formActions.onTotalDiscountsChange,
                                 Modifier.weight(1f),
                                 errorText = if (totalDiscountsClass is MoneyInput.Invalid) invalidAmountError else null
                             )
                             NumberField(
                                 stringResource(R.string.sales_returns_label),
                                 salesReturnsInput,
-                                { salesReturnsInput = it },
+                                formActions.onSalesReturnsChange,
                                 Modifier.weight(1f),
                                 errorText = if (salesReturnsClass is MoneyInput.Invalid) invalidAmountError else null
                             )
@@ -356,14 +373,14 @@ fun ReportEntryTab(
                                     selected = if (staffCount == 0) personText else stringResource(R.string.people_count, staffCount),
                                     onSelected = { sel ->
                                         val n = sel.filter { it.isDigit() }.toIntOrNull() ?: 0
-                                        staffCount = n
-                                        if (n == 0) totalExpenses = ""
+                                        formActions.onStaffCountChange(n)
+                                        if (n == 0) formActions.onTotalExpensesChange("")
                                     }
                                 )
                             }
                             Box(Modifier.weight(1f)) {
                                 NumberField(
-                                    stringResource(R.string.total_expense), totalExpenses, { totalExpenses = it },
+                                    stringResource(R.string.total_expense), totalExpenses, formActions.onTotalExpensesChange,
                                     Modifier.fillMaxWidth(), enabled = staffCount != 0,
                                     errorText = if (expensesClass is MoneyInput.Invalid) invalidAmountError else null
                                 )
@@ -373,17 +390,16 @@ fun ReportEntryTab(
                         // ---- Mu'assel ----
                         SectionHeader("📦", stringResource(R.string.sale_of_muassel), ShiftColors.PurpleLight, ShiftColors.Purple, ShiftColors.Purple)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            NumberField(stringResource(R.string.muassel), muassel, { muassel = it }, Modifier.weight(1f), isInteger = true)
-                            NumberField(stringResource(R.string.outdoor_muassel), outdoorMuassel, { outdoorMuassel = it }, Modifier.weight(1f), isInteger = true)
+                            NumberField(stringResource(R.string.muassel), muassel, formActions.onMuasselChange, Modifier.weight(1f), isInteger = true)
+                            NumberField(stringResource(R.string.outdoor_muassel), outdoorMuassel, formActions.onOutdoorMuasselChange, Modifier.weight(1f), isInteger = true)
                         }
 
-                        val entryDigits = MoneyFormat.minorUnitDigits(currentCurrency)
                         // ---- Due Sales (credit) ----
                         SectionHeader("📒", stringResource(R.string.due_sales), ShiftColors.DangerLight, ShiftColors.Danger, ShiftColors.Danger) {
                             modalType = ModalType.CREDIT
                         }
-                        creditEntries.forEachIndexed { i, e ->
-                            val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                        dueCreditItems.forEach { item ->
+                            val normReceipt = normalizeReceiptNumber(item.customerName)
                             val receiptLabel = when {
                                 isUnspecifiedReceipt(normReceipt) -> stringResource(R.string.receipt_unspecified)
                                 normReceipt.isNotEmpty() -> "#$normReceipt"
@@ -391,8 +407,8 @@ fun ReportEntryTab(
                             }
                             EntryRow(
                                 left = receiptLabel,
-                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency",
-                                onRemove = { creditEntries.removeAt(i) }
+                                right = "${MoneyFormat.toPlainDecimal(item.amount, entryDigits)} $currentCurrency",
+                                onRemove = { formActions.onRemoveDueCredit(item.id) }
                             )
                         }
 
@@ -400,8 +416,8 @@ fun ReportEntryTab(
                         SectionHeader("💵", stringResource(R.string.due_collection), ShiftColors.PurpleLight, ShiftColors.Purple, ShiftColors.Purple) {
                             modalType = ModalType.OLD_DUE
                         }
-                        oldDueEntries.forEachIndexed { i, e ->
-                            val normReceipt = normalizeReceiptNumber(e.receiptNo)
+                        previousDueCollections.forEach { item ->
+                            val normReceipt = normalizeReceiptNumber(item.customerName)
                             val receiptLabel = when {
                                 isUnspecifiedReceipt(normReceipt) -> stringResource(R.string.receipt_unspecified)
                                 normReceipt.isNotEmpty() -> "#$normReceipt"
@@ -409,8 +425,8 @@ fun ReportEntryTab(
                             }
                             EntryRow(
                                 left = receiptLabel,
-                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency (${e.type.name.lowercase()})",
-                                onRemove = { oldDueEntries.removeAt(i) }
+                                right = "${MoneyFormat.toPlainDecimal(item.amount, entryDigits)} $currentCurrency (${item.paymentMode.lowercase(Locale.ROOT)})",
+                                onRemove = { formActions.onRemovePreviousDue(item.id) }
                             )
                         }
 
@@ -420,13 +436,29 @@ fun ReportEntryTab(
                         val employeeDao = remember(db) { db.employeeDao() }
 
                         val activeEmployees by employeeDao.getAllActive().collectAsState(initial = emptyList())
-                        val advancesByEmployee by remember(activeEmployees) {
+                        val savedAdvanceItems = remember(shiftReports) {
+                            parseEmployerAdvances(shiftReports)
+                        }
+                        val advancesByEmployee by remember(activeEmployees, savedAdvanceItems, staffAdvances, entryDigits) {
                             derivedStateOf {
-                                val totalsByName = staffEntries
-                                    .groupBy { com.lojia.shiftreport.util.normalizeRestoreName(it.name) }
-                                    .mapValues { (_, list) -> list.sumOf { it.amount.toDouble() } }
+                                val range = currentMonthRange(System.currentTimeMillis(), ZoneId.systemDefault())
+                                val unsavedByName = mutableMapOf<String, Long>()
+                                for (item in staffAdvances) {
+                                    val key = normalizeRestoreName(item.staffName)
+                                    if (key.isNotEmpty()) {
+                                        unsavedByName[key] = (unsavedByName[key] ?: 0L) + item.amount
+                                    }
+                                }
                                 activeEmployees.associate { emp ->
-                                    emp.id to (totalsByName[com.lojia.shiftreport.util.normalizeRestoreName(emp.name)] ?: 0.0)
+                                    val saved = advancesInMonthMinor(savedAdvanceItems, emp.name, range)
+                                    val unsaved = unsavedByName[normalizeRestoreName(emp.name)] ?: 0L
+                                    val advances = saved + unsaved
+                                    val salary = emp.monthlySalaryMinor
+                                    emp.id to EmployeeAdvanceSummary(
+                                        salaryMinor = salary,
+                                        advancesMinor = advances,
+                                        balanceMinor = balanceMinor(salary, advances)
+                                    )
                                 }
                             }
                         }
@@ -493,12 +525,11 @@ fun ReportEntryTab(
                                     showAdminAuthForAdvance = false
                                     if (advanceClassified is MoneyInput.Valid) {
                                         val amt = MoneyFormat.toMajorUnits(advanceClassified.minor, entryDigits)
-                                        staffEntries.add(
-                                            StaffEntry(
-                                                name = emp.name,
-                                                amount = java.math.BigDecimal.valueOf(amt),
-                                                type = if (isBank) PayType.BANK else PayType.CASH
-                                            )
+                                        formActions.onAddStaffAdvance(
+                                            emp.name,
+                                            amt,
+                                            entryDigits,
+                                            if (isBank) "BANK" else "CASH"
                                         )
                                         advanceAmountText = ""
                                         android.widget.Toast.makeText(
@@ -511,11 +542,11 @@ fun ReportEntryTab(
                             )
                         }
 
-                        staffEntries.forEachIndexed { i, e ->
+                        staffAdvances.forEach { item ->
                             EntryRow(
-                                left = e.name,
-                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency (${e.type.name.lowercase()})",
-                                onRemove = { staffEntries.removeAt(i) }
+                                left = item.staffName,
+                                right = "${MoneyFormat.toPlainDecimal(item.amount, entryDigits)} $currentCurrency (${item.paymentMode.lowercase(Locale.ROOT)})",
+                                onRemove = { formActions.onRemoveStaffAdvance(item.id) }
                             )
                         }
 
@@ -523,11 +554,11 @@ fun ReportEntryTab(
                         SectionHeader("🚪", stringResource(R.string.walk_out), ShiftColors.DangerLight, ShiftColors.Danger, ShiftColors.Danger) {
                             modalType = ModalType.WALKOUT
                         }
-                        walkoutEntries.forEachIndexed { i, e ->
+                        unpaidBills.forEach { item ->
                             EntryRow(
-                                left = e.description,
-                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.amount, entryDigits), entryDigits)} $currentCurrency",
-                                onRemove = { walkoutEntries.removeAt(i) }
+                                left = item.tableOrOrderRef,
+                                right = "${MoneyFormat.toPlainDecimal(item.amount, entryDigits)} $currentCurrency",
+                                onRemove = { formActions.onRemoveUnpaidBill(item.id) }
                             )
                         }
 
@@ -535,12 +566,13 @@ fun ReportEntryTab(
                         SectionHeader("🛒", stringResource(R.string.paid_out), ShiftColors.DangerLight, ShiftColors.Danger, ShiftColors.Danger) {
                             modalType = ModalType.ITEM
                         }
-                        itemEntries.forEachIndexed { i, e ->
-                            val leftText = if (e.qty > 0) "${e.name} (${e.qty} pcs)" else e.name
+                        purchasedItems.forEach { item ->
+                            val qtyInt = item.quantity.toInt()
+                            val leftText = if (qtyInt > 0) "${item.itemName} ($qtyInt pcs)" else item.itemName
                             EntryRow(
                                 left = leftText,
-                                right = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(e.total, entryDigits), entryDigits)} $currentCurrency (${e.type.name.lowercase()})",
-                                onRemove = { itemEntries.removeAt(i) }
+                                right = "${MoneyFormat.toPlainDecimal(item.totalAmount, entryDigits)} $currentCurrency (${item.paidVia.lowercase(Locale.ROOT)})",
+                                onRemove = { formActions.onRemovePurchasedItem(item.id) }
                             )
                         }
 
@@ -566,9 +598,9 @@ fun ReportEntryTab(
                             muasselCount = muassel.toIntOrNull() ?: 0,
                             outdoorMuasselCount = outdoorMuassel.toIntOrNull() ?: 0,
                             actualCashCount = actualCashCountInput,
-                            onActualCashCountChange = { actualCashCountInput = it },
+                            onActualCashCountChange = formActions.onActualCashCountChange,
                             notes = notesInput,
-                            onNotesChange = { notesInput = it },
+                            onNotesChange = formActions.onNotesChange,
                             currentCurrency = currentCurrency
                         )
 
@@ -635,13 +667,36 @@ fun ReportEntryTab(
                                             totalExpenses = expenses,
                                             muassel = muassel.toIntOrNull() ?: 0,
                                             outdoorMuassel = outdoorMuassel.toIntOrNull() ?: 0,
-                                            creditEntries = creditEntries.toList(),
-                                            oldDueEntries = oldDueEntries.toList(),
-                                            staffEntries = staffEntries.toList(),
-                                            walkoutEntries = walkoutEntries.toList(),
-                                            itemEntries = itemEntries.toList(),
-                                            netCash = MoneyFormat.toMajorUnits(expectedCashMinor),
-                                            netMada = MoneyFormat.toMajorUnits(netMadaMinor),
+                                            creditEntries = dueCreditItems.map {
+                                                CreditEntry(
+                                                    it.customerName,
+                                                    MoneyFormat.toMajorUnits(it.amount, entryDigits)
+                                                )
+                                            },
+                                            oldDueEntries = previousDueCollections.map {
+                                                OldDueEntry(
+                                                    it.customerName,
+                                                    MoneyFormat.toMajorUnits(it.amount, entryDigits),
+                                                    if (it.paymentMode.equals("BANK", ignoreCase = true)) PayType.BANK else PayType.CASH
+                                                )
+                                            },
+                                            walkoutEntries = unpaidBills.map {
+                                                WalkoutEntry(
+                                                    it.tableOrOrderRef,
+                                                    MoneyFormat.toMajorUnits(it.amount, entryDigits)
+                                                )
+                                            },
+                                            itemEntries = purchasedItems.map {
+                                                ItemEntry(
+                                                    name = it.itemName,
+                                                    qty = it.quantity.toInt(),
+                                                    unitPriceDouble = MoneyFormat.toMajorUnits(it.unitPrice, entryDigits),
+                                                    totalDouble = MoneyFormat.toMajorUnits(it.totalAmount, entryDigits),
+                                                    type = if (it.paidVia.equals("BANK", ignoreCase = true)) PayType.BANK else PayType.CASH
+                                                )
+                                            },
+                                            netCash = MoneyFormat.toMajorUnits(expectedCashMinor, entryDigits),
+                                            netMada = MoneyFormat.toMajorUnits(netMadaMinor, entryDigits),
                                             isLocked = false,
                                             managerSignedBy = null,
                                             managerSignTime = null,
@@ -715,7 +770,7 @@ fun ReportEntryTab(
             colors = DatePickerDefaults.colors(containerColor = Color.White),
             confirmButton = {
                 TextButton(onClick = {
-                    state.selectedDateMillis?.let { dateMillis = it }
+                    state.selectedDateMillis?.let { formActions.onDateMillisChange(it) }
                     showDatePicker = false
                 }) { Text(stringResource(R.string.ok), color = ShiftColors.Primary, fontWeight = FontWeight.Bold) }
             },
@@ -751,18 +806,27 @@ fun ReportEntryTab(
                 focusManager.clearFocus()
                 keyboardController?.hide()
                 when (modalType) {
-                    ModalType.CREDIT -> creditEntries.add(CreditEntry(result.receipt, result.amount))
-                    ModalType.OLD_DUE -> oldDueEntries.add(OldDueEntry(result.receipt, result.amount, result.type))
-                    ModalType.STAFF -> staffEntries.add(StaffEntry(result.name, result.amount, result.type))
-                    ModalType.WALKOUT -> walkoutEntries.add(WalkoutEntry(result.name, result.amount))
-                    ModalType.ITEM -> itemEntries.add(
-                        ItemEntry(
-                            name = result.name,
-                            qty = result.qty,
-                            unitPriceDouble = result.unitPrice,
-                            totalDouble = result.amount,
-                            type = result.type
-                        )
+                    ModalType.CREDIT -> formActions.onAddDueCredit(result.receipt, result.amount, entryDigits)
+                    ModalType.OLD_DUE -> formActions.onAddPreviousDue(
+                        result.receipt,
+                        result.amount,
+                        entryDigits,
+                        result.type.name
+                    )
+                    ModalType.STAFF -> formActions.onAddStaffAdvance(
+                        result.name,
+                        result.amount,
+                        entryDigits,
+                        result.type.name
+                    )
+                    ModalType.WALKOUT -> formActions.onAddUnpaidBill(result.name, result.amount, entryDigits)
+                    ModalType.ITEM -> formActions.onAddPurchasedItem(
+                        result.name,
+                        result.qty,
+                        result.unitPrice,
+                        result.amount,
+                        entryDigits,
+                        result.type.name
                     )
                     ModalType.NONE -> {}
                 }
@@ -776,7 +840,7 @@ fun ReportEntryTab(
 @Composable
 fun EmployerAdvanceSection(
     employees: List<com.lojia.shiftreport.data.Employee>,
-    advancesByEmployee: Map<String, Double> = emptyMap(),
+    advancesByEmployee: Map<String, EmployeeAdvanceSummary> = emptyMap(),
     selectedEmployee: com.lojia.shiftreport.data.Employee?,
     onEmployeeSelected: (com.lojia.shiftreport.data.Employee) -> Unit,
     amount: String,
@@ -831,7 +895,11 @@ fun EmployerAdvanceSection(
                     )
                 } else {
                     employees.forEach { employee ->
-                        val taken = advancesByEmployee[employee.id] ?: 0.0
+                        val summary = advancesByEmployee[employee.id] ?: EmployeeAdvanceSummary(
+                            salaryMinor = employee.monthlySalaryMinor,
+                            advancesMinor = 0L,
+                            balanceMinor = balanceMinor(employee.monthlySalaryMinor, 0L)
+                        )
                         DropdownMenuItem(
                             text = {
                                 Column {
@@ -840,9 +908,14 @@ fun EmployerAdvanceSection(
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = "${stringResource(R.string.total_advances)}: ${MoneyFormat.format(taken, currency)}",
+                                        text = stringResource(
+                                            R.string.employee_advance_subtitle,
+                                            MoneyFormat.formatMinor(summary.salaryMinor, currency),
+                                            MoneyFormat.formatMinor(summary.advancesMinor, currency),
+                                            MoneyFormat.formatMinor(summary.balanceMinor, currency)
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.Gray
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             },
@@ -856,7 +929,7 @@ fun EmployerAdvanceSection(
             }
         }
 
-        val advanceAmountClass = classifyMoneyInput(amount)
+        val advanceAmountClass = classifyMoneyInput(amount, MoneyFormat.minorUnitDigits(currency))
         val isAdvanceAmountInvalid = advanceAmountClass is MoneyInput.Invalid
 
         OutlinedTextField(

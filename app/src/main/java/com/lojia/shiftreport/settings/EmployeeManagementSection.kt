@@ -40,6 +40,7 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
+import com.lojia.shiftreport.util.normalizeRestoreName
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -50,6 +51,18 @@ private val FoodicsTextGray = Color(0xFF6B7280)
 private val FoodicsBorderLight = Color(0xFFE5E7EB)
 private val FoodicsGreen = Color(0xFF10B981)
 private val FoodicsOrange = Color(0xFFF59E0B)
+
+internal fun isDuplicateEmployeeName(
+    employeeId: String?,
+    candidateName: String,
+    existingEmployees: List<Employee>
+): Boolean {
+    val normalizedCandidate = normalizeRestoreName(candidateName)
+    if (normalizedCandidate.isEmpty()) return false
+    return existingEmployees.any {
+        it.id != employeeId && normalizeRestoreName(it.name) == normalizedCandidate
+    }
+}
 
 @Composable
 fun EmployeeManagementSection(
@@ -328,13 +341,29 @@ fun EmployeeManagementSection(
     }
 
     if (showAddEditDialog) {
+        val currentEditing = editingEmployee
         AddEditEmployeeDialog(
-            existing = editingEmployee,
+            existing = currentEditing,
+            existingEmployees = employees,
             activeCurrency = activeCurrency,
             onDismiss = { showAddEditDialog = false },
             onSave = { name, salaryMinor, phone, isActive ->
                 coroutineScope.launch {
-                    val emp = editingEmployee?.copy(
+                    val currentAll = employeeDao.getAllOnce()
+                    val duplicateExists = isDuplicateEmployeeName(
+                        employeeId = currentEditing?.id,
+                        candidateName = name,
+                        existingEmployees = currentAll
+                    )
+                    if (duplicateExists) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.employee_name_exists_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
+                    val emp = currentEditing?.copy(
                         name = name,
                         monthlySalaryMinor = salaryMinor,
                         phone = phone,
@@ -350,7 +379,7 @@ fun EmployeeManagementSection(
                     showAddEditDialog = false
                     Toast.makeText(
                         context,
-                        if (editingEmployee != null) "Employee updated" else "Employee saved",
+                        if (currentEditing != null) "Employee updated" else "Employee saved",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -525,6 +554,7 @@ private fun EmployeeItemCard(
 @Composable
 private fun AddEditEmployeeDialog(
     existing: Employee?,
+    existingEmployees: List<Employee>,
     activeCurrency: String,
     onDismiss: () -> Unit,
     onSave: (name: String, salaryMinor: Long, phone: String?, isActive: Boolean) -> Unit
@@ -541,10 +571,18 @@ private fun AddEditEmployeeDialog(
     var phone by remember { mutableStateOf(existing?.phone ?: "") }
     var isActive by remember { mutableStateOf(existing?.isActive ?: true) }
 
+    val isDuplicateName = remember(name, existingEmployees, existing) {
+        isDuplicateEmployeeName(
+            employeeId = existing?.id,
+            candidateName = name,
+            existingEmployees = existingEmployees
+        )
+    }
+
     val salaryClass = classifyMoneyInput(salaryText, activeDigits)
     val salaryMinor = (salaryClass as? MoneyInput.Valid)?.minor
     val isSalaryInvalid = salaryClass is MoneyInput.Invalid
-    val canSave = name.isNotBlank() && salaryMinor != null && salaryMinor > 0L
+    val canSave = name.isNotBlank() && !isDuplicateName && salaryMinor != null && salaryMinor > 0L
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -566,7 +604,11 @@ private fun AddEditEmployeeDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Employee Name *") },
-                    placeholder = { Text("e.g., Rahim") },
+                    placeholder = { Text(stringResource(R.string.employee_name_hint)) },
+                    isError = isDuplicateName,
+                    supportingText = if (isDuplicateName) {
+                        { Text(stringResource(R.string.employee_name_exists_error)) }
+                    } else null,
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()

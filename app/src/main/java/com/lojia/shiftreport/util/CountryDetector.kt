@@ -49,7 +49,7 @@ object CountryDetector {
             }
         } catch (_: Exception) {}
 
-        return "US"
+        return AppConstants.DEFAULT_COUNTRY_CODE
     }
 
     /**
@@ -60,15 +60,9 @@ object CountryDetector {
         val match = LOJIA_COUNTRIES.find { it.code.equals(iso, ignoreCase = true) }
         if (match != null) return match
 
-        // Secondary locale/language fallback if ISO not in list
-        val currentLang = Locale.getDefault().language.lowercase()
-        return if (currentLang == "bn") {
-            LOJIA_COUNTRIES.find { it.code == "BD" } ?: LOJIA_COUNTRIES[0]
-        } else if (currentLang == "ar") {
-            LOJIA_COUNTRIES.find { it.code == "SA" } ?: LOJIA_COUNTRIES[0]
-        } else {
-            LOJIA_COUNTRIES.find { it.code == "US" } ?: LOJIA_COUNTRIES[0]
-        }
+        return LOJIA_COUNTRIES.find {
+            it.code.equals(AppConstants.DEFAULT_COUNTRY_CODE, ignoreCase = true)
+        } ?: LOJIA_COUNTRIES.first()
     }
 
     /**

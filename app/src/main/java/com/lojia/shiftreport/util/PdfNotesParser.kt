@@ -35,26 +35,16 @@ object PdfNotesParser {
         return ACTUAL_CASH_REGEX.find(notes)?.groupValues?.get(1)?.toDoubleOrNull()
     }
 
-    fun extractStartingCashMinor(report: ShiftReport): Long {
+    fun extractStartingCashMinor(report: ShiftReport, digits: Int): Long {
         if (report.openingCash > 0L) return report.openingCash
         val doubleVal = STARTING_CASH_REGEX.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
-        return MoneyFormat.toMinorUnits(doubleVal)
+        return MoneyFormat.toMinorUnits(doubleVal, digits)
     }
 
-    fun extractStartingCashMinor(notes: String): Long? {
-        val doubleVal = STARTING_CASH_REGEX.find(notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
-        return MoneyFormat.toMinorUnits(doubleVal)
-    }
-
-    fun extractActualCashMinor(report: ShiftReport): Long? {
+    fun extractActualCashMinor(report: ShiftReport, digits: Int): Long? {
         if (report.closingCash > 0L) return report.closingCash
         val doubleVal = ACTUAL_CASH_REGEX.find(report.notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
-        return MoneyFormat.toMinorUnits(doubleVal)
-    }
-
-    fun extractActualCashMinor(notes: String): Long? {
-        val doubleVal = ACTUAL_CASH_REGEX.find(notes)?.groupValues?.get(1)?.toDoubleOrNull() ?: return null
-        return MoneyFormat.toMinorUnits(doubleVal)
+        return MoneyFormat.toMinorUnits(doubleVal, digits)
     }
 
     fun cleanDisplayNotes(notes: String): String {
