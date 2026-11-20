@@ -320,8 +320,14 @@ fun MonthlySalesSummaryView(
     val monthTotalBankIn = dailyDataList.sumOf { it.madaAmount } + dailyDataList.sumOf { it.walletAmount }
     val monthNetCashflow = (monthTotalCashIn + monthTotalBankIn + monthTotalCollectedDue) - (monthTotalExpenses + monthTotalPurchases + monthTotalStaffAdvances)
 
+    val week1Label = stringResource(R.string.monthly_week_1_label)
+    val week2Label = stringResource(R.string.monthly_week_2_label)
+    val week3Label = stringResource(R.string.monthly_week_3_label)
+    val week4Label = stringResource(R.string.monthly_week_4_label)
+    val week5Label = stringResource(R.string.monthly_week_5_fmt, dailyDataList.size)
+
     // Weekly breakdowns (Week 1..5)
-    val weeklyBreakdowns = remember(dailyDataList) {
+    val weeklyBreakdowns = remember(dailyDataList, week1Label, week2Label, week3Label, week4Label, week5Label) {
         val weeks = mutableListOf<Pair<String, Double>>()
         var week1 = 0.0
         var week2 = 0.0
@@ -338,12 +344,12 @@ fun MonthlySalesSummaryView(
                 else -> week5 += d.totalRevenue
             }
         }
-        weeks.add("Week 1 (1-7)" to week1)
-        weeks.add("Week 2 (8-14)" to week2)
-        weeks.add("Week 3 (15-21)" to week3)
-        weeks.add("Week 4 (22-28)" to week4)
+        weeks.add(week1Label to week1)
+        weeks.add(week2Label to week2)
+        weeks.add(week3Label to week3)
+        weeks.add(week4Label to week4)
         if (week5 > 0 || dailyDataList.size > 28) {
-            weeks.add("Week 5 (29-${dailyDataList.size})" to week5)
+            weeks.add(week5Label to week5)
         }
         weeks
     }
@@ -795,7 +801,7 @@ fun MonthlySalesSummaryView(
                     icon = Icons.Default.CreditCard,
                     iconTint = Color(0xFF2563EB),
                     label = stringResource(R.string.mada_payments) + " / " + stringResource(R.string.digital_wallet),
-                    detail = "MADA & digital settlements",
+                    detail = stringResource(R.string.monthly_mada_digital_settlements),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalBankIn, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFF2563EB)
                 )
@@ -839,7 +845,7 @@ fun MonthlySalesSummaryView(
                     icon = Icons.Default.People,
                     iconTint = Color(0xFFD97706),
                     label = stringResource(R.string.staff_advances_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalStaffAdvances, summaryDigits), summaryDigits), currency).substringBefore(":"),
-                    detail = "Salary advance payouts",
+                    detail = stringResource(R.string.monthly_salary_advance_payouts),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalStaffAdvances, summaryDigits), summaryDigits)} $currency",
                     amountColor = Color(0xFFD97706)
                 )

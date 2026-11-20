@@ -172,10 +172,14 @@ fun PrinterSetupScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = when (connectionStatus) {
-                                PrinterConnectionStatus.CONNECTED -> "Connected: ${connectedDevice?.name ?: connectedDevice?.address} (${connectedDevice?.type})"
-                                PrinterConnectionStatus.CONNECTING -> "Connecting to printer..."
-                                PrinterConnectionStatus.FAILED -> statusMessage ?: "Connection Failed"
-                                PrinterConnectionStatus.DISCONNECTED -> "Printer Disconnected"
+                                PrinterConnectionStatus.CONNECTED -> stringResource(
+                                    R.string.printer_status_connected_format,
+                                    connectedDevice?.name ?: connectedDevice?.address ?: "",
+                                    connectedDevice?.type?.toString() ?: ""
+                                )
+                                PrinterConnectionStatus.CONNECTING -> stringResource(R.string.printer_status_connecting)
+                                PrinterConnectionStatus.FAILED -> statusMessage ?: stringResource(R.string.printer_status_failed)
+                                PrinterConnectionStatus.DISCONNECTED -> stringResource(R.string.printer_status_disconnected)
                             },
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.Medium,
@@ -205,7 +209,12 @@ fun PrinterSetupScreen(
                                     val result = if (selectedTabIndex == 0) {
                                         // WiFi Print
                                         val port = portInput.toIntOrNull() ?: 9100
-                                        val device = PrinterDevice("WiFi Printer", ipInput.trim(), PrinterType.WIFI, port)
+                                        val device = PrinterDevice(
+                                            context.getString(R.string.printer_wifi_default_name),
+                                            ipInput.trim(),
+                                            PrinterType.WIFI,
+                                            port
+                                        )
                                         if (!wifiPrinterManager.isConnected()) {
                                             wifiPrinterManager.connect(device)
                                         }
@@ -223,9 +232,9 @@ fun PrinterSetupScreen(
 
                                     isOperating = false
                                     result.onSuccess {
-                                        Toast.makeText(context, "Test receipt printed successfully!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.printer_test_printed_toast), Toast.LENGTH_SHORT).show()
                                     }.onFailure { err ->
-                                        Toast.makeText(context, "Print failed: ${err.message}", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, context.getString(R.string.printer_print_failed_toast, err.message ?: ""), Toast.LENGTH_LONG).show()
                                     }
                                 }
                             },
@@ -238,7 +247,7 @@ fun PrinterSetupScreen(
                         ) {
                             Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Test Print", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                            Text(stringResource(R.string.printer_test_print_btn), fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                         }
 
                         // Disconnect Button
@@ -255,7 +264,7 @@ fun PrinterSetupScreen(
                                     .weight(0.6f)
                                     .height(46.dp)
                             ) {
-                                Text("Disconnect", fontSize = 13.sp)
+                                Text(stringResource(R.string.btn_disconnect_drive), fontSize = 13.sp)
                             }
                         }
                     }
@@ -278,7 +287,7 @@ fun PrinterSetupScreen(
                 Tab(
                     selected = selectedTabIndex == 0,
                     onClick = { selectedTabIndex = 0 },
-                    text = { Text("WIFI (Network)", fontWeight = FontWeight.SemiBold) },
+                    text = { Text(stringResource(R.string.printer_tab_wifi), fontWeight = FontWeight.SemiBold) },
                     icon = { Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
                 Tab(
@@ -287,7 +296,7 @@ fun PrinterSetupScreen(
                         selectedTabIndex = 1
                         pairedPrinters = bluetoothPrinterManager.getPairedPrinters()
                     },
-                    text = { Text("BLUETOOTH", fontWeight = FontWeight.SemiBold) },
+                    text = { Text(stringResource(R.string.printer_tab_bluetooth), fontWeight = FontWeight.SemiBold) },
                     icon = { Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
             }
@@ -311,7 +320,7 @@ fun PrinterSetupScreen(
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Text(
-                                        text = "Direct Network Configuration (TCP Socket)",
+                                        text = stringResource(R.string.printer_direct_network_header),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.onSurface
@@ -325,8 +334,8 @@ fun PrinterSetupScreen(
                                         OutlinedTextField(
                                             value = ipInput,
                                             onValueChange = { ipInput = it },
-                                            label = { Text("Printer IP Address") },
-                                            placeholder = { Text("e.g. 192.168.1.100") },
+                                            label = { Text(stringResource(R.string.printer_ip_label)) },
+                                            placeholder = { Text(stringResource(R.string.printer_network_ip_placeholder)) },
                                             singleLine = true,
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             modifier = Modifier
@@ -337,7 +346,7 @@ fun PrinterSetupScreen(
                                         OutlinedTextField(
                                             value = portInput,
                                             onValueChange = { portInput = it },
-                                            label = { Text("Port") },
+                                            label = { Text(stringResource(R.string.printer_port_short_label)) },
                                             singleLine = true,
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             modifier = Modifier
@@ -369,7 +378,10 @@ fun PrinterSetupScreen(
                                                 modifier = Modifier.size(18.dp)
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text(if (isDiscovering) "Stop Scan" else "Auto Discover")
+                                            Text(
+                                                if (isDiscovering) stringResource(R.string.printer_stop_scan_btn)
+                                                else stringResource(R.string.printer_auto_discover_btn)
+                                            )
                                         }
 
                                         // Connect Button
@@ -378,7 +390,12 @@ fun PrinterSetupScreen(
                                                 scope.launch {
                                                     isOperating = true
                                                     val port = portInput.toIntOrNull() ?: 9100
-                                                    val dev = PrinterDevice("WiFi Printer", ipInput.trim(), PrinterType.WIFI, port)
+                                                    val dev = PrinterDevice(
+                                                        context.getString(R.string.printer_wifi_default_name),
+                                                        ipInput.trim(),
+                                                        PrinterType.WIFI,
+                                                        port
+                                                    )
                                                     prefs.savePrinterNetworkIp(dev.address)
                                                     prefs.savePrinterNetworkPort(dev.port)
                                                     prefs.savePrinterConnectionType("network")
@@ -389,11 +406,19 @@ fun PrinterSetupScreen(
                                                         connectionStatus = PrinterConnectionStatus.CONNECTED
                                                         connectedDevice = dev
                                                         statusMessage = null
-                                                        Toast.makeText(context, "Connected to ${dev.address}:${dev.port}", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(
+                                                            context,
+                                                            context.getString(R.string.printer_connected_addr_toast, "${dev.address}:${dev.port}"),
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
                                                     }.onFailure { err ->
                                                         connectionStatus = PrinterConnectionStatus.FAILED
-                                                        statusMessage = err.localizedMessage ?: "Connection Timeout"
-                                                        Toast.makeText(context, "Failed: ${err.message}", Toast.LENGTH_LONG).show()
+                                                        statusMessage = err.localizedMessage ?: context.getString(R.string.printer_connection_timeout)
+                                                        Toast.makeText(
+                                                            context,
+                                                            context.getString(R.string.printer_failed_msg_toast, err.message ?: ""),
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
                                                     }
                                                 }
                                             },
@@ -404,7 +429,7 @@ fun PrinterSetupScreen(
                                             if (isOperating) {
                                                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                                             } else {
-                                                Text("Connect")
+                                                Text(stringResource(R.string.printer_connect_btn))
                                             }
                                         }
                                     }
@@ -424,7 +449,7 @@ fun PrinterSetupScreen(
                                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "Scanning local network (_printer._tcp, _pdl-datastream._tcp)...",
+                                        text = stringResource(R.string.printer_scanning_network),
                                         fontSize = 12.sp,
                                         color = TextHintColor
                                     )
@@ -435,7 +460,7 @@ fun PrinterSetupScreen(
                         // Discovered Printers List
                         item {
                             Text(
-                                text = "Discovered Network Printers (${discoveredPrinters.size})",
+                                text = stringResource(R.string.printer_discovered_network_format, discoveredPrinters.size),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
@@ -445,7 +470,7 @@ fun PrinterSetupScreen(
                         if (discoveredPrinters.isEmpty() && !isDiscovering) {
                             item {
                                 Text(
-                                    text = "No network printers found. Enter printer IP directly or tap 'Auto Discover'. Ensure your device and printer are on the same WiFi.",
+                                    text = stringResource(R.string.printer_no_network_found),
                                     fontSize = 12.5.sp,
                                     color = TextHintColor,
                                     modifier = Modifier.padding(vertical = 8.dp)
@@ -503,7 +528,7 @@ fun PrinterSetupScreen(
                                         },
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                     ) {
-                                        Text("Connect", fontSize = 12.sp)
+                                        Text(stringResource(R.string.printer_connect_btn), fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -523,7 +548,7 @@ fun PrinterSetupScreen(
                     ) {
                         item {
                             Text(
-                                text = "Paired Bluetooth Printers (${pairedPrinters.size})",
+                                text = stringResource(R.string.printer_paired_bt_format, pairedPrinters.size),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -533,7 +558,7 @@ fun PrinterSetupScreen(
                         if (pairedPrinters.isEmpty()) {
                             item {
                                 Text(
-                                    text = "No paired Bluetooth printers detected. Please turn on Bluetooth and pair your ESC/POS thermal printer in Android Settings first.",
+                                    text = stringResource(R.string.printer_no_paired_bt_found),
                                     fontSize = 12.5.sp,
                                     color = TextHintColor,
                                     modifier = Modifier.padding(vertical = 12.dp)
@@ -587,17 +612,17 @@ fun PrinterSetupScreen(
                                                         connectionStatus = PrinterConnectionStatus.CONNECTED
                                                         connectedDevice = btDevice
                                                         statusMessage = null
-                                                        Toast.makeText(context, "Connected to ${device.name}", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, context.getString(R.string.printer_connected_addr_toast, device.name), Toast.LENGTH_SHORT).show()
                                                     }.onFailure { err ->
                                                         connectionStatus = PrinterConnectionStatus.FAILED
                                                         statusMessage = err.message
-                                                        Toast.makeText(context, "Connection failed: ${err.message}", Toast.LENGTH_LONG).show()
+                                                        Toast.makeText(context, context.getString(R.string.printer_connection_failed_toast, err.message ?: ""), Toast.LENGTH_LONG).show()
                                                     }
                                                 }
                                             },
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                         ) {
-                                            Text("Connect", fontSize = 12.sp)
+                                            Text(stringResource(R.string.printer_connect_btn), fontSize = 12.sp)
                                         }
                                     }
                                 }

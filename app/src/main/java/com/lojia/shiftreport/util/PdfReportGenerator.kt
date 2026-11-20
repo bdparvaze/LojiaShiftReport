@@ -44,13 +44,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object PdfReportGenerator {
-    private fun getLocalizedShiftName(language: AppLanguage, shift: String): String {
-        val code = language.code
+    private fun getLocalizedShiftName(context: Context, shift: String): String {
         return when (shift.lowercase()) {
-            "morning" -> if (code == "bn") "সকাল" else if (code == "ar") "صباحية" else "Morning"
-            "evening" -> if (code == "bn") "সন্ধ্যা" else if (code == "ar") "مسائية" else "Evening"
-            "night" -> if (code == "bn") "রাত" else if (code == "ar") "ليلية" else "Night"
-            "day" -> if (code == "bn") "দিন" else if (code == "ar") "نهارية" else "Day"
+            "morning" -> context.getString(R.string.shift_morning)
+            "evening" -> context.getString(R.string.shift_evening)
+            "night" -> context.getString(R.string.shift_night)
+            "day" -> context.getString(R.string.shift_day)
             else -> shift
         }
     }
@@ -412,9 +411,9 @@ object PdfReportGenerator {
             }
             appendLine("${pStr.reportId}: #${report.id.toString().padStart(6, '0')}")
             appendLine("${pStr.date}: ${DateTimeFormatUtils.formatIsoDateTime(report.dateInMillis)}")
-            appendLine("${pStr.shift}: ${getLocalizedShiftName(language, report.shift)} | ${pStr.cashier}: ${report.cashierName}")
+            appendLine("${pStr.shift}: ${getLocalizedShiftName(context, report.shift)} | ${pStr.cashier}: ${report.cashierName}")
             appendLine("--------------------------------")
-            appendLine("[1. SALES SUMMARY]")
+            appendLine("[1. ${pStr.salesSummary}]")
             appendLine("${pStr.cashSales}: ${MoneyFormat.formatMinor(report.grossCash, currency, receiptLocale)}")
             appendLine("${pStr.cardMadaSales}: ${MoneyFormat.formatMinor(report.madaPayments, currency, receiptLocale)}")
             if (report.digitalWallet > 0L) {
@@ -422,7 +421,7 @@ object PdfReportGenerator {
             }
             appendLine("${pStr.grossTotalSales}: ${MoneyFormat.formatMinor(report.totalSales, currency, receiptLocale)}")
             appendLine("--------------------------------")
-            appendLine("[2. CASH DRAWER RECONCILIATION]")
+            appendLine("[2. ${pStr.cashDrawerReconciliation}]")
             if (startingCash > 0L) {
                 appendLine("${pStr.startingCash}: ${MoneyFormat.formatMinor(startingCash, currency, receiptLocale)}")
             }
@@ -436,15 +435,15 @@ object PdfReportGenerator {
                 appendLine("${pStr.actualCashCount}: ${MoneyFormat.formatMinor(actualCashCount, currency, receiptLocale)}")
                 val varStr = if (variance != null) {
                     when {
-                        variance == 0L -> "${MoneyFormat.formatMinor(0L, currency, receiptLocale)} (Balanced)"
-                        variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency, receiptLocale)} (Over)"
-                        else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency, receiptLocale)} (Short)"
+                        variance == 0L -> "${MoneyFormat.formatMinor(0L, currency, receiptLocale)} (${context.getString(R.string.zreport_balanced)})"
+                        variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency, receiptLocale)} (${context.getString(R.string.zreport_over)})"
+                        else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency, receiptLocale)} (${context.getString(R.string.zreport_short)})"
                     }
-                } else "N/A"
+                } else context.getString(R.string.not_available_short)
                 appendLine("${pStr.variance}: $varStr")
             }
             appendLine("--------------------------------")
-            appendLine("[3. OTHER TRACKING]")
+            appendLine("[3. ${pStr.otherTracking}]")
             appendLine("${pStr.dueSales}: ${MoneyFormat.formatMinor(report.totalDueCredit, currency, receiptLocale)} (${dueCreditEntries.size})")
             appendLine("${pStr.staffMeals}: ${report.staffMealsCount}")
             if (displayNotes.isNotBlank()) {
@@ -709,7 +708,7 @@ object PdfReportGenerator {
             canvas.drawText(DateTimeFormatUtils.formatDateOnly(report.dateInMillis, Locale.US), colDate, rowY, textPaint)
             val truncatedCashier = if (report.cashierName.length > 15) report.cashierName.take(13) + ".." else report.cashierName
             canvas.drawText(truncatedCashier, colCashier, rowY, textPaint)
-            canvas.drawText(getLocalizedShiftName(language, report.shift), colShift, rowY, textPaint)
+            canvas.drawText(getLocalizedShiftName(context, report.shift), colShift, rowY, textPaint)
 
             val digits = MoneyFormat.minorUnitDigits(currency)
             val cashValStr = MoneyFormat.toPlainDecimal(report.grossCash, digits)
@@ -1061,14 +1060,14 @@ object PdfReportGenerator {
 
         // Col 1 (left)
         drawTextSafe("${pStr.reportId}: #${report.id.toString().padStart(6, '0')}", margin + 12f, currentY + 18f, textBoldPaint, isBold = true)
-        drawTextSafe("${pStr.shift}: ${getLocalizedShiftName(language, report.shift)}", margin + 12f, currentY + 35f, textBoldPaint, isBold = true)
+        drawTextSafe("${pStr.shift}: ${getLocalizedShiftName(context, report.shift)}", margin + 12f, currentY + 35f, textBoldPaint, isBold = true)
         drawTextSafe("${pStr.cashier}: ${report.cashierName}", margin + 12f, currentY + 52f, textBoldPaint, isBold = true)
 
         // Col 2 (middle)
         drawTextSafe("${pStr.date}: ${DateTimeFormatUtils.formatIsoDateTimeSeconds(report.dateInMillis)}", margin + 175f, currentY + 18f, textPaint)
         drawTextSafe(context.getString(R.string.official_digital_verification), margin + 175f, currentY + 35f, secondaryPaint)
         if (report.managerSignedBy?.isNotBlank() == true) {
-            drawTextSafe("Audited: ${report.managerSignedBy}", margin + 175f, currentY + 52f, secondaryPaint)
+            drawTextSafe(context.getString(R.string.pdf_audited_by_fmt, report.managerSignedBy), margin + 175f, currentY + 52f, secondaryPaint)
         }
 
         // Col 3 (Right QR Container Card)
@@ -1217,10 +1216,10 @@ object PdfReportGenerator {
         if (actualCashCount != null) {
             drawDataRow(pStr.actualCashCount, MoneyFormat.formatMinor(actualCashCount, currency), isBold = true, rowHeight = 17f)
             val varianceStr = when {
-                variance == null -> "N/A"
-                variance == 0L -> "${MoneyFormat.formatMinor(0L, currency)} (Balanced)"
-                variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency)} (Over)"
-                else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency)} (Short)"
+                variance == null -> context.getString(R.string.not_available_short)
+                variance == 0L -> "${MoneyFormat.formatMinor(0L, currency)} (${context.getString(R.string.zreport_balanced)})"
+                variance > 0L -> "+${MoneyFormat.formatMinor(variance, currency)} (${context.getString(R.string.zreport_over)})"
+                else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currency)} (${context.getString(R.string.zreport_short)})"
             }
             val varPaint = when {
                 variance == null -> textPaint
@@ -1237,7 +1236,7 @@ object PdfReportGenerator {
             drawDataRow(pStr.variance, varianceStr, isBold = true, customValuePaint = varPaint, customBgPaint = varBgPaint, rowHeight = 18f)
         } else {
             drawDataRow(pStr.actualCashCount, "[ _______________________ ]", isBold = false)
-            drawDataRow(pStr.variance, "[ _______________________ ] (Pending Count)", isBold = false)
+            drawDataRow(pStr.variance, "[ _______________________ ] ${localizedPdfContext.getString(R.string.pdf_pending_count)}", isBold = false)
         }
 
         currentY += 8f
@@ -1285,7 +1284,12 @@ object PdfReportGenerator {
         canvas.drawLine(PAGE_WIDTH - margin - 180f, signY, PAGE_WIDTH - margin - 16f, signY, linePaint)
         drawTextSafe(pStr.supervisorSign, PAGE_WIDTH - margin - 180f, signY + 13f, textBoldPaint, isBold = true)
         if (report.managerSignedBy?.isNotBlank() == true) {
-            drawTextSafe("Signed: ${report.managerSignedBy}", PAGE_WIDTH - margin - 180f, signY + 24f, secondaryPaint)
+            drawTextSafe(
+                localizedPdfContext.getString(R.string.pdf_signed_by_fmt, report.managerSignedBy),
+                PAGE_WIDTH - margin - 180f,
+                signY + 24f,
+                secondaryPaint
+            )
         }
 
         // Page 1 Footer
@@ -1510,7 +1514,7 @@ object PdfReportGenerator {
                 file = null,
                 uri = null,
                 displayPath = "",
-                errorMessage = e.localizedMessage ?: "Failed to write PDF to storage"
+                errorMessage = e.localizedMessage ?: context.getString(R.string.pdf_write_failed_error)
             )
         } finally {
             try {
@@ -1574,7 +1578,7 @@ object PdfReportGenerator {
     /**
      * Shares the exported PDF file via Intent chooser.
      */
-    fun sharePdfFile(context: Context, uri: Uri, title: String = "Shift Sales Report PDF") =
+    fun sharePdfFile(context: Context, uri: Uri, title: String = context.getString(R.string.pdf_email_subject)) =
         PdfShareUtils.sharePdfFile(context, uri, title)
 
     /**

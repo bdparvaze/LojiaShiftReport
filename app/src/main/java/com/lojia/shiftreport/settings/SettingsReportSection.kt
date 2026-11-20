@@ -140,7 +140,8 @@ fun SettingsReportSection(
     var countrySearch by remember { mutableStateOf("") }
 
     // 1. Profile State
-    var fullName by remember(userProfile) { mutableStateOf(userProfile?.fullName ?: "Store Owner") }
+    val defaultOwnerLabel = stringResource(R.string.profile_store_owner)
+    var fullName by remember(userProfile, defaultOwnerLabel) { mutableStateOf(userProfile?.fullName ?: defaultOwnerLabel) }
     var username by remember(userProfile) { mutableStateOf(userProfile?.username ?: "") }
     var email by remember(userProfile) { mutableStateOf(userProfile?.email ?: "") }
     var password by remember(userProfile) { mutableStateOf("") }
@@ -264,14 +265,14 @@ fun SettingsReportSection(
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.Person,
-                    title = "Profile",
+                    title = stringResource(R.string.profile),
                     subtitle = stringResource(R.string.profile_subtitle),
                     onClick = { onNavigateToSection("profile") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.People,
-                    title = "Cashier",
+                    title = stringResource(R.string.cashiers),
                     subtitle = stringResource(R.string.cashiers_subtitle),
                     onClick = { onNavigateToSection("cashiers") }
                 )
@@ -279,7 +280,7 @@ fun SettingsReportSection(
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.Badge,
                     title = stringResource(R.string.nav_employee),
-                    subtitle = "Manage staff, monthly salaries & advances",
+                    subtitle = stringResource(R.string.settings_employees_subtitle),
                     onClick = { onNavigateToSection("employees") }
                 )
 
@@ -293,22 +294,22 @@ fun SettingsReportSection(
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.Shield,
-                    title = "Security",
+                    title = stringResource(R.string.security),
                     subtitle = stringResource(R.string.security_subtitle),
                     onClick = { onNavigateToSection("security") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.CloudUpload,
-                    title = "Backup",
+                    title = stringResource(R.string.backup),
                     subtitle = stringResource(R.string.backup_subtitle),
                     onClick = { onNavigateToSection("backup") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.Print,
-                    title = "Thermal Printer (ESC/POS)",
-                    subtitle = "Configure Bluetooth & Network receipt printers",
+                    title = stringResource(R.string.settings_thermal_printer_title),
+                    subtitle = stringResource(R.string.settings_thermal_printer_subtitle),
                     onClick = onConfigurePrinterClick
                 )
 
@@ -341,14 +342,14 @@ fun SettingsReportSection(
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.Info,
-                    title = "About",
+                    title = stringResource(R.string.about),
                     subtitle = stringResource(R.string.about_subtitle),
                     onClick = { onNavigateToSection("about") }
                 )
 
                 LoyverseMenuItemRow(
                     icon = Icons.Outlined.HeadsetMic,
-                    title = "Support",
+                    title = stringResource(R.string.nav_support),
                     subtitle = stringResource(R.string.support_subtitle),
                     onClick = { onNavigateToSection("support") }
                 )
@@ -414,7 +415,7 @@ fun SettingsReportSection(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
-                    LojiaSectionHeader("PIN & BIOMETRIC")
+                    LojiaSectionHeader(stringResource(R.string.settings_section_pin_biometric))
 
                     // Card 1 — Quick Login
                     LojiaSettingsCard {
@@ -427,14 +428,14 @@ fun SettingsReportSection(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Quick Login with PIN",
+                                text = stringResource(R.string.cd_quick_login_pin),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = OnSurfaceLight
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Unlock POS with 6-digit PIN",
+                                text = stringResource(R.string.settings_unlock_pos_pin_desc),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -488,14 +489,14 @@ fun SettingsReportSection(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Change 6-Digit PIN",
+                                text = stringResource(R.string.cd_change_pin),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = OnSurfaceLight
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Tap to update your 6-digit PIN",
+                                text = stringResource(R.string.settings_tap_update_pin_desc),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -508,7 +509,7 @@ fun SettingsReportSection(
                         )
                     }
 
-                    LojiaSectionHeader("BIOMETRIC")
+                    LojiaSectionHeader(stringResource(R.string.settings_section_biometric))
 
                     // Card 3 — Biometric
                     LojiaSettingsCard {
@@ -521,14 +522,14 @@ fun SettingsReportSection(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Biometric Login",
+                                text = stringResource(R.string.biometric_login),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = OnSurfaceLight
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Fingerprint / Face ID",
+                                text = stringResource(R.string.settings_fingerprint_face_id),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -633,7 +634,7 @@ fun SettingsReportSection(
                         .fillMaxWidth()
                         .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
                 ) {
-                    LojiaSectionHeader("APPLICATION INFO")
+                    LojiaSectionHeader(stringResource(R.string.settings_section_app_info))
 
                     LojiaSettingRow(
                         icon = Icons.Outlined.Info,
@@ -649,7 +650,7 @@ fun SettingsReportSection(
                         onClick = {}
                     )
 
-                    LojiaSectionHeader("LEGAL")
+                    LojiaSectionHeader(stringResource(R.string.settings_section_legal))
 
                     LojiaSettingRow(
                         icon = Icons.Outlined.Description,
@@ -692,7 +693,7 @@ fun SettingsReportSection(
                         .fillMaxWidth()
                         .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
                 ) {
-                    LojiaSectionHeader("CONTACT SUPPORT")
+                    LojiaSectionHeader(stringResource(R.string.settings_section_contact_support))
 
                     LojiaSettingRow(
                         icon = Icons.Outlined.HeadsetMic,

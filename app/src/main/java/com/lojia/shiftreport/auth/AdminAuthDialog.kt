@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.util.SecurityUtils
 import com.lojia.shiftreport.util.isPinUsable
@@ -64,8 +66,8 @@ private val DialogTextBlack = Color(0xFF111827)
 fun AdminAuthDialog(
     onDismissRequest: () -> Unit,
     onAuthSuccess: () -> Unit,
-    title: String = "Admin Confirmation",
-    subtitle: String = "Confirm Action"
+    title: String = stringResource(R.string.auth_admin_confirmation),
+    subtitle: String = stringResource(R.string.auth_confirm_action)
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -151,7 +153,7 @@ fun AdminAuthDialog(
             errorMessage = null
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             delay(500L)
-            Toast.makeText(context, "✓ PIN Confirmed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.auth_pin_confirmed_toast), Toast.LENGTH_SHORT).show()
             onAuthSuccess()
         } else {
             attempts += 1
@@ -161,13 +163,13 @@ fun AdminAuthDialog(
             triggerShake()
             if (attempts >= AuthPinConstants.MAX_ATTEMPTS) {
                 lockoutSeconds = AuthPinConstants.LOCKOUT_SECONDS
-                errorMessage = "Too many attempts. Try again in ${lockoutSeconds}s"
+                errorMessage = context.getString(R.string.auth_too_many_attempts_format, lockoutSeconds)
             } else {
                 val left = AuthPinConstants.MAX_ATTEMPTS - attempts
                 errorMessage = if (passwordMode) {
-                    "❌ Invalid Admin PIN or Password ($left left)"
+                    context.getString(R.string.auth_invalid_pin_or_password_format, left)
                 } else {
-                    "❌ Wrong PIN - Try again ($left left)"
+                    context.getString(R.string.auth_wrong_pin_format, left)
                 }
             }
             delay(500L)
@@ -298,7 +300,7 @@ fun AdminAuthDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "Admin authentication required to continue. This action will be logged.",
+                                text = stringResource(R.string.auth_info_banner),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF4B5563)
                             )
@@ -404,7 +406,7 @@ fun AdminAuthDialog(
                                     }
                                 }
                             },
-                            label = { Text("Admin Password") },
+                            label = { Text(stringResource(R.string.admin_password_label)) },
                             singleLine = true,
                             isError = isError,
                             visualTransformation = if (passwordVisible) {
@@ -421,9 +423,9 @@ fun AdminAuthDialog(
                                             Icons.Default.Visibility
                                         },
                                         contentDescription = if (passwordVisible) {
-                                            "Hide password"
+                                            stringResource(R.string.cd_hide_password)
                                         } else {
-                                            "Show password"
+                                            stringResource(R.string.cd_show_password)
                                         }
                                     )
                                 }
@@ -451,9 +453,9 @@ fun AdminAuthDialog(
                     // Helper / Attempts Indicator
                     Text(
                         text = if (isPasswordMode) {
-                            "Enter Admin Password (min 6 chars)"
+                            stringResource(R.string.auth_enter_admin_password_hint)
                         } else {
-                            "Enter 6-digit Admin PIN"
+                            stringResource(R.string.auth_enter_admin_pin_hint)
                         },
                         fontSize = 12.sp,
                         color = if (isError) Color.Red else Color.Gray,
@@ -481,7 +483,7 @@ fun AdminAuthDialog(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "✓ PIN Confirmed - Access Granted",
+                                    text = stringResource(R.string.auth_pin_access_granted),
                                     color = Color(0xFF065F46),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
@@ -492,7 +494,7 @@ fun AdminAuthDialog(
 
                     // Instant Red Error Card
                     val displayError = if (lockoutSeconds > 0) {
-                        "Too many attempts. Try again in ${lockoutSeconds}s"
+                        stringResource(R.string.auth_too_many_attempts_format, lockoutSeconds)
                     } else {
                         errorMessage
                     }
@@ -537,9 +539,9 @@ fun AdminAuthDialog(
                     ) {
                         Text(
                             text = if (isPasswordMode) {
-                                "Or use 6-digit Admin PIN"
+                                stringResource(R.string.auth_use_admin_pin_toggle)
                             } else {
-                                "Or use Admin Password"
+                                stringResource(R.string.auth_use_admin_password_toggle)
                             },
                             color = DialogBlue,
                             fontSize = 13.sp,
@@ -557,7 +559,7 @@ fun AdminAuthDialog(
                     ) {
                         TextButton(onClick = onDismissRequest) {
                             Text(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 color = Color(0xFF6B7280),
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -599,7 +601,7 @@ fun AdminAuthDialog(
                                         color = Color.White
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Verifying...", fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.verifying_label), fontWeight = FontWeight.Bold)
                                 }
                                 isSuccess -> {
                                     Icon(
@@ -608,7 +610,7 @@ fun AdminAuthDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Confirmed ✓", fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.confirmed_label), fontWeight = FontWeight.Bold)
                                 }
                                 isError -> {
                                     Icon(
@@ -617,14 +619,14 @@ fun AdminAuthDialog(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Retry", fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.retry_label), fontWeight = FontWeight.Bold)
                                 }
                                 isPasswordMode || isPinComplete -> {
-                                    Text("Confirm", fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.confirm), fontWeight = FontWeight.Bold)
                                 }
                                 else -> {
                                     Text(
-                                        text = "Enter ${AuthPinConstants.PIN_LENGTH - pin.length} more",
+                                        text = stringResource(R.string.auth_enter_more_format, AuthPinConstants.PIN_LENGTH - pin.length),
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 13.sp
                                     )

@@ -46,7 +46,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
+import java.util.Locale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -600,7 +602,7 @@ fun LojiaPasswordField(
                 ) {
                     Icon(
                         imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                        contentDescription = stringResource(if (isPasswordVisible) R.string.cd_hide_password else R.string.cd_show_password),
                         tint = LojiaColors.N500,
                         modifier = Modifier.size(20.dp)
                     )
@@ -646,15 +648,23 @@ fun LojiaCountryPickerDialog(
     onDismiss: () -> Unit,
     isBn: Boolean
 ) {
+    val appLocale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
+    val localizedCountries = remember(countries, appLocale) {
+        countries.map { country ->
+            val displayName = Locale("", country.code).getDisplayCountry(appLocale).ifBlank { country.name }
+            country to displayName
+        }
+    }
     var searchQuery by remember { mutableStateOf("") }
-    val filtered = remember(searchQuery, countries) {
-        if (searchQuery.isBlank()) countries
+    val filtered = remember(searchQuery, localizedCountries) {
+        if (searchQuery.isBlank()) localizedCountries
         else {
             val q = searchQuery.lowercase().trim()
-            countries.filter {
-                it.name.lowercase().contains(q) ||
-                        it.dial.contains(q) ||
-                        it.code.lowercase().contains(q)
+            localizedCountries.filter { (country, displayName) ->
+                displayName.lowercase().contains(q) ||
+                        country.name.lowercase().contains(q) ||
+                        country.dial.contains(q) ||
+                        country.code.lowercase().contains(q)
             }
         }
     }
@@ -741,7 +751,7 @@ fun LojiaCountryPickerDialog(
                         .fillMaxWidth()
                         .heightIn(max = 360.dp)
                 ) {
-                    items(filtered, key = { it.code + it.dial }) { country ->
+                    items(filtered, key = { (c, _) -> c.code + c.dial }) { (country, displayName) ->
                         val isSelected = country.dial == selectedDial
                         Row(
                             modifier = Modifier
@@ -761,7 +771,7 @@ fun LojiaCountryPickerDialog(
                                 modifier = Modifier.width(52.dp)
                             )
                             Text(
-                                text = country.name,
+                                text = displayName,
                                 fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.sp,
                                 color = LojiaColors.N700,
                                 maxLines = 1,

@@ -75,7 +75,7 @@ object PdfShareUtils {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            context.startActivity(Intent.createChooser(intent, "Open PDF Report").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.pdf_chooser_open_report)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: Exception) {
             Toast.makeText(context, context.getString(R.string.no_pdf_viewer_found), Toast.LENGTH_LONG).show()
         }
@@ -84,7 +84,7 @@ object PdfShareUtils {
     /**
      * Shares the exported PDF file via Intent chooser.
      */
-    fun sharePdfFile(context: Context, uri: Uri, title: String = "Shift Sales Report PDF") {
+    fun sharePdfFile(context: Context, uri: Uri, title: String = context.getString(R.string.pdf_email_subject)) {
         try {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/pdf"
@@ -92,7 +92,7 @@ object PdfShareUtils {
                 putExtra(Intent.EXTRA_SUBJECT, title)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(intent, "Share PDF Report").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.pdf_chooser_share_report)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: Exception) {
             Toast.makeText(context, context.getString(R.string.could_not_share_pdf, e.localizedMessage ?: ""), Toast.LENGTH_SHORT).show()
         }
@@ -109,12 +109,12 @@ object PdfShareUtils {
                 if (recipientEmail.isNotBlank()) {
                     putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail.trim()))
                 }
-                putExtra(Intent.EXTRA_SUBJECT, "Shift Sales Report PDF")
-                putExtra(Intent.EXTRA_TEXT, "Please find attached the Shift Sales Report PDF.")
+                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.pdf_email_subject))
+                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.pdf_email_body))
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             context.startActivity(
-                Intent.createChooser(intent, "Email PDF Report")
+                Intent.createChooser(intent, context.getString(R.string.pdf_chooser_email_report))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         } catch (e: Exception) {
@@ -153,7 +153,7 @@ object PdfShareUtils {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 context.startActivity(
-                    Intent.createChooser(fallbackIntent, "Share PDF Report")
+                    Intent.createChooser(fallbackIntent, context.getString(R.string.pdf_chooser_share_report))
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } catch (e: Exception) {

@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +63,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.util.calculateInSampleSize
 import com.lojia.shiftreport.data.BusinessProfile
@@ -79,12 +81,13 @@ private val ProfileBorderLight = Color(0xFFE5E7EB)
 private val ProfileRed = Color(0xFFDC2626)
 private val ProfileRedBg = Color(0xFFFEF2F2)
 
-private val RECOVERY_QUESTIONS = listOf(
-    "What was your first pet's name?",
-    "What city were you born in?",
-    "What is your mother's maiden name?",
-    "What was your first school?",
-    "What is your favorite teacher?"
+@Composable
+private fun recoveryQuestionOptions(): List<String> = listOf(
+    stringResource(R.string.profile_security_q1),
+    stringResource(R.string.profile_security_q2),
+    stringResource(R.string.profile_security_q3),
+    stringResource(R.string.profile_security_q4),
+    stringResource(R.string.profile_security_q5)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,30 +107,33 @@ fun ProfileScreen(
     val addressCount = savedAddresses.size
     val bProfile = businessProfile ?: BusinessProfile()
 
+    val storeOwnerLabel = stringResource(R.string.profile_store_owner)
+    val notSetText = stringResource(R.string.not_set)
+
     // Read real registration & profile data
     var refreshTrigger by remember { mutableIntStateOf(0) }
-    val displayFullName = remember(userProfile, refreshTrigger) {
+    val displayFullName = remember(userProfile, refreshTrigger, storeOwnerLabel) {
         prefs.getFullName()
             .ifBlank { "${prefs.getFirstName()} ${prefs.getLastName()}".trim() }
             .ifBlank { userProfile?.fullName.orEmpty() }
-            .ifBlank { "Store Owner" }
+            .ifBlank { storeOwnerLabel }
     }
     val displayUsername = remember(userProfile, refreshTrigger) {
         prefs.getSavedUsername()
             .ifBlank { userProfile?.username.orEmpty() }
             .ifBlank { "admin" }
     }
-    val displayEmail = remember(userProfile, bProfile, refreshTrigger) {
+    val displayEmail = remember(userProfile, bProfile, refreshTrigger, notSetText) {
         prefs.getEmail()
             .ifBlank { userProfile?.email.orEmpty() }
             .ifBlank { bProfile.email }
-            .ifBlank { "Not set" }
+            .ifBlank { notSetText }
     }
-    val displayPhone = remember(userProfile, bProfile, refreshTrigger) {
+    val displayPhone = remember(userProfile, bProfile, refreshTrigger, notSetText) {
         prefs.getPhone()
             .ifBlank { userProfile?.phone.orEmpty() }
             .ifBlank { bProfile.phone }
-            .ifBlank { "Not set" }
+            .ifBlank { notSetText }
     }
     val displayRecoveryQuestion = remember(userProfile, refreshTrigger) {
         prefs.getRecoveryQuestion()
@@ -221,7 +227,7 @@ fun ProfileScreen(
                 if (profileBitmap != null) {
                     Image(
                         bitmap = profileBitmap!!,
-                        contentDescription = "Profile Picture",
+                        contentDescription = stringResource(R.string.profile_picture),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape),
@@ -236,7 +242,8 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = displayFullName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "S",
+                            text = displayFullName.trim().firstOrNull()?.uppercaseChar()?.toString()
+                                ?: storeOwnerLabel.first().uppercaseChar().toString(),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             color = ProfileBlue
@@ -255,7 +262,7 @@ fun ProfileScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Profile Picture",
+                        contentDescription = stringResource(R.string.profile_edit_picture_cd),
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )
@@ -279,7 +286,7 @@ fun ProfileScreen(
                     prefs.saveProfileImageUri(croppedUri.toString())
                     showCropperDialog = false
                     imageUriToCrop = null
-                    Toast.makeText(context, "Profile picture updated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.profile_picture_updated_toast), Toast.LENGTH_SHORT).show()
                 },
                 onDismiss = {
                     showCropperDialog = false
@@ -289,12 +296,12 @@ fun ProfileScreen(
         }
 
         // SECTION 1: PERSONAL INFORMATION
-        ProfileSectionTitle("PERSONAL INFORMATION")
+        ProfileSectionTitle(stringResource(R.string.profile_section_personal))
 
         // 1. Full Name
         ProfileItemCard(
             icon = Icons.Default.Person,
-            title = "Full Name",
+            title = stringResource(R.string.profile_full_name_label),
             value = displayFullName,
             onClick = { showEditNameDialog = true }
         )
@@ -319,7 +326,7 @@ fun ProfileScreen(
                     clipboardManager.setText(AnnotatedString(displayUsername))
                     Toast.makeText(
                         context,
-                        "User ID cannot be changed. Permanent login ID.",
+                        context.getString(R.string.profile_userid_permanent_toast),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -353,7 +360,7 @@ fun ProfileScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "User ID",
+                            text = stringResource(R.string.profile_userid_label),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = ProfileTextBlack
@@ -366,7 +373,7 @@ fun ProfileScreen(
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "Cannot be changed",
+                                text = stringResource(R.string.profile_cannot_be_changed),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = ProfileTextGray
@@ -385,14 +392,14 @@ fun ProfileScreen(
 
                 Icon(
                     imageVector = Icons.Default.Lock,
-                    contentDescription = "Locked",
+                    contentDescription = stringResource(R.string.profile_locked_cd),
                     tint = Color(0xFF9CA3AF),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "Copy User ID",
+                    contentDescription = stringResource(R.string.profile_copy_userid_cd),
                     tint = ProfileBlue,
                     modifier = Modifier.size(20.dp)
                 )
@@ -402,7 +409,7 @@ fun ProfileScreen(
         // 3. Email Address
         ProfileItemCard(
             icon = Icons.Default.Email,
-            title = "Email Address",
+            title = stringResource(R.string.profile_email_label),
             value = displayEmail,
             onClick = { showEditEmailDialog = true }
         )
@@ -410,7 +417,7 @@ fun ProfileScreen(
         // 4. Phone Number
         ProfileItemCard(
             icon = Icons.Default.Phone,
-            title = "Phone Number",
+            title = stringResource(R.string.profile_phone_label),
             value = displayPhone,
             onClick = { showEditPhoneDialog = true }
         )
@@ -418,11 +425,11 @@ fun ProfileScreen(
         // 5. Address
         ProfileItemCard(
             icon = Icons.Default.LocationOn,
-            title = "Address",
+            title = stringResource(R.string.profile_address_label),
             value = if (addressCount > 0) {
-                "$addressCount addresses saved"
+                stringResource(R.string.saved_addresses_count_format, addressCount)
             } else {
-                "Add store or branch address"
+                stringResource(R.string.profile_add_address_hint)
             },
             onClick = {
                 reportViewModel.selectReportSettingsMenu("saved_addresses")
@@ -430,16 +437,16 @@ fun ProfileScreen(
         )
 
         // SECTION 2: SECURITY & RECOVERY
-        ProfileSectionTitle("SECURITY & RECOVERY")
+        ProfileSectionTitle(stringResource(R.string.profile_section_security))
 
         // 6. Recovery Question
         ProfileItemCard(
             icon = Icons.Default.HelpOutline,
-            title = "Recovery Question",
+            title = stringResource(R.string.profile_recovery_question_label),
             value = if (displayRecoveryQuestion.isNotBlank()) {
                 "$displayRecoveryQuestion ••••"
             } else {
-                "Set security recovery question"
+                stringResource(R.string.profile_set_recovery_hint)
             },
             onClick = { showEditRecoveryDialog = true }
         )
@@ -482,13 +489,13 @@ fun ProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
-                        text = "Password",
+                        text = stringResource(R.string.password),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = ProfileTextBlack
                     )
                     Text(
-                        text = "•••••••• • Change administrator master password",
+                        text = "•••••••• • ${stringResource(R.string.change_password_desc)}",
                         fontSize = 13.sp,
                         color = ProfileTextGray,
                         maxLines = 1,
@@ -517,7 +524,7 @@ fun ProfileScreen(
             onDismiss = { showEditNameDialog = false },
             onSave = { first, last ->
                 showEditNameDialog = false
-                requireAdminPin("Update Full Name") {
+                requireAdminPin(context.getString(R.string.profile_auth_update_name)) {
                     val full = "$first $last".trim()
                     prefs.saveFirstName(first)
                     prefs.saveLastName(last)
@@ -525,7 +532,7 @@ fun ProfileScreen(
                     val current = userProfile ?: UserProfile()
                     reportViewModel.saveUserProfile(current.copy(fullName = full))
                     refreshTrigger++
-                    Toast.makeText(context, "Full name updated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.profile_name_updated_toast), Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -534,17 +541,17 @@ fun ProfileScreen(
     // B. Edit Email Dialog
     if (showEditEmailDialog) {
         EditEmailDialog(
-            currentEmail = if (displayEmail == "Not set") "" else displayEmail,
+            currentEmail = if (displayEmail == notSetText) "" else displayEmail,
             onDismiss = { showEditEmailDialog = false },
             onSave = { newEmail ->
                 showEditEmailDialog = false
-                requireAdminPin("Update Email Address") {
+                requireAdminPin(context.getString(R.string.profile_auth_update_email)) {
                     prefs.saveEmail(newEmail)
                     val current = userProfile ?: UserProfile()
                     reportViewModel.saveUserProfile(current.copy(email = newEmail))
                     reportViewModel.saveBusinessProfile(bProfile.copy(email = newEmail))
                     refreshTrigger++
-                    Toast.makeText(context, "Email updated - Verification sent", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.profile_email_updated_toast), Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -553,17 +560,17 @@ fun ProfileScreen(
     // C. Edit Phone Dialog
     if (showEditPhoneDialog) {
         EditPhoneDialog(
-            currentPhone = if (displayPhone == "Not set") "" else displayPhone,
+            currentPhone = if (displayPhone == notSetText) "" else displayPhone,
             onDismiss = { showEditPhoneDialog = false },
             onSave = { newPhone ->
                 showEditPhoneDialog = false
-                requireAdminPin("Update Phone Number") {
+                requireAdminPin(context.getString(R.string.profile_auth_update_phone)) {
                     prefs.savePhone(newPhone)
                     val current = userProfile ?: UserProfile()
                     reportViewModel.saveUserProfile(current.copy(phone = newPhone))
                     reportViewModel.saveBusinessProfile(bProfile.copy(phone = newPhone))
                     refreshTrigger++
-                    Toast.makeText(context, "Phone number updated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.profile_phone_updated_toast), Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -571,12 +578,13 @@ fun ProfileScreen(
 
     // D. Edit Recovery Question Dialog
     if (showEditRecoveryDialog) {
+        val defaultRecoveryQuestion = recoveryQuestionOptions().first()
         EditRecoveryQuestionDialog(
-            currentQuestion = displayRecoveryQuestion.ifBlank { RECOVERY_QUESTIONS.first() },
+            currentQuestion = displayRecoveryQuestion.ifBlank { defaultRecoveryQuestion },
             onDismiss = { showEditRecoveryDialog = false },
             onSave = { question, answer ->
                 showEditRecoveryDialog = false
-                requireAdminPin("Update Recovery Question") {
+                requireAdminPin(context.getString(R.string.profile_auth_update_recovery)) {
                     val hash = SecurityUtils.hashSecret(answer)
                     prefs.saveRecoveryQuestion(question)
                     prefs.saveRecoveryAnswerHash(hash)
@@ -588,7 +596,7 @@ fun ProfileScreen(
                         )
                     )
                     refreshTrigger++
-                    Toast.makeText(context, "Recovery question updated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.profile_recovery_updated_toast), Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -601,11 +609,11 @@ fun ProfileScreen(
             onDismiss = { showProfileChangePasswordDialog = false },
             onSave = { newPassword ->
                 showProfileChangePasswordDialog = false
-                requireAdminPin("Change Master Password") {
+                requireAdminPin(context.getString(R.string.profile_auth_change_password)) {
                     val newHash = SecurityUtils.hashSecret(newPassword)
                     val current = userProfile ?: UserProfile()
                     reportViewModel.saveUserProfile(current.copy(passwordHash = newHash))
-                    Toast.makeText(context, "Password changed. Please sign in again.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.profile_password_changed_toast), Toast.LENGTH_SHORT).show()
                     onLogoutClick()
                 }
             }
@@ -781,17 +789,17 @@ private fun EditFullNameDialog(
                         ) {
                             Icon(Icons.Default.Person, contentDescription = null, tint = ProfileBlue)
                         }
-                        Text("Edit Full Name", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                        Text(stringResource(R.string.profile_edit_full_name_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
                     }
 
                     OutlinedTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        label = { Text("First Name *") },
+                        label = { Text(stringResource(R.string.profile_first_name_label)) },
                         singleLine = true,
                         isError = firstName.isBlank(),
                         supportingText = if (firstName.isBlank()) {
-                            { Text("First name is required") }
+                            { Text(stringResource(R.string.profile_first_name_required)) }
                         } else null,
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                         shape = RoundedCornerShape(12.dp),
@@ -801,11 +809,11 @@ private fun EditFullNameDialog(
                     OutlinedTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        label = { Text("Last Name *") },
+                        label = { Text(stringResource(R.string.profile_last_name_label)) },
                         singleLine = true,
                         isError = lastName.isBlank(),
                         supportingText = if (lastName.isBlank()) {
-                            { Text("Last name is required") }
+                            { Text(stringResource(R.string.profile_last_name_required)) }
                         } else null,
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                         shape = RoundedCornerShape(12.dp),
@@ -818,7 +826,7 @@ private fun EditFullNameDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "This will be shown as your full name in reports and profile.",
+                            text = stringResource(R.string.profile_full_name_info),
                             fontSize = 12.sp,
                             color = ProfileBlue,
                             modifier = Modifier.padding(12.dp)
@@ -830,7 +838,7 @@ private fun EditFullNameDialog(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", color = ProfileTextGray)
+                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -840,7 +848,7 @@ private fun EditFullNameDialog(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text("Save", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -897,17 +905,17 @@ private fun EditEmailDialog(
                         ) {
                             Icon(Icons.Default.Email, contentDescription = null, tint = ProfileBlue)
                         }
-                        Text("Edit Email Address", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                        Text(stringResource(R.string.profile_edit_email_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
                     }
 
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email Address *") },
+                        label = { Text(stringResource(R.string.profile_email_required_label)) },
                         singleLine = true,
                         isError = email.isNotBlank() && !isEmailValid,
                         supportingText = if (email.isNotBlank() && !isEmailValid) {
-                            { Text("Enter a valid email address", color = ProfileRed) }
+                            { Text(stringResource(R.string.profile_invalid_email_error), color = ProfileRed) }
                         } else null,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         shape = RoundedCornerShape(12.dp),
@@ -920,7 +928,7 @@ private fun EditEmailDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Verification email will be sent to new address.",
+                            text = stringResource(R.string.profile_email_verification_note),
                             fontSize = 12.sp,
                             color = ProfileBlue,
                             modifier = Modifier.padding(12.dp)
@@ -932,7 +940,7 @@ private fun EditEmailDialog(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", color = ProfileTextGray)
+                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -942,7 +950,7 @@ private fun EditEmailDialog(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text("Save", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -999,18 +1007,18 @@ private fun EditPhoneDialog(
                         ) {
                             Icon(Icons.Default.Phone, contentDescription = null, tint = ProfileBlue)
                         }
-                        Text("Edit Phone Number", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                        Text(stringResource(R.string.profile_edit_phone_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
                     }
 
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it },
-                        label = { Text("Phone Number *") },
+                        label = { Text(stringResource(R.string.profile_phone_required_label)) },
                         placeholder = { Text("+966 50 000 0000") },
                         singleLine = true,
                         isError = phone.isNotBlank() && !isValid,
                         supportingText = if (phone.isNotBlank() && !isValid) {
-                            { Text("Enter 10 to 15 digits", color = ProfileRed) }
+                            { Text(stringResource(R.string.profile_phone_digits_error), color = ProfileRed) }
                         } else null,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         shape = RoundedCornerShape(12.dp),
@@ -1022,7 +1030,7 @@ private fun EditPhoneDialog(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", color = ProfileTextGray)
+                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -1032,7 +1040,7 @@ private fun EditPhoneDialog(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text("Save", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1091,9 +1099,10 @@ private fun EditRecoveryQuestionDialog(
                         ) {
                             Icon(Icons.Default.HelpOutline, contentDescription = null, tint = ProfileBlue)
                         }
-                        Text("Edit Recovery Question", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                        Text(stringResource(R.string.profile_edit_recovery_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
                     }
 
+                    val recoveryQuestions = recoveryQuestionOptions()
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded }
@@ -1102,7 +1111,7 @@ private fun EditRecoveryQuestionDialog(
                             value = selectedQuestion,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Security Question") },
+                            label = { Text(stringResource(R.string.security_question_label)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
@@ -1113,7 +1122,7 @@ private fun EditRecoveryQuestionDialog(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            RECOVERY_QUESTIONS.forEach { q ->
+                            recoveryQuestions.forEach { q ->
                                 DropdownMenuItem(
                                     text = { Text(q) },
                                     onClick = {
@@ -1128,7 +1137,7 @@ private fun EditRecoveryQuestionDialog(
                     OutlinedTextField(
                         value = answer,
                         onValueChange = { answer = it },
-                        label = { Text("Answer * (min 3 chars)") },
+                        label = { Text(stringResource(R.string.profile_answer_label)) },
                         singleLine = true,
                         visualTransformation = if (answerVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -1149,7 +1158,7 @@ private fun EditRecoveryQuestionDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "This will be used to recover your account if you forget password. Keep it secure.",
+                            text = stringResource(R.string.profile_recovery_info),
                             fontSize = 12.sp,
                             color = Color(0xFF92400E),
                             modifier = Modifier.padding(12.dp)
@@ -1161,7 +1170,7 @@ private fun EditRecoveryQuestionDialog(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", color = ProfileTextGray)
+                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -1171,7 +1180,7 @@ private fun EditRecoveryQuestionDialog(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text("Save", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1186,6 +1195,7 @@ private fun ProfileChangePasswordDialog(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
+    val context = LocalContext.current
     var currentPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
@@ -1195,14 +1205,19 @@ private fun ProfileChangePasswordDialog(
     var showConfirm by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    val strengthLabel = when {
-        newPass.length < 8 -> "Weak"
-        newPass.any { it.isDigit() } && newPass.any { !it.isLetterOrDigit() } -> "Strong"
-        else -> "Medium"
+    val strengthLevel = when {
+        newPass.length < 8 -> 0
+        newPass.any { it.isDigit() } && newPass.any { !it.isLetterOrDigit() } -> 2
+        else -> 1
     }
-    val strengthColor = when (strengthLabel) {
-        "Strong" -> Color(0xFF10B981)
-        "Medium" -> Color(0xFFF59E0B)
+    val strengthLabel = when (strengthLevel) {
+        0 -> stringResource(R.string.auth_weak)
+        2 -> stringResource(R.string.auth_strong)
+        else -> stringResource(R.string.profile_strength_medium)
+    }
+    val strengthColor = when (strengthLevel) {
+        2 -> Color(0xFF10B981)
+        1 -> Color(0xFFF59E0B)
         else -> ProfileRed
     }
 
@@ -1249,13 +1264,13 @@ private fun ProfileChangePasswordDialog(
                         ) {
                             Icon(Icons.Default.Key, contentDescription = null, tint = ProfileRed)
                         }
-                        Text("Change Password", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
+                        Text(stringResource(R.string.change_password_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
                     }
 
                     OutlinedTextField(
                         value = currentPass,
                         onValueChange = { currentPass = it; errorText = null },
-                        label = { Text("Current Password *") },
+                        label = { Text(stringResource(R.string.profile_current_password_label)) },
                         singleLine = true,
                         visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -1270,7 +1285,7 @@ private fun ProfileChangePasswordDialog(
                     OutlinedTextField(
                         value = newPass,
                         onValueChange = { newPass = it; errorText = null },
-                        label = { Text("New Password * (min 8 chars)") },
+                        label = { Text(stringResource(R.string.profile_new_password_label)) },
                         singleLine = true,
                         visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -1284,7 +1299,7 @@ private fun ProfileChangePasswordDialog(
 
                     if (newPass.isNotEmpty()) {
                         Text(
-                            text = "Password strength: $strengthLabel",
+                            text = stringResource(R.string.profile_password_strength_format, strengthLabel),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = strengthColor
@@ -1294,7 +1309,7 @@ private fun ProfileChangePasswordDialog(
                     OutlinedTextField(
                         value = confirmPass,
                         onValueChange = { confirmPass = it; errorText = null },
-                        label = { Text("Confirm New Password *") },
+                        label = { Text(stringResource(R.string.profile_confirm_password_label)) },
                         singleLine = true,
                         isError = confirmPass.isNotEmpty() && confirmPass != newPass,
                         visualTransformation = if (showConfirm) VisualTransformation.None else PasswordVisualTransformation(),
@@ -1321,7 +1336,7 @@ private fun ProfileChangePasswordDialog(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = onDismiss) {
-                            Text("Cancel", color = ProfileTextGray)
+                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
@@ -1329,7 +1344,7 @@ private fun ProfileChangePasswordDialog(
                                 val currentOk = currentPasswordHash.isBlank() ||
                                     SecurityUtils.verifySecretWithUpgrade(currentPass, currentPasswordHash).isMatch
                                 if (!currentOk) {
-                                    errorText = "Current password is incorrect"
+                                    errorText = context.getString(R.string.profile_current_password_incorrect)
                                 } else {
                                     onSave(newPass)
                                 }
@@ -1339,7 +1354,7 @@ private fun ProfileChangePasswordDialog(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text("Change", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.profile_change_action), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

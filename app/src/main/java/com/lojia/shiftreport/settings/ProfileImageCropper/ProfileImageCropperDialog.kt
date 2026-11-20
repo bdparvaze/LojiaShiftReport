@@ -88,7 +88,7 @@ fun ProfileImageCropperDialog(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Crop Profile Photo",
+                    text = stringResource(R.string.crop_profile_photo_title),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 19.sp
@@ -131,7 +131,7 @@ fun ProfileImageCropperDialog(
                     )
                 } else {
                     Text(
-                        text = "Unable to load image",
+                        text = stringResource(R.string.crop_unable_to_load_image),
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -173,7 +173,7 @@ fun ProfileImageCropperDialog(
             }
 
             Text(
-                text = "Pinch to zoom • Drag to reposition",
+                text = stringResource(R.string.crop_instructions),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
@@ -197,7 +197,7 @@ fun ProfileImageCropperDialog(
                         .testTag("btn_cancel_crop"),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
 
                 Button(
@@ -236,11 +236,11 @@ fun ProfileImageCropperDialog(
                                         onCropSaved(finalUri)
                                         onDismiss()
                                     } else {
-                                        Toast.makeText(context, "Failed to save cropped image", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.crop_save_failed_toast), Toast.LENGTH_SHORT).show()
                                     }
                                 } catch (e: Exception) {
                                     isSaving = false
-                                    Toast.makeText(context, "Crop error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.crop_error_toast_format, e.message ?: ""), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -266,7 +266,7 @@ fun ProfileImageCropperDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Save Photo", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.save_photo_label), fontWeight = FontWeight.Bold)
                     }
                 }
             }

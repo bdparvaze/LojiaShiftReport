@@ -1,5 +1,6 @@
 package com.lojia.shiftreport.settings
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -251,7 +252,7 @@ fun SettingsBackupSubSection(
         // ==========================================
         // 1. TOP: BACKUP LOCATION SELECTOR
         // ==========================================
-        LojiaSectionHeader(text = "BACKUP DESTINATION")
+        LojiaSectionHeader(text = stringResource(R.string.backup_section_destination))
 
         Card(
             modifier = Modifier
@@ -268,13 +269,13 @@ fun SettingsBackupSubSection(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Select Backup Location",
+                    text = stringResource(R.string.backup_select_location_title),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
                 )
                 Text(
-                    text = "Choose where your shift reports and database are safely stored. International standard multi-cloud architecture.",
+                    text = stringResource(R.string.backup_select_location_desc),
                     fontSize = 12.sp,
                     color = TextSecondaryLight,
                     lineHeight = 16.sp
@@ -284,8 +285,8 @@ fun SettingsBackupSubSection(
 
                 // Location Option 1: Device Storage (Local)
                 BackupLocationOptionCard(
-                    title = "Device Storage (Offline)",
-                    subtitle = "Documents/LojiaShiftReport/backups/ • 100% Offline",
+                    title = stringResource(R.string.backup_loc_device_title),
+                    subtitle = stringResource(R.string.backup_loc_device_subtitle),
                     icon = Icons.Outlined.Folder,
                     iconTint = PrimaryIndigoLight,
                     isSelected = selectedLocation == BackupLocation.LOCAL,
@@ -297,8 +298,8 @@ fun SettingsBackupSubSection(
 
                 // Location Option 2: Google Drive
                 BackupLocationOptionCard(
-                    title = "Google Drive",
-                    subtitle = "Secure AppData cloud sync • Personal or Workspace",
+                    title = stringResource(R.string.backup_loc_gdrive_title),
+                    subtitle = stringResource(R.string.backup_loc_gdrive_subtitle),
                     icon = Icons.Outlined.CloudQueue,
                     iconTint = Color(0xFF1A73E8),
                     isSelected = selectedLocation == BackupLocation.GOOGLE_DRIVE,
@@ -310,8 +311,8 @@ fun SettingsBackupSubSection(
 
                 // Location Option 3: Microsoft OneDrive
                 BackupLocationOptionCard(
-                    title = "Microsoft OneDrive",
-                    subtitle = "/Apps/LojiaShiftReport/ • Microsoft 365 cloud",
+                    title = stringResource(R.string.backup_loc_onedrive_title),
+                    subtitle = stringResource(R.string.backup_loc_onedrive_subtitle),
                     icon = Icons.Outlined.CloudSync,
                     iconTint = Color(0xFF0078D4),
                     isSelected = selectedLocation == BackupLocation.ONEDRIVE,
@@ -323,8 +324,8 @@ fun SettingsBackupSubSection(
 
                 // Location Option 4: Both (Local + Cloud)
                 BackupLocationOptionCard(
-                    title = "Both (Local + Cloud)",
-                    subtitle = "WhatsApp standard: on-device copies + cloud sync",
+                    title = stringResource(R.string.backup_loc_both_title),
+                    subtitle = stringResource(R.string.backup_loc_both_subtitle),
                     icon = Icons.Outlined.Layers,
                     iconTint = SuccessGreen,
                     isSelected = selectedLocation == BackupLocation.BOTH,
@@ -339,7 +340,7 @@ fun SettingsBackupSubSection(
         // ==========================================
         // 2. MIDDLE: STATUS CARDS
         // ==========================================
-        LojiaSectionHeader(text = "DESTINATION STATUS & ACTIONS")
+        LojiaSectionHeader(text = stringResource(R.string.backup_section_status_actions))
 
         // 2A. LOCAL STATUS CARD
         if (selectedLocation == BackupLocation.LOCAL || selectedLocation == BackupLocation.BOTH) {
@@ -355,10 +356,11 @@ fun SettingsBackupSubSection(
                             isLocalBackingUp = false
                             refreshStatus()
                             if (res[BackupLocation.LOCAL]?.isSuccess == true) {
-                                Toast.makeText(context, "Local backup saved to Documents folder!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.backup_local_saved_toast), Toast.LENGTH_SHORT).show()
                             } else {
-                                val err = res[BackupLocation.LOCAL]?.exceptionOrNull()?.message ?: "Backup failed"
-                                Toast.makeText(context, "Backup failed: $err", Toast.LENGTH_SHORT).show()
+                                val err = res[BackupLocation.LOCAL]?.exceptionOrNull()?.message
+                                    ?: context.getString(R.string.backup_failed_generic)
+                                Toast.makeText(context, context.getString(R.string.backup_failed_format, err), Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -387,11 +389,11 @@ fun SettingsBackupSubSection(
                     runWithPortableBackupGate {
                         reportViewModel.backupToGoogleDrive(
                             onSuccess = {
-                                Toast.makeText(context, "Google Drive backup uploaded!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.backup_gdrive_uploaded_toast), Toast.LENGTH_SHORT).show()
                                 refreshStatus()
                             },
                             onFailure = { err ->
-                                Toast.makeText(context, "Upload failed: $err", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.backup_upload_failed_format, err), Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -400,7 +402,7 @@ fun SettingsBackupSubSection(
                     reportViewModel.fetchGoogleDriveBackups(
                         onSuccess = { showDriveBackupsPicker = true },
                         onFailure = { err ->
-                            Toast.makeText(context, "Could not fetch Drive backups: $err", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.backup_gdrive_fetch_failed_format, err), Toast.LENGTH_SHORT).show()
                         }
                     )
                 },
@@ -430,10 +432,11 @@ fun SettingsBackupSubSection(
                             isOneDriveBackingUp = false
                             refreshStatus()
                             if (res[BackupLocation.ONEDRIVE]?.isSuccess == true) {
-                                Toast.makeText(context, "OneDrive backup uploaded successfully!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.backup_onedrive_uploaded_toast), Toast.LENGTH_SHORT).show()
                             } else {
-                                val err = res[BackupLocation.ONEDRIVE]?.exceptionOrNull()?.message ?: "Upload failed"
-                                Toast.makeText(context, "OneDrive: $err", Toast.LENGTH_LONG).show()
+                                val err = res[BackupLocation.ONEDRIVE]?.exceptionOrNull()?.message
+                                    ?: context.getString(R.string.backup_upload_failed_generic)
+                                Toast.makeText(context, context.getString(R.string.backup_onedrive_error_format, err), Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -462,14 +465,14 @@ fun SettingsBackupSubSection(
                             pendingBackupSummary = summary
                             showRestoreConfirmDialog = true
                         } else {
-                            Toast.makeText(context, "No OneDrive backup file found to restore.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.backup_onedrive_none_found_toast), Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
                 onDisconnect = {
                     backupManager.oneDriveProvider.disconnect()
                     refreshStatus()
-                    Toast.makeText(context, "Disconnected from Microsoft OneDrive.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.backup_onedrive_disconnected_toast), Toast.LENGTH_SHORT).show()
                 }
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -478,7 +481,7 @@ fun SettingsBackupSubSection(
         // ==========================================
         // 3. BOTTOM: AUTO BACKUP SECTION
         // ==========================================
-        LojiaSectionHeader(text = "AUTOMATIC BACKUP")
+        LojiaSectionHeader(text = stringResource(R.string.backup_section_automatic))
 
         Card(
             modifier = Modifier
@@ -508,7 +511,7 @@ fun SettingsBackupSubSection(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Safeguard shift data automatically without manual interaction",
+                            text = stringResource(R.string.backup_auto_desc),
                             fontSize = 12.sp,
                             color = TextSecondaryLight
                         )
@@ -531,7 +534,7 @@ fun SettingsBackupSubSection(
                     HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f))
 
                     Text(
-                        text = "Backup Frequency",
+                        text = stringResource(R.string.backup_frequency_title),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
@@ -542,9 +545,9 @@ fun SettingsBackupSubSection(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
-                            "daily" to "Daily (3:00 AM)",
-                            "weekly" to "Weekly",
-                            "manual" to "Manual"
+                            "daily" to stringResource(R.string.backup_freq_daily_3am),
+                            "weekly" to stringResource(R.string.weekly),
+                            "manual" to stringResource(R.string.backup_freq_manual)
                         ).forEach { (freqKey, freqLabel) ->
                             val isSelected = autoBackupFreq.equals(freqKey, ignoreCase = true)
                             FilterChip(
@@ -571,7 +574,7 @@ fun SettingsBackupSubSection(
         // ==========================================
         // 4. DANGER ZONE: CLEAR ALL DATA
         // ==========================================
-        LojiaSectionHeader(text = "DANGER ZONE")
+        LojiaSectionHeader(text = stringResource(R.string.backup_section_danger_zone))
 
         Card(
             modifier = Modifier
@@ -643,11 +646,11 @@ fun SettingsBackupSubSection(
         AlertDialog(
             onDismissRequest = { showLocalFilesDialog = false },
             title = {
-                Text("Local Backup Archives", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Text(stringResource(R.string.backup_local_archives_title), fontWeight = FontWeight.Bold, fontSize = 17.sp)
             },
             text = {
                 if (backupFiles.isEmpty()) {
-                    Text("No local backup files found in Documents/LojiaShiftReport/backups/", fontSize = 13.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_local_none_found), fontSize = 13.sp, color = TextSecondaryLight)
                 } else {
                     Column(
                         modifier = Modifier
@@ -679,7 +682,7 @@ fun SettingsBackupSubSection(
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
-                                            text = "${dateFormatter.format(Date(file.lastModified()))} • ${formatFileSize(file.length())}",
+                                            text = "${dateFormatter.format(Date(file.lastModified()))} • ${formatFileSize(context, file.length())}",
                                             fontSize = 10.sp,
                                             color = TextSecondaryLight
                                         )
@@ -711,7 +714,7 @@ fun SettingsBackupSubSection(
                                             }
                                         }
                                     ) {
-                                        Icon(Icons.Outlined.Restore, contentDescription = "Restore", tint = PrimaryIndigoLight)
+                                        Icon(Icons.Outlined.Restore, contentDescription = stringResource(R.string.action_unarchive), tint = PrimaryIndigoLight)
                                     }
                                 }
                             }
@@ -726,7 +729,7 @@ fun SettingsBackupSubSection(
                         PdfShareUtils.openFolderInFileManager(context, backupManager.localProvider.getBackupDirectory())
                     }
                 ) {
-                    Text("Open Folder in Files")
+                    Text(stringResource(R.string.backup_open_folder_files))
                 }
             },
             dismissButton = {
@@ -747,13 +750,13 @@ fun SettingsBackupSubSection(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color(0xFF0078D4))
-                    Text("Connect Microsoft OneDrive", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.backup_connect_onedrive), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Sign in with your Microsoft 365 or Outlook account to sync shift backups directly to /Apps/LojiaShiftReport/.",
+                        text = stringResource(R.string.backup_onedrive_connect_desc),
                         fontSize = 12.sp,
                         color = TextSecondaryLight
                     )
@@ -761,8 +764,8 @@ fun SettingsBackupSubSection(
                     OutlinedTextField(
                         value = inputEmail,
                         onValueChange = { inputEmail = it },
-                        label = { Text("Microsoft Account Email") },
-                        placeholder = { Text("e.g. store@outlook.com") },
+                        label = { Text(stringResource(R.string.backup_onedrive_email_label)) },
+                        placeholder = { Text(stringResource(R.string.backup_onedrive_email_hint)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -776,11 +779,11 @@ fun SettingsBackupSubSection(
                         backupManager.oneDriveProvider.setConnectedAccount(email, dummyToken)
                         refreshStatus()
                         showOneDriveConnectDialog = false
-                        Toast.makeText(context, "OneDrive account connected: $email", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.backup_onedrive_connected_format, email), Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4))
                 ) {
-                    Text("Connect Account")
+                    Text(stringResource(R.string.backup_connect_account_btn))
                 }
             },
             dismissButton = {
@@ -800,7 +803,7 @@ fun SettingsBackupSubSection(
             },
             text = {
                 if (driveBackupsList.isEmpty()) {
-                    Text("No backup archives found in Google Drive.", fontSize = 13.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_gdrive_none_found), fontSize = 13.sp, color = TextSecondaryLight)
                 } else {
                     Column(
                         modifier = Modifier
@@ -928,13 +931,13 @@ fun SettingsBackupSubSection(
                         ) {
                             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    text = "✓ ${summary.shiftReportsCount} shifts ready to restore",
+                                    text = stringResource(R.string.backup_restore_shifts_count_format, summary.shiftReportsCount),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryIndigoLight
                                 )
                                 Text(
-                                    text = "Total Records: ${summary.totalRecords} • Export Date: ${summary.exportDate}",
+                                    text = stringResource(R.string.backup_restore_summary_format, summary.totalRecords, summary.exportDate),
                                     fontSize = 11.sp,
                                     color = OnSurfaceLight
                                 )
@@ -987,12 +990,7 @@ fun SettingsBackupSubSection(
                                         Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
                                         refreshStatus()
                                     } else {
-                                        val err = res.exceptionOrNull()
-                                        val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                                            context.getString(R.string.backup_pw_wrong_or_damaged)
-                                        } else {
-                                            err?.localizedMessage ?: context.getString(R.string.restore_failed)
-                                        }
+                                        val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, res.exceptionOrNull())
                                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                     }
                                 }
@@ -1031,7 +1029,7 @@ fun SettingsBackupSubSection(
             },
             title = {
                 Text(
-                    text = "Type DELETE to Confirm",
+                    text = stringResource(R.string.backup_delete_dialog_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = ErrorRedLight
@@ -1040,13 +1038,13 @@ fun SettingsBackupSubSection(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "This will permanently wipe all local database tables, cashier sessions, sales ledger, and shift reports from this device.",
+                        text = stringResource(R.string.backup_delete_dialog_warning),
                         fontSize = 13.sp,
                         color = OnSurfaceLight
                     )
 
                     Text(
-                        text = "To proceed, please type DELETE below in all capital letters:",
+                        text = stringResource(R.string.backup_delete_dialog_instruction),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = ErrorRedLight
@@ -1055,7 +1053,7 @@ fun SettingsBackupSubSection(
                     OutlinedTextField(
                         value = typedConfirmation,
                         onValueChange = { typedConfirmation = it },
-                        placeholder = { Text("DELETE") },
+                        placeholder = { Text(stringResource(R.string.backup_delete_keyword)) },
                         singleLine = true,
                         isError = typedConfirmation.isNotEmpty() && !isConfirmed,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -1076,11 +1074,11 @@ fun SettingsBackupSubSection(
                         pendingAdminAuthAction = {
                             reportViewModel.clearAllBusinessData(
                                 onSuccess = {
-                                    Toast.makeText(context, "All business data has been permanently cleared.", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, context.getString(R.string.backup_cleared_all_toast), Toast.LENGTH_LONG).show()
                                     refreshStatus()
                                 },
                                 onFailure = { err ->
-                                    Toast.makeText(context, "Error clearing data: $err", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.backup_clear_error_format, err), Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -1173,11 +1171,7 @@ fun SettingsBackupSubSection(
                                 Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_LONG).show()
                                 refreshStatus()
                             }.onFailure { err ->
-                                val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                                    context.getString(R.string.backup_pw_wrong_or_damaged)
-                                } else {
-                                    err.localizedMessage ?: context.getString(R.string.restore_failed)
-                                }
+                                val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, err)
                                 restorePasswordError = msg
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
@@ -1301,6 +1295,7 @@ private fun LocalBackupStatusCard(
     onViewFiles: () -> Unit,
     onRestoreFile: () -> Unit
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(LojiaDimens.CardRadius),
@@ -1332,8 +1327,8 @@ private fun LocalBackupStatusCard(
                         Icon(Icons.Outlined.Folder, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(20.dp))
                     }
                     Column {
-                        Text("Device Storage", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
-                        Text("Documents/LojiaShiftReport/backups/", fontSize = 11.sp, color = TextSecondaryLight)
+                        Text(stringResource(R.string.backup_device_storage_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(stringResource(R.string.backup_local_folder_path), fontSize = 11.sp, color = TextSecondaryLight)
                     }
                 }
 
@@ -1342,7 +1337,7 @@ private fun LocalBackupStatusCard(
                     color = if (lastBackupTime > 0L) SuccessContainer else WarningContainer
                 ) {
                     Text(
-                        text = if (lastBackupTime > 0L) "Protected" else "No Backup",
+                        text = stringResource(if (lastBackupTime > 0L) R.string.backup_status_protected else R.string.backup_status_no_backup),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (lastBackupTime > 0L) SuccessGreen else WarningOrange,
@@ -1358,18 +1353,18 @@ private fun LocalBackupStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Last Backup", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.last_backup), fontSize = 11.sp, color = TextSecondaryLight)
                     Text(
-                        text = if (lastBackupTime > 0L) formatTimeAgo(lastBackupTime) else "Never",
+                        text = if (lastBackupTime > 0L) formatTimeAgo(context, lastBackupTime) else stringResource(R.string.lock_never),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Total Archives Size", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_total_archives_size), fontSize = 11.sp, color = TextSecondaryLight)
                     Text(
-                        text = formatFileSize(totalSize),
+                        text = formatFileSize(context, totalSize),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
@@ -1391,11 +1386,11 @@ private fun LocalBackupStatusCard(
                     if (isBackingUp) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Backing up...", fontSize = 12.sp)
+                        Text(stringResource(R.string.backup_backing_up), fontSize = 12.sp)
                     } else {
                         Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Backup Now", fontSize = 12.sp)
+                        Text(stringResource(R.string.backup_now_label), fontSize = 12.sp)
                     }
                 }
 
@@ -1408,7 +1403,7 @@ private fun LocalBackupStatusCard(
                 ) {
                     Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("View Files", fontSize = 12.sp)
+                    Text(stringResource(R.string.backup_view_files), fontSize = 12.sp)
                 }
             }
         }
@@ -1426,6 +1421,7 @@ private fun GoogleDriveStatusCard(
     onRestore: () -> Unit,
     onDisconnect: () -> Unit
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(LojiaDimens.CardRadius),
@@ -1457,9 +1453,9 @@ private fun GoogleDriveStatusCard(
                         Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = Color(0xFF1A73E8), modifier = Modifier.size(20.dp))
                     }
                     Column {
-                        Text("Google Drive", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(stringResource(R.string.backup_loc_gdrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
                         Text(
-                            text = if (isConnected) (accountEmail ?: "Connected") else "Not Connected",
+                            text = if (isConnected) (accountEmail ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
                             fontSize = 11.sp,
                             color = TextSecondaryLight
                         )
@@ -1472,7 +1468,7 @@ private fun GoogleDriveStatusCard(
                     border = BorderStroke(1.dp, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
                 ) {
                     Text(
-                        text = if (isConnected) "Connected" else "Disconnected",
+                        text = stringResource(if (isConnected) R.string.backup_status_connected else R.string.backup_status_disconnected),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isConnected) SuccessGreen else TextSecondaryLight,
@@ -1488,17 +1484,17 @@ private fun GoogleDriveStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Last Cloud Sync", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_last_cloud_sync), fontSize = 11.sp, color = TextSecondaryLight)
                     Text(
-                        text = if (lastSyncTime > 0L) formatTimeAgo(lastSyncTime) else "Never",
+                        text = if (lastSyncTime > 0L) formatTimeAgo(context, lastSyncTime) else stringResource(R.string.lock_never),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Target Folder", fontSize = 11.sp, color = TextSecondaryLight)
-                    Text("AppData Space", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
+                    Text(stringResource(R.string.backup_target_folder), fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_appdata_space), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
                 }
             }
 
@@ -1511,7 +1507,7 @@ private fun GoogleDriveStatusCard(
                 ) {
                     Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Connect Google Drive", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.backup_connect_gdrive), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(
@@ -1528,11 +1524,11 @@ private fun GoogleDriveStatusCard(
                         if (isUploading) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Uploading...", fontSize = 12.sp)
+                            Text(stringResource(R.string.backup_uploading), fontSize = 12.sp)
                         } else {
                             Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Backup Now", fontSize = 12.sp)
+                            Text(stringResource(R.string.backup_now_label), fontSize = 12.sp)
                         }
                     }
 
@@ -1545,11 +1541,11 @@ private fun GoogleDriveStatusCard(
                     ) {
                         Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Restore", fontSize = 12.sp)
+                        Text(stringResource(R.string.action_unarchive), fontSize = 12.sp)
                     }
 
                     IconButton(onClick = onDisconnect) {
-                        Icon(Icons.Default.Close, contentDescription = "Disconnect", tint = ErrorRedLight)
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.btn_disconnect_drive), tint = ErrorRedLight)
                     }
                 }
             }
@@ -1568,6 +1564,7 @@ private fun OneDriveStatusCard(
     onRestore: () -> Unit,
     onDisconnect: () -> Unit
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(LojiaDimens.CardRadius),
@@ -1599,9 +1596,9 @@ private fun OneDriveStatusCard(
                         Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color(0xFF0078D4), modifier = Modifier.size(20.dp))
                     }
                     Column {
-                        Text("Microsoft OneDrive", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(stringResource(R.string.backup_loc_onedrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
                         Text(
-                            text = if (isConnected) (accountEmail ?: "Connected") else "Not Connected",
+                            text = if (isConnected) (accountEmail ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
                             fontSize = 11.sp,
                             color = TextSecondaryLight
                         )
@@ -1614,7 +1611,7 @@ private fun OneDriveStatusCard(
                     border = BorderStroke(1.dp, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
                 ) {
                     Text(
-                        text = if (isConnected) "Connected" else "Disconnected",
+                        text = stringResource(if (isConnected) R.string.backup_status_connected else R.string.backup_status_disconnected),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isConnected) SuccessGreen else TextSecondaryLight,
@@ -1630,17 +1627,17 @@ private fun OneDriveStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Last Cloud Sync", fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_last_cloud_sync), fontSize = 11.sp, color = TextSecondaryLight)
                     Text(
-                        text = if (lastSyncTime > 0L) formatTimeAgo(lastSyncTime) else "Never",
+                        text = if (lastSyncTime > 0L) formatTimeAgo(context, lastSyncTime) else stringResource(R.string.lock_never),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Target Folder", fontSize = 11.sp, color = TextSecondaryLight)
-                    Text("/Apps/LojiaShiftReport/", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
+                    Text(stringResource(R.string.backup_target_folder), fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_onedrive_folder_path), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
                 }
             }
 
@@ -1653,7 +1650,7 @@ private fun OneDriveStatusCard(
                 ) {
                     Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Connect Microsoft OneDrive", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.backup_connect_onedrive), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(
@@ -1670,11 +1667,11 @@ private fun OneDriveStatusCard(
                         if (isUploading) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Uploading...", fontSize = 12.sp)
+                            Text(stringResource(R.string.backup_uploading), fontSize = 12.sp)
                         } else {
                             Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Backup Now", fontSize = 12.sp)
+                            Text(stringResource(R.string.backup_now_label), fontSize = 12.sp)
                         }
                     }
 
@@ -1687,11 +1684,11 @@ private fun OneDriveStatusCard(
                     ) {
                         Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Restore", fontSize = 12.sp)
+                        Text(stringResource(R.string.action_unarchive), fontSize = 12.sp)
                     }
 
                     IconButton(onClick = onDisconnect) {
-                        Icon(Icons.Default.Close, contentDescription = "Disconnect", tint = ErrorRedLight)
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.btn_disconnect_drive), tint = ErrorRedLight)
                     }
                 }
             }
@@ -1699,24 +1696,24 @@ private fun OneDriveStatusCard(
     }
 }
 
-private fun formatFileSize(bytes: Long): String {
-    if (bytes <= 0) return "0 B"
+private fun formatFileSize(context: Context, bytes: Long): String {
+    if (bytes <= 0) return context.getString(R.string.backup_size_zero_bytes)
     val kb = bytes / 1024.0
-    if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb)
+    if (kb < 1024) return String.format(Locale.US, context.getString(R.string.backup_size_kb_format), kb)
     val mb = kb / 1024.0
-    return String.format(Locale.US, "%.1f MB", mb)
+    return String.format(Locale.US, context.getString(R.string.backup_size_mb_format), mb)
 }
 
-private fun formatTimeAgo(timeMs: Long): String {
-    if (timeMs <= 0L) return "Never"
+private fun formatTimeAgo(context: Context, timeMs: Long): String {
+    if (timeMs <= 0L) return context.getString(R.string.lock_never)
     val now = System.currentTimeMillis()
     val diff = now - timeMs
-    if (diff < 60_000L) return "Just now"
+    if (diff < 60_000L) return context.getString(R.string.backup_time_just_now)
     val mins = diff / 60_000L
-    if (mins < 60) return "$mins min ago"
+    if (mins < 60) return context.getString(R.string.backup_time_min_ago_format, mins)
     val hours = mins / 60
-    if (hours < 24) return "$hours hr ago"
+    if (hours < 24) return context.getString(R.string.backup_time_hr_ago_format, hours)
     val days = hours / 24
-    if (days < 7) return "$days days ago"
+    if (days < 7) return context.getString(R.string.backup_time_days_ago_format, days)
     return SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(timeMs))
 }

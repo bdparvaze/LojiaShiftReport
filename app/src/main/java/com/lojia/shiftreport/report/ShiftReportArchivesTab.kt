@@ -131,7 +131,7 @@ fun ShiftReportArchivesTab(
                 ) {
                     if (searchQuery.isEmpty()) {
                         Text(
-                            text = "Search by cashier or shift...",
+                            text = stringResource(R.string.search_cashier_shift),
                             fontSize = 13.sp,
                             color = TextHintColor
                         )
@@ -336,7 +336,7 @@ fun ShiftReportArchivesTab(
                                     horizontalAlignment = Alignment.Start
                                 ) {
                                     Text(
-                                        text = "GROSS REVENUE",
+                                        text = stringResource(R.string.gross_revenue).uppercase(),
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = TextHintColor,
@@ -357,7 +357,7 @@ fun ShiftReportArchivesTab(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "MADA / BANK",
+                                        text = stringResource(R.string.mada_bank).uppercase(),
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = TextHintColor
@@ -377,7 +377,7 @@ fun ShiftReportArchivesTab(
                                     horizontalAlignment = Alignment.End
                                 ) {
                                     Text(
-                                        text = "NET CASH",
+                                        text = stringResource(R.string.net_cash_1).uppercase(),
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = TextHintColor
@@ -416,7 +416,7 @@ fun ShiftReportArchivesTab(
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(
-                                        text = "Delete",
+                                        text = stringResource(R.string.delete),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = ErrorRedLight,
@@ -445,7 +445,7 @@ fun ShiftReportArchivesTab(
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(
-                                        text = "Preview PDF",
+                                        text = stringResource(R.string.preview_pdf),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = PureWhite,
@@ -508,8 +508,8 @@ fun StickySummaryBar(
             }
             val label = when {
                 isBalanced -> stringResource(R.string.balanced)
-                isOver -> "Over"
-                else -> "Short"
+                isOver -> stringResource(R.string.zreport_over)
+                else -> stringResource(R.string.zreport_short)
             }
             Surface(
                 color = when {
@@ -521,7 +521,12 @@ fun StickySummaryBar(
                 border = BorderStroke(1.dp, textColor.copy(alpha = 0.3f))
             ) {
                 Text(
-                    text = "$label: ${if (variance > 0L) "+" else ""}${MoneyFormat.formatMinor(variance, currency)}",
+                    text = stringResource(
+                        R.string.archive_variance_label_fmt,
+                        label,
+                        if (variance > 0L) "+" else "",
+                        MoneyFormat.formatMinor(variance, currency)
+                    ),
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = textColor,

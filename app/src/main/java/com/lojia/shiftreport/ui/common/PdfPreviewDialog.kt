@@ -115,7 +115,7 @@ fun ShiftReportPreviewDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Report Preview",
+                        text = stringResource(R.string.report_preview_title),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
@@ -157,7 +157,7 @@ fun ShiftReportPreviewDialog(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "SHIFT CLOSING & REVENUE CERTIFICATE",
+                            text = titleLabel.uppercase(),
                             fontSize = 9.sp,
                             color = PureWhite.copy(alpha = 0.9f)
                         )
@@ -173,7 +173,7 @@ fun ShiftReportPreviewDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Sales Summary section
-                PreviewSection(title = "Sales Summary") {
+                PreviewSection(title = stringResource(R.string.pdf_sales_summary_title)) {
                     PreviewRow(
                         label = grossCashLabel,
                         value = MoneyFormat.formatMinor(report.grossCash, currencyCode),
@@ -203,27 +203,27 @@ fun ShiftReportPreviewDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Cash Drawer section
-                PreviewSection(title = "Cash Drawer Reconciliation") {
+                PreviewSection(title = stringResource(R.string.cash_drawer_recon_title)) {
                     if (startingCash > 0L) {
                         PreviewRow(
-                            label = "Starting Cash",
+                            label = stringResource(R.string.pdf_starting_cash_short),
                             value = MoneyFormat.formatMinor(startingCash, currencyCode)
                         )
                     }
                     PreviewRow(
-                        label = "(+) Gross Cash",
+                        label = stringResource(R.string.gross_cash_label),
                         value = "+${MoneyFormat.formatMinor(report.grossCash, currencyCode)}",
                         color = SuccessGreen
                     )
                     if (cashIn > 0L) {
                         PreviewRow(
-                            label = "(+) Cash In",
+                            label = stringResource(R.string.cash_in_label),
                             value = "+${MoneyFormat.formatMinor(cashIn, currencyCode)}",
                             color = SuccessGreen
                         )
                     }
                     PreviewRow(
-                        label = "(-) Cash Out",
+                        label = stringResource(R.string.cash_out_label),
                         value = "-${MoneyFormat.formatMinor(cashOut, currencyCode)}",
                         color = ErrorRedLight
                     )
@@ -236,17 +236,17 @@ fun ShiftReportPreviewDialog(
                     )
                     if (actualCashCount != null) {
                         PreviewRow(
-                            label = "Actual Cash Count",
+                            label = stringResource(R.string.pdf_actual_cash_count_label),
                             value = MoneyFormat.formatMinor(actualCashCount, currencyCode)
                         )
                         val (varText, varColor) = when {
-                            variance == null -> "N/A" to OnSurfaceLight
-                            variance == 0L -> "${MoneyFormat.formatMinor(0L, currencyCode)} (Balanced)" to SuccessGreen
-                            variance > 0L -> "+${MoneyFormat.formatMinor(variance, currencyCode)} (Over)" to SuccessGreen
-                            else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currencyCode)} (Short)" to ErrorRedLight
+                            variance == null -> stringResource(R.string.not_available_short) to OnSurfaceLight
+                            variance == 0L -> "${MoneyFormat.formatMinor(0L, currencyCode)} (${stringResource(R.string.zreport_balanced)})" to SuccessGreen
+                            variance > 0L -> "+${MoneyFormat.formatMinor(variance, currencyCode)} (${stringResource(R.string.zreport_over)})" to SuccessGreen
+                            else -> "-${MoneyFormat.formatMinor(Math.abs(variance), currencyCode)} (${stringResource(R.string.zreport_short)})" to ErrorRedLight
                         }
                         PreviewRow(
-                            label = "Variance (Over/Short)",
+                            label = stringResource(R.string.pdf_variance_over_short),
                             value = varText,
                             bold = true,
                             color = varColor
@@ -257,14 +257,14 @@ fun ShiftReportPreviewDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Other Tracking section
-                PreviewSection(title = "Other Tracking") {
+                PreviewSection(title = stringResource(R.string.other_tracking_title)) {
                     PreviewRow(
                         label = dueSalesLabel,
                         value = MoneyFormat.formatMinor(report.totalDueCredit, currencyCode)
                     )
                     PreviewRow(
                         label = staffMealsLabel,
-                        value = "${report.staffMealsCount} persons"
+                        value = stringResource(R.string.pdf_staff_meals_persons_fmt, report.staffMealsCount)
                     )
                     if (cleanNotes.isNotBlank()) {
                         PreviewRow(
@@ -279,7 +279,7 @@ fun ShiftReportPreviewDialog(
 
                 // Footer
                 Text(
-                    text = "Computer-generated report • Lojia POS",
+                    text = stringResource(R.string.pdf_computer_generated_footer),
                     fontSize = 9.sp,
                     color = TextHintColor,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -343,7 +343,7 @@ fun ShiftReportPreviewDialog(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Open Printer Settings",
+                                        text = stringResource(R.string.open_printer_settings),
                                         fontSize = 11.sp,
                                         color = PrimaryIndigoLight
                                     )
@@ -557,7 +557,7 @@ fun ShiftReportPreviewDialog(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Export",
+                                text = stringResource(R.string.btn_export),
                                 maxLines = 1,
                                 softWrap = false,
                                 fontSize = 12.sp,
@@ -585,7 +585,7 @@ fun ShiftReportPreviewDialog(
                                         putExtra(Intent.EXTRA_TEXT, fallbackSummary)
                                         type = "text/plain"
                                     }
-                                    val shareIntent = Intent.createChooser(sendIntent, "Share Shift Report").apply {
+                                    val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.share_shift_report_title)).apply {
                                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
                                     context.startActivity(shareIntent)
@@ -613,7 +613,7 @@ fun ShiftReportPreviewDialog(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Share",
+                                text = stringResource(R.string.btn_share),
                                 maxLines = 1,
                                 softWrap = false,
                                 fontSize = 12.sp,

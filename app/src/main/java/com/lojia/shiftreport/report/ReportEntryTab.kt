@@ -534,7 +534,11 @@ fun ReportEntryTab(
                                         advanceAmountText = ""
                                         android.widget.Toast.makeText(
                                             context,
-                                            "Added ${MoneyFormat.format(amt, currentCurrency)} to ${emp.name}",
+                                            context.getString(
+                                                R.string.report_advance_added_toast,
+                                                MoneyFormat.format(amt, currentCurrency),
+                                                emp.name
+                                            ),
                                             android.widget.Toast.LENGTH_SHORT
                                         ).show()
                                     }
@@ -568,7 +572,7 @@ fun ReportEntryTab(
                         }
                         purchasedItems.forEach { item ->
                             val qtyInt = item.quantity.toInt()
-                            val leftText = if (qtyInt > 0) "${item.itemName} ($qtyInt pcs)" else item.itemName
+                            val leftText = if (qtyInt > 0) stringResource(R.string.report_item_qty_format, item.itemName, qtyInt) else item.itemName
                             EntryRow(
                                 left = leftText,
                                 right = "${MoneyFormat.toPlainDecimal(item.totalAmount, entryDigits)} $currentCurrency (${item.paidVia.lowercase(Locale.ROOT)})",
@@ -863,7 +867,7 @@ fun EmployerAdvanceSection(
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = selectedEmployee?.name ?: "Select Employee",
+                value = selectedEmployee?.name ?: stringResource(R.string.report_select_employee),
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = {
@@ -875,8 +879,8 @@ fun EmployerAdvanceSection(
                 modifier = Modifier
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth(),
-                label = { Text("Employee") },
-                placeholder = { Text("Select from ${employees.size} employees") },
+                label = { Text(stringResource(R.string.nav_employee)) },
+                placeholder = { Text(stringResource(R.string.select_from_employees_format, employees.size)) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
             )
@@ -887,7 +891,7 @@ fun EmployerAdvanceSection(
             ) {
                 if (employees.isEmpty()) {
                     DropdownMenuItem(
-                        text = { Text("No employees - Add in Settings > Employees") },
+                        text = { Text(stringResource(R.string.no_employees_add_hint)) },
                         onClick = {
                             expanded = false
                             onNavigateToSettings()
@@ -935,7 +939,7 @@ fun EmployerAdvanceSection(
         OutlinedTextField(
             value = amount,
             onValueChange = onAmountChange,
-            label = { Text("Advance Amount") },
+            label = { Text(stringResource(R.string.advance_amount_label)) },
             enabled = selectedEmployee != null,
             isError = isAdvanceAmountInvalid,
             supportingText = if (isAdvanceAmountInvalid) {
@@ -957,12 +961,12 @@ fun EmployerAdvanceSection(
             FilterChip(
                 selected = selectedType == "Cash",
                 onClick = { onTypeChange("Cash") },
-                label = { Text("Cash") }
+                label = { Text(stringResource(R.string.cash)) }
             )
             FilterChip(
                 selected = selectedType == "Bank",
                 onClick = { onTypeChange("Bank") },
-                label = { Text("Bank") }
+                label = { Text(stringResource(R.string.bank)) }
             )
         }
 
@@ -973,7 +977,12 @@ fun EmployerAdvanceSection(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Add ${amount.ifBlank { "0" }} $currency to ${selectedEmployee?.name ?: "Employee"}",
+                text = stringResource(
+                    R.string.report_add_advance_button_format,
+                    amount.ifBlank { "0" },
+                    currency,
+                    selectedEmployee?.name ?: stringResource(R.string.nav_employee)
+                ),
                 fontWeight = FontWeight.SemiBold
             )
         }

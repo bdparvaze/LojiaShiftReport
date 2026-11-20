@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.room.withTransaction
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -200,8 +201,9 @@ object OfflineBackupManager {
         rootJson.put("cashMovements", cashMovementsArr)
 
         // Employees
+        val validEmployees = employees.withValidSalary { it.monthlySalaryMinor }
         val employeesArr = JSONArray()
-        employees.forEach { emp ->
+        validEmployees.forEach { emp ->
             employeesArr.put(employeeToJson(emp))
         }
         rootJson.put("employees", employeesArr)
@@ -228,7 +230,7 @@ object OfflineBackupManager {
         rootJson.put("schemaVersion", 15)
 
         val totalRecords = shiftReports.size + shiftSessions.size + cashiers.size + users.size +
-            cashMovements.size + employees.size + employerAdvances.size
+            cashMovements.size + validEmployees.size + employerAdvances.size
         Pair(rootJson.toString(2), totalRecords)
     }
 
@@ -298,6 +300,23 @@ object OfflineBackupManager {
                 cause is javax.crypto.AEADBadTagException ||
                 cause is javax.crypto.BadPaddingException ||
                 cause is java.security.GeneralSecurityException
+        }
+    }
+
+    fun resolveRestoreErrorMessage(context: Context, error: Throwable?): String {
+        val currencyCause = generateSequence(error) { it.cause }.firstOrNull {
+            it is BackupCurrencyMismatchException || it is BackupCurrencyInvalidException
+        }
+        return when (currencyCause) {
+            is BackupCurrencyMismatchException ->
+                context.getString(R.string.restore_currency_mismatch, currencyCause.backupCode, currencyCause.localCode)
+            is BackupCurrencyInvalidException ->
+                context.getString(R.string.restore_currency_invalid)
+            else -> if (isBackupPasswordOrFormatError(error)) {
+                context.getString(R.string.backup_pw_wrong_or_damaged)
+            } else {
+                error?.localizedMessage ?: context.getString(R.string.restore_failed)
+            }
         }
     }
 
@@ -837,12 +856,29 @@ object OfflineBackupManager {
             val employeeDao = database.employeeDao()
             val employerAdvanceDao = database.employerAdvanceDao()
 
+            val localCode = reportDao.getBusinessProfileOnce()?.currency
+                ?.takeIf { it.isNotBlank() }
+                ?: AppConstants.DEFAULT_CURRENCY_CODE
+            val localLocked = !canChangeCurrency(hasFinancialData(database))
+            when (val decision = decideCurrencyRestore(localCode, localLocked, backupCurrency)) {
+                CurrencyRestoreDecision.Allow -> Unit
+                is CurrencyRestoreDecision.RejectMismatch ->
+                    return@withContext Result.failure(
+                        BackupCurrencyMismatchException(decision.backupCode, decision.localCode)
+                    )
+                CurrencyRestoreDecision.RejectInvalid ->
+                    return@withContext Result.failure(BackupCurrencyInvalidException())
+            }
+
             val restoredCount = database.withTransaction {
                 var count = 0
 
                 // 1. Business Profile
                 if (root.has("businessProfile")) {
                     val obj = root.getJSONObject("businessProfile")
+                    val normalizedCurrency = obj.optString("currency", AppConstants.DEFAULT_CURRENCY_CODE)
+                        .trim()
+                        .uppercase(Locale.US)
                     val bp = BusinessProfile(
                         id = obj.optInt("id", 1),
                         businessName = obj.optString("businessName", "My Store"),
@@ -851,8 +887,8 @@ object OfflineBackupManager {
                         email = obj.optString("email", ""),
                         address = obj.optString("address", ""),
                         workingHours = obj.optString("workingHours", "08:00 AM - 10:00 PM"),
-                        currency = obj.optString("currency", AppConstants.DEFAULT_CURRENCY_CODE),
-                        country = obj.optString("country", "United States"),
+                        currency = normalizedCurrency,
+                        country = obj.optString("country", defaultCountryDisplayName()),
                         logoUri = obj.optString("logoUri", "")
                     )
                     reportDao.saveBusinessProfile(bp)
@@ -1072,10 +1108,10 @@ object OfflineBackupManager {
                 var skippedEmployeesDuplicate = 0
                 val employeesArr = root.optJSONArray("employees")
                 if (employeesArr != null) {
-                    val backupEmployees = mutableListOf<BackupEmployee>()
+                    val parsedEmployees = mutableListOf<BackupEmployee>()
                     for (i in 0 until employeesArr.length()) {
                         val obj = employeesArr.getJSONObject(i)
-                        backupEmployees.add(
+                        parsedEmployees.add(
                             BackupEmployee(
                                 id = obj.optString("id", ""),
                                 name = obj.optString("name", ""),
@@ -1085,6 +1121,14 @@ object OfflineBackupManager {
                                 createdAt = obj.optLong("createdAt", System.currentTimeMillis()),
                                 createdByAdminId = obj.optString("createdByAdminId", "")
                             )
+                        )
+                    }
+                    val backupEmployees = parsedEmployees.withValidSalary { it.monthlySalaryMinor }
+                    val droppedZeroSalaryCount = parsedEmployees.size - backupEmployees.size
+                    if (droppedZeroSalaryCount > 0) {
+                        AppLogger.w(
+                            "OfflineBackupManager",
+                            "Dropped $droppedZeroSalaryCount employee record(s) with non-positive monthlySalaryMinor during restore"
                         )
                     }
                     val existingEmployees = employeeDao.getAllOnce()

@@ -226,11 +226,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                     val msg = context.getString(R.string.data_restored_success, count)
                                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
                                 }.onFailure { err ->
-                                    val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                                        context.getString(R.string.backup_pw_wrong_or_damaged)
-                                    } else {
-                                        err.localizedMessage ?: context.getString(R.string.restore_failed)
-                                    }
+                                    val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, err)
                                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }
@@ -272,6 +268,23 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             }
 
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+            val topMenuState = remember { TopMenuStateHolder() }
+
+            LaunchedEffect(drawerState.currentValue, drawerState.targetValue) {
+                val active = drawerState.currentValue == DrawerValue.Open ||
+                    drawerState.targetValue == DrawerValue.Open
+                topMenuState.syncExternalState(active)
+            }
+
+            val openTopMenu: () -> Unit = {
+                topMenuState.open()
+                scope.launch { drawerState.open() }
+            }
+
+            val closeTopMenu: () -> Unit = {
+                topMenuState.dismiss()
+                scope.launch { drawerState.close() }
+            }
 
             LojiaTheme(language = currentLanguage) {
                 if (!isAuthenticated) {
@@ -307,9 +320,10 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             val isScannerActive = navState is AppNavState.ShiftReportState.DocumentScanner
 
                             // Handle back button smoothly to close drawer, pop back stack, return to Reports or exit
-                            val canHandleBack = drawerState.isOpen || navBackStack.isNotEmpty() || navState != AppNavState.ShiftReportState.Reports
+                            val canHandleBack = drawerState.isOpen || topMenuState.isOpen || navBackStack.isNotEmpty() || navState != AppNavState.ShiftReportState.Reports
                             BackHandler(enabled = !isScannerActive && canHandleBack) {
-                                if (drawerState.isOpen) {
+                                if (drawerState.isOpen || topMenuState.isOpen) {
+                                    topMenuState.onDismissBackPress()
                                     scope.launch { drawerState.close() }
                                 } else if (navBackStack.isNotEmpty()) {
                                     focusManager.clearFocus()
@@ -322,7 +336,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
                             ModalNavigationDrawer(
                                 drawerState = drawerState,
-                                gesturesEnabled = false,
+                                gesturesEnabled = drawerState.isOpen || drawerState.isAnimationRunning || topMenuState.isOpen,
                                 drawerContent = {
                                     MainAppDrawer(
                                         activeModule = activeModule,
@@ -330,12 +344,20 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                         currentLanguage = currentLanguage,
                                         businessProfile = businessProfile,
                                         userProfile = userProfile,
-                                        onNavigate = { newNavState -> navigateTo(newNavState) },
-                                        onOpenReportMenu = { menuKey -> navigateTo(AppNavState.ShiftReportState.SettingsDetail(menuKey)) },
-                                        onCloseDrawer = { scope.launch { drawerState.close() } },
+                                        onNavigate = { newNavState ->
+                                            topMenuState.onSelectItem { navigateTo(newNavState) }
+                                        },
+                                        onOpenReportMenu = { menuKey ->
+                                            topMenuState.onSelectItem {
+                                                navigateTo(AppNavState.ShiftReportState.SettingsDetail(menuKey))
+                                            }
+                                        },
+                                        onCloseDrawer = closeTopMenu,
                                         onLockApp = {
-                                            reportViewModel.preferencesRepository.recordLogout(keepQuickLoginState = true)
-                                            isAuthenticated = false
+                                            topMenuState.onSelectItem {
+                                                reportViewModel.preferencesRepository.recordLogout(keepQuickLoginState = true)
+                                                isAuthenticated = false
+                                            }
                                         }
                                     )
                                 }
@@ -393,7 +415,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                             modifier = Modifier.weight(1f)
                                                         ) {
                                                             IconButton(
-                                                                onClick = { scope.launch { drawerState.open() } },
+                                                                onClick = openTopMenu,
                                                                 modifier = Modifier.testTag("drawer_menu_btn")
                                                             ) {
                                                                 Icon(
@@ -488,11 +510,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                                         val msg = context.getString(R.string.data_restored_success, count)
                                                                         android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
                                                                     }.onFailure { err ->
-                                                                        val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                                                                            context.getString(R.string.backup_pw_wrong_or_damaged)
-                                                                        } else {
-                                                                            err.localizedMessage ?: context.getString(R.string.restore_failed)
-                                                                        }
+                                                                        val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, err)
                                                                         android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                                                     }
                                                                 }
@@ -564,11 +582,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                             val msg = context.getString(R.string.data_restored_success, count)
                                                             android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
                                                         }.onFailure { err ->
-                                                            val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                                                                context.getString(R.string.backup_pw_wrong_or_damaged)
-                                                            } else {
-                                                                err.localizedMessage ?: context.getString(R.string.restore_failed)
-                                                            }
+                                                            val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, err)
                                                             mainRestorePasswordError = msg
                                                             android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                                         }

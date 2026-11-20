@@ -93,11 +93,7 @@ fun QuickPinScreen(
                         pinError = true
                         if (failedAttempts >= 3) {
                             lockoutSeconds = 30
-                            errorMessage = if (isBn) {
-                                "পিন ভুলে গেছেন? পাসওয়ার্ড ব্যবহার করুন"
-                            } else {
-                                "Forgot PIN? Use password"
-                            }
+                            errorMessage = context.getString(R.string.quick_pin_lockout_prompt)
                         } else {
                             errorMessage = context.getString(R.string.quick_pin_incorrect)
                         }
@@ -127,11 +123,7 @@ fun QuickPinScreen(
                         onAuthenticated()
                     } else {
                         pinError = true
-                        errorMessage = if (isBn) {
-                            "পিন মেলেনি, আবার চেষ্টা করুন"
-                        } else {
-                            "PINs do not match. Please try again."
-                        }
+                        errorMessage = context.getString(R.string.quick_pin_mismatch_error)
                         delay(600L)
                         enteredPin = ""
                     }
@@ -145,14 +137,14 @@ fun QuickPinScreen(
 
     val titleText = when (currentMode) {
         QuickPinMode.ENTER_PIN -> stringResource(R.string.quick_pin_enter_pin)
-        QuickPinMode.CREATE_PIN -> if (isBn) "নতুন ৬-সংখ্যার পিন তৈরি করুন" else "Create 6-Digit PIN"
-        QuickPinMode.CONFIRM_PIN -> if (isBn) "পিন নিশ্চিত করুন" else "Confirm 6-Digit PIN"
+        QuickPinMode.CREATE_PIN -> stringResource(R.string.quick_pin_create_title)
+        QuickPinMode.CONFIRM_PIN -> stringResource(R.string.quick_pin_confirm_title)
     }
 
     val subtitleText = when (currentMode) {
         QuickPinMode.ENTER_PIN -> stringResource(R.string.quick_pin_subtitle)
-        QuickPinMode.CREATE_PIN -> if (isBn) "অ্যাপ সহজে আনলক করতে ৬-সংখ্যার পিন সেট করুন" else "Set a 6-digit PIN for instant secure access"
-        QuickPinMode.CONFIRM_PIN -> if (isBn) "নিশ্চিত করতে একই ৬-সংখ্যার পিন আবার লিখুন" else "Re-enter the 6-digit PIN to confirm"
+        QuickPinMode.CREATE_PIN -> stringResource(R.string.quick_pin_create_subtitle)
+        QuickPinMode.CONFIRM_PIN -> stringResource(R.string.quick_pin_confirm_subtitle)
     }
 
     val isBiometricAvailable = remember(context) {
@@ -244,11 +236,7 @@ fun QuickPinScreen(
             if (errorMessage != null || isLockedOut) {
                 Spacer(modifier = Modifier.height(12.dp))
                 val displayError = if (isLockedOut) {
-                    if (isBn) {
-                        "পিন ভুলে গেছেন? পাসওয়ার্ড ব্যবহার করুন (${lockoutSeconds}সে)"
-                    } else {
-                        "Forgot PIN? Use password (${lockoutSeconds}s)"
-                    }
+                    stringResource(R.string.quick_pin_lockout_countdown_fmt, lockoutSeconds)
                 } else {
                     errorMessage.orEmpty()
                 }
@@ -326,7 +314,7 @@ fun QuickPinScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                    contentDescription = stringResource(R.string.btn_numpad_del),
+                                    contentDescription = stringResource(R.string.cd_backspace),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(24.dp)
                                 )

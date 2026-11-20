@@ -27,6 +27,7 @@ import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
+import com.lojia.shiftreport.util.RECEIPT_UNSPECIFIED
 import com.lojia.shiftreport.util.classifyMoneyInput
 
 private const val MAX_ITEM_DESCRIPTION_LENGTH = 100
@@ -148,14 +149,14 @@ fun AddEntryDialog(
                             onValueChange = { if (it.length <= MAX_ITEM_DESCRIPTION_LENGTH) name = it },
                             label = {
                                 Text(
-                                    text = "${stringResource(R.string.item_description)} *",
+                                    text = stringResource(R.string.item_description_required_fmt, stringResource(R.string.item_description)),
                                     fontSize = 13.sp,
                                     color = OnSurfaceVariantLight
                                 )
                             },
                             placeholder = {
                                 Text(
-                                    text = "e.g., Chicken, Bread, Cleaning supplies",
+                                    text = stringResource(R.string.add_entry_item_desc_hint),
                                     fontSize = 13.sp,
                                     color = TextHintColor
                                 )
@@ -168,7 +169,7 @@ fun AddEntryDialog(
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "e.g., Chicken, Bread, Cleaning supplies",
+                            text = stringResource(R.string.add_entry_item_desc_hint),
                             fontSize = 11.sp,
                             color = TextHintColor,
                             modifier = Modifier.padding(start = 4.dp)
@@ -192,7 +193,7 @@ fun AddEntryDialog(
                             },
                             label = {
                                 Text(
-                                    text = "Total Amount ($currentCurrency) *",
+                                    text = stringResource(R.string.add_entry_total_amount_req_fmt, currentCurrency),
                                     fontSize = 13.sp,
                                     color = OnSurfaceVariantLight
                                 )
@@ -223,7 +224,7 @@ fun AddEntryDialog(
                         }
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "The amount shown on your bill",
+                            text = stringResource(R.string.add_entry_bill_amount_support),
                             fontSize = 11.sp,
                             color = TextHintColor,
                             modifier = Modifier.padding(start = 4.dp)
@@ -280,14 +281,14 @@ fun AddEntryDialog(
                                 },
                                 label = {
                                     Text(
-                                        text = "Quantity (Optional)",
+                                        text = stringResource(R.string.add_entry_quantity_optional),
                                         fontSize = 13.sp,
                                         color = OnSurfaceVariantLight
                                     )
                                 },
                                 placeholder = {
                                     Text(
-                                        text = "e.g., 1, 2, 3 pcs",
+                                        text = stringResource(R.string.add_entry_quantity_hint),
                                         fontSize = 13.sp,
                                         color = TextHintColor
                                     )
@@ -301,7 +302,7 @@ fun AddEntryDialog(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "e.g., 1, 2, 3 pcs",
+                                text = stringResource(R.string.add_entry_quantity_hint),
                                 fontSize = 11.sp,
                                 color = TextHintColor,
                                 modifier = Modifier.padding(start = 4.dp)
@@ -324,14 +325,14 @@ fun AddEntryDialog(
                                 },
                                 label = {
                                     Text(
-                                        text = "Unit Price (Optional, auto-calculated)",
+                                        text = stringResource(R.string.add_entry_unit_price_optional),
                                         fontSize = 13.sp,
                                         color = OnSurfaceVariantLight
                                     )
                                 },
                                 placeholder = {
                                     Text(
-                                        text = "Auto-filled from Total ÷ Quantity",
+                                        text = stringResource(R.string.add_entry_auto_filled_hint),
                                         fontSize = 13.sp,
                                         color = TextHintColor
                                     )
@@ -355,7 +356,7 @@ fun AddEntryDialog(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "→ Auto-filled from Total ÷ Quantity",
+                                text = stringResource(R.string.add_entry_auto_filled_arrow),
                                 fontSize = 11.sp,
                                 color = TextHintColor,
                                 modifier = Modifier.padding(start = 4.dp)
@@ -400,8 +401,8 @@ fun AddEntryDialog(
                     keyboardController?.hide()
                     onSubmit(
                         ModalResult(
-                            receipt = receipt.ifBlank { "Unspecified" },
-                            name = name.trim().ifBlank { "Unspecified" },
+                            receipt = receipt.ifBlank { RECEIPT_UNSPECIFIED },
+                            name = name.trim().ifBlank { RECEIPT_UNSPECIFIED },
                             amount = amount,
                             qty = parsedQty,
                             unitPrice = parsedUnitPrice,
@@ -411,7 +412,7 @@ fun AddEntryDialog(
                 }
             ) {
                 Text(
-                    text = if (type == ModalType.ITEM) "Add Entry" else stringResource(R.string.add),
+                    text = stringResource(if (type == ModalType.ITEM) R.string.add_entry_btn else R.string.add),
                     color = PureWhite,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,

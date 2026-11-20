@@ -154,7 +154,7 @@ fun InlineEditableProfileRow(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = value.ifBlank { "Not set" },
+                        text = value.ifBlank { stringResource(R.string.not_set) },
                         fontSize = valueFontSize,
                         fontWeight = valueFontWeight,
                         fontFamily = valueFontFamily,
@@ -426,7 +426,7 @@ fun CountryCodePickerDialog(
                                             fontSize = 14.sp
                                         )
                                         Text(
-                                            text = "${country.displayName} (${country.code})",
+                                            text = "$countryName (${country.code})",
                                             color = OnSurfaceVariantLight,
                                             fontSize = 12.sp
                                         )

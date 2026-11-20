@@ -636,6 +636,15 @@ abstract class AppDatabase : RoomDatabase() {
 
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
+            try {
+                db.execSQL("DELETE FROM employees WHERE monthlySalaryMinor <= 0")
+            } catch (e: Exception) {
+                com.lojia.shiftreport.util.AppLogger.e(
+                    "AppDatabase",
+                    "Failed to delete zero-salary employee records on open: ${e.message}",
+                    e
+                )
+            }
             scope.launch(Dispatchers.IO) {
                 val database = databaseProvider() ?: INSTANCE
                 database?.let {
@@ -695,7 +704,7 @@ abstract class AppDatabase : RoomDatabase() {
                         email = "",
                         address = "",
                         currency = AppConstants.DEFAULT_CURRENCY_CODE,
-                        country = "United States"
+                        country = defaultCountryDisplayName()
                     )
                 )
                 reportDao.saveReceiptConfig(

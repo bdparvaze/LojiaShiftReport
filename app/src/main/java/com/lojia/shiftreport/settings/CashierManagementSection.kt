@@ -397,7 +397,7 @@ fun CashierManagementSection(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Add your first cashier to get started",
+                                text = stringResource(R.string.cashier_empty_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextHintColor
                             )
@@ -473,7 +473,7 @@ fun CashierManagementSection(
                                         color = OnSurfaceLight
                                     )
                                     Text(
-                                        text = "Preserved for ZATCA/VAT audit history",
+                                        text = stringResource(R.string.cashier_archived_audit_desc),
                                         fontSize = 11.sp,
                                         color = TextHintColor
                                     )
@@ -497,7 +497,7 @@ fun CashierManagementSection(
                             ) {
                                 if (filteredArchivedCashiers.isEmpty()) {
                                     Text(
-                                        text = "No archived cashiers.",
+                                        text = stringResource(R.string.cashier_no_archived),
                                         fontSize = 12.sp,
                                         color = TextHintColor,
                                         modifier = Modifier.padding(8.dp)
@@ -931,7 +931,7 @@ private fun CashierCard(
                         SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(cashier.archivedAt))
                     }
                     Text(
-                        text = "Archived: $dateFormatted",
+                        text = stringResource(R.string.cashier_archived_date_fmt, dateFormatted),
                         fontSize = 10.5.sp,
                         color = TextHintColor
                     )

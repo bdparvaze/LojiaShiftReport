@@ -136,7 +136,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val result = syncManager.setCurrency(currencyCode)
             if (result.isSuccess) {
-                _uiMessage.emit(UiText.DynamicString("Currency set to ${currencyCode.trim().uppercase(Locale.US)}"))
+                _uiMessage.emit(UiText.StringResource(R.string.toast_currency_set, currencyCode.trim().uppercase(Locale.US)))
             } else {
                 _uiMessage.emit(UiText.StringResource(R.string.currency_locked_message))
             }
@@ -1101,9 +1101,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 lastSavedSnapshot = snapshot
             } catch (e: Exception) {
                 AppLogger.e("ReportViewModel", "Failed to save draft", e)
-                val errorText = e.localizedMessage ?: "Failed to save draft"
+                val errorText = e.localizedMessage ?: context.getString(R.string.err_failed_save_draft)
                 _draftSaveError.emit(errorText)
-                _uiMessage.emit(UiText.DynamicString(errorText))
+                if (e.localizedMessage != null) {
+                    _uiMessage.emit(UiText.DynamicString(errorText))
+                } else {
+                    _uiMessage.emit(UiText.StringResource(R.string.err_failed_save_draft))
+                }
             }
         }
     }
@@ -1424,8 +1428,12 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     fun updateCashier(cashier: Cashier) {
         syncManager.updateCashier(cashier) {
             viewModelScope.launch {
-                val msg = if (cashier.active) "Activated ${cashier.name}" else "Deactivated ${cashier.name}"
-                _uiMessage.emit(UiText.DynamicString(msg))
+                _uiMessage.emit(
+                    UiText.StringResource(
+                        if (cashier.active) R.string.toast_cashier_activated else R.string.toast_cashier_deactivated,
+                        cashier.name
+                    )
+                )
             }
         }
     }
@@ -1433,7 +1441,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     fun archiveCashier(cashier: Cashier) {
         syncManager.archiveCashier(cashier) {
             viewModelScope.launch {
-                _uiMessage.emit(UiText.DynamicString("Archived cashier ${cashier.name}"))
+                _uiMessage.emit(UiText.StringResource(R.string.toast_cashier_archived, cashier.name))
             }
         }
     }
@@ -1441,7 +1449,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     fun unarchiveCashier(cashier: Cashier) {
         syncManager.unarchiveCashier(cashier) {
             viewModelScope.launch {
-                _uiMessage.emit(UiText.DynamicString("Restored cashier ${cashier.name}"))
+                _uiMessage.emit(UiText.StringResource(R.string.toast_cashier_restored, cashier.name))
             }
         }
     }

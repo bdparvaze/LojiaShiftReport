@@ -91,7 +91,7 @@ fun GoogleMapsLocationPickerModal(
     var currentLat by remember { mutableDoubleStateOf(defaultLat) }
     var currentLng by remember { mutableDoubleStateOf(defaultLng) }
     var addressText by remember { mutableStateOf(initialAddress) }
-    var areaTitle by remember { mutableStateOf("Locating area...") }
+    var areaTitle by remember { mutableStateOf(context.getString(R.string.maps_locating_area)) }
     var searchQuery by remember { mutableStateOf("") }
 
     var isGeocoding by remember { mutableStateOf(false) }
@@ -179,7 +179,7 @@ fun GoogleMapsLocationPickerModal(
                         !subLocality.isNullOrBlank() -> subLocality
                         !locality.isNullOrBlank() -> locality
                         !feature.isNullOrBlank() && feature != addr.subThoroughfare -> feature
-                        else -> "Store Location"
+                        else -> context.getString(R.string.maps_store_location)
                     }
 
                     val sb = StringBuilder()
@@ -203,20 +203,21 @@ fun GoogleMapsLocationPickerModal(
                     var matchedFallback = false
                     for ((_, data) in fallbackCities) {
                         if (kotlin.math.abs(data.first - lat) < 0.25 && kotlin.math.abs(data.second - lng) < 0.25) {
-                            areaTitle = data.third.split(",").firstOrNull()?.trim() ?: "Selected Area"
-                            addressText = "${data.third} (Near %.4f, %.4f)".format(Locale.US, lat, lng)
+                            val cityLabel = data.third.split(",").firstOrNull()?.trim() ?: context.getString(R.string.maps_selected_area)
+                            areaTitle = cityLabel
+                            addressText = context.getString(R.string.maps_near_coords_fmt, data.third, lat, lng)
                             matchedFallback = true
                             break
                         }
                     }
                     if (!matchedFallback) {
-                        areaTitle = "Pinned Store Location"
-                        addressText = "Store Address at Lat: %.5f, Lng: %.5f".format(Locale.US, lat, lng)
+                        areaTitle = context.getString(R.string.maps_pinned_store_location)
+                        addressText = context.getString(R.string.maps_pinned_coords_fmt, lat, lng)
                     }
                 }
             } catch (e: Exception) {
-                areaTitle = "Pinned Store Location"
-                addressText = "Store Address at Lat: %.5f, Lng: %.5f".format(Locale.US, lat, lng)
+                areaTitle = context.getString(R.string.maps_pinned_store_location)
+                addressText = context.getString(R.string.maps_pinned_coords_fmt, lat, lng)
             } finally {
                 isGeocoding = false
             }
@@ -359,7 +360,7 @@ fun GoogleMapsLocationPickerModal(
         if (addressText.isBlank()) {
             performReverseGeocode(currentLat, currentLng)
         } else {
-            areaTitle = addressText.split(",").firstOrNull()?.trim() ?: "Permanent Address"
+            areaTitle = addressText.split(",").firstOrNull()?.trim() ?: context.getString(R.string.maps_permanent_address)
         }
     }
 
@@ -505,7 +506,7 @@ fun GoogleMapsLocationPickerModal(
                                     color = PureWhite
                                 )
                                 Text(
-                                    text = if (isDraggingMap) "Release to pin address" else "Resolving address...",
+                                    text = stringResource(if (isDraggingMap) R.string.maps_release_to_pin else R.string.maps_resolving_address),
                                     color = PureWhite,
                                     fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Medium
@@ -563,7 +564,7 @@ fun GoogleMapsLocationPickerModal(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(
-                                            text = "Google Maps",
+                                            text = stringResource(R.string.maps_google_maps_brand),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.5.sp,
                                             color = OnSurfaceLight
@@ -573,7 +574,7 @@ fun GoogleMapsLocationPickerModal(
                                             color = SuccessContainer
                                         ) {
                                             Text(
-                                                text = "LIVE",
+                                                text = stringResource(R.string.maps_live_badge),
                                                 color = SuccessGreen,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.ExtraBold,
@@ -582,7 +583,7 @@ fun GoogleMapsLocationPickerModal(
                                         }
                                     }
                                     Text(
-                                        text = "Pin permanent store address on map",
+                                        text = stringResource(R.string.maps_pin_permanent_subtitle),
                                         fontSize = 11.sp,
                                         color = OnSurfaceVariantLight,
                                         maxLines = 1,
@@ -696,18 +697,25 @@ fun GoogleMapsLocationPickerModal(
                             }
                         }
 
-                        listOf("Riyadh", "Jeddah", "Dubai", "Dhaka", "Chittagong").forEach { city ->
+                        listOf(
+                            "Riyadh" to R.string.city_riyadh,
+                            "Jeddah" to R.string.city_jeddah,
+                            "Dubai" to R.string.city_dubai,
+                            "Dhaka" to R.string.city_dhaka,
+                            "Chittagong" to R.string.city_chittagong
+                        ).forEach { (cityQuery, cityNameRes) ->
+                            val cityDisplayName = stringResource(cityNameRes)
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = SurfaceLight,
                                 border = BorderStroke(1.dp, OutlineLight),
                                 modifier = Modifier.clickable {
-                                    searchQuery = city
-                                    searchCoordinates(city)
+                                    searchQuery = cityDisplayName
+                                    searchCoordinates(cityQuery)
                                 }
                             ) {
                                 Text(
-                                    text = city,
+                                    text = cityDisplayName,
                                     fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = OnSurfaceLight,
@@ -864,7 +872,7 @@ fun GoogleMapsLocationPickerModal(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = "Google Maps Verified Location",
+                                        text = stringResource(R.string.maps_verified_location),
                                         fontSize = 11.5.sp,
                                         color = SuccessGreen,
                                         fontWeight = FontWeight.Medium
@@ -923,16 +931,21 @@ fun GoogleMapsLocationPickerModal(
                         ) {
                             Text(stringResource(R.string.tag_as_label), fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariantLight)
 
-                            listOf("Store", "Warehouse", "Office", "Branch").forEach { type ->
-                                val isSelected = selectedAddressType == type
+                            listOf(
+                                "Store" to R.string.address_tag_store,
+                                "Warehouse" to R.string.address_tag_warehouse,
+                                "Office" to R.string.address_tag_office,
+                                "Branch" to R.string.address_tag_branch
+                            ).forEach { (typeKey, tagRes) ->
+                                val isSelected = selectedAddressType == typeKey
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = if (isSelected) PrimaryContainerLight else SurfaceLight,
                                     border = BorderStroke(1.dp, if (isSelected) PrimaryIndigoLight else OutlineLight),
-                                    modifier = Modifier.clickable { selectedAddressType = type }
+                                    modifier = Modifier.clickable { selectedAddressType = typeKey }
                                 ) {
                                     Text(
-                                        text = type,
+                                        text = stringResource(tagRes),
                                         fontSize = 11.5.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) PrimaryIndigoLight else OnSurfaceVariantLight,
@@ -969,7 +982,7 @@ fun GoogleMapsLocationPickerModal(
                             Button(
                                 onClick = {
                                     val finalAddress = addressText.trim().ifBlank {
-                                        "Coordinates: %.5f, %.5f".format(Locale.US, currentLat, currentLng)
+                                        context.getString(R.string.maps_coordinates_fmt, currentLat, currentLng)
                                     }
                                     onLocationConfirmed(finalAddress, currentLat, currentLng)
                                 },

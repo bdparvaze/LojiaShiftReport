@@ -149,7 +149,7 @@ fun BusinessLogoPickerCard(
             cameraTempUri = uri
             cameraLauncher.launch(uri)
         } catch (e: Exception) {
-            Toast.makeText(context, "Camera error: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.logo_camera_error_fmt, e.message ?: ""), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -168,7 +168,7 @@ fun BusinessLogoPickerCard(
             },
             title = {
                 Text(
-                    text = "Change photo",
+                    text = stringResource(R.string.cd_change_photo),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -203,7 +203,7 @@ fun BusinessLogoPickerCard(
                                 modifier = Modifier.size(22.dp)
                             )
                             Text(
-                                text = "Take photo with Camera",
+                                text = stringResource(R.string.logo_take_photo_camera),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     color = OnSurfaceLight,
@@ -402,7 +402,7 @@ fun BusinessLogoPickerCard(
 
         // "Change photo" Label Link (Matching Image 1)
         Text(
-            text = "Change photo",
+            text = stringResource(R.string.cd_change_photo),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = primaryBrand,

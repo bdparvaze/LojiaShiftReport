@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.auth.api.credentials.Credential
 import com.google.android.gms.auth.api.credentials.Credentials
 import com.google.android.gms.auth.api.credentials.HintRequest
+import com.lojia.shiftreport.R
 
 @Composable
 fun rememberPhoneNumberHint(
@@ -30,10 +31,10 @@ fun rememberPhoneNumberHint(
                 if (!phone.isNullOrBlank()) {
                     onPhoneSelected(phone)
                 } else {
-                    onError("No phone number found")
+                    onError(context.getString(R.string.phone_hint_none_found))
                 }
             } catch (e: Exception) {
-                onError("Error: ${e.message}")
+                onError(context.getString(R.string.phone_hint_error_fmt, e.message.orEmpty()))
             }
         }
     }
@@ -51,7 +52,7 @@ fun rememberPhoneNumberHint(
                 IntentSenderRequest.Builder(pendingIntent.intentSender).build()
             )
         } catch (e: Exception) {
-            onError("Unable to open phone picker: ${e.message}")
+            onError(context.getString(R.string.phone_hint_picker_unavailable_fmt, e.message.orEmpty()))
         }
     }
 }

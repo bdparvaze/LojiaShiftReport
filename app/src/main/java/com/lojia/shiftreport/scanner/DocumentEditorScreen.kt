@@ -707,7 +707,7 @@ fun DocumentEditorScreen(
                         IconButton(
                             onClick = {
                                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Scanned Text", ocrExtractedText)
+                                val clip = ClipData.newPlainText(context.getString(R.string.scan_clipboard_label), ocrExtractedText)
                                 cm.setPrimaryClip(clip)
                                 Toast.makeText(context, context.getString(R.string.doc_toast_text_copied), Toast.LENGTH_SHORT).show()
                             }

@@ -17,7 +17,7 @@ import java.util.UUID
 data class Employee(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
-    val monthlySalaryMinor: Long = 0L,
+    val monthlySalaryMinor: Long,
     val phone: String? = null,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),

@@ -95,7 +95,7 @@ fun MainAppDrawer(
 
                         Column {
                             Text(
-                                text = "Lojia Shift Report",
+                                text = stringResource(R.string.app_name),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -103,7 +103,7 @@ fun MainAppDrawer(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = userProfile?.fullName ?: "Shift Manager",
+                                text = userProfile?.fullName ?: stringResource(R.string.default_shift_manager),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.8f),
                                 maxLines = 1,
@@ -120,7 +120,7 @@ fun MainAppDrawer(
                             onClick = {},
                             label = {
                                 Text(
-                                    text = "Shift Report",
+                                    text = stringResource(R.string.nav_reports),
                                     style = MaterialTheme.typography.labelSmall,
                                     maxLines = 1,
                                     softWrap = false
@@ -134,11 +134,19 @@ fun MainAppDrawer(
                             modifier = Modifier.height(28.dp)
                         )
 
+                        val rawRole = userProfile?.currentRole
+                        val roleBadgeText = when {
+                            rawRole.isNullOrBlank() || rawRole.equals("ADMIN", ignoreCase = true) ->
+                                stringResource(R.string.role_admin)
+                            rawRole.equals("CASHIER", ignoreCase = true) ->
+                                stringResource(R.string.cashier_1)
+                            else -> rawRole
+                        }
                         AssistChip(
                             onClick = {},
                             label = {
                                 Text(
-                                    text = userProfile?.currentRole ?: "ADMIN",
+                                    text = roleBadgeText,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,

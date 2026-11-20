@@ -40,6 +40,7 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
+import com.lojia.shiftreport.util.isValidMonthlySalary
 import com.lojia.shiftreport.util.normalizeRestoreName
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -132,7 +133,7 @@ fun EmployeeManagementSection(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "${employees.size} employees • $activeCount active",
+                        text = stringResource(R.string.employees_count_format, employees.size, activeCount),
                         fontSize = 14.sp,
                         color = FoodicsTextGray
                     )
@@ -155,7 +156,7 @@ fun EmployeeManagementSection(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Add Employee",
+                        text = stringResource(R.string.empty_employee_add_button),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
@@ -177,21 +178,21 @@ fun EmployeeManagementSection(
                 icon = Icons.Default.People,
                 iconTint = FoodicsBlue,
                 count = employees.size.toString(),
-                label = "Total",
+                label = stringResource(R.string.total),
                 modifier = Modifier.weight(1f)
             )
             EmployeeStatCard(
                 icon = Icons.Default.CheckCircle,
                 iconTint = FoodicsGreen,
                 count = activeCount.toString(),
-                label = "Active",
+                label = stringResource(R.string.active),
                 modifier = Modifier.weight(1f)
             )
             EmployeeStatCard(
                 icon = Icons.Default.Block,
                 iconTint = FoodicsOrange,
                 count = inactiveCount.toString(),
-                label = "Inactive",
+                label = stringResource(R.string.inactive),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -204,7 +205,7 @@ fun EmployeeManagementSection(
             onValueChange = { searchQuery = it },
             placeholder = {
                 Text(
-                    text = "Search by name or phone...",
+                    text = stringResource(R.string.employee_search_hint),
                     color = FoodicsTextGray,
                     fontSize = 14.sp
                 )
@@ -256,7 +257,7 @@ fun EmployeeManagementSection(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = if (employees.isEmpty()) "No employees yet" else "No matching employees",
+                        text = if (employees.isEmpty()) stringResource(R.string.empty_employee_title) else stringResource(R.string.empty_employee_no_match),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = FoodicsTextBlack,
@@ -264,7 +265,7 @@ fun EmployeeManagementSection(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Add your first employee with monthly salary to track advances",
+                        text = stringResource(R.string.empty_employee_hint),
                         fontSize = 14.sp,
                         color = FoodicsTextGray,
                         textAlign = TextAlign.Center
@@ -287,7 +288,7 @@ fun EmployeeManagementSection(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Add Employee",
+                                text = stringResource(R.string.empty_employee_add_button),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -318,7 +319,7 @@ fun EmployeeManagementSection(
 
     if (showAdminAuthForAdd) {
         AdminAuthDialog(
-            subtitle = "Add Employee",
+            subtitle = stringResource(R.string.empty_employee_add_button),
             onDismissRequest = { showAdminAuthForAdd = false },
             onAuthSuccess = {
                 showAdminAuthForAdd = false
@@ -330,7 +331,7 @@ fun EmployeeManagementSection(
 
     employeePendingEditAuth?.let { target ->
         AdminAuthDialog(
-            subtitle = "Edit Employee: ${target.name}",
+            subtitle = stringResource(R.string.employee_edit_subtitle_format, target.name),
             onDismissRequest = { employeePendingEditAuth = null },
             onAuthSuccess = {
                 employeePendingEditAuth = null
@@ -349,6 +350,14 @@ fun EmployeeManagementSection(
             onDismiss = { showAddEditDialog = false },
             onSave = { name, salaryMinor, phone, isActive ->
                 coroutineScope.launch {
+                    if (!isValidMonthlySalary(salaryMinor)) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.employee_salary_required),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
                     val currentAll = employeeDao.getAllOnce()
                     val duplicateExists = isDuplicateEmployeeName(
                         employeeId = currentEditing?.id,
@@ -379,7 +388,10 @@ fun EmployeeManagementSection(
                     showAddEditDialog = false
                     Toast.makeText(
                         context,
-                        if (currentEditing != null) "Employee updated" else "Employee saved",
+                        context.getString(
+                            if (currentEditing != null) R.string.employee_updated_toast
+                            else R.string.employee_saved_toast
+                        ),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -498,7 +510,7 @@ private fun EmployeeItemCard(
                             .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = if (employee.isActive) "Active" else "Inactive",
+                            text = if (employee.isActive) stringResource(R.string.active) else stringResource(R.string.inactive),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = if (employee.isActive) Color(0xFF065F46) else FoodicsTextGray
@@ -507,7 +519,10 @@ private fun EmployeeItemCard(
                 }
 
                 Text(
-                    text = "${com.lojia.shiftreport.util.MoneyFormat.formatMinor(employee.monthlySalaryMinor, activeCurrency)} / month",
+                    text = stringResource(
+                        R.string.employee_salary_per_month_format,
+                        com.lojia.shiftreport.util.MoneyFormat.formatMinor(employee.monthlySalaryMinor, activeCurrency)
+                    ),
                     fontSize = 14.sp,
                     color = FoodicsTextGray
                 )
@@ -542,7 +557,7 @@ private fun EmployeeItemCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Employee",
+                    contentDescription = stringResource(R.string.employee_edit_label),
                     tint = FoodicsBlue,
                     modifier = Modifier.size(20.dp)
                 )
@@ -582,13 +597,14 @@ private fun AddEditEmployeeDialog(
     val salaryClass = classifyMoneyInput(salaryText, activeDigits)
     val salaryMinor = (salaryClass as? MoneyInput.Valid)?.minor
     val isSalaryInvalid = salaryClass is MoneyInput.Invalid
+    val isSalaryZero = salaryClass is MoneyInput.Valid && !isValidMonthlySalary(salaryClass.minor)
     val canSave = name.isNotBlank() && !isDuplicateName && salaryMinor != null && salaryMinor > 0L
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (existing != null) "Edit Employee" else "Add New Employee",
+                text = if (existing != null) stringResource(R.string.employee_edit_label) else stringResource(R.string.employee_add_new_title),
                 fontWeight = FontWeight.Bold
             )
         },
@@ -603,7 +619,7 @@ private fun AddEditEmployeeDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Employee Name *") },
+                    label = { Text(stringResource(R.string.employee_name_label)) },
                     placeholder = { Text(stringResource(R.string.employee_name_hint)) },
                     isError = isDuplicateName,
                     supportingText = if (isDuplicateName) {
@@ -617,12 +633,18 @@ private fun AddEditEmployeeDialog(
                 OutlinedTextField(
                     value = salaryText,
                     onValueChange = { salaryText = it },
-                    label = { Text("Monthly Salary *") },
-                    placeholder = { Text("e.g., 1500") },
-                    isError = isSalaryInvalid,
-                    supportingText = if (isSalaryInvalid) {
-                        { Text(stringResource(R.string.valid_amount_error)) }
-                    } else null,
+                    label = { Text(stringResource(R.string.monthly_salary_label)) },
+                    placeholder = { Text(stringResource(R.string.employee_salary_hint)) },
+                    isError = isSalaryInvalid || isSalaryZero,
+                    supportingText = when {
+                        isSalaryInvalid -> {
+                            { Text(stringResource(R.string.valid_amount_error)) }
+                        }
+                        isSalaryZero -> {
+                            { Text(stringResource(R.string.employee_salary_required)) }
+                        }
+                        else -> null
+                    },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = if (activeDigits == 0) KeyboardType.Number else KeyboardType.Decimal
                     ),
@@ -635,7 +657,7 @@ private fun AddEditEmployeeDialog(
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Phone (Optional)") },
+                    label = { Text(stringResource(R.string.phone_optional_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -649,7 +671,7 @@ private fun AddEditEmployeeDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Active Status",
+                            text = stringResource(R.string.active_status_label),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
@@ -673,12 +695,12 @@ private fun AddEditEmployeeDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = FoodicsBlue),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

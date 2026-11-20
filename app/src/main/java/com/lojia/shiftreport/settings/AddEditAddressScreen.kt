@@ -206,7 +206,7 @@ fun AddEditAddressScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (addressId != null) "Edit Address" else "Add New Address",
+                        text = stringResource(if (addressId != null) R.string.edit_address else R.string.add_new_address),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = PureWhite
@@ -277,7 +277,7 @@ fun AddEditAddressScreen(
                             .testTag("btn_save_address")
                     ) {
                         Text(
-                            text = "Save",
+                            text = stringResource(R.string.save),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
@@ -312,7 +312,7 @@ fun AddEditAddressScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "All information is encrypted",
+                        text = stringResource(R.string.all_info_encrypted),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = SuccessGreen
@@ -333,7 +333,7 @@ fun AddEditAddressScreen(
                 // =============================================================
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Country/region",
+                        text = stringResource(R.string.country_region_label),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -346,7 +346,7 @@ fun AddEditAddressScreen(
                             .testTag("field_address_country")
                     ) {
                         OutlinedTextField(
-                            value = "${countryCodeToFlagEmoji(selectedCountry.code)}  ${selectedCountry.displayName}",
+                            value = "${countryCodeToFlagEmoji(selectedCountry.code)}  ${stringResource(selectedCountry.nameRes)}",
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
@@ -370,7 +370,7 @@ fun AddEditAddressScreen(
                 // =============================================================
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Address",
+                        text = stringResource(R.string.address),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -397,7 +397,7 @@ fun AddEditAddressScreen(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = addressLine.ifBlank { "Tap Edit to select on map" },
+                                    text = addressLine.ifBlank { stringResource(R.string.address_tap_edit_map) },
                                     fontSize = 13.sp,
                                     fontWeight = if (addressLine.isBlank()) FontWeight.Normal else FontWeight.Medium,
                                     color = if (addressLine.isBlank()) TextHintColor else OnSurfaceLight,
@@ -431,7 +431,7 @@ fun AddEditAddressScreen(
                                     color = OnSurfaceLight.copy(alpha = 0.78f)
                                 ) {
                                     Text(
-                                        text = "Edit",
+                                        text = stringResource(R.string.edit_item),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = PureWhite,
@@ -448,14 +448,14 @@ fun AddEditAddressScreen(
                         onValueChange = { addressLine = it },
                         label = {
                             Text(
-                                text = "Street address *",
+                                text = stringResource(R.string.street_address_required),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
                         },
                         placeholder = {
                             Text(
-                                text = "Street, building, district",
+                                text = stringResource(R.string.street_building_district_hint),
                                 fontSize = 13.sp,
                                 color = TextHintColor
                             )
@@ -473,7 +473,7 @@ fun AddEditAddressScreen(
                         onValueChange = { aptSuite = it },
                         label = {
                             Text(
-                                text = "Apt, suite, unit (optional)",
+                                text = stringResource(R.string.apt_suite_optional),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -487,12 +487,14 @@ fun AddEditAddressScreen(
                     )
 
                     // Address label with Suggestion chip on trailing
+                    val storeSuggestion = stringResource(R.string.address_tag_store)
+                    val warehouseSuggestion = stringResource(R.string.address_tag_warehouse)
                     OutlinedTextField(
                         value = addressLabel,
                         onValueChange = { addressLabel = it },
                         label = {
                             Text(
-                                text = "Address label (optional)",
+                                text = stringResource(R.string.address_label_optional),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -506,12 +508,12 @@ fun AddEditAddressScreen(
                                     .padding(end = 8.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .clickable {
-                                        addressLabel = if (addressLabel == "Main Store") "Warehouse" else "Main Store"
+                                        addressLabel = if (addressLabel == storeSuggestion) warehouseSuggestion else storeSuggestion
                                     }
                                     .testTag("chip_address_label_suggestion")
                             ) {
                                 Text(
-                                    text = "Suggestion",
+                                    text = stringResource(R.string.suggestion_label),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = PrimaryIndigoDark,
@@ -533,7 +535,7 @@ fun AddEditAddressScreen(
                 // =============================================================
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Contact information",
+                        text = stringResource(R.string.contact_information_header),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -544,7 +546,7 @@ fun AddEditAddressScreen(
                         onValueChange = { firstName = it },
                         label = {
                             Text(
-                                text = "First name *",
+                                text = stringResource(R.string.profile_first_name_label),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -562,7 +564,7 @@ fun AddEditAddressScreen(
                         onValueChange = { lastName = it },
                         label = {
                             Text(
-                                text = "Last name *",
+                                text = stringResource(R.string.profile_last_name_label),
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
@@ -587,7 +589,7 @@ fun AddEditAddressScreen(
                             readOnly = true,
                             label = {
                                 Text(
-                                    text = "Code",
+                                    text = stringResource(R.string.address_dial_code_label),
                                     fontSize = 11.sp,
                                     color = OnSurfaceVariantLight
                                 )
@@ -607,7 +609,7 @@ fun AddEditAddressScreen(
                             },
                             label = {
                                 Text(
-                                    text = "Mobile number *",
+                                    text = stringResource(R.string.address_mobile_required),
                                     fontSize = 13.sp,
                                     color = OnSurfaceVariantLight
                                 )
@@ -647,7 +649,7 @@ fun AddEditAddressScreen(
                             readOnly = true,
                             label = {
                                 Text(
-                                    text = "Code",
+                                    text = stringResource(R.string.address_dial_code_label),
                                     fontSize = 11.sp,
                                     color = OnSurfaceVariantLight
                                 )
@@ -667,7 +669,7 @@ fun AddEditAddressScreen(
                             },
                             label = {
                                 Text(
-                                    text = "Alternate phone number",
+                                    text = stringResource(R.string.alternate_phone_label),
                                     fontSize = 13.sp,
                                     color = OnSurfaceVariantLight
                                 )
@@ -721,7 +723,7 @@ fun AddEditAddressScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Select Country/region",
+                        text = stringResource(R.string.address_select_country_region),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -740,7 +742,7 @@ fun AddEditAddressScreen(
                     onValueChange = { countrySearch = it },
                     placeholder = {
                         Text(
-                            text = "Search country...",
+                            text = stringResource(R.string.search_country_hint),
                             fontSize = 13.sp,
                             color = TextHintColor
                         )
@@ -790,7 +792,7 @@ fun AddEditAddressScreen(
                                     color = OnSurfaceLight
                                 )
                                 Text(
-                                    text = country.displayName,
+                                    text = stringResource(country.nameRes),
                                     fontSize = 14.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = OnSurfaceLight

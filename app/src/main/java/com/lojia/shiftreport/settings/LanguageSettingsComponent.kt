@@ -62,7 +62,7 @@ fun LanguageSettingsComponent(
         .collectAsState(
             initial = LanguagePreferenceData(
                 currentCode = currentLanguage.code,
-                secondaryCode = if (currentLanguage.code == "ar") "en" else "ar",
+                secondaryCode = if (currentLanguage == AppLanguage.ARABIC) AppLanguage.ENGLISH.code else AppLanguage.ARABIC.code,
                 lastUpdatedMillis = System.currentTimeMillis()
             )
         )
@@ -76,7 +76,7 @@ fun LanguageSettingsComponent(
             .fillMaxWidth()
             .testTag("language_settings_component")
     ) {
-        LojiaSectionHeader("APPLICATION LANGUAGE")
+        LojiaSectionHeader(stringResource(R.string.application_language_header))
 
         // =========================================================================
         // LANGUAGE CATALOG LIST (English, Bengali, Arabic)
@@ -97,9 +97,14 @@ fun LanguageSettingsComponent(
                             LanguagePreferences.saveLanguageDataStore(context, lang.code)
                             ConfigurationSyncManager.getInstance(context).setLanguage(lang)
                             onLanguageChanged(lang)
+                            val nativeNameRes = when (lang) {
+                                AppLanguage.ENGLISH -> R.string.lang_native_en
+                                AppLanguage.BENGALI -> R.string.lang_native_bn
+                                AppLanguage.ARABIC -> R.string.lang_native_ar
+                            }
                             Toast.makeText(
                                 context,
-                                context.getString(R.string.language_saved_datastore, lang.displayName),
+                                context.getString(R.string.language_saved_datastore, context.getString(nativeNameRes)),
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -162,8 +167,13 @@ private fun LanguageOptionRow(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        val nativeName = when (language) {
+                            AppLanguage.ENGLISH -> stringResource(R.string.lang_native_en)
+                            AppLanguage.BENGALI -> stringResource(R.string.lang_native_bn)
+                            AppLanguage.ARABIC -> stringResource(R.string.lang_native_ar)
+                        }
                         Text(
-                            text = language.nativeName,
+                            text = nativeName,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 15.sp,
                             color = if (isSelected) OnPrimaryContainerLight else OnSurfaceLight,
@@ -176,7 +186,7 @@ private fun LanguageOptionRow(
                                 color = WarningContainer
                             ) {
                                 Text(
-                                    text = "RTL",
+                                    text = stringResource(R.string.lang_rtl_badge),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = WarningOrange,
@@ -187,7 +197,7 @@ private fun LanguageOptionRow(
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "${language.displayName} (${language.code.uppercase()})",
+                        text = "${stringResource(language.titleRes)} (${language.code.uppercase()})",
                         fontSize = 13.sp,
                         color = OnSurfaceVariantLight,
                         maxLines = 1,
@@ -225,7 +235,7 @@ fun LanguageToggleSettingsCard(
         .collectAsState(
             initial = LanguagePreferenceData(
                 currentCode = LanguagePreferences.getLanguage(context),
-                secondaryCode = "ar"
+                secondaryCode = AppLanguage.ARABIC.code
             )
         )
 
@@ -250,14 +260,14 @@ fun LanguageToggleSettingsCard(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Display Language",
+                text = stringResource(R.string.lang_display_language),
                 fontWeight = FontWeight.Medium,
                 fontSize = 15.sp,
                 color = OnSurfaceLight
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "${currentLang.displayName} (DataStore)",
+                text = stringResource(R.string.lang_datastore_value_fmt, stringResource(currentLang.titleRes)),
                 fontSize = 13.sp,
                 color = OnSurfaceVariantLight
             )

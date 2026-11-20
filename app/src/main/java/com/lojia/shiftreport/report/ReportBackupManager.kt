@@ -105,7 +105,7 @@ class ReportBackupManager(
             val resolvedState = state ?: uri.getQueryParameter("state")
             if (code.isNullOrEmpty()) {
                 GoogleDriveManager.clearOAuthState(context)
-                val error = uri.getQueryParameter("error") ?: "Authorization cancelled or failed"
+                val error = uri.getQueryParameter("error") ?: context.getString(R.string.backup_auth_cancelled)
                 emitUiMessage(UiText.DynamicString(error))
                 withContext(Dispatchers.Main) { onComplete(false) }
                 return@launch
@@ -113,12 +113,12 @@ class ReportBackupManager(
             val result = GoogleDriveManager.handleOAuthCallback(context, code, resolvedState)
             result.onSuccess { account: DriveAccountInfo ->
                 _driveAccountInfo.value = account
-                val emailStr = account.email ?: "Google Account"
+                val emailStr = account.email ?: context.getString(R.string.google_account)
                 emitUiMessage(UiText.StringResource(R.string.drive_connected_as, emailStr))
                 fetchGoogleDriveBackups()
                 withContext(Dispatchers.Main) { onComplete(true) }
             }.onFailure { err ->
-                val msg = err.localizedMessage ?: "Drive authentication failed"
+                val msg = err.localizedMessage ?: context.getString(R.string.drive_auth_failed)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onComplete(false) }
             }
@@ -156,7 +156,7 @@ class ReportBackupManager(
                 fetchGoogleDriveBackups()
                 withContext(Dispatchers.Main) { onSuccess(item) }
             }.onFailure { err ->
-                val msg = err.localizedMessage ?: "Drive upload failed"
+                val msg = err.localizedMessage ?: context.getString(R.string.drive_upload_failed)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
@@ -176,7 +176,7 @@ class ReportBackupManager(
                 _driveBackupsList.value = list
                 withContext(Dispatchers.Main) { onSuccess(list) }
             }.onFailure { err ->
-                val msg = err.localizedMessage ?: "Failed to list Drive backups"
+                val msg = err.localizedMessage ?: context.getString(R.string.drive_list_failed)
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
         }
@@ -204,7 +204,7 @@ class ReportBackupManager(
                     onReady(bytes, requiresPassword)
                 }
             }.onFailure { err ->
-                val msg = err.localizedMessage ?: "Drive download failed"
+                val msg = err.localizedMessage ?: context.getString(R.string.drive_download_failed)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
@@ -242,16 +242,12 @@ class ReportBackupManager(
                 syncManager.forceSync { _: Boolean, _: String -> }
                 NotificationHelper.sendTestPushNotification(
                     context,
-                    "☁️ Google Drive Restore Complete",
-                    "Restored $count records from Google Drive (${item.name})."
+                    context.getString(R.string.drive_restore_complete_notif_title),
+                    context.getString(R.string.drive_restore_complete_notif_body, count, item.name)
                 )
                 withContext(Dispatchers.Main) { onSuccess(count) }
             }.onFailure { err ->
-                val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                    context.getString(R.string.backup_pw_wrong_or_damaged)
-                } else {
-                    err.localizedMessage ?: context.getString(R.string.restore_failed)
-                }
+                val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, err)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
@@ -290,23 +286,19 @@ class ReportBackupManager(
                     syncManager.forceSync { _: Boolean, _: String -> }
                     NotificationHelper.sendTestPushNotification(
                         context,
-                        "☁️ Google Drive Restore Complete",
-                        "Restored $count records from Google Drive (${item.name})."
+                        context.getString(R.string.drive_restore_complete_notif_title),
+                        context.getString(R.string.drive_restore_complete_notif_body, count, item.name)
                     )
                     withContext(Dispatchers.Main) { onSuccess(count) }
                 }.onFailure { err ->
-                    val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(err)) {
-                        context.getString(R.string.backup_pw_wrong_or_damaged)
-                    } else {
-                        err.localizedMessage ?: context.getString(R.string.restore_failed)
-                    }
+                    val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, err)
                     emitUiMessage(UiText.DynamicString(msg))
                     withContext(Dispatchers.Main) { onFailure(msg) }
                 }
             }.onFailure { err ->
                 _isDriveDownloading.value = false
                 _isBackingUp.value = false
-                val msg = err.localizedMessage ?: "Drive download failed"
+                val msg = err.localizedMessage ?: context.getString(R.string.drive_download_failed)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
@@ -361,7 +353,7 @@ class ReportBackupManager(
         scope.launch {
             delay(1200)
             lastServerSyncTime.value = System.currentTimeMillis()
-            lastServerSyncStatus.value = "Synced via WorkManager"
+            lastServerSyncStatus.value = context.getString(R.string.sync_status_workmanager)
         }
     }
 
@@ -389,8 +381,11 @@ class ReportBackupManager(
             _isBackingUp.value = false
             NotificationHelper.sendTestPushNotification(
                 context,
-                "☁️ Cloud Backup Successful",
-                "Your store database and shift ledgers were backed up to Google Drive at ${SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(now))}."
+                context.getString(R.string.cloud_backup_success_notif_title),
+                context.getString(
+                    R.string.cloud_backup_success_notif_body,
+                    SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(now))
+                )
             )
         }
     }
@@ -430,7 +425,7 @@ class ReportBackupManager(
                 emitUiMessage(UiText.StringResource(R.string.backup_created_success, info.fileName))
                 withContext(Dispatchers.Main) { onSuccess(info) }
             }.onFailure { error ->
-                val msg = error.localizedMessage ?: "Failed to create backup"
+                val msg = error.localizedMessage ?: context.getString(R.string.backup_create_failed)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
@@ -474,16 +469,12 @@ class ReportBackupManager(
                 syncManager.forceSync { _: Boolean, _: String -> }
                 NotificationHelper.sendTestPushNotification(
                     context,
-                    "📦 Backup Restored Successfully",
-                    "Restored $count business records into store ledger."
+                    context.getString(R.string.backup_restored_notif_title),
+                    context.getString(R.string.backup_restored_notif_body, count)
                 )
                 withContext(Dispatchers.Main) { onSuccess(count) }
             }.onFailure { error ->
-                val msg = if (OfflineBackupManager.isBackupPasswordOrFormatError(error)) {
-                    context.getString(R.string.backup_pw_wrong_or_damaged)
-                } else {
-                    error.localizedMessage ?: context.getString(R.string.restore_failed)
-                }
+                val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, error)
                 emitUiMessage(UiText.DynamicString(msg))
                 withContext(Dispatchers.Main) { onFailure(msg) }
             }
@@ -517,7 +508,7 @@ class ReportBackupManager(
                 emitUiMessage(UiText.StringResource(R.string.all_data_cleared_success))
                 withContext(Dispatchers.Main) { onSuccess() }
             } catch (e: Exception) {
-                val err = e.localizedMessage ?: "Failed to clear data"
+                val err = e.localizedMessage ?: context.getString(R.string.clear_data_failed)
                 emitUiMessage(UiText.DynamicString(err))
                 withContext(Dispatchers.Main) { onFailure(err) }
             }

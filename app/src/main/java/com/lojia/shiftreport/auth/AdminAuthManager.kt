@@ -2,6 +2,7 @@ package com.lojia.shiftreport.auth
 
 import android.content.Context
 import androidx.fragment.app.FragmentActivity
+import com.lojia.shiftreport.R
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -38,15 +39,15 @@ object AdminAuthManager {
         activity: FragmentActivity,
         secureStorage: SecureStorageManager,
         fallbackPin: String = "",
-        title: String = "Admin Authorization",
-        description: String = "Biometric or 6-digit Admin PIN required"
+        title: String = activity.getString(R.string.auth_admin_confirmation),
+        description: String = activity.getString(R.string.auth_confirm_action)
     ): Boolean {
         if (com.lojia.shiftreport.auth.BiometricManager.checkBiometricAvailability(activity) == BiometricStatus.AVAILABLE) {
             val biometricSuccess = suspendCancellableCoroutine<Boolean> { cont ->
                 com.lojia.shiftreport.auth.BiometricManager.showBiometricPrompt(
                     activity = activity,
                     title = title,
-                    subtitle = "Authorized Personnel Only",
+                    subtitle = activity.getString(R.string.auth_authorized_personnel_only),
                     description = description
                 ) { result ->
                     cont.resume(result is BiometricAuthResult.Success)

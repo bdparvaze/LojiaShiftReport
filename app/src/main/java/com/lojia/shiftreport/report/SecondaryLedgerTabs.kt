@@ -121,7 +121,7 @@ fun PaidOutShoppingLedgerTab(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Total Shopping Paid Out",
+                        text = stringResource(R.string.paid_out_total_title),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = TextHintColor,
@@ -143,7 +143,7 @@ fun PaidOutShoppingLedgerTab(
                     border = BorderStroke(0.5.dp, WarningOrange.copy(alpha = 0.35f))
                 ) {
                     Text(
-                        text = "${list.size} entries",
+                        text = stringResource(R.string.paid_out_entries_count_fmt, list.size),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = WarningOrange,
@@ -167,7 +167,7 @@ fun PaidOutShoppingLedgerTab(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Outdoor Shopping Expenses",
+                text = stringResource(R.string.paid_out_section_header),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryIndigoDark,
@@ -207,14 +207,14 @@ fun PaidOutShoppingLedgerTab(
                 }
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    text = "No paid out entries yet",
+                    text = stringResource(R.string.paid_out_empty_title),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = OnSurfaceLight
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Record outdoor shopping and paid out expenses here.",
+                    text = stringResource(R.string.paid_out_empty_desc),
                     fontSize = 12.sp,
                     color = OnSurfaceVariantLight,
                     textAlign = TextAlign.Center,
@@ -269,7 +269,7 @@ fun PaidOutShoppingLedgerTab(
                             if (item.qty > 0 && item.unitPriceMinor > 0L) {
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    text = "${item.qty} pcs × ${MoneyFormat.formatMinor(item.unitPriceMinor, currency)}",
+                                    text = stringResource(R.string.paid_out_qty_x_price_fmt, item.qty, MoneyFormat.formatMinor(item.unitPriceMinor, currency)),
                                     fontSize = 12.sp,
                                     color = OnSurfaceVariantLight,
                                     maxLines = 1
@@ -277,7 +277,7 @@ fun PaidOutShoppingLedgerTab(
                             } else if (item.qty > 0) {
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    text = "${item.qty} pcs",
+                                    text = stringResource(R.string.paid_out_qty_pcs_fmt, item.qty),
                                     fontSize = 12.sp,
                                     color = OnSurfaceVariantLight,
                                     maxLines = 1
@@ -418,7 +418,7 @@ fun WalkoutLedgerTab(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Total Walk-out Loss",
+                        text = stringResource(R.string.total_walkout_loss),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = TextHintColor,
@@ -440,7 +440,7 @@ fun WalkoutLedgerTab(
                     border = BorderStroke(0.5.dp, ErrorRedLight.copy(alpha = 0.35f))
                 ) {
                     Text(
-                        text = "$count bill${if (count != 1) "s" else ""}",
+                        text = if (count == 1) stringResource(R.string.walkout_bill_singular_fmt, count) else stringResource(R.string.walkout_bills_plural_fmt, count),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = ErrorRedLight,
@@ -464,7 +464,7 @@ fun WalkoutLedgerTab(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Walk-out Unpaid Bills",
+                text = stringResource(R.string.walkout_bills_section_header),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryIndigoDark,
@@ -511,7 +511,7 @@ fun WalkoutLedgerTab(
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Unpaid table and walk-out bills recorded during shifts will appear here.",
+                    text = stringResource(R.string.walkout_empty_desc),
                     fontSize = 12.sp,
                     color = OnSurfaceVariantLight,
                     textAlign = TextAlign.Center,

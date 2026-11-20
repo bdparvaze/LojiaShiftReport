@@ -158,9 +158,9 @@ object BiometricManager {
             when (result) {
                 is BiometricAuthResult.Success -> onSuccess()
                 is BiometricAuthResult.Error -> onError(result.errorCode, result.errString)
-                is BiometricAuthResult.Failed -> onError(-2, "Authentication failed")
-                is BiometricAuthResult.UserCanceled -> onError(-3, "Authentication cancelled")
-                else -> onError(-1, "Authentication error")
+                is BiometricAuthResult.Failed -> onError(-2, activity.getString(R.string.biometric_auth_failed))
+                is BiometricAuthResult.UserCanceled -> onError(-3, activity.getString(R.string.biometric_auth_cancelled))
+                else -> onError(-1, activity.getString(R.string.biometric_auth_error))
             }
         }
     }
@@ -220,7 +220,7 @@ object BiometricManager {
         try {
             biometricPrompt.authenticate(promptInfoBuilder.build())
         } catch (e: Exception) {
-            onResult(BiometricAuthResult.Error(-1, e.message ?: "Authentication initialization error"))
+            onResult(BiometricAuthResult.Error(-1, e.message ?: activity.getString(R.string.biometric_auth_init_error)))
         }
     }
 

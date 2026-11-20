@@ -179,7 +179,7 @@ fun DueLedgerTab(
             onValueChange = { searchQuery = it },
             placeholder = {
                 Text(
-                    text = "Search by receipt number...",
+                    text = stringResource(R.string.search_receipt_number),
                     fontSize = 13.sp,
                     color = TextHintColor
                 )
@@ -256,7 +256,7 @@ fun DueLedgerTab(
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Total Issued Due",
+                            text = stringResource(R.string.total_issued_due),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextHintColor,
@@ -306,7 +306,7 @@ fun DueLedgerTab(
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Total Collected",
+                            text = stringResource(R.string.total_collected),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextHintColor,
@@ -362,7 +362,7 @@ fun DueLedgerTab(
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Net Outstanding Due",
+                            text = stringResource(R.string.net_outstanding_due),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = WarningOrange,
@@ -371,7 +371,7 @@ fun DueLedgerTab(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = "Collections automatically deduct from same receipt #",
+                            text = stringResource(R.string.deduct_auto_hint),
                             fontSize = 10.sp,
                             color = OnSurfaceVariantLight,
                             maxLines = 2
@@ -431,7 +431,7 @@ fun DueLedgerTab(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Receipt Ledger Breakdown",
+                text = stringResource(R.string.ledger_receipt_breakdown_title),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryIndigoDark,
@@ -471,14 +471,14 @@ fun DueLedgerTab(
                 }
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    text = "No due records yet",
+                    text = stringResource(R.string.empty_due_title),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = OnSurfaceLight
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Receipts with outstanding balances appear here.",
+                    text = stringResource(R.string.empty_due_hint),
                     fontSize = 12.sp,
                     color = OnSurfaceVariantLight,
                     textAlign = TextAlign.Center,
@@ -594,7 +594,7 @@ fun DueLedgerTab(
                             // Column 1 — Issued Due
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Issued Due",
+                                    text = stringResource(R.string.issued_due),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = TextHintColor,
@@ -616,7 +616,7 @@ fun DueLedgerTab(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "Collected (-)",
+                                    text = stringResource(R.string.collected_minus),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = TextHintColor,
@@ -638,7 +638,7 @@ fun DueLedgerTab(
                                 horizontalAlignment = Alignment.End
                             ) {
                                 Text(
-                                    text = "Net Remaining",
+                                    text = stringResource(R.string.net_remaining),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = TextHintColor,
@@ -755,7 +755,7 @@ fun EmployerLedgerTab(
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Total Advances",
+                            text = stringResource(R.string.ledger_total_advances),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextHintColor,
@@ -797,7 +797,7 @@ fun EmployerLedgerTab(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Cash",
+                            text = stringResource(R.string.cash_payment_opt),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextHintColor
@@ -822,7 +822,7 @@ fun EmployerLedgerTab(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Bank",
+                            text = stringResource(R.string.bank),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = TextHintColor
@@ -854,7 +854,7 @@ fun EmployerLedgerTab(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Employer Advance Transactions",
+                text = stringResource(R.string.ledger_employer_advances_title),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryIndigoDark,
@@ -894,14 +894,14 @@ fun EmployerLedgerTab(
                 }
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    text = "No advances recorded",
+                    text = stringResource(R.string.empty_advance_title),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = OnSurfaceLight
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Salary advances given to staff appear here.",
+                    text = stringResource(R.string.empty_advance_hint),
                     fontSize = 12.sp,
                     color = OnSurfaceVariantLight,
                     textAlign = TextAlign.Center,
@@ -937,7 +937,7 @@ fun EmployerLedgerTab(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = displayStaffName.firstOrNull()?.uppercase() ?: "S",
+                                text = displayStaffName.firstOrNull()?.uppercase() ?: stringResource(R.string.ledger_staff_initial_fallback),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryIndigoLight

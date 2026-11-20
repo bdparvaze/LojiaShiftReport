@@ -54,9 +54,11 @@ import androidx.compose.material.icons.Icons
 
 
 import androidx.compose.material.icons.automirrored.outlined.Backspace
+import androidx.compose.material.icons.outlined.ClearAll
 
 
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.semantics.clearAndSetSemantics
 
 
 import androidx.compose.material3.*
@@ -123,7 +125,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @Composable
 fun SecureDeleteModal(
-    title: String = "Delete Shift Report",
+    title: String = stringResource(R.string.delete_shift_report_title),
     itemDescription: String = stringResource(R.string.delete_report_confirm),
     userProfile: UserProfile?,
     onDismiss: () -> Unit,
@@ -139,8 +141,8 @@ fun SecureDeleteModal(
     val actualQuestion = userProfile?.securityQuestion?.ifBlank { defaultQuestion } ?: defaultQuestion
     val actualAnswer = userProfile?.securityAnswer?.ifBlank { "Lojia" } ?: "Lojia"
 
-    val reportSubtitle = remember(itemDescription) {
-        Regex("#(\\d+)").find(itemDescription)?.let { "Shift Report #${it.groupValues[1]}" }
+    val reportSubtitle = remember(itemDescription, context) {
+        Regex("#(\\d+)").find(itemDescription)?.let { context.getString(R.string.shift_report_number_fmt, it.groupValues[1]) }
             ?: itemDescription
     }
 
@@ -179,7 +181,7 @@ fun SecureDeleteModal(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Delete Shift Report",
+                        text = stringResource(R.string.delete_shift_report_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight,
@@ -223,7 +225,7 @@ fun SecureDeleteModal(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "This action cannot be undone. Enter your security credentials to confirm.",
+                                text = stringResource(R.string.delete_shift_report_confirm_desc),
                                 fontSize = 12.sp,
                                 color = OnSurfaceLight,
                                 lineHeight = 16.sp
@@ -232,9 +234,8 @@ fun SecureDeleteModal(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Security question label (English only — no bilingual mixing)
                     Text(
-                        text = "Security Question",
+                        text = stringResource(R.string.security_question_label),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = TextHintColor,
@@ -358,7 +359,7 @@ fun SecureDeleteModal(
                         )
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.cancel),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = PrimaryIndigoLight
@@ -397,7 +398,7 @@ fun SecureDeleteModal(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Delete",
+                            text = stringResource(R.string.delete),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = PureWhite
@@ -626,6 +627,7 @@ fun SecurityPinModal(
 ) {
     var enteredPin by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
     val shakeOffset = remember { Animatable(0f) }
@@ -934,7 +936,7 @@ fun SecurityPinModal(
                                                             if (isPinUsable(next) && isPinUsable(expectedPin) && SecurityUtils.verifySecret(next, expectedPin)) {
                                                                 onSuccess()
                                                             } else {
-                                                                errorMsg = "Incorrect PIN. Try again."
+                                                                errorMsg = context.getString(R.string.components_incorrect_pin_try_again)
                                                                 enteredPin = ""
                                                                 coroutineScope.launch {
                                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -982,11 +984,11 @@ fun SecurityPinModal(
                                                     )
                                                 }
                                                 item.isClear -> {
-                                                    Text(
-                                                        text = item.key,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 19.sp,
-                                                        color = ErrorRedLight
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.ClearAll,
+                                                        contentDescription = stringResource(R.string.cd_clear),
+                                                        tint = ErrorRedLight,
+                                                        modifier = Modifier.size(22.dp)
                                                     )
                                                 }
                                                 else -> {
@@ -1006,7 +1008,8 @@ fun SecurityPinModal(
                                                                 fontWeight = FontWeight.Bold,
                                                                 fontSize = 8.5.sp,
                                                                 letterSpacing = 1.sp,
-                                                                color = TextHintColor
+                                                                color = TextHintColor,
+                                                                modifier = Modifier.clearAndSetSemantics {}
                                                             )
                                                         }
                                                     }

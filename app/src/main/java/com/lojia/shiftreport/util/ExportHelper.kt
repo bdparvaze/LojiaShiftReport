@@ -34,7 +34,7 @@ object ExportHelper {
 
         val digits = MoneyFormat.minorUnitDigits(currency)
         FileWriter(csvFile).use { writer ->
-            writer.append("Report ID,Cashier Name,Shift,Date,Gross Cash ($currency),Mada/Card ($currency),Digital Wallet ($currency),Staff Meals,Expenses ($currency),Net Cash ($currency),Total Sales ($currency),Notes\n")
+            writer.append(context.getString(R.string.export_csv_header, currency) + "\n")
 
             for (r in reports) {
                 val dateStr = DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US)
@@ -55,7 +55,7 @@ object ExportHelper {
     fun exportReportsAsCsv(context: Context, reports: List<ShiftReport>, currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE) {
         try {
             val file = exportShiftReportsToCsv(context, reports, currency)
-            shareExportedFile(context, file, "text/csv", "Export Shift Reports CSV")
+            shareExportedFile(context, file, "text/csv", context.getString(R.string.export_csv_share_title))
         } catch (e: Exception) {
             Toast.makeText(context, context.getString(R.string.error_exporting_csv, e.message ?: ""), Toast.LENGTH_SHORT).show()
         }
@@ -280,7 +280,7 @@ object ExportHelper {
             }
             document.close()
 
-            shareExportedFile(context, pdfFile, "application/pdf", "Shift Reports PDF")
+            shareExportedFile(context, pdfFile, "application/pdf", context.getString(R.string.export_pdf_share_title))
         } catch (e: Exception) {
             Toast.makeText(context, context.getString(R.string.error_exporting_pdf, e.message ?: ""), Toast.LENGTH_SHORT).show()
         }

@@ -299,8 +299,8 @@ fun SettingsCommonDialogs(
                                 ticketSubmitted = true
                                 NotificationHelper.sendTestPushNotification(
                                     context,
-                                    "🎫 Support Ticket Submitted",
-                                    "Your request '$subject' has been received by Lojia Support Desk."
+                                    context.getString(R.string.settings_support_ticket_submitted),
+                                    context.getString(R.string.settings_support_ticket_received_format, subject)
                                 )
                             }
                         }
@@ -353,15 +353,15 @@ fun ChangeQuickPinDialog(
     val displayStep = if (hasExistingPin) step else (step - 1)
 
     val stepTitle = when (step) {
-        1 -> "Verify Current PIN"
-        2 -> "Enter New 6-Digit PIN"
-        else -> "Confirm New 6-Digit PIN"
+        1 -> stringResource(R.string.settings_pin_step1_title)
+        2 -> stringResource(R.string.settings_pin_step2_title)
+        else -> stringResource(R.string.settings_pin_step3_title)
     }
 
     val stepDesc = when (step) {
-        1 -> "Enter your existing 6-digit Quick PIN to authorize this change."
-        2 -> "Choose a new 6-digit numeric PIN for fast login."
-        else -> "Re-enter the new 6-digit PIN to confirm."
+        1 -> stringResource(R.string.settings_pin_step1_desc)
+        2 -> stringResource(R.string.settings_pin_step2_desc)
+        else -> stringResource(R.string.settings_pin_step3_desc)
     }
 
     AlertDialog(
@@ -394,7 +394,7 @@ fun ChangeQuickPinDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Step $displayStep of $totalSteps",
+                    text = stringResource(R.string.settings_step_of_format, displayStep, totalSteps),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -473,7 +473,7 @@ fun ChangeQuickPinDialog(
                                         onPinChanged()
                                     } else {
                                         isError = true
-                                        errorMessage = "PINs do not match"
+                                        errorMessage = context.getString(R.string.settings_pins_do_not_match)
                                     }
                                 }
                             },
@@ -515,7 +515,7 @@ fun ChangeQuickPinDialog(
                                 isError = false
                             } else {
                                 isError = true
-                                errorMessage = "PIN must be exactly 6 digits"
+                                errorMessage = context.getString(R.string.pin_must_be_4_digits)
                             }
                         }
                         3 -> {
@@ -526,14 +526,14 @@ fun ChangeQuickPinDialog(
                                 onPinChanged()
                             } else {
                                 isError = true
-                                errorMessage = "PINs do not match"
+                                errorMessage = context.getString(R.string.settings_pins_do_not_match)
                             }
                         }
                     }
                 },
                 modifier = Modifier.testTag("pin_dialog_confirm")
             ) {
-                Text(if (step == 3) "Save PIN" else "Next")
+                Text(if (step == 3) stringResource(R.string.save_pin_btn) else stringResource(R.string.btn_next))
             }
         },
         dismissButton = {
@@ -646,9 +646,9 @@ fun ChangePasswordDialog(
                         .padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    PasswordRuleItem(text = "At least 8 characters", isMet = hasMinLength)
-                    PasswordRuleItem(text = "At least 1 number (0-9)", isMet = hasDigit)
-                    PasswordRuleItem(text = "At least 1 uppercase letter (A-Z)", isMet = hasUpper)
+                    PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_length), isMet = hasMinLength)
+                    PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_digit), isMet = hasDigit)
+                    PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_upper), isMet = hasUpper)
                 }
 
                 LojiaPasswordField(
@@ -683,7 +683,7 @@ fun ChangePasswordDialog(
                         }
                     }
                     if (newPassword.length < 8 || !newPassword.any { it.isDigit() } || !newPassword.any { it.isUpperCase() }) {
-                        newPasswordError = "Password must be at least 8 chars with 1 number and 1 uppercase letter"
+                        newPasswordError = context.getString(R.string.settings_pw_requirements_error)
                         hasError = true
                     }
                     if (newPassword != confirmPassword) {
@@ -769,7 +769,7 @@ fun ChangeEmailDialog(
         },
         title = {
             Text(
-                text = "Change Email Address",
+                text = stringResource(R.string.settings_change_email_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -783,7 +783,7 @@ fun ChangeEmailDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Update your business contact email with confirmation.",
+                    text = stringResource(R.string.settings_change_email_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -794,12 +794,12 @@ fun ChangeEmailDialog(
                         newEmail = it
                         emailError = null
                         if (confirmEmail.isNotBlank() && it.trim() != confirmEmail.trim()) {
-                            confirmError = "Emails do not match"
+                            confirmError = context.getString(R.string.settings_emails_do_not_match)
                         } else {
                             confirmError = null
                         }
                     },
-                    label = { Text("New Email Address") },
+                    label = { Text(stringResource(R.string.new_email_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     singleLine = true,
                     isError = emailError != null,
@@ -818,12 +818,12 @@ fun ChangeEmailDialog(
                     onValueChange = {
                         confirmEmail = it
                         if (it.trim() != newEmail.trim()) {
-                            confirmError = "Emails do not match"
+                            confirmError = context.getString(R.string.settings_emails_do_not_match)
                         } else {
                             confirmError = null
                         }
                     },
-                    label = { Text("Confirm Email Address") },
+                    label = { Text(stringResource(R.string.confirm_email_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     singleLine = true,
                     isError = confirmError != null,
@@ -844,11 +844,11 @@ fun ChangeEmailDialog(
                     val cleanMail = newEmail.trim()
                     var hasErr = false
                     if (!cleanMail.matches(emailRegex)) {
-                        emailError = "Please enter a valid email address"
+                        emailError = context.getString(R.string.settings_invalid_email_error)
                         hasErr = true
                     }
                     if (confirmEmail.trim() != cleanMail) {
-                        confirmError = "Emails do not match"
+                        confirmError = context.getString(R.string.settings_emails_do_not_match)
                         hasErr = true
                     }
                     if (!hasErr) {

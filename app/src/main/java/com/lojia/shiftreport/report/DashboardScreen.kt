@@ -146,7 +146,7 @@ fun DashboardScreen(
                                 )
                             )
                             Text(
-                                text = "Financial performance & shift analytics",
+                                text = stringResource(R.string.dashboard_analytics_subtitle),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 11.sp,
                                     color = TextSecondaryLight

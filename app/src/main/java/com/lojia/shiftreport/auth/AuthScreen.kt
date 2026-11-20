@@ -306,7 +306,7 @@ fun AuthScreenLoginTab(
                 ) {
                     Icon(
                         imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                        contentDescription = stringResource(if (isPasswordVisible) R.string.cd_hide_password else R.string.cd_show_password),
                         tint = mediumGray,
                         modifier = Modifier.size(20.dp)
                     )
@@ -388,7 +388,7 @@ fun AuthScreenLoginTab(
                     if (rememberMe) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = "Remember Me Selected",
+                            contentDescription = stringResource(R.string.auth_remember_me_selected_cd),
                             tint = Color.White,
                             modifier = Modifier.size(13.dp)
                         )

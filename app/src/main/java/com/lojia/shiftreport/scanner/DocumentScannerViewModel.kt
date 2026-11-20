@@ -484,7 +484,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        val chooserIntent = Intent.createChooser(shareIntent, "Share Word (.docx)").apply {
+        val chooserIntent = Intent.createChooser(shareIntent, getApplication<Application>().getString(R.string.doc_btn_share_docx)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(chooserIntent)
@@ -598,7 +598,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            val chooser = Intent.createChooser(shareIntent, "Share Protected PDF").apply {
+            val chooser = Intent.createChooser(shareIntent, context.getString(R.string.scanner_share_protected_pdf)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(chooser)
@@ -624,7 +624,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            val chooser = Intent.createChooser(viewIntent, "Open Protected PDF").apply {
+            val chooser = Intent.createChooser(viewIntent, context.getString(R.string.scanner_open_protected_pdf)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(chooser)
@@ -657,7 +657,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            val chooser = Intent.createChooser(shareIntent, "Share Document").apply {
+            val chooser = Intent.createChooser(shareIntent, context.getString(R.string.scanner_share_document)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(chooser)
@@ -687,7 +687,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
-            val chooser = Intent.createChooser(viewIntent, "Open PDF").apply {
+            val chooser = Intent.createChooser(viewIntent, context.getString(R.string.scanner_open_pdf)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(chooser)

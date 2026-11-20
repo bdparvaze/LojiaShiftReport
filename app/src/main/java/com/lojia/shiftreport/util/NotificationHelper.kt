@@ -35,26 +35,26 @@ object NotificationHelper {
 
             val shiftChannel = NotificationChannel(
                 CHANNEL_SHIFT,
-                "Shift & Sales Reports",
+                context.getString(R.string.notify_channel_shift_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Daily shift closing summaries and revenue alerts"
+                description = context.getString(R.string.notify_channel_shift_desc)
             }
 
             val inventoryChannel = NotificationChannel(
                 CHANNEL_INVENTORY,
-                "Inventory & Low Stock Alerts",
+                context.getString(R.string.notify_channel_inventory_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Real-time alerts when product inventory runs below minimum threshold"
+                description = context.getString(R.string.notify_channel_inventory_desc)
             }
 
             val systemChannel = NotificationChannel(
                 CHANNEL_SYSTEM,
-                "System & Security",
+                context.getString(R.string.notify_channel_system_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Backup reminders, security notices, and hardware status"
+                description = context.getString(R.string.notify_channel_system_desc)
             }
 
             notificationManager.createNotificationChannels(listOf(shiftChannel, inventoryChannel, systemChannel))
@@ -66,9 +66,10 @@ object NotificationHelper {
         productName: String,
         currentStock: Double,
         minStockAlert: Double,
-        unit: String = "pcs"
+        unit: String = ""
     ) {
         initNotificationChannels(context)
+        val resolvedUnit = unit.ifBlank { context.getString(R.string.unit_pcs) }
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -80,7 +81,7 @@ object NotificationHelper {
         )
 
         val title = context.getString(R.string.notif_low_stock_title, productName)
-        val descriptionText = context.getString(R.string.notif_low_stock, currentStock.toInt(), unit, minStockAlert.toInt(), unit)
+        val descriptionText = context.getString(R.string.notif_low_stock, currentStock.toInt(), resolvedUnit, minStockAlert.toInt(), resolvedUnit)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_INVENTORY)
             .setSmallIcon(android.R.drawable.stat_notify_error)

@@ -105,7 +105,7 @@ fun PosReconciliationSummary(
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = "POS Revenue Breakdown",
+                            text = stringResource(R.string.recon_pos_revenue_breakdown),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ShiftColors.Brass,
@@ -216,7 +216,7 @@ fun PosReconciliationSummary(
                         Text("💵", fontSize = 16.sp)
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "Cash Drawer Reconciliation",
+                            stringResource(R.string.cash_drawer_recon_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
                             color = ShiftColors.Charcoal
@@ -294,7 +294,7 @@ fun PosReconciliationSummary(
                                 color = PosCashGreen
                             )
                             Text(
-                                "Starting Float + Inflows - Outflows",
+                                stringResource(R.string.recon_drawer_formula),
                                 fontSize = 9.5.sp,
                                 color = PosCashGreen
                             )
@@ -361,7 +361,7 @@ fun PosReconciliationSummary(
                             Text("ℹ️", fontSize = 14.sp)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Enter physical cash in drawer to calculate variance",
+                                stringResource(R.string.recon_enter_physical_cash_hint),
                                 fontSize = 11.5.sp,
                                 color = ShiftColors.TextMuted
                             )
@@ -392,8 +392,8 @@ fun PosReconciliationSummary(
                     }
                     val statusText = when {
                         isBalanced -> stringResource(R.string.balanced)
-                        isOver -> "Cash Over"
-                        else -> "Cash Short"
+                        isOver -> stringResource(R.string.recon_cash_over)
+                        else -> stringResource(R.string.recon_cash_short)
                     }
 
                     Surface(
@@ -427,7 +427,11 @@ fun PosReconciliationSummary(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Expected: ${MoneyFormat.formatMinor(expectedCash, currency)} • Actual: ${MoneyFormat.formatMinor(actualCountVal ?: 0L, currency)}",
+                                text = stringResource(
+                                    R.string.recon_expected_actual_format,
+                                    MoneyFormat.formatMinor(expectedCash, currency),
+                                    MoneyFormat.formatMinor(actualCountVal ?: 0L, currency)
+                                ),
                                 fontSize = 10.5.sp,
                                 color = textColor.copy(alpha = 0.85f)
                             )
@@ -453,7 +457,7 @@ fun PosReconciliationSummary(
                     Text("📋", fontSize = 16.sp)
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "Operational & Receivables Tracking",
+                        stringResource(R.string.recon_operational_tracking_title),
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = ShiftColors.Charcoal
@@ -466,7 +470,7 @@ fun PosReconciliationSummary(
                     label = stringResource(R.string.due_sales_credit_entries),
                     value = totalDueCredit,
                     currency = currency,
-                    note = "Tracked as Receivables • Excluded from sales & drawer"
+                    note = stringResource(R.string.recon_receivables_note)
                 )
 
                 if (staffMealsCount > 0) {
@@ -497,7 +501,7 @@ fun PosReconciliationSummary(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(stringResource(R.string.muassel), fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-                        Text("${muasselCount + outdoorMuasselCount} pcs", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Purple)
+                        Text(stringResource(R.string.recon_pcs_count_format, muasselCount + outdoorMuasselCount), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Purple)
                     }
                 }
 

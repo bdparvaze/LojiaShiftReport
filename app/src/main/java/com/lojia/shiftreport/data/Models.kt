@@ -459,7 +459,7 @@ data class BusinessProfile(
     val mapLng: Double = 0.0,
     val workingHours: String = "08:00 AM - 10:00 PM",
     val currency: String = AppConstants.DEFAULT_CURRENCY_CODE,
-    val country: String = "United States",
+    val country: String = defaultCountryDisplayName(),
     val vatRate: Double = 0.0,
     val isTaxEnabled: Boolean = false,
     val isTaxIncluded: Boolean = true,
@@ -550,6 +550,9 @@ enum class AppCountry(
         }
     }
 }
+
+fun defaultCountryDisplayName(): String =
+    AppCountry.fromCode(AppConstants.DEFAULT_COUNTRY_CODE).displayNameEn
 
 enum class AppLanguage(
     val code: String,

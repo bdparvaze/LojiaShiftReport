@@ -65,30 +65,13 @@ fun countryCodeToFlagEmoji(countryCode: String): String {
 /**
  * Resolves the actual Currency Symbol (e.g. ﷼, ৳, $, €, £, ₹) based on a currency code.
  */
-fun getCurrencySymbol(currencyCode: String): String {
+fun getCurrencySymbol(currencyCode: String, locale: Locale = Locale.getDefault()): String {
     if (currencyCode.isBlank()) return AppConstants.DEFAULT_CURRENCY_SYMBOL
-    val upper = currencyCode.trim().uppercase()
-    return when (upper) {
-        "SAR", "QAR", "OMR" -> "﷼"
-        "BDT" -> "৳"
-        "USD", "CAD", "AUD", "SGD" -> "$"
-        "EUR" -> "€"
-        "GBP" -> "£"
-        "INR" -> "₹"
-        "PKR" -> "Rs"
-        "AED" -> "د.إ"
-        "KWD" -> "د.ك"
-        "BHD" -> "د.ب"
-        "MYR" -> "RM"
-        "TRY" -> "₺"
-        "EGP" -> "E£"
-        "JPY", "CNY" -> "¥"
-        "IDR" -> "Rp"
-        else -> try {
-            java.util.Currency.getInstance(upper).symbol
-        } catch (e: Exception) {
-            upper
-        }
+    val upper = currencyCode.trim().uppercase(Locale.US)
+    return try {
+        Currency.getInstance(upper).getSymbol(locale).ifBlank { upper }
+    } catch (_: Exception) {
+        upper
     }
 }
 
@@ -105,36 +88,12 @@ private val COMMON_CURRENCY_ORDER = listOf(
     "AUD", "TRY", "JPY", "CNY", "IDR"
 )
 
-private val COMMON_CURRENCY_NAMES = mapOf(
-    "BDT" to "Bangladeshi Taka",
-    "SAR" to "Saudi Riyal",
-    "AED" to "UAE Dirham",
-    "QAR" to "Qatari Riyal",
-    "KWD" to "Kuwaiti Dinar",
-    "OMR" to "Omani Rial",
-    "BHD" to "Bahraini Dinar",
-    "USD" to "US Dollar",
-    "GBP" to "British Pound",
-    "EUR" to "Euro",
-    "INR" to "Indian Rupee",
-    "PKR" to "Pakistani Rupee",
-    "MYR" to "Malaysian Ringgit",
-    "SGD" to "Singapore Dollar",
-    "CAD" to "Canadian Dollar",
-    "AUD" to "Australian Dollar",
-    "TRY" to "Turkish Lira",
-    "EGP" to "Egyptian Pound",
-    "JPY" to "Japanese Yen",
-    "CNY" to "Chinese Yuan",
-    "IDR" to "Indonesian Rupiah"
-)
-
 private fun resolveIsoCurrencyInfo(code: String?, locale: Locale = Locale.getDefault()): IsoCurrencyInfo {
     val upper = code?.trim()?.uppercase(Locale.US).orEmpty().ifEmpty { MoneyFormat.DEFAULT_CURRENCY_CODE }
     val digits = MoneyFormat.minorUnitDigits(upper)
-    val symbol = getCurrencySymbol(upper)
-    val displayName = COMMON_CURRENCY_NAMES[upper] ?: try {
-        Currency.getInstance(upper).getDisplayName(locale)
+    val symbol = getCurrencySymbol(upper, locale)
+    val displayName = try {
+        Currency.getInstance(upper).getDisplayName(locale).ifBlank { upper }
     } catch (_: Exception) {
         upper
     }
@@ -162,26 +121,22 @@ private fun allIso4217Currencies(locale: Locale = Locale.getDefault()): List<Iso
 
 private data class LanguageDisplayInfo(
     val flag: String,
-    val nativeLabel: String,
-    val englishLabel: String
+    @androidx.annotation.StringRes val nativeLabelRes: Int
 )
 
 private fun getLanguageDisplayInfo(lang: AppLanguage): LanguageDisplayInfo {
     return when (lang) {
         AppLanguage.ENGLISH -> LanguageDisplayInfo(
             flag = "🇺🇸",
-            nativeLabel = "English",
-            englishLabel = "English"
+            nativeLabelRes = R.string.lang_native_en
         )
         AppLanguage.BENGALI -> LanguageDisplayInfo(
             flag = "🇧🇩",
-            nativeLabel = "বাংলা",
-            englishLabel = "Bengali"
+            nativeLabelRes = R.string.lang_native_bn
         )
         AppLanguage.ARABIC -> LanguageDisplayInfo(
             flag = "🇸🇦",
-            nativeLabel = "العربية",
-            englishLabel = "Arabic"
+            nativeLabelRes = R.string.lang_native_ar
         )
     }
 }
@@ -204,8 +159,9 @@ fun RegionalPreferencesCard(
     onOpenRegionalMenu: (initialOption: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val appLocale = remember(currentLanguage) { Locale.forLanguageTag(currentLanguage.code) }
     val activeCurrencyCode = businessProfile?.currency?.ifBlank { currentCountry.currencyCode } ?: currentCountry.currencyCode
-    val activeCurrency = resolveIsoCurrencyInfo(activeCurrencyCode)
+    val activeCurrency = resolveIsoCurrencyInfo(activeCurrencyCode, appLocale)
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
     val langInfo = getLanguageDisplayInfo(currentLanguage)
 
@@ -222,7 +178,7 @@ fun RegionalPreferencesCard(
             // Row 1: Country
             SimpleRegionalSelectorRow(
                 icon = Icons.Outlined.Public,
-                label = "Country",
+                label = stringResource(R.string.regional_country_label),
                 valueText = "$countryFlag  ${stringResource(currentCountry.nameRes)}",
                 onClick = { onOpenRegionalMenu(1) },
                 testTag = "regional_row_country_currency"
@@ -233,8 +189,8 @@ fun RegionalPreferencesCard(
             // Row 2: Language
             SimpleRegionalSelectorRow(
                 icon = Icons.Outlined.Translate,
-                label = "Language",
-                valueText = "${langInfo.flag}  ${langInfo.nativeLabel}",
+                label = stringResource(R.string.nav_language),
+                valueText = "${langInfo.flag}  ${stringResource(langInfo.nativeLabelRes)}",
                 onClick = { onOpenRegionalMenu(0) },
                 testTag = "regional_row_language"
             )
@@ -244,7 +200,7 @@ fun RegionalPreferencesCard(
             // Row 3: Currency
             SimpleRegionalSelectorRow(
                 icon = Icons.Outlined.Payments,
-                label = "Currency",
+                label = stringResource(R.string.regional_currency_label),
                 valueText = "${activeCurrency.code} (${activeCurrency.symbol})",
                 onClick = { onOpenRegionalMenu(2) },
                 testTag = "regional_row_currency"
@@ -302,11 +258,12 @@ fun RegionalPreferencesDetailView(
     val currentCurrency by reportViewModel.currentCurrency.collectAsState()
     val isCurrencyLocked by reportViewModel.isCurrencyLocked.collectAsState()
 
+    val appLocale = remember(currentLanguage) { Locale.forLanguageTag(currentLanguage.code) }
     val activeCurrencyCode = currentCurrency.ifBlank { currentCountry.currencyCode }
-    val activeCurrency = resolveIsoCurrencyInfo(activeCurrencyCode)
+    val activeCurrency = resolveIsoCurrencyInfo(activeCurrencyCode, appLocale)
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
     val langInfo = getLanguageDisplayInfo(currentLanguage)
-    val allCurrencies = remember(currentLanguage) { allIso4217Currencies() }
+    val allCurrencies = remember(appLocale) { allIso4217Currencies(appLocale) }
 
     var activeSheet by remember { mutableStateOf<RegionalSheetType?>(null) }
     var pendingAuthSubtitle by remember { mutableStateOf<String?>(null) }
@@ -364,7 +321,7 @@ fun RegionalPreferencesDetailView(
                     // Row 1: Country selector (disabled when financial data exists)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Public,
-                        label = "Country",
+                        label = stringResource(R.string.regional_country_label),
                         valueText = "$countryFlag  ${stringResource(currentCountry.nameRes)}",
                         enabled = !isCurrencyLocked,
                         onClick = { if (!isCurrencyLocked) activeSheet = RegionalSheetType.COUNTRY },
@@ -376,8 +333,8 @@ fun RegionalPreferencesDetailView(
                     // Row 2: Language selector (always unlocked)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Translate,
-                        label = "Language",
-                        valueText = "${langInfo.flag}  ${langInfo.nativeLabel}",
+                        label = stringResource(R.string.nav_language),
+                        valueText = "${langInfo.flag}  ${stringResource(langInfo.nativeLabelRes)}",
                         enabled = true,
                         onClick = { activeSheet = RegionalSheetType.LANGUAGE },
                         testTag = "row_select_language"
@@ -388,7 +345,7 @@ fun RegionalPreferencesDetailView(
                     // Row 3: Currency selector (disabled when financial data exists)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Payments,
-                        label = "Currency",
+                        label = stringResource(R.string.regional_currency_label),
                         valueText = "${activeCurrency.symbol}  ${activeCurrency.code} — ${activeCurrency.fullName}",
                         enabled = !isCurrencyLocked,
                         onClick = { if (!isCurrencyLocked) activeSheet = RegionalSheetType.CURRENCY },
@@ -470,7 +427,7 @@ fun RegionalPreferencesDetailView(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Select Country",
+                        text = stringResource(R.string.regional_select_country),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -494,7 +451,7 @@ fun RegionalPreferencesDetailView(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Search country...",
+                            text = stringResource(R.string.search_country_hint),
                             fontSize = 14.sp,
                             color = TextHintColor
                         )
@@ -626,7 +583,7 @@ fun RegionalPreferencesDetailView(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Select Language",
+                        text = stringResource(R.string.regional_select_language),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -673,21 +630,12 @@ fun RegionalPreferencesDetailView(
                                 fontSize = 22.sp,
                                 color = OnSurfaceLight
                             )
-                            Column {
-                                Text(
-                                    text = info.nativeLabel,
-                                    fontSize = 15.sp,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                    color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
-                                )
-                                if (info.nativeLabel != info.englishLabel) {
-                                    Text(
-                                        text = info.englishLabel,
-                                        fontSize = 12.sp,
-                                        color = OnSurfaceVariantLight
-                                    )
-                                }
-                            }
+                            Text(
+                                text = stringResource(info.nativeLabelRes),
+                                fontSize = 15.sp,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
+                            )
                         }
 
                         if (isSelected) {
@@ -745,7 +693,7 @@ fun RegionalPreferencesDetailView(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Select Currency",
+                        text = stringResource(R.string.regional_select_currency),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
@@ -769,7 +717,7 @@ fun RegionalPreferencesDetailView(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Search currency...",
+                            text = stringResource(R.string.regional_search_currency_hint),
                             fontSize = 14.sp,
                             color = TextHintColor
                         )

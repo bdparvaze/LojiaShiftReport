@@ -231,15 +231,16 @@ fun DataRecoveryDialog(
                         }
                     }
 
-                    val preview = remember(backupFile, previewText) {
-                        if (!previewText.isNullOrBlank()) {
-                            previewText
-                        } else if (summary != null) {
-                            "${summary.shiftReportsCount} shifts ready to restore (${summary.totalRecords} records)"
-                        } else {
-                            "Backup found"
-                        }
+                    val resolvedPreview = when {
+                        !previewText.isNullOrBlank() -> previewText
+                        summary != null -> stringResource(
+                            R.string.backup_shifts_ready_fmt,
+                            summary.shiftReportsCount,
+                            summary.totalRecords
+                        )
+                        else -> stringResource(R.string.backup_found_label)
                     }
+                    val preview = resolvedPreview
 
                     Surface(
                         color = BackgroundLight,
