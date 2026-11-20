@@ -585,13 +585,14 @@ fun ProfileScreen(
             onSave = { question, answer ->
                 showEditRecoveryDialog = false
                 requireAdminPin(context.getString(R.string.profile_auth_update_recovery)) {
-                    val hash = SecurityUtils.hashSecret(answer)
-                    prefs.saveRecoveryQuestion(question)
+                    val cleanQuestion = question.trim()
+                    val hash = com.lojia.shiftreport.auth.SecurityRecoveryVerifier.hashNormalizedAnswer(answer)
+                    prefs.saveRecoveryQuestion(cleanQuestion)
                     prefs.saveRecoveryAnswerHash(hash)
                     val current = userProfile ?: UserProfile()
                     reportViewModel.saveUserProfile(
                         current.copy(
-                            securityQuestion = question,
+                            securityQuestion = cleanQuestion,
                             securityAnswer = hash
                         )
                     )

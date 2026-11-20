@@ -284,6 +284,22 @@ fun MainAppDrawer(
                 }
             )
 
+            // 7.5 Printer
+            DrawerMenuItem(
+                title = stringResource(R.string.nav_printer),
+                icon = Icons.Outlined.Print,
+                activeColor = PrimaryIndigoLight,
+                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail &&
+                    com.lojia.shiftreport.printer.PrinterNavigationConfig.isPrinterSection(navState.section),
+                modifier = Modifier.testTag("drawer_item_printer"),
+                onClick = {
+                    val target = com.lojia.shiftreport.printer.PrinterNavigationConfig.SECTION_PRINTER
+                    onOpenReportMenu(target)
+                    onNavigate(AppNavState.ShiftReportState.SettingsDetail(target))
+                    onCloseDrawer()
+                }
+            )
+
             // 8. Support
             DrawerMenuItem(
                 title = stringResource(R.string.nav_support),

@@ -1601,7 +1601,7 @@
     <string name="could_not_open_document">Could not open document: %s</string>
 
     <!-- Printer & Settings -->
-    <string name="printer_network_ip_placeholder">e.g. 192.168.1.100</string>
+    <string name="printer_network_ip_placeholder">Enter printer IP address</string>
     <string name="btn_my_location">My Location</string>
     <string name="permanent_store_address_label">Permanent Store / Branch Address</string>
     <string name="permanent_store_address_placeholder">e.g. Shop #4, Avenue 12, Commercial Area</string>
@@ -2184,4 +2184,24 @@
     <string name="backup_restored_notif_body">Restored %1$d business records into store ledger.</string>
     <string name="clear_data_failed">Failed to clear data</string>
     <string name="role_admin">ADMIN</string>
+    <string name="nav_printer">Printer</string>
+    <string name="printer_name_label">Printer Name</string>
+    <string name="printer_name_placeholder">Optional friendly name</string>
+    <string name="printer_paper_width_58mm">58 mm</string>
+    <string name="printer_paper_width_80mm">80 mm</string>
+    <string name="printer_cut_mode_label">Paper cut</string>
+    <string name="printer_cut_mode_none">None</string>
+    <string name="printer_cut_mode_partial">Partial</string>
+    <string name="printer_cut_mode_full">Full</string>
+    <string name="printer_error_not_connected">Printer is not connected.</string>
+    <string name="printer_error_no_network_ip">No network printer IP address configured.</string>
+    <string name="printer_error_invalid_port">Invalid network printer port.</string>
+    <string name="printer_error_no_bt_printer">No Bluetooth printer selected in settings.</string>
+    <string name="printer_error_bt_permission">Bluetooth and Nearby Devices permission is required to print.</string>
+    <string name="printer_error_bt_unavailable">Bluetooth adapter is unavailable.</string>
+    <string name="printer_error_bt_disabled">Bluetooth is disabled.</string>
+    <string name="printer_error_bt_device_not_found">Bluetooth printer device not found.</string>
+    <string name="printer_error_bt_connect_failed">Could not establish Bluetooth connection.</string>
+    <string name="printer_error_network_connect_failed">Could not connect to network printer at %1$s.</string>
+    <string name="auth_recovery_unavailable">Recovery is not available because no security question and answer are configured.</string>
 </resources>

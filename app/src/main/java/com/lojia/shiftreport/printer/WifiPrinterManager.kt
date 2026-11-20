@@ -2,6 +2,7 @@ package com.lojia.shiftreport.printer
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.util.AppLogger
 import com.lojia.shiftreport.util.paperWidthDots
@@ -10,15 +11,61 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.nio.charset.StandardCharsets
+
+/**
+ * Pure JVM-testable TCP print job coordinator ensuring disconnected sessions
+ * auto-connect before sending bytes and close cleanly when auto-connected for one-shot jobs.
+ */
+internal object NetworkPrintCoordinator {
+    interface TcpPrintTransport {
+        fun isConnected(): Boolean
+        fun connect(host: String, port: Int)
+        fun writeAndFlush(bytes: ByteArray)
+        fun close()
+    }
+
+    fun resolveTarget(host: String, port: Int): Pair<String, Int>? {
+        val cleanHost = host.trim()
+        if (cleanHost.isEmpty() || port !in 1..65535) return null
+        return cleanHost to port
+    }
+
+    fun sendWithAutoConnect(
+        transport: TcpPrintTransport,
+        host: String,
+        port: Int,
+        payload: ByteArray,
+        closeAfterAutoConnect: Boolean
+    ): Result<Unit> {
+        val wasAlreadyConnected = transport.isConnected()
+        var didAutoConnect = false
+        return try {
+            if (!wasAlreadyConnected) {
+                transport.connect(host, port)
+                didAutoConnect = true
+            }
+            transport.writeAndFlush(payload)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            if (didAutoConnect && closeAfterAutoConnect) {
+                try {
+                    transport.close()
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+}
 
 /**
  * Primary network POS thermal printer manager using raw TCP socket (Port 9100).
- * Implements ESC/POS commands with 5-second connection timeout, identical to Foodics POS.
+ * Shares [EscPosNativeProtocol] encoding with [BluetoothPrinterManager] so receipt
+ * formatting, non-Latin bitmap rendering, and cut modes match across transports.
  */
 class WifiPrinterManager(private val context: Context) : PrinterManager {
 
@@ -26,18 +73,9 @@ class WifiPrinterManager(private val context: Context) : PrinterManager {
 
     companion object {
         private const val TAG = "WifiPrinterManager"
-        const val DEFAULT_PORT = 9100
+        const val DEFAULT_PORT = 9100 // Raw TCP / AppSocket (HP JetDirect) standard raw-print port
         const val CONNECTION_TIMEOUT_MS = 5000
         const val SOCKET_TIMEOUT_MS = 5000
-
-        // ESC/POS Command Constants
-        val ESC_INIT = byteArrayOf(0x1B, 0x40) // ESC @
-        val ALIGN_LEFT = byteArrayOf(0x1B, 0x61, 0x00) // ESC a 0
-        val ALIGN_CENTER = byteArrayOf(0x1B, 0x61, 0x01) // ESC a 1
-        val ALIGN_RIGHT = byteArrayOf(0x1B, 0x61, 0x02) // ESC a 2
-        val LINE_FEED = byteArrayOf(0x0A) // LF
-        val PAPER_CUT = byteArrayOf(0x1D, 0x56, 0x42, 0x00) // GS V B 0 (Full Cut)
-        val PARTIAL_CUT = byteArrayOf(0x1D, 0x56, 0x01) // GS V 1 (Partial Cut)
     }
 
     private var socket: Socket? = null
@@ -51,115 +89,187 @@ class WifiPrinterManager(private val context: Context) : PrinterManager {
 
     override fun isConnected(): Boolean {
         val s = socket
-        return s != null && s.isConnected && !s.isClosed
+        return s != null && s.isConnected && !s.isClosed && outputStream != null
     }
 
     override fun getConnectedDevice(): PrinterDevice? = _connectedDevice.value
 
     /**
-     * Connects to a WiFi / Network POS printer on port 9100 with a 5-second timeout.
+     * Connects to a WiFi / Network POS printer on port 9100 (or configured port) with a 5-second timeout.
      */
     override suspend fun connect(device: PrinterDevice): Result<Unit> = withContext(Dispatchers.IO) {
+        val target = NetworkPrintCoordinator.resolveTarget(device.address, device.port)
+        if (target == null) {
+            val msg = if (device.address.isBlank()) {
+                context.getString(R.string.printer_error_no_network_ip)
+            } else {
+                context.getString(R.string.printer_error_invalid_port)
+            }
+            _status.value = PrinterConnectionStatus.FAILED
+            return@withContext Result.failure(IllegalArgumentException(msg))
+        }
+
         disconnect()
         _status.value = PrinterConnectionStatus.CONNECTING
-        AppLogger.i(TAG, "Connecting to WiFi printer at ${device.address}:${device.port}...")
+        AppLogger.i(TAG, "Connecting to WiFi printer at ${target.first}:${target.second}...")
 
         try {
             val newSocket = Socket()
             newSocket.soTimeout = SOCKET_TIMEOUT_MS
-            val socketAddress = InetSocketAddress(device.address, device.port)
+            val socketAddress = InetSocketAddress(target.first, target.second)
             newSocket.connect(socketAddress, CONNECTION_TIMEOUT_MS)
 
+            val out = newSocket.getOutputStream()
             socket = newSocket
-            outputStream = newSocket.getOutputStream()
+            outputStream = out
 
             // Initialize printer hardware with ESC @
-            outputStream?.write(ESC_INIT)
-            outputStream?.flush()
+            out.write(EscPosNativeProtocol.INIT)
+            out.flush()
 
             _status.value = PrinterConnectionStatus.CONNECTED
-            _connectedDevice.value = device
-            AppLogger.i(TAG, "Successfully connected to WiFi printer: ${device.address}")
+            _connectedDevice.value = device.copy(address = target.first, port = target.second)
+            AppLogger.i(TAG, "Successfully connected to WiFi printer: ${target.first}:${target.second}")
             Result.success(Unit)
         } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to connect to WiFi printer at ${device.address}", e)
+            AppLogger.e(TAG, "Failed to connect to WiFi printer at ${target.first}:${target.second}", e)
             disconnect()
             _status.value = PrinterConnectionStatus.FAILED
-            Result.failure(e)
+            val errorMsg = e.localizedMessage?.takeIf { it.isNotBlank() }
+                ?: context.getString(R.string.printer_error_network_connect_failed, "${target.first}:${target.second}")
+            Result.failure(IllegalStateException(errorMsg, e))
+        }
+    }
+
+    private fun resolveTargetDevice(): Result<PrinterDevice> {
+        connectedDevice.value?.let { connected ->
+            if (connected.address.isNotBlank() && connected.port in 1..65535) {
+                return Result.success(connected)
+            }
+        }
+        val savedIp = prefsRepository.getPrinterNetworkIp().trim()
+        if (savedIp.isEmpty()) {
+            return Result.failure(IllegalStateException(context.getString(R.string.printer_error_no_network_ip)))
+        }
+        val savedPort = prefsRepository.getPrinterNetworkPort()
+        if (savedPort !in 1..65535) {
+            return Result.failure(IllegalStateException(context.getString(R.string.printer_error_invalid_port)))
+        }
+        val savedName = prefsRepository.getPrinterNetworkName().ifBlank {
+            context.getString(R.string.printer_wifi_default_name)
+        }
+        return Result.success(PrinterDevice(savedName, savedIp, PrinterType.WIFI, savedPort))
+    }
+
+    private fun activeCutModeFor(device: PrinterDevice): PrinterCutMode {
+        val identifier = PrinterConfigHelper.buildNetworkIdentifier(device.address, device.port)
+        return prefsRepository.getPrinterCutMode(PrinterConfigHelper.CONNECTION_NETWORK, identifier)
+    }
+
+    private suspend fun sendBytesOverNetwork(
+        targetDevice: PrinterDevice,
+        bytes: ByteArray,
+        closeAfterAutoConnect: Boolean
+    ): Result<Unit> {
+        val wasAlreadyConnected = isConnected() &&
+            connectedDevice.value?.address == targetDevice.address &&
+            connectedDevice.value?.port == targetDevice.port
+
+        if (!wasAlreadyConnected) {
+            val connRes = connect(targetDevice)
+            if (connRes.isFailure) return connRes
+        }
+
+        return try {
+            val out = outputStream
+                ?: return Result.failure(IllegalStateException(context.getString(R.string.printer_error_not_connected)))
+            out.write(bytes)
+            out.flush()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed sending print job to ${targetDevice.address}:${targetDevice.port}", e)
+            disconnect()
+            Result.failure(
+                IllegalStateException(
+                    e.localizedMessage?.takeIf { it.isNotBlank() }
+                        ?: context.getString(
+                            R.string.printer_error_network_connect_failed,
+                            "${targetDevice.address}:${targetDevice.port}"
+                        ),
+                    e
+                )
+            )
+        } finally {
+            if (!wasAlreadyConnected && closeAfterAutoConnect) {
+                disconnect()
+            }
         }
     }
 
     /**
      * Sends a raw monochrome or grayscale bitmap to the printer using ESC/POS raster command (GS v 0).
+     * Automatically connects using saved network settings when disconnected.
      */
     override suspend fun printBitmap(bitmap: Bitmap): Result<Unit> = withContext(Dispatchers.IO) {
-        val out = outputStream
-        if (!isConnected() || out == null) {
-            return@withContext Result.failure(IllegalStateException("Printer is not connected"))
-        }
-
-        try {
-            val rasterBytes = bitmapToRasterEscPos(bitmap)
-            out.write(ESC_INIT)
-            out.write(ALIGN_CENTER)
-            out.write(rasterBytes)
-            out.write(LINE_FEED)
-            out.write(LINE_FEED)
-            out.write(LINE_FEED)
-            out.write(PAPER_CUT)
-            out.flush()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to print bitmap", e)
-            Result.failure(e)
-        }
+        val targetRes = resolveTargetDevice()
+        val targetDevice = targetRes.getOrElse { return@withContext Result.failure(it) }
+        val cutMode = activeCutModeFor(targetDevice)
+        val payload = EscPosNativeProtocol.encodeBitmapPrintJob(bitmap, cutMode)
+        sendBytesOverNetwork(targetDevice, payload, closeAfterAutoConnect = false)
     }
 
     /**
-     * Prints formatted or plain text. If non-Latin scripts (Arabic, Bengali) are detected,
-     * renders them into high-resolution bitmaps to avoid ?????? question mark artifacts.
+     * Prints formatted ESC/POS text using the shared [EscPosNativeProtocol] encoder
+     * and the configured per-printer [PrinterCutMode]. Auto-connects when disconnected.
      */
     override suspend fun printText(text: String): Result<Unit> = withContext(Dispatchers.IO) {
-        val out = outputStream
-        if (!isConnected() || out == null) {
-            return@withContext Result.failure(IllegalStateException("Printer is not connected"))
-        }
-
-        try {
-            out.write(ESC_INIT)
-            val widthPx = paperWidthDots(prefsRepository.getPrinterPaperWidth())
-            val lines = text.split("\n")
-            for (line in lines) {
-                if (ThermalBitmapRenderer.containsNonLatin(line)) {
-                    val bmp = ThermalBitmapRenderer.renderLineToBitmap(line, widthPx = widthPx)
-                    val raster = bitmapToRasterEscPos(bmp)
-                    out.write(raster)
+        printFormattedTextInternal(text, closeAfterAutoConnect = false).fold(
+            onSuccess = { fullSuccess ->
+                if (fullSuccess) {
+                    Result.success(Unit)
                 } else {
-                    out.write(ALIGN_LEFT)
-                    out.write(line.toByteArray(StandardCharsets.US_ASCII))
-                    out.write(LINE_FEED)
+                    Result.failure(IllegalStateException(context.getString(R.string.printer_warning_message)))
                 }
-            }
-            out.write(LINE_FEED)
-            out.write(LINE_FEED)
-            out.write(PAPER_CUT)
-            out.flush()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "Failed to print text", e)
-            Result.failure(e)
-        }
+            },
+            onFailure = { Result.failure(it) }
+        )
+    }
+
+    suspend fun printFormattedTextWithStatus(text: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        printFormattedTextInternal(text, closeAfterAutoConnect = true)
+    }
+
+    private suspend fun printFormattedTextInternal(
+        text: String,
+        closeAfterAutoConnect: Boolean
+    ): Result<Boolean> {
+        val targetRes = resolveTargetDevice()
+        val targetDevice = targetRes.getOrElse { return Result.failure(it) }
+
+        val paperWidth = PrinterPaperWidth.fromWidthMm(prefsRepository.getPrinterPaperWidth())
+        val widthPx = paperWidthDots(paperWidth.widthMm)
+        val cutMode = activeCutModeFor(targetDevice)
+        val encoded = EscPosNativeProtocol.encodeFormattedTextWithStatus(
+            text = text,
+            charsPerLine = paperWidth.charsPerLine,
+            widthPx = widthPx,
+            cutMode = cutMode
+        )
+
+        val sendRes = sendBytesOverNetwork(targetDevice, encoded.bytes, closeAfterAutoConnect)
+        return sendRes.fold(
+            onSuccess = { BluetoothPrinterManager.resolvePrintOutcome(usedFallback = encoded.usedTextFallback) },
+            onFailure = { Result.failure(it) }
+        )
     }
 
     /**
-     * Prints the international multilingual test receipt requested:
-     * "Lojia Test - تم اختبار الطباعة - টেস্ট"
+     * Prints the international multilingual test receipt using the configured paper width & cut mode.
      */
     suspend fun testPrint(): Result<Unit> = withContext(Dispatchers.IO) {
         val testText = "Lojia Test - تم اختبار الطباعة - টেস্ট"
         AppLogger.i(TAG, "Triggering POS multilingual test print: $testText")
 
-        // Render full test line to bitmap to guarantee pristine Arabic and Bengali typography
         val widthPx = paperWidthDots(prefsRepository.getPrinterPaperWidth())
         val bmp = ThermalBitmapRenderer.renderLineToBitmap(
             rawLine = "<b>[C]$testText</b>",
@@ -189,49 +299,5 @@ class WifiPrinterManager(private val context: Context) : PrinterManager {
 
         _status.value = PrinterConnectionStatus.DISCONNECTED
         _connectedDevice.value = null
-    }
-
-    /**
-     * Converts an Android Bitmap into standard ESC/POS GS v 0 raster byte image.
-     */
-    private fun bitmapToRasterEscPos(bitmap: Bitmap): ByteArray {
-        val width = bitmap.width
-        val height = bitmap.height
-        val widthBytes = (width + 7) / 8
-        val out = ByteArrayOutputStream()
-
-        out.write(ALIGN_CENTER)
-        // GS v 0 0 xL xH yL yH
-        out.write(
-            byteArrayOf(
-                0x1D, 0x76, 0x30, 0x00,
-                (widthBytes and 0xFF).toByte(),
-                ((widthBytes shr 8) and 0xFF).toByte(),
-                (height and 0xFF).toByte(),
-                ((height shr 8) and 0xFF).toByte()
-            )
-        )
-
-        for (y in 0 until height) {
-            for (x in 0 until widthBytes) {
-                var b = 0
-                for (bit in 0 until 8) {
-                    val px = x * 8 + bit
-                    if (px < width) {
-                        val pixel = bitmap.getPixel(px, y)
-                        val r = (pixel shr 16) and 0xFF
-                        val g = (pixel shr 8) and 0xFF
-                        val bl = pixel and 0xFF
-                        val lum = (299 * r + 587 * g + 114 * bl) / 1000
-                        if (lum < 160) {
-                            b = b or (1 shl (7 - bit))
-                        }
-                    }
-                }
-                out.write(b)
-            }
-        }
-        out.write(LINE_FEED)
-        return out.toByteArray()
     }
 }

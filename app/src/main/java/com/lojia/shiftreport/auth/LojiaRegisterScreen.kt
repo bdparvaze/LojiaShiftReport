@@ -200,13 +200,15 @@ fun LojiaRegisterScreen(
             isProcessingReg = false
 
             val fullPhone = "${selectedCountry.dial} $phoneNum".trim()
+            val trimmedQuestion = rSq.trim()
+            val hashedAnswer = SecurityRecoveryVerifier.hashNormalizedAnswer(rSa)
             val newProfile = (userProfile ?: UserProfile()).copy(
                 fullName = "${rFn.trim()} ${rLn.trim()}".trim(),
                 username = rUn.trim(),
                 email = rEm.trim(),
                 passwordHash = SecurityUtils.hashSecret(rPw),
-                securityQuestion = rSq,
-                securityAnswer = rSa.trim(),
+                securityQuestion = trimmedQuestion,
+                securityAnswer = hashedAnswer,
                 phone = fullPhone,
                 isRegistered = true
             )
@@ -215,6 +217,8 @@ fun LojiaRegisterScreen(
             preferencesRepository.saveFullName(newProfile.fullName)
             preferencesRepository.saveEmail(newProfile.email)
             preferencesRepository.savePhone(newProfile.phone)
+            preferencesRepository.saveRecoveryQuestion(trimmedQuestion)
+            preferencesRepository.saveRecoveryAnswerHash(hashedAnswer)
             preferencesRepository.saveRememberedUsername(newProfile.username)
             preferencesRepository.saveUserSession(
                 username = newProfile.username,

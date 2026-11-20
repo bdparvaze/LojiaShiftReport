@@ -120,31 +120,49 @@ fun SettingsScreen(
         pendingAdminAction = action
     }
 
+    val selectedReportMenu by reportViewModel.selectedReportSettingsMenu.collectAsState()
+    val isPrinterSection = com.lojia.shiftreport.printer.PrinterNavigationConfig.isPrinterSection(selectedReportMenu)
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(BackgroundLight)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .testTag("settings_scrollable_list"),
-            verticalArrangement = Arrangement.Top
-        ) {
-            SettingsReportSection(
-                reportViewModel = reportViewModel,
-                language = currentLanguage,
-                isAdmin = isAdmin,
-                onRestrictedClick = handleRestrictedClick,
-                onSwitchModule = onSwitchModule,
-                onConfigurePrinterClick = { showTestPrintDialog = true },
-                onNavigateToSection = onNavigateToSection,
-                onNavigateBack = onNavigateBack
-            )
+        if (isPrinterSection) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                SettingsReportSection(
+                    reportViewModel = reportViewModel,
+                    language = currentLanguage,
+                    isAdmin = isAdmin,
+                    onRestrictedClick = handleRestrictedClick,
+                    onSwitchModule = onSwitchModule,
+                    onConfigurePrinterClick = { showTestPrintDialog = true },
+                    onNavigateToSection = onNavigateToSection,
+                    onNavigateBack = onNavigateBack
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .testTag("settings_scrollable_list"),
+                verticalArrangement = Arrangement.Top
+            ) {
+                SettingsReportSection(
+                    reportViewModel = reportViewModel,
+                    language = currentLanguage,
+                    isAdmin = isAdmin,
+                    onRestrictedClick = handleRestrictedClick,
+                    onSwitchModule = onSwitchModule,
+                    onConfigurePrinterClick = { showTestPrintDialog = true },
+                    onNavigateToSection = onNavigateToSection,
+                    onNavigateBack = onNavigateBack
+                )
 
-            // Bottom Spacing
-            Spacer(modifier = Modifier.height(24.dp))
+                // Bottom Spacing
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 

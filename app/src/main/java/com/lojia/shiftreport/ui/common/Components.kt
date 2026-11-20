@@ -132,14 +132,21 @@ fun SecureDeleteModal(
     onConfirmDelete: () -> Unit
 ) {
     val context = LocalContext.current
+    val prefs = remember(context) { com.lojia.shiftreport.data.PreferencesRepository.getInstance(context) }
+    val coroutineScope = rememberCoroutineScope()
     var passwordInput by remember { mutableStateOf("") }
     var answerInput by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
     val actualPasswordHash = userProfile?.passwordHash.orEmpty()
-    val defaultQuestion = stringResource(R.string.default_security_question)
-    val actualQuestion = userProfile?.securityQuestion?.ifBlank { defaultQuestion } ?: defaultQuestion
-    val actualAnswer = userProfile?.securityAnswer?.ifBlank { "Lojia" } ?: "Lojia"
+    val actualQuestion = userProfile?.securityQuestion?.trim().orEmpty()
+        .ifBlank { prefs.getRecoveryQuestion().trim() }
+    val storedAnswer = userProfile?.securityAnswer?.trim().orEmpty()
+        .ifBlank { prefs.getRecoveryAnswerHash().trim() }
+    val recoveryConfigured = com.lojia.shiftreport.auth.SecurityRecoveryVerifier.isRecoveryConfigured(
+        actualQuestion,
+        storedAnswer
+    )
 
     val reportSubtitle = remember(itemDescription, context) {
         Regex("#(\\d+)").find(itemDescription)?.let { context.getString(R.string.shift_report_number_fmt, it.groupValues[1]) }
@@ -250,7 +257,11 @@ fun SecureDeleteModal(
                         color = SurfaceVariantLight
                     ) {
                         Text(
-                            text = actualQuestion,
+                            text = if (recoveryConfigured) {
+                                actualQuestion
+                            } else {
+                                stringResource(R.string.auth_recovery_unavailable)
+                            },
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             color = PrimaryIndigoDark,
@@ -369,11 +380,32 @@ fun SecureDeleteModal(
                     // Delete — filled error
                     Button(
                         onClick = {
+                            if (!recoveryConfigured) {
+                                errorMsg = context.getString(R.string.auth_recovery_unavailable)
+                                return@Button
+                            }
                             val passValid = isPinUsable(passwordInput) &&
                                 isPinUsable(actualPasswordHash) &&
                                 SecurityUtils.verifySecret(passwordInput, actualPasswordHash)
-                            val ansValid = answerInput.trim().equals(actualAnswer.trim(), ignoreCase = true)
-                            if (passValid && ansValid) {
+                            val ansResult = com.lojia.shiftreport.auth.SecurityRecoveryVerifier.verifyAnswerWithUpgrade(
+                                enteredAnswer = answerInput,
+                                storedAnswerOrHash = storedAnswer
+                            )
+                            if (passValid && ansResult.isMatch) {
+                                if (ansResult.newHashToStore != null) {
+                                    prefs.saveRecoveryAnswerHash(ansResult.newHashToStore)
+                                    coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        try {
+                                            val db = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                                            val existing = db.reportDao().getUserProfileOnce()
+                                            if (existing != null) {
+                                                db.reportDao().saveUserProfile(
+                                                    existing.copy(securityAnswer = ansResult.newHashToStore)
+                                                )
+                                            }
+                                        } catch (_: Exception) {}
+                                    }
+                                }
                                 onConfirmDelete()
                                 onDismiss()
                             } else {

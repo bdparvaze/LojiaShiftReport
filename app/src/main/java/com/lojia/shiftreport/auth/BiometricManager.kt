@@ -397,8 +397,8 @@ fun BiometricLockScreen(
             if (isProfileValid) {
                 preferencesRepository.saveUserSession(
                     username = u,
-                    fullName = userProfile?.fullName ?: "Demo Owner",
-                    email = userProfile?.email ?: "demo@example.com",
+                    fullName = userProfile?.fullName.orEmpty(),
+                    email = userProfile?.email.orEmpty(),
                     rememberMe = rememberMe
                 )
                 Toast.makeText(context, context.getString(R.string.auth_toast_login_success), Toast.LENGTH_SHORT).show()
@@ -876,14 +876,19 @@ fun LojiaPasswordRecoveryDialog(
 ) {
     if (!showDialog) return
 
+    val context = LocalContext.current
+    val prefs = remember(context) { PreferencesRepository.getInstance(context) }
+    val coroutineScope = rememberCoroutineScope()
+
     var recoveryAnswer by remember { mutableStateOf("") }
     var recoveryError by remember { mutableStateOf<String?>(null) }
     var isAnswerCorrect by remember { mutableStateOf(false) }
 
-    val question = userProfile?.securityQuestion.orEmpty().ifEmpty {
-        stringResource(R.string.auth_sq4)
-    }
-    val actualAnswer = userProfile?.securityAnswer.orEmpty().ifEmpty { "School" }
+    val question = userProfile?.securityQuestion?.trim().orEmpty()
+        .ifBlank { prefs.getRecoveryQuestion().trim() }
+    val storedAnswer = userProfile?.securityAnswer?.trim().orEmpty()
+        .ifBlank { prefs.getRecoveryAnswerHash().trim() }
+    val recoveryConfigured = SecurityRecoveryVerifier.isRecoveryConfigured(question, storedAnswer)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -897,94 +902,131 @@ fun LojiaPasswordRecoveryDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = stringResource(R.string.auth_answer_security_question),
-                    fontSize = 12.sp,
-                    color = LojiaColors.N600
-                )
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = LojiaColors.P50,
-                    border = BorderStroke(1.dp, LojiaColors.P100),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Text(
-                            text = stringResource(R.string.auth_question_label),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = LojiaColors.P600
-                        )
-                        Text(
-                            text = question,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = LojiaColors.N900
-                        )
-                    }
-                }
-
-                if (!isAnswerCorrect) {
-                    LojiaInputField(
-                        value = recoveryAnswer,
-                        onValueChange = {
-                            recoveryAnswer = it
-                            recoveryError = null
-                        },
-                        label = stringResource(R.string.auth_answer_label),
-                        placeholder = stringResource(R.string.auth_enter_answer_placeholder),
-                        errorMessage = recoveryError,
-                        validationState = if (recoveryError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
-                        testTag = "recoveryAnswer"
-                    )
-                } else {
+                if (!recoveryConfigured) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = LojiaColors.OkBg,
-                        border = BorderStroke(1.dp, LojiaColors.G200),
+                        color = LojiaColors.P50,
+                        border = BorderStroke(1.dp, LojiaColors.P100),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = stringResource(R.string.auth_recovery_unavailable),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = LojiaColors.N900,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.auth_answer_security_question),
+                        fontSize = 12.sp,
+                        color = LojiaColors.N600
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = LojiaColors.P50,
+                        border = BorderStroke(1.dp, LojiaColors.P100),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = stringResource(R.string.auth_identity_verified),
-                                fontSize = 12.sp,
-                                color = LojiaColors.G500,
-                                fontWeight = FontWeight.Bold
+                                text = stringResource(R.string.auth_question_label),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = LojiaColors.P600
                             )
                             Text(
-                                text = stringResource(R.string.auth_recovery_success_msg),
+                                text = question,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = LojiaColors.N900
                             )
                         }
                     }
+
+                    if (!isAnswerCorrect) {
+                        LojiaInputField(
+                            value = recoveryAnswer,
+                            onValueChange = {
+                                recoveryAnswer = it
+                                recoveryError = null
+                            },
+                            label = stringResource(R.string.auth_answer_label),
+                            placeholder = stringResource(R.string.auth_enter_answer_placeholder),
+                            errorMessage = recoveryError,
+                            validationState = if (recoveryError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
+                            testTag = "recoveryAnswer"
+                        )
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = LojiaColors.OkBg,
+                            border = BorderStroke(1.dp, LojiaColors.G200),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = stringResource(R.string.auth_identity_verified),
+                                    fontSize = 12.sp,
+                                    color = LojiaColors.G500,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stringResource(R.string.auth_recovery_success_msg),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = LojiaColors.N900
+                                )
+                            }
+                        }
+                    }
                 }
             }
         },
         confirmButton = {
-            val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
-            if (!isAnswerCorrect) {
-                TextButton(
-                    onClick = {
-                        if (actualAnswer.isNotBlank() && recoveryAnswer.trim().equals(actualAnswer.trim(), ignoreCase = true)) {
-                            isAnswerCorrect = true
-                        } else {
-                            recoveryError = incorrectAnswerError
+            if (recoveryConfigured) {
+                val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
+                if (!isAnswerCorrect) {
+                    TextButton(
+                        onClick = {
+                            val result = SecurityRecoveryVerifier.verifyAnswerWithUpgrade(
+                                enteredAnswer = recoveryAnswer,
+                                storedAnswerOrHash = storedAnswer
+                            )
+                            if (result.isMatch) {
+                                if (result.newHashToStore != null) {
+                                    prefs.saveRecoveryAnswerHash(result.newHashToStore)
+                                    coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        try {
+                                            val db = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                                            val existing = db.reportDao().getUserProfileOnce()
+                                            if (existing != null) {
+                                                db.reportDao().saveUserProfile(
+                                                    existing.copy(securityAnswer = result.newHashToStore)
+                                                )
+                                            }
+                                        } catch (_: Exception) {}
+                                    }
+                                }
+                                isAnswerCorrect = true
+                            } else {
+                                recoveryError = incorrectAnswerError
+                            }
                         }
+                    ) {
+                        Text(stringResource(R.string.auth_verify_btn), color = LojiaColors.P500, fontWeight = FontWeight.Bold)
                     }
-                ) {
-                    Text(stringResource(R.string.auth_verify_btn), color = LojiaColors.P500, fontWeight = FontWeight.Bold)
-                }
-            } else {
-                TextButton(
-                    onClick = {
-                        onDismiss()
-                        onAuthenticated()
+                } else {
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            onAuthenticated()
+                        }
+                    ) {
+                        Text(stringResource(R.string.auth_complete_login_btn), color = LojiaColors.G500, fontWeight = FontWeight.Bold)
                     }
-                ) {
-                    Text(stringResource(R.string.auth_complete_login_btn), color = LojiaColors.G500, fontWeight = FontWeight.Bold)
                 }
             }
         },

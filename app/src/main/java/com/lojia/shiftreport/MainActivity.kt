@@ -296,7 +296,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             onAuthenticated = {
                                 isAuthenticated = true
                                 userInteractionTime.value = System.currentTimeMillis()
-                                val uName = userProfile?.username?.ifBlank { "owner" } ?: "owner"
+                                val uName = userProfile?.username?.ifBlank { null }
+                                    ?: reportViewModel.preferencesRepository.getSavedUsername()
                                 reportViewModel.preferencesRepository.saveUserSession(
                                     username = uName,
                                     fullName = userProfile?.fullName,
@@ -382,6 +383,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                         "profile" -> stringResource(R.string.profile)
                                                         "security" -> stringResource(R.string.security)
                                                         "backup" -> stringResource(R.string.backup)
+                                                        "printer", "thermal_printer" -> stringResource(R.string.printer_setup_title)
                                                         "country", "countries", "currency" -> stringResource(R.string.country)
                                                         "language" -> stringResource(R.string.language)
                                                         "about" -> stringResource(R.string.about)
@@ -474,7 +476,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 language = currentLanguage,
                                                 onDismiss = { previewReport = null },
                                                 onOpenPrinterSettings = {
-                                                    navigateTo(AppNavState.ShiftReportState.SettingsDetail("profile"))
+                                                    navigateTo(
+                                                        AppNavState.ShiftReportState.SettingsDetail(
+                                                            com.lojia.shiftreport.printer.PrinterNavigationConfig.resolvePreviewPrinterSettingsTarget()
+                                                        )
+                                                    )
                                                 }
                                             )
                                         }
@@ -744,7 +750,9 @@ private fun ShiftReportModuleNavHost(
                 else -> {
                     SettingsScreen(
                         reportViewModel = reportViewModel,
-                        activeModule = AppModule.SHIFT_REPORT
+                        activeModule = AppModule.SHIFT_REPORT,
+                        onNavigateToSection = onNavigateToSection,
+                        onNavigateBack = onNavigateBack
                     )
                 }
             }

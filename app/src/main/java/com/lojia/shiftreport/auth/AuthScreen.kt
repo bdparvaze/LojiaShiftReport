@@ -188,8 +188,8 @@ fun AuthScreenLoginTab(
                 password = ""
                 preferencesRepository.saveUserSession(
                     username = trimmedUser,
-                    fullName = userProfile?.fullName ?: "Staff Operator",
-                    email = userProfile?.email ?: "",
+                    fullName = userProfile?.fullName.orEmpty(),
+                    email = userProfile?.email.orEmpty(),
                     rememberMe = rememberMe
                 )
                 Toast.makeText(context, context.getString(R.string.auth_toast_login_success), Toast.LENGTH_SHORT).show()

@@ -67,6 +67,8 @@ class PreferencesRepository private constructor(context: Context) {
         private const val KEY_PRINTER_CONN_TYPE = "key_printer_conn_type" // "bluetooth" or "network"
         private const val KEY_PRINTER_NET_IP = "key_printer_net_ip"
         private const val KEY_PRINTER_NET_PORT = "key_printer_net_port"
+        private const val KEY_PRINTER_NET_NAME = "key_printer_net_name"
+        private const val KEY_PRINTER_BT_NAME = "key_printer_bt_name"
         private const val KEY_BUSINESS_LOGO_URI = "key_business_logo_uri"
 
         // Data preservation on uninstall keys
@@ -398,7 +400,54 @@ class PreferencesRepository private constructor(context: Context) {
     }
 
     fun getPrinterNetworkPort(): Int {
-        return prefs.getInt(KEY_PRINTER_NET_PORT, 9100)
+        return prefs.getInt(KEY_PRINTER_NET_PORT, com.lojia.shiftreport.printer.WifiPrinterManager.DEFAULT_PORT)
+    }
+
+    fun savePrinterNetworkName(name: String) {
+        prefs.edit().putString(KEY_PRINTER_NET_NAME, name).apply()
+    }
+
+    fun getPrinterNetworkName(): String {
+        return prefs.getString(KEY_PRINTER_NET_NAME, "") ?: ""
+    }
+
+    fun saveSelectedPrinterName(name: String) {
+        prefs.edit().putString(KEY_PRINTER_BT_NAME, name).apply()
+    }
+
+    fun getSelectedPrinterName(): String {
+        return prefs.getString(KEY_PRINTER_BT_NAME, "") ?: ""
+    }
+
+    fun savePrinterCutMode(
+        connectionType: String,
+        identifier: String,
+        mode: com.lojia.shiftreport.printer.PrinterCutMode
+    ) {
+        val key = com.lojia.shiftreport.printer.PrinterConfigHelper.buildCutModeStorageKey(connectionType, identifier)
+        prefs.edit().putString(key, mode.name).apply()
+    }
+
+    fun getPrinterCutMode(
+        connectionType: String,
+        identifier: String
+    ): com.lojia.shiftreport.printer.PrinterCutMode {
+        val key = com.lojia.shiftreport.printer.PrinterConfigHelper.buildCutModeStorageKey(connectionType, identifier)
+        val raw = prefs.getString(key, null)
+        return com.lojia.shiftreport.printer.PrinterConfigHelper.resolveCutMode(raw, connectionType)
+    }
+
+    fun getActivePrinterCutMode(): com.lojia.shiftreport.printer.PrinterCutMode {
+        val connType = getPrinterConnectionType()
+        val identifier = if (connType == com.lojia.shiftreport.printer.PrinterConfigHelper.CONNECTION_NETWORK) {
+            com.lojia.shiftreport.printer.PrinterConfigHelper.buildNetworkIdentifier(
+                getPrinterNetworkIp(),
+                getPrinterNetworkPort()
+            )
+        } else {
+            getSelectedPrinterAddress()
+        }
+        return getPrinterCutMode(connType, identifier)
     }
 
     fun saveBusinessLogoUri(uri: String) {

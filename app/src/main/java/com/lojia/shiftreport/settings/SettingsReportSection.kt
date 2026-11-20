@@ -609,6 +609,17 @@ fun SettingsReportSection(
             }
 
             // =================================================================
+            // 3.5 THERMAL PRINTER SETUP
+            // =================================================================
+            "printer", "thermal_printer" -> {
+                com.lojia.shiftreport.printer.PrinterSetupScreen(
+                    onClose = onNavigateBack,
+                    showTopBar = false,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // =================================================================
             // 4. REGIONAL & PREFERENCES SELECTION (LANGUAGE, COUNTRY, CURRENCY)
             // =================================================================
             "country", "countries", "currency", "language", "regional" -> {

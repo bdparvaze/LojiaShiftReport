@@ -1601,7 +1601,7 @@
     <string name="could_not_open_document">تعذر فتح المستند: %s</string>
 
     <!-- Printer & Settings -->
-    <string name="printer_network_ip_placeholder">مثال: 192.168.1.100</string>
+    <string name="printer_network_ip_placeholder">أدخل عنوان IP للطابعة</string>
     <string name="btn_my_location">موقعي</string>
     <string name="permanent_store_address_label">عنوان المتجر / الفرع الدائم</string>
     <string name="permanent_store_address_placeholder">مثال: محل رقم 4، شارع 12، المنطقة التجارية</string>
@@ -2184,4 +2184,24 @@
     <string name="backup_restored_notif_body">تمت استعادة %1$d سجل عمل إلى دفتر المتجر.</string>
     <string name="clear_data_failed">فشل مسح البيانات</string>
     <string name="role_admin">مدير النظام</string>
+    <string name="nav_printer">الطابعة</string>
+    <string name="printer_name_label">اسم الطابعة</string>
+    <string name="printer_name_placeholder">اسم تعريفي اختياري</string>
+    <string name="printer_paper_width_58mm">58 مم</string>
+    <string name="printer_paper_width_80mm">80 مم</string>
+    <string name="printer_cut_mode_label">قص الورق</string>
+    <string name="printer_cut_mode_none">بدون قص</string>
+    <string name="printer_cut_mode_partial">قص جزئي</string>
+    <string name="printer_cut_mode_full">قص كامل</string>
+    <string name="printer_error_not_connected">الطابعة غير متصلة.</string>
+    <string name="printer_error_no_network_ip">لم يتم تعيين عنوان IP لطابعة الشبكة.</string>
+    <string name="printer_error_invalid_port">منفذ طابعة الشبكة غير صالح.</string>
+    <string name="printer_error_no_bt_printer">لم يتم تحديد طابعة بلوتوث في الإعدادات.</string>
+    <string name="printer_error_bt_permission">يلزم منح إذن البلوتوث والأجهزة القريبة للطباعة.</string>
+    <string name="printer_error_bt_unavailable">محول البلوتوث غير متاح.</string>
+    <string name="printer_error_bt_disabled">البلوتوث معطل.</string>
+    <string name="printer_error_bt_device_not_found">لم يتم العثور على جهاز طابعة البلوتوث.</string>
+    <string name="printer_error_bt_connect_failed">تعذر إنشاء اتصال بلوتوث.</string>
+    <string name="printer_error_network_connect_failed">تعذر الاتصال بطابعة الشبكة على %1$s.</string>
+    <string name="auth_recovery_unavailable">الاسترداد غير متاح لعدم إعداد سؤال أمان وإجابة.</string>
 </resources>

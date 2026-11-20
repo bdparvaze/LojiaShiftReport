@@ -1601,7 +1601,7 @@
     <string name="could_not_open_document">নথি খোলা যায়নি: %s</string>
 
     <!-- Printer & Settings -->
-    <string name="printer_network_ip_placeholder">যেমন: ১৯২.১৬৮.১.১০০</string>
+    <string name="printer_network_ip_placeholder">প্রিন্টারের IP ঠিকানা লিখুন</string>
     <string name="btn_my_location">আমার অবস্থান</string>
     <string name="permanent_store_address_label">স্থায়ী দোকান / শাখা ঠিকানা</string>
     <string name="permanent_store_address_placeholder">যেমন: দোকান #৪, এভিনিউ ১২, বাণিজ্যিক এলাকা</string>
@@ -2184,4 +2184,24 @@
     <string name="backup_restored_notif_body">স্টোরের খাতায় %1$dটি ব্যবসায়িক রেকর্ড পুনরুদ্ধার করা হয়েছে।</string>
     <string name="clear_data_failed">তথ্য মুছতে ব্যর্থ হয়েছে</string>
     <string name="role_admin">অ্যাডমিন</string>
+    <string name="nav_printer">প্রিন্টার</string>
+    <string name="printer_name_label">প্রিন্টারের নাম</string>
+    <string name="printer_name_placeholder">ঐচ্ছিক পরিচিত নাম</string>
+    <string name="printer_paper_width_58mm">৫৮ মিমি</string>
+    <string name="printer_paper_width_80mm">৮০ মিমি</string>
+    <string name="printer_cut_mode_label">কাগজ কাটা</string>
+    <string name="printer_cut_mode_none">কোনোটিই নয়</string>
+    <string name="printer_cut_mode_partial">আংশিক</string>
+    <string name="printer_cut_mode_full">সম্পূর্ণ</string>
+    <string name="printer_error_not_connected">প্রিন্টার সংযুক্ত নেই।</string>
+    <string name="printer_error_no_network_ip">কোনো নেটওয়ার্ক প্রিন্টারের IP ঠিকানা সেট করা নেই।</string>
+    <string name="printer_error_invalid_port">নেটওয়ার্ক প্রিন্টারের পোর্ট সঠিক নয়।</string>
+    <string name="printer_error_no_bt_printer">সেটিংসে কোনো ব্লুটুথ প্রিন্টার নির্বাচন করা হয়নি।</string>
+    <string name="printer_error_bt_permission">প্রিন্ট করতে ব্লুটুথ ও কাছাকাছি ডিভাইস অনুমতি প্রয়োজন।</string>
+    <string name="printer_error_bt_unavailable">ব্লুটুথ অ্যাডাপ্টার পাওয়া যায়নি।</string>
+    <string name="printer_error_bt_disabled">ব্লুটুথ বন্ধ রয়েছে।</string>
+    <string name="printer_error_bt_device_not_found">ব্লুটুথ প্রিন্টার ডিভাইস পাওয়া যায়নি।</string>
+    <string name="printer_error_bt_connect_failed">ব্লুটুথ সংযোগ স্থাপন করা যায়নি।</string>
+    <string name="printer_error_network_connect_failed">%1$s-এ নেটওয়ার্ক প্রিন্টারে সংযোগ করা যায়নি।</string>
+    <string name="auth_recovery_unavailable">কোনো নিরাপত্তা প্রশ্ন ও উত্তর সেট করা না থাকায় পুনরুদ্ধার সম্ভব নয়।</string>
 </resources>
