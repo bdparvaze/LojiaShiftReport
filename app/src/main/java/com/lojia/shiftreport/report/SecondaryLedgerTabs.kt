@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -91,10 +92,16 @@ fun PaidOutShoppingLedgerTab(
     ) {
         // Section 1 — Top KPI Card
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(0)
+                .depthSemanticCard(
+                    backgroundColor = WarningContainer,
+                    borderColor = WarningOrange.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(12.dp)
+                ),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = WarningContainer),
-            border = BorderStroke(1.dp, WarningOrange.copy(alpha = 0.35f)),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(
@@ -223,14 +230,15 @@ fun PaidOutShoppingLedgerTab(
                 )
             }
         } else {
-            list.forEach { item ->
+            list.forEachIndexed { idx, item ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 8.dp)
+                        .cardRise(idx + 1)
+                        .depthCard(shape = RoundedCornerShape(12.dp)),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                    border = BorderStroke(1.dp, OutlineLight),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(
@@ -387,10 +395,16 @@ fun WalkoutLedgerTab(
     ) {
         // Section 1 — KPI Card
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(0)
+                .depthSemanticCard(
+                    backgroundColor = ErrorContainer,
+                    borderColor = ErrorRedLight.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(12.dp)
+                ),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = ErrorContainer),
-            border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.3f)),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(
@@ -520,14 +534,15 @@ fun WalkoutLedgerTab(
                 )
             }
         } else {
-            list.forEach { item ->
+            list.forEachIndexed { idx, item ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 8.dp)
+                        .cardRise(idx + 1)
+                        .depthCard(shape = RoundedCornerShape(12.dp)),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                    border = BorderStroke(1.dp, OutlineLight),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(

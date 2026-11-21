@@ -31,6 +31,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -370,8 +372,6 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 selectedSettingsMenu?.startsWith("settings/profile/addresses") == true
 
                                         if (!isFullScreenAddressRoute) {
-                                            val topBarBg = PrimaryIndigo
-
                                             val screenTitle = when (val state = navState) {
                                                 is AppNavState.ShiftReportState.Reports -> stringResource(R.string.nav_reports)
                                                 is AppNavState.ShiftReportState.Analytics -> stringResource(R.string.nav_analytics)
@@ -393,9 +393,10 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 }
                                             }
 
-                                            Surface(
-                                                color = topBarBg,
-                                                shadowElevation = 4.dp
+                                            LojiaGradientHeader(
+                                                shape = RectangleShape,
+                                                contentPadding = PaddingValues(0.dp),
+                                                modifier = Modifier.shadow(Dimens.CardElevation)
                                             ) {
                                                 Column(
                                                     modifier = Modifier

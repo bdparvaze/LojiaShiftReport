@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,9 +31,11 @@ fun WeeklyBreakdownCard(
 ) {
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = PureWhite,
-        border = BorderStroke(1.dp, OutlineLight),
-        modifier = modifier.fillMaxWidth()
+        color = Color.Transparent,
+        modifier = modifier
+            .fillMaxWidth()
+            .cardRise(5)
+            .depthCard(shape = RoundedCornerShape(14.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -123,9 +126,11 @@ fun TopRevenueDaysCard(
 
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = PureWhite,
-        border = BorderStroke(1.dp, OutlineLight),
-        modifier = modifier.fillMaxWidth()
+        color = Color.Transparent,
+        modifier = modifier
+            .fillMaxWidth()
+            .cardRise(6)
+            .depthCard(shape = RoundedCornerShape(14.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -1,19 +1,25 @@
 package com.lojia.shiftreport.ui.common
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
@@ -21,28 +27,34 @@ import androidx.compose.ui.unit.dp
 import com.lojia.shiftreport.ui.theme.*
 
 @Composable
-fun lojiaDefaultTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+fun lojiaDefaultTextFieldColors(): TextFieldColors = TextFieldDefaults.colors(
     focusedTextColor = OnSurfaceLight,
     unfocusedTextColor = OnSurfaceLight,
     disabledTextColor = OnSurfaceVariantLight,
     errorTextColor = ErrorRedLight,
-    focusedContainerColor = SurfaceLight,
-    unfocusedContainerColor = SurfaceLight,
-    disabledContainerColor = BackgroundLight,
-    errorContainerColor = ErrorContainerLight,
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    disabledContainerColor = Color.Transparent,
+    errorContainerColor = Color.Transparent,
     focusedLabelColor = PrimaryIndigoLight,
     unfocusedLabelColor = OnSurfaceVariantLight,
     disabledLabelColor = TextHintColor,
     errorLabelColor = ErrorRedLight,
     focusedPlaceholderColor = TextHintColor,
     unfocusedPlaceholderColor = TextHintColor,
-    focusedBorderColor = PrimaryIndigoLight,
-    unfocusedBorderColor = OutlineLight,
-    disabledBorderColor = OutlineVariantLight,
-    errorBorderColor = ErrorRedLight,
+    disabledPlaceholderColor = TextDisabledColor,
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    disabledIndicatorColor = Color.Transparent,
+    errorIndicatorColor = Color.Transparent,
+    focusedLeadingIconColor = PrimaryIndigoLight,
+    unfocusedLeadingIconColor = OnSurfaceVariantLight,
+    focusedTrailingIconColor = PrimaryIndigoLight,
+    unfocusedTrailingIconColor = OnSurfaceVariantLight,
     cursorColor = PrimaryIndigoLight
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LojiaTextField(
     value: String,
@@ -66,30 +78,69 @@ fun LojiaTextField(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    shape: Shape = RoundedCornerShape(10.dp),
-    colors: TextFieldColors = lojiaDefaultTextFieldColors()
+    shape: Shape = RoundedCornerShape(Dimens.RadiusMd),
+    colors: TextFieldColors = lojiaDefaultTextFieldColors(),
+    supportingText: @Composable (() -> Unit)? = null,
+    suffix: @Composable (() -> Unit)? = null
 ) {
-    OutlinedTextField(
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val effectiveTextStyle = textStyle.copy(
+        color = when {
+            !enabled -> OnSurfaceVariantLight
+            isError -> ErrorRedLight
+            else -> textStyle.color
+        }
+    )
+
+    BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.defaultMinSize(minHeight = 56.dp),
         enabled = enabled,
         readOnly = readOnly,
-        textStyle = textStyle,
-        label = label,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        isError = isError,
-        visualTransformation = visualTransformation,
+        textStyle = effectiveTextStyle,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = singleLine,
         maxLines = maxLines,
         minLines = minLines,
+        visualTransformation = visualTransformation,
         interactionSource = interactionSource,
-        shape = shape,
-        colors = colors
+        cursorBrush = SolidColor(if (isError) ErrorRedLight else PrimaryIndigoLight),
+        decorationBox = { innerTextField ->
+            TextFieldDefaults.DecorationBox(
+                value = value,
+                innerTextField = innerTextField,
+                enabled = enabled,
+                singleLine = singleLine,
+                visualTransformation = visualTransformation,
+                interactionSource = interactionSource,
+                isError = isError,
+                label = label,
+                placeholder = placeholder,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                suffix = suffix,
+                supportingText = supportingText,
+                shape = shape,
+                colors = colors,
+                contentPadding = if (label == null) {
+                    PaddingValues(horizontal = 14.dp, vertical = 12.dp)
+                } else {
+                    TextFieldDefaults.contentPaddingWithLabel()
+                },
+                container = {
+                    Box(
+                        modifier = Modifier.depthInset(
+                            enabled = enabled,
+                            isError = isError,
+                            isFocused = isFocused,
+                            shape = shape
+                        )
+                    )
+                }
+            )
+        }
     )
 }
 
@@ -113,8 +164,10 @@ fun LojiaMultilineTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    shape: Shape = RoundedCornerShape(10.dp),
-    colors: TextFieldColors = lojiaDefaultTextFieldColors()
+    shape: Shape = RoundedCornerShape(Dimens.RadiusMd),
+    colors: TextFieldColors = lojiaDefaultTextFieldColors(),
+    supportingText: @Composable (() -> Unit)? = null,
+    suffix: @Composable (() -> Unit)? = null
 ) {
     LojiaTextField(
         value = value,
@@ -136,6 +189,8 @@ fun LojiaMultilineTextField(
         minLines = 3,
         interactionSource = interactionSource,
         shape = shape,
-        colors = colors
+        colors = colors,
+        supportingText = supportingText,
+        suffix = suffix
     )
 }

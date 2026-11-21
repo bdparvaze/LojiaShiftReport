@@ -89,15 +89,76 @@ object DepthTokens {
     /** Drop-shadow opacity beneath enabled raised buttons. */
     const val RAISED_BUTTON_SHADOW_ALPHA: Float = 0.24f
 
+    // ============ SECONDARY & DESTRUCTIVE BUTTON TOKENS ============
+    /** Top gradient stop for raised secondary/outlined buttons. */
+    val SecondaryButtonGradientStart: Color = PureWhite
+
+    /** Bottom gradient stop for raised secondary/outlined buttons. */
+    val SecondaryButtonGradientEnd: Color = BackgroundLight
+
+    /** Lower lip color beneath enabled secondary buttons. */
+    val SecondaryButtonLipColor: Color = OutlineLight
+
+    /** Perimeter border color for secondary raised buttons. */
+    val SecondaryButtonBorderColor: Color = OutlineLight
+
+    /** Soft shadow tint beneath enabled secondary buttons. */
+    val SecondaryButtonShadowColor: Color = PrimaryBlueDark
+
+    /** Top gradient stop for disabled secondary buttons. */
+    val SecondaryButtonDisabledStart: Color = SurfaceVariantLight
+
+    /** Bottom gradient stop for disabled secondary buttons. */
+    val SecondaryButtonDisabledEnd: Color = BackgroundLight
+
+    /** Shadow opacity beneath enabled secondary buttons. */
+    const val SECONDARY_BUTTON_SHADOW_ALPHA: Float = 0.10f
+
+    /** Lip opacity beneath enabled secondary buttons. */
+    const val SECONDARY_BUTTON_LIP_ALPHA: Float = 0.90f
+
+    /** Lip opacity beneath disabled secondary buttons. */
+    const val SECONDARY_BUTTON_LIP_DISABLED_ALPHA: Float = 0.50f
+
+    /** Top gradient stop for destructive raised buttons. */
+    val DestructiveButtonGradientStart: Color = PosExpenseRedFill
+
+    /** Bottom gradient stop for destructive raised buttons. */
+    val DestructiveButtonGradientEnd: Color = ErrorRedLight
+
+    /** Lower lip color anchored beneath destructive raised buttons. */
+    val DestructiveButtonLipColor: Color = OnErrorContainerLight
+
+    /** Elevation shadow tint beneath destructive raised buttons. */
+    val DestructiveButtonShadowColor: Color = ErrorRedLight
+
     // ============ INSET FIELD TOKENS (PRESSED-IN SURFACES) ============
     /** Recessed fill background for inset text fields and input wells. */
     val InsetFieldBackground: Color = Color(0xFFF3F6FB)
+
+    /** Recessed fill background when an inset text field holds focus. */
+    val InsetFieldFocusedBackground: Color = Color(0xFFF6F9FF)
+
+    /** Recessed fill background when an inset text field is in error state. */
+    val InsetFieldErrorBackground: Color = NegativeBannerSurface
+
+    /** Recessed fill background when an inset text field is disabled. */
+    val InsetFieldDisabledBackground: Color = SurfaceVariantLight
 
     /** Inner shadow color cast along the upper edge of inset input wells. */
     val InsetFieldShadowColor: Color = OnBackgroundLight
 
     /** Perimeter stroke color for inset input wells. */
     val InsetFieldBorderColor: Color = OutlineLight
+
+    /** Perimeter stroke color when an inset input well holds focus. */
+    val InsetFieldFocusedBorderColor: Color = PrimaryBlueLight
+
+    /** Perimeter stroke color when an inset input well is in error state. */
+    val InsetFieldErrorBorderColor: Color = ErrorRedLight
+
+    /** Perimeter stroke color when an inset input well is disabled. */
+    val InsetFieldDisabledBorderColor: Color = OutlineVariantLight
 
     /** Crisp lower-edge highlight color reinforcing the recessed bevel. */
     val InsetFieldHighlightColor: Color = PureWhite
@@ -113,6 +174,19 @@ object DepthTokens {
 
     /** Bottom edge bevel highlight opacity for inset input wells. */
     const val INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA: Float = 0.80f
+
+    // ============ TAB BAR TOKENS ============
+    /** Top gradient stop for raised tab bar containers. */
+    val TabBarGradientStart: Color = PureWhite
+
+    /** Bottom gradient stop for raised tab bar containers. */
+    val TabBarGradientEnd: Color = Color(0xFFF8FAFF)
+
+    /** Start stop for active tab indicator pill gradient. */
+    val TabIndicatorGradientStart: Color = PrimaryLight
+
+    /** End stop for active tab indicator pill gradient. */
+    val TabIndicatorGradientEnd: Color = PrimaryBlueLight
 
     // ============ HEADER & LIVE PULSE TOKENS ============
     /** Specular sheen highlight alpha along the top of brand gradient headers. */
@@ -208,6 +282,22 @@ data class DepthStyle(
     val buttonElevation: Dp = Dimens.RaisedButtonElevation,
     val buttonLipHeight: Dp = Dimens.ButtonLipHeight,
     val buttonCornerRadius: Dp = Dimens.RadiusMd,
+    val secondaryButtonGradientStart: Color = DepthTokens.SecondaryButtonGradientStart,
+    val secondaryButtonGradientEnd: Color = DepthTokens.SecondaryButtonGradientEnd,
+    val secondaryButtonLipColor: Color = DepthTokens.SecondaryButtonLipColor,
+    val secondaryButtonBorderColor: Color = DepthTokens.SecondaryButtonBorderColor,
+    val secondaryButtonShadowColor: Color = DepthTokens.SecondaryButtonShadowColor,
+    val secondaryButtonDisabledStart: Color = DepthTokens.SecondaryButtonDisabledStart,
+    val secondaryButtonDisabledEnd: Color = DepthTokens.SecondaryButtonDisabledEnd,
+    val secondaryButtonShadowAlpha: Float = DepthTokens.SECONDARY_BUTTON_SHADOW_ALPHA,
+    val secondaryButtonLipAlpha: Float = DepthTokens.SECONDARY_BUTTON_LIP_ALPHA,
+    val secondaryButtonLipDisabledAlpha: Float = DepthTokens.SECONDARY_BUTTON_LIP_DISABLED_ALPHA,
+    val secondaryButtonElevation: Dp = Dimens.SecondaryButtonElevation,
+    val secondaryButtonLipHeight: Dp = Dimens.SecondaryButtonLipHeight,
+    val destructiveButtonGradientStart: Color = DepthTokens.DestructiveButtonGradientStart,
+    val destructiveButtonGradientEnd: Color = DepthTokens.DestructiveButtonGradientEnd,
+    val destructiveButtonLipColor: Color = DepthTokens.DestructiveButtonLipColor,
+    val destructiveButtonShadowColor: Color = DepthTokens.DestructiveButtonShadowColor,
     val cardGradientStart: Color = DepthTokens.CardGradientStart,
     val cardGradientEnd: Color = DepthTokens.CardGradientEnd,
     val cardAccentGradientStart: Color = DepthTokens.CardAccentGradientStart,
@@ -225,16 +315,26 @@ data class DepthStyle(
     val cardAccentElevation: Dp = Dimens.CardAccentElevation,
     val cardCornerRadius: Dp = Dimens.RadiusLg,
     val insetBackground: Color = DepthTokens.InsetFieldBackground,
+    val insetFocusedBackground: Color = DepthTokens.InsetFieldFocusedBackground,
+    val insetErrorBackground: Color = DepthTokens.InsetFieldErrorBackground,
+    val insetDisabledBackground: Color = DepthTokens.InsetFieldDisabledBackground,
     val insetShadowColor: Color = DepthTokens.InsetFieldShadowColor,
     val insetTopShadowAlpha: Float = DepthTokens.INSET_FIELD_TOP_SHADOW_ALPHA,
     val insetSideShadowAlpha: Float = DepthTokens.INSET_FIELD_SIDE_SHADOW_ALPHA,
     val insetBorderColor: Color = DepthTokens.InsetFieldBorderColor,
+    val insetFocusedBorderColor: Color = DepthTokens.InsetFieldFocusedBorderColor,
+    val insetErrorBorderColor: Color = DepthTokens.InsetFieldErrorBorderColor,
+    val insetDisabledBorderColor: Color = DepthTokens.InsetFieldDisabledBorderColor,
     val insetBorderAlpha: Float = DepthTokens.INSET_FIELD_BORDER_ALPHA,
     val insetBottomHighlightColor: Color = DepthTokens.InsetFieldHighlightColor,
     val insetBottomHighlightAlpha: Float = DepthTokens.INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA,
     val insetBorderWidth: Dp = Dimens.InsetBorderWidth,
     val insetShadowHeight: Dp = Dimens.InsetShadowHeight,
     val insetCornerRadius: Dp = Dimens.RadiusMd,
+    val tabBarGradientStart: Color = DepthTokens.TabBarGradientStart,
+    val tabBarGradientEnd: Color = DepthTokens.TabBarGradientEnd,
+    val tabIndicatorGradientStart: Color = DepthTokens.TabIndicatorGradientStart,
+    val tabIndicatorGradientEnd: Color = DepthTokens.TabIndicatorGradientEnd,
     val cardRiseDurationMs: Int = DepthMotionTokens.CARD_RISE_DURATION_MS,
     val cardRiseStaggerStepMs: Int = DepthMotionTokens.CARD_RISE_STAGGER_STEP_MS,
     val cardRiseMaxDelayMs: Int = DepthMotionTokens.CARD_RISE_MAX_DELAY_MS,

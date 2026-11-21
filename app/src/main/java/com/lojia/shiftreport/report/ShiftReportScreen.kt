@@ -89,6 +89,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 
@@ -145,6 +146,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
+
+enum class ShiftReportTab {
+    REPORT_ENTRY,
+    DUE_HISTORY,
+    EMPLOYER_ADVANCES,
+    PAID_OUT,
+    WALKOUT,
+    ARCHIVES
+}
+
+val SHIFT_REPORT_TABS: List<ShiftReportTab> = ShiftReportTab.entries
 
 /* ----------------------------------------------------------------------
  * OVERLOAD FOR VIEWMODEL & NAVIGATION INTEGRATION (WITH TOP 3 TABS)
@@ -440,17 +452,20 @@ fun ShiftReportScreenContent(
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
 
-    val tabTitles = listOf(
-        stringResource(R.string.tab_report_entry),
-        stringResource(R.string.tab_due_history),
-        stringResource(R.string.tab_employer),
-        stringResource(R.string.tab_paid_out),
-        stringResource(R.string.tab_walkout),
-        stringResource(R.string.tab_archives, shiftReports.size)
-    )
+    val depthStyle = LocalDepthStyle.current
+    val tabTitles = SHIFT_REPORT_TABS.map { tab ->
+        when (tab) {
+            ShiftReportTab.REPORT_ENTRY -> stringResource(R.string.tab_report_entry)
+            ShiftReportTab.DUE_HISTORY -> stringResource(R.string.tab_due_history)
+            ShiftReportTab.EMPLOYER_ADVANCES -> stringResource(R.string.tab_employer)
+            ShiftReportTab.PAID_OUT -> stringResource(R.string.tab_paid_out)
+            ShiftReportTab.WALKOUT -> stringResource(R.string.tab_walkout)
+            ShiftReportTab.ARCHIVES -> stringResource(R.string.tab_archives, shiftReports.size)
+        }
+    }
 
-    val pagerState = rememberPagerState(initialPage = savedTab.coerceIn(0, tabTitles.size - 1)) {
-        tabTitles.size
+    val pagerState = rememberPagerState(initialPage = savedTab.coerceIn(0, SHIFT_REPORT_TABS.size - 1)) {
+        SHIFT_REPORT_TABS.size
     }
 
     LaunchedEffect(pagerState.currentPage) {
@@ -464,24 +479,26 @@ fun ShiftReportScreenContent(
         }
     }
 
-    val tabIcons = listOf(
-        Icons.AutoMirrored.Filled.ListAlt,
-        Icons.Default.ReceiptLong,
-        Icons.Default.AccountBalanceWallet,
-        Icons.Default.ShoppingCart,
-        Icons.Default.DirectionsWalk,
-        Icons.Default.FolderZip
-    )
+    val tabIcons = SHIFT_REPORT_TABS.map { tab ->
+        when (tab) {
+            ShiftReportTab.REPORT_ENTRY -> Icons.AutoMirrored.Filled.ListAlt
+            ShiftReportTab.DUE_HISTORY -> Icons.Default.ReceiptLong
+            ShiftReportTab.EMPLOYER_ADVANCES -> Icons.Default.AccountBalanceWallet
+            ShiftReportTab.PAID_OUT -> Icons.Default.ShoppingCart
+            ShiftReportTab.WALKOUT -> Icons.Default.DirectionsWalk
+            ShiftReportTab.ARCHIVES -> Icons.Default.FolderZip
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(BackgroundLight)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(BackgroundLight)
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = {
                         focusManager.clearFocus()
@@ -491,16 +508,22 @@ fun ShiftReportScreenContent(
         ) {
         // ---- SCROLLABLE OPTIONS TAB ROW ----
         Surface(
-            color = SurfaceLight,
-            shadowElevation = 0.dp,
-            modifier = Modifier.fillMaxWidth()
+            color = Color.Transparent,
+            shadowElevation = Dimens.SecondaryButtonElevation,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(depthStyle.tabBarGradientStart, depthStyle.tabBarGradientEnd)
+                    )
+                )
         ) {
             ScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
-                containerColor = SurfaceLight,
+                containerColor = Color.Transparent,
                 contentColor = PrimaryIndigoDark,
                 edgePadding = 8.dp,
-                modifier = Modifier.height(44.dp),
+                modifier = Modifier.heightIn(min = Dimens.TabBarMinHeight),
                 indicator = { tabPositions ->
                     if (pagerState.currentPage < tabPositions.size) {
                         Box(
@@ -508,7 +531,12 @@ fun ShiftReportScreenContent(
                                 .tabIndicatorOffset(tabPositions[pagerState.currentPage])
                                 .height(3.dp)
                                 .background(
-                                    color = PrimaryIndigoLight,
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(
+                                            depthStyle.tabIndicatorGradientStart,
+                                            depthStyle.tabIndicatorGradientEnd
+                                        )
+                                    ),
                                     shape = RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
                                 )
                         )
@@ -520,7 +548,7 @@ fun ShiftReportScreenContent(
                     val isSelected = pagerState.currentPage == index
                     Tab(
                         selected = isSelected,
-                        modifier = Modifier.height(44.dp),
+                        modifier = Modifier.heightIn(min = Dimens.TabBarMinHeight),
                         onClick = {
                             focusManager.clearFocus()
                             keyboardController?.hide()
@@ -559,8 +587,8 @@ fun ShiftReportScreenContent(
                 .fillMaxWidth()
                 .weight(1f)
         ) { page ->
-            when (page) {
-                0 -> ReportEntryTab(
+            when (SHIFT_REPORT_TABS[page]) {
+                ShiftReportTab.REPORT_ENTRY -> ReportEntryTab(
                     cashierOptions = cashierOptions,
                     currentCurrency = currentCurrency,
                     shiftReports = shiftReports,
@@ -568,26 +596,26 @@ fun ShiftReportScreenContent(
                     formActions = formActions,
                     onSave = onSaveReportData
                 )
-                1 -> DueLedgerTab(
+                ShiftReportTab.DUE_HISTORY -> DueLedgerTab(
                     reports = shiftReports,
                     currency = currentCurrency
                 )
-                2 -> EmployerLedgerTab(
+                ShiftReportTab.EMPLOYER_ADVANCES -> EmployerLedgerTab(
                     reports = shiftReports,
                     employees = employees,
                     currency = currentCurrency,
                     businessProfile = businessProfile,
                     language = language
                 )
-                3 -> PaidOutShoppingLedgerTab(
+                ShiftReportTab.PAID_OUT -> PaidOutShoppingLedgerTab(
                     reports = shiftReports,
                     currency = currentCurrency
                 )
-                4 -> WalkoutLedgerTab(
+                ShiftReportTab.WALKOUT -> WalkoutLedgerTab(
                     reports = shiftReports,
                     currency = currentCurrency
                 )
-                5 -> ShiftReportArchivesTab(
+                ShiftReportTab.ARCHIVES -> ShiftReportArchivesTab(
                     reports = shiftReports,
                     userProfile = userProfile,
                     currentCurrency = currentCurrency,

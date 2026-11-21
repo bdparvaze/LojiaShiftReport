@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
@@ -82,39 +84,52 @@ fun AddEntryDialog(
         ModalType.NONE -> ""
     }
 
-    AlertDialog(
+    LojiaDialog(
         onDismissRequest = {
             focusManager.clearFocus()
             keyboardController?.hide()
             onDismiss()
-        },
-        containerColor = SurfaceLight,
-        titleContentColor = OnSurfaceLight,
-        textContentColor = OnSurfaceLight,
-        title = {
+        }
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = title,
                 color = OnSurfaceLight,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = Dimens.DialogPaddingComfortable,
+                        top = Dimens.DialogPaddingComfortable,
+                        end = Dimens.DialogPaddingComfortable,
+                        bottom = Dimens.SpacingSm
+                    )
             )
-        },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
+            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(Dimens.DialogPaddingComfortable)
+            ) {
                 when (type) {
                     ModalType.CREDIT -> {
-                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         if (isAmountInvalid) {
                             Spacer(Modifier.height(4.dp))
                             Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
                         }
                     }
                     ModalType.OLD_DUE -> {
-                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         if (isAmountInvalid) {
                             Spacer(Modifier.height(4.dp))
                             Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
@@ -123,9 +138,9 @@ fun AddEntryDialog(
                         PayTypeSelector(payType) { payType = it }
                     }
                     ModalType.STAFF -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         if (isAmountInvalid) {
                             Spacer(Modifier.height(4.dp))
                             Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
@@ -134,9 +149,9 @@ fun AddEntryDialog(
                         PayTypeSelector(payType) { payType = it }
                     }
                     ModalType.WALKOUT -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), colors = fieldColors(), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
                         if (isAmountInvalid) {
                             Spacer(Modifier.height(4.dp))
                             Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
@@ -162,7 +177,6 @@ fun AddEntryDialog(
                                 )
                             },
                             shape = RoundedCornerShape(10.dp),
-                            colors = fieldColors(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("paid_out_item_name_input")
@@ -208,7 +222,6 @@ fun AddEntryDialog(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             isError = isAmountInvalid,
                             shape = RoundedCornerShape(10.dp),
-                            colors = fieldColors(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("paid_out_total_amount_input")
@@ -240,6 +253,7 @@ fun AddEntryDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = Dimens.MinTouchTarget)
                                 .clickable { showOptionalDetails = !showOptionalDetails }
                                 .padding(vertical = 10.dp)
                                 .testTag("paid_out_optional_toggle"),
@@ -295,7 +309,6 @@ fun AddEntryDialog(
                                 },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 shape = RoundedCornerShape(10.dp),
-                                colors = fieldColors(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("paid_out_quantity_input")
@@ -340,7 +353,6 @@ fun AddEntryDialog(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 isError = isUnitPriceInvalid,
                                 shape = RoundedCornerShape(10.dp),
-                                colors = fieldColors(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("paid_out_unit_price_input")
@@ -370,73 +382,108 @@ fun AddEntryDialog(
                     Text(it, color = ErrorRedLight, fontSize = 12.sp)
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                enabled = !isAmountInvalid && !isUnitPriceInvalid,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
-                onClick = {
-                    val amount = when (amountClass) {
-                        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(amountClass.minor, digits)
-                        MoneyInput.Empty, MoneyInput.Invalid -> {
-                            error = invalidAmountError
-                            return@Button
-                        }
-                    }
-                    if (amount <= 0) {
-                        error = invalidAmountError
-                        return@Button
-                    }
-                    val parsedQty = qtyText.toIntOrNull()?.coerceAtLeast(0) ?: 0
-                    val parsedUnitPrice = when (unitPriceClass) {
-                        is MoneyInput.Valid -> MoneyFormat.toMajorUnits(unitPriceClass.minor, digits)
-                        MoneyInput.Empty -> if (parsedQty > 0) (amount / parsedQty) else 0.0
-                        MoneyInput.Invalid -> {
-                            error = invalidAmountError
-                            return@Button
-                        }
-                    }
 
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    onSubmit(
-                        ModalResult(
-                            receipt = receipt.ifBlank { RECEIPT_UNSPECIFIED },
-                            name = name.trim().ifBlank { RECEIPT_UNSPECIFIED },
-                            amount = amount,
-                            qty = parsedQty,
-                            unitPrice = parsedUnitPrice,
-                            type = payType
-                        )
+            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+
+            val confirmEnabled = !isAmountInvalid && !isUnitPriceInvalid
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onDismiss()
+                    },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = OnSurfaceVariantLight,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-            ) {
-                Text(
-                    text = stringResource(if (type == ModalType.ITEM) R.string.add_entry_btn else R.string.add),
-                    color = PureWhite,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    onDismiss()
+
+                Button(
+                    enabled = confirmEnabled,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(
+                            enabled = confirmEnabled,
+                            cornerRadius = Dimens.RadiusMd
+                        ),
+                    onClick = {
+                        val amount = when (amountClass) {
+                            is MoneyInput.Valid -> MoneyFormat.toMajorUnits(amountClass.minor, digits)
+                            MoneyInput.Empty, MoneyInput.Invalid -> {
+                                error = invalidAmountError
+                                return@Button
+                            }
+                        }
+                        if (amount <= 0) {
+                            error = invalidAmountError
+                            return@Button
+                        }
+                        val parsedQty = qtyText.toIntOrNull()?.coerceAtLeast(0) ?: 0
+                        val parsedUnitPrice = when (unitPriceClass) {
+                            is MoneyInput.Valid -> MoneyFormat.toMajorUnits(unitPriceClass.minor, digits)
+                            MoneyInput.Empty -> if (parsedQty > 0) (amount / parsedQty) else 0.0
+                            MoneyInput.Invalid -> {
+                                error = invalidAmountError
+                                return@Button
+                            }
+                        }
+
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        onSubmit(
+                            ModalResult(
+                                receipt = receipt.ifBlank { RECEIPT_UNSPECIFIED },
+                                name = name.trim().ifBlank { RECEIPT_UNSPECIFIED },
+                                amount = amount,
+                                qty = parsedQty,
+                                unitPrice = parsedUnitPrice,
+                                type = payType
+                            )
+                        )
+                    }
+                ) {
+                    Text(
+                        text = stringResource(if (type == ModalType.ITEM) R.string.add_entry_btn else R.string.add),
+                        color = if (confirmEnabled) PureWhite else OnSurfaceVariantLight,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-            ) {
-                Text(
-                    text = stringResource(R.string.cancel),
-                    color = OnSurfaceVariantLight,
-                    fontSize = 14.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
         }
-    )
+    }
 }

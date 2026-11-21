@@ -1,6 +1,5 @@
 package com.lojia.shiftreport.ui.common
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +7,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,12 +27,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
-import com.lojia.shiftreport.ui.theme.OutlineLight
 import com.lojia.shiftreport.ui.theme.PrimaryIndigoLight
-import com.lojia.shiftreport.ui.theme.SurfaceLight
+import com.lojia.shiftreport.ui.theme.PureWhite
 import com.lojia.shiftreport.ui.theme.TextHintColor
+import com.lojia.shiftreport.ui.theme.depthCard
+import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 
 // ---- LojiaDimens (as an object) ----
 object LojiaDimens {
@@ -79,15 +82,17 @@ fun LojiaSettingsCard(
     onClick: (() -> Unit)? = null,
     content: @Composable RowScope.() -> Unit
 ) {
+    val cardShape = RoundedCornerShape(LojiaDimens.CardRadius)
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
+            .depthCard(shape = cardShape)
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
+        shape = cardShape,
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, OutlineLight)
+        border = null
     ) {
         Row(
             modifier = Modifier
@@ -140,16 +145,21 @@ fun LojiaPrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
+    val buttonShape = RoundedCornerShape(LojiaDimens.ButtonRadius)
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .heightIn(min = Dimens.MinTouchTarget)
+            .depthRaisedButton(enabled = enabled, cornerRadius = LojiaDimens.ButtonRadius),
         enabled = enabled,
-        shape = RoundedCornerShape(12.dp),
+        shape = buttonShape,
+        elevation = null,
         colors = ButtonDefaults.buttonColors(
-            containerColor = PrimaryIndigoLight,
-            contentColor = Color.White
+            containerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            contentColor = PureWhite,
+            disabledContentColor = OnSurfaceVariantLight
         )
     ) {
         Text(
@@ -167,12 +177,22 @@ fun LojiaOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val buttonShape = RoundedCornerShape(LojiaDimens.ButtonRadius)
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, PrimaryIndigoLight),
+        modifier = modifier
+            .heightIn(min = Dimens.MinTouchTarget)
+            .depthSecondaryButton(
+                enabled = true,
+                borderColor = PrimaryIndigoLight,
+                cornerRadius = LojiaDimens.ButtonRadius
+            ),
+        shape = buttonShape,
+        border = null,
+        elevation = null,
         colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
             contentColor = PrimaryIndigoLight
         )
     ) {

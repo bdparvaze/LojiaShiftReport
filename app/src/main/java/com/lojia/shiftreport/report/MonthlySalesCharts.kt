@@ -37,9 +37,10 @@ fun MonthlyKpiCard(
 ) {
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = PureWhite,
-        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-        modifier = modifier.defaultMinSize(minHeight = 96.dp)
+        color = Color.Transparent,
+        modifier = modifier
+            .defaultMinSize(minHeight = 96.dp)
+            .depthCard(shape = RoundedCornerShape(14.dp))
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -114,9 +115,10 @@ fun LegendItem(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
+            .heightIn(min = Dimens.MinTouchTarget)
             .clip(RoundedCornerShape(6.dp))
             .clickable { onClick() }
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
         Box(
             modifier = Modifier

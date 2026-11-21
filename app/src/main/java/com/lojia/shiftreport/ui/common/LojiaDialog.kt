@@ -25,6 +25,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
+import com.lojia.shiftreport.ui.theme.PureWhite
+import com.lojia.shiftreport.ui.theme.SurfaceLight
+import com.lojia.shiftreport.ui.theme.depthCard
+import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthSecondaryButton
+import com.lojia.shiftreport.ui.theme.depthSemanticCard
 
 /**
  * Standard reusable modal dialog container for Lojia Shift Report.
@@ -45,22 +52,35 @@ fun LojiaDialog(
 ) {
     val configuration = LocalConfiguration.current
     val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+    val usesStandardSurface = containerColor == MaterialTheme.colorScheme.surface ||
+        containerColor == SurfaceLight ||
+        containerColor == PureWhite
 
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = properties
     ) {
+        val cardDepthModifier = if (usesStandardSurface) {
+            Modifier.depthCard(shape = shape)
+        } else {
+            Modifier.depthSemanticCard(
+                backgroundColor = containerColor,
+                borderColor = MaterialTheme.colorScheme.outlineVariant,
+                shape = shape
+            )
+        }
         Surface(
             shape = shape,
-            color = containerColor,
-            border = border ?: BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            shadowElevation = Dimens.DialogElevation,
+            color = Color.Transparent,
+            border = border,
+            shadowElevation = 0.dp,
             modifier = modifier
                 .padding(horizontal = Dimens.SpacingLg)
                 .widthIn(max = maxWidth)
                 .fillMaxWidth()
                 .heightIn(max = maxDialogHeight)
                 .wrapContentHeight()
+                .then(cardDepthModifier)
         ) {
             Column(
                 modifier = Modifier
@@ -157,14 +177,16 @@ fun LojiaConfirmDialog(
                 OutlinedButton(
                     onClick = onDismissRequest,
                     shape = RoundedCornerShape(Dimens.RadiusMd),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    border = null,
+                    elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
                         .testTag(dismissTestTag)
                 ) {
                     Text(
@@ -179,13 +201,21 @@ fun LojiaConfirmDialog(
                 Button(
                     onClick = onConfirm,
                     shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContentColor = OnSurfaceVariantLight
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(
+                            enabled = true,
+                            isDestructive = isDestructive,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag(confirmTestTag)
                 ) {
                     Text(
@@ -289,14 +319,16 @@ fun LojiaFormDialog(
                 OutlinedButton(
                     onClick = onDismissRequest,
                     shape = RoundedCornerShape(Dimens.RadiusMd),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    border = null,
+                    elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
                         .testTag(dismissTestTag)
                 ) {
                     Text(
@@ -312,13 +344,21 @@ fun LojiaFormDialog(
                     onClick = onConfirm,
                     enabled = isConfirmEnabled,
                     shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContentColor = OnSurfaceVariantLight
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(
+                            enabled = isConfirmEnabled,
+                            isDestructive = isDestructive,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag(confirmTestTag)
                 ) {
                     Text(

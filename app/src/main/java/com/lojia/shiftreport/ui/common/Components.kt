@@ -271,11 +271,11 @@ fun SecureDeleteModal(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Password field
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = passwordInput,
                         onValueChange = { passwordInput = it; errorMsg = null },
-                        label = { Text(stringResource(R.string.password), fontSize = 12.sp, color = OnSurfaceVariantLight) },
-                        placeholder = { Text(stringResource(R.string.auth_ph_password), fontSize = 12.sp, color = TextHintColor) },
+                        label = { Text(stringResource(R.string.password), fontSize = 12.sp) },
+                        placeholder = { Text(stringResource(R.string.auth_ph_password), fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Lock,
@@ -290,23 +290,16 @@ fun SecureDeleteModal(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("delete_auth_password_input"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryIndigoLight,
-                            unfocusedBorderColor = OutlineLight,
-                            focusedContainerColor = SurfaceLight,
-                            unfocusedContainerColor = SurfaceLight,
-                            cursorColor = PrimaryIndigoLight
-                        )
+                        shape = RoundedCornerShape(Dimens.RadiusMd)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Security answer field
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = answerInput,
                         onValueChange = { answerInput = it; errorMsg = null },
-                        label = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp, color = OnSurfaceVariantLight) },
-                        placeholder = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp, color = TextHintColor) },
+                        label = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp) },
+                        placeholder = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.HelpOutline,
@@ -319,14 +312,7 @@ fun SecureDeleteModal(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("delete_auth_answer_input"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryIndigoLight,
-                            unfocusedBorderColor = OutlineLight,
-                            focusedContainerColor = SurfaceLight,
-                            unfocusedContainerColor = SurfaceLight,
-                            cursorColor = PrimaryIndigoLight
-                        )
+                        shape = RoundedCornerShape(Dimens.RadiusMd)
                     )
 
                     // Error message (if any)
@@ -357,15 +343,21 @@ fun SecureDeleteModal(
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Cancel — outlined
+                    // Cancel — raised secondary
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier
                             .weight(1f)
-                            .height(Dimens.ButtonHeightStandard),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = PrimaryIndigoLight,
+                                cornerRadius = Dimens.RadiusMd
+                            ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
                         colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
                             contentColor = PrimaryIndigoLight
                         )
                     ) {
@@ -377,7 +369,7 @@ fun SecureDeleteModal(
                         )
                     }
 
-                    // Delete — filled error
+                    // Delete — filled raised destructive
                     Button(
                         onClick = {
                             if (!recoveryConfigured) {
@@ -414,11 +406,17 @@ fun SecureDeleteModal(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .height(Dimens.ButtonHeightStandard)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(
+                                enabled = true,
+                                isDestructive = true,
+                                cornerRadius = Dimens.RadiusMd
+                            )
                             .testTag("confirm_secure_delete_btn"),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ErrorRedLight,
+                            containerColor = Color.Transparent,
                             contentColor = PureWhite
                         )
                     ) {
@@ -449,16 +447,28 @@ fun SolidCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val baseModifier = modifier
+    val cardShape = RoundedCornerShape(Dimens.RadiusLg)
+    val usesStandardSurface = backgroundColor == MaterialTheme.colorScheme.surface ||
+        backgroundColor == SurfaceLight ||
+        backgroundColor == PureWhite
+    val styledModifier = modifier
         .fillMaxWidth()
-        .clip(RoundedCornerShape(16.dp))
-        .background(backgroundColor)
-        .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+        .then(
+            if (usesStandardSurface) {
+                Modifier.depthCard(shape = cardShape)
+            } else {
+                Modifier.depthSemanticCard(
+                    backgroundColor = backgroundColor,
+                    borderColor = borderColor,
+                    shape = cardShape
+                )
+            }
+        )
 
     val finalModifier = if (onClick != null) {
-        baseModifier.clickable { onClick() }
+        styledModifier.clickable { onClick() }
     } else {
-        baseModifier
+        styledModifier
     }
 
     Column(
@@ -477,12 +487,15 @@ fun MetricStatCard(
     iconBgColor: Color = PureWhite,
     modifier: Modifier = Modifier
 ) {
+    val cardShape = RoundedCornerShape(Dimens.RadiusMd)
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)),
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
-        shape = RoundedCornerShape(12.dp)
+            .depthCard(shape = cardShape),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = null,
+        shape = cardShape
     ) {
         Row(
             modifier = Modifier
@@ -493,9 +506,7 @@ fun MetricStatCard(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(PureWhite)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp)),
+                    .depthInset(shape = RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -687,22 +698,29 @@ fun SecurityPinModal(
                     )
                 )
         ) {
-                // Top close button
+                // Top close button (>= 48.dp touch target)
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = 16.dp, end = 16.dp)
-                        .size(34.dp)
-                        .background(SurfaceVariantLight, CircleShape)
+                        .padding(top = 10.dp, end = 10.dp)
+                        .minimumInteractiveComponentSize()
                         .testTag("btn_close_pin_modal")
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.close),
-                        tint = TextHintColor,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(SurfaceVariantLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close),
+                            tint = TextHintColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
 
                 Column(
@@ -937,8 +955,8 @@ fun SecurityPinModal(
                                 rowKeys.forEach { item ->
                                     val containerColor = when {
                                         item.isClear -> ErrorContainerLight.copy(alpha = 0.5f)
-                                        item.isDelete -> BackgroundLight
-                                        else -> BackgroundLight
+                                        item.isDelete -> LocalDepthStyle.current.cardGradientEnd
+                                        else -> LocalDepthStyle.current.cardGradientStart
                                     }
                                     val borderColor = when {
                                         item.isClear -> ErrorRedLight.copy(alpha = 0.3f)
@@ -997,7 +1015,7 @@ fun SecurityPinModal(
                                         shape = CircleShape,
                                         color = containerColor,
                                         border = BorderStroke(1.dp, borderColor),
-                                        shadowElevation = 0.5.dp,
+                                        shadowElevation = Dimens.SecondaryButtonElevation,
                                         modifier = Modifier
                                             .size(64.dp)
                                             .testTag("pin_key_${item.key}")
@@ -1061,7 +1079,7 @@ fun SecurityPinModal(
                         onClick = onDismiss,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .defaultMinSize(minHeight = 42.dp)
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                             .testTag("btn_cancel_pin_auth")
                     ) {
                         Text(

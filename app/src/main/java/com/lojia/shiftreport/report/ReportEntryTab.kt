@@ -32,6 +32,7 @@ import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.data.StaffAdvanceItem
+import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.EmployeeAdvanceSummary
 import com.lojia.shiftreport.util.MoneyFormat
@@ -205,7 +206,7 @@ fun ReportEntryTab(
     val scrollState = rememberScrollState()
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = BackgroundLight,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             StickySummaryBar(
@@ -218,7 +219,7 @@ fun ReportEntryTab(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(BackgroundLight)
                 .padding(padding),
             contentAlignment = Alignment.TopCenter
         ) {
@@ -237,8 +238,12 @@ fun ReportEntryTab(
             // ---- Header card ----
             Card(
                 shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = ShiftColors.Card),
-                elevation = CardDefaults.cardElevation(2.dp)
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(0.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .cardRise(0)
+                    .depthCard(shape = RoundedCornerShape(14.dp))
             ) {
                 Column(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(horizontal = 14.dp, vertical = 14.dp)) {
@@ -274,10 +279,8 @@ fun ReportEntryTab(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .defaultMinSize(minHeight = 40.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(Color.White)
-                                            .border(1.dp, OutlineLight, RoundedCornerShape(8.dp))
+                                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                                            .depthInset(shape = RoundedCornerShape(Dimens.RadiusSm))
                                             .clickable { showDatePicker = true }
                                             .padding(horizontal = 10.dp, vertical = 6.dp),
                                         contentAlignment = Alignment.CenterStart
@@ -622,17 +625,23 @@ fun ReportEntryTab(
                             Button(
                                 onClick = { showResetConfirm = true },
                                 enabled = hasEnteredData,
+                                elevation = null,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = ShiftColors.Danger,
-                                    disabledContainerColor = ShiftColors.Danger.copy(alpha = 0.35f),
-                                    contentColor = Color.White,
-                                    disabledContentColor = Color.White.copy(alpha = 0.6f)
+                                    containerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    contentColor = PureWhite,
+                                    disabledContentColor = OnSurfaceVariantLight
                                 ),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
                                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 46.dp)
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthRaisedButton(
+                                        enabled = hasEnteredData,
+                                        isDestructive = true,
+                                        cornerRadius = Dimens.RadiusMd
+                                    )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -642,7 +651,7 @@ fun ReportEntryTab(
                                     Spacer(Modifier.width(4.dp))
                                     Text(
                                         text = stringResource(R.string.clean_data),
-                                        color = if (hasEnteredData) Color.White else Color.White.copy(alpha = 0.6f),
+                                        color = if (hasEnteredData) PureWhite else OnSurfaceVariantLight,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         maxLines = 1,
@@ -713,17 +722,23 @@ fun ReportEntryTab(
                                     resetAll()
                                 },
                                 enabled = canSave,
+                                elevation = null,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = ShiftColors.SaveBtn,
-                                    disabledContainerColor = ShiftColors.SaveBtn.copy(alpha = 0.35f),
-                                    contentColor = Color.White,
-                                    disabledContentColor = Color.White.copy(alpha = 0.6f)
+                                    containerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    contentColor = PureWhite,
+                                    disabledContentColor = OnSurfaceVariantLight
                                 ),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
                                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 46.dp)
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthRaisedButton(
+                                        enabled = canSave,
+                                        isDestructive = false,
+                                        cornerRadius = Dimens.RadiusMd
+                                    )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -733,7 +748,7 @@ fun ReportEntryTab(
                                     Spacer(Modifier.width(4.dp))
                                     Text(
                                         text = stringResource(R.string.save_report),
-                                        color = if (canSave) Color.White else Color.White.copy(alpha = 0.6f),
+                                        color = if (canSave) PureWhite else OnSurfaceVariantLight,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         maxLines = 1,
@@ -755,7 +770,7 @@ fun ReportEntryTab(
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            containerColor = Color.White,
+            containerColor = PureWhite,
             titleContentColor = OnBackgroundLight,
             textContentColor = OnSurfaceVariantLight,
             title = { Text(stringResource(R.string.clean_data), color = OnBackgroundLight, fontWeight = FontWeight.Bold) },
@@ -774,7 +789,7 @@ fun ReportEntryTab(
         val state = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
-            colors = DatePickerDefaults.colors(containerColor = Color.White),
+            colors = DatePickerDefaults.colors(containerColor = PureWhite),
             confirmButton = {
                 TextButton(onClick = {
                     state.selectedDateMillis?.let { formActions.onDateMillisChange(it) }
@@ -786,14 +801,14 @@ fun ReportEntryTab(
             DatePicker(
                 state = state,
                 colors = DatePickerDefaults.colors(
-                    containerColor = Color.White,
+                    containerColor = PureWhite,
                     titleContentColor = OnBackgroundLight,
                     headlineContentColor = OnBackgroundLight,
                     weekdayContentColor = OnSurfaceVariantLight,
                     subheadContentColor = OnBackgroundLight,
                     dayContentColor = OnBackgroundLight,
                     selectedDayContainerColor = ShiftColors.Primary,
-                    selectedDayContentColor = Color.White
+                    selectedDayContentColor = PureWhite
                 )
             )
         }
@@ -870,7 +885,7 @@ fun EmployerAdvanceSection(
             onExpandedChange = { expanded = !expanded },
             modifier = Modifier.fillMaxWidth()
         ) {
-            OutlinedTextField(
+            LojiaTextField(
                 value = selectedEmployee?.name ?: stringResource(R.string.report_select_employee),
                 onValueChange = {},
                 readOnly = true,
@@ -886,7 +901,7 @@ fun EmployerAdvanceSection(
                 label = { Text(stringResource(R.string.nav_employee)) },
                 placeholder = { Text(stringResource(R.string.select_from_employees_format, employees.size)) },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(Dimens.RadiusMd)
             )
 
             ExposedDropdownMenu(
@@ -940,7 +955,7 @@ fun EmployerAdvanceSection(
         val advanceAmountClass = classifyMoneyInput(amount, MoneyFormat.minorUnitDigits(currency))
         val isAdvanceAmountInvalid = advanceAmountClass is MoneyInput.Invalid
 
-        OutlinedTextField(
+        LojiaTextField(
             value = amount,
             onValueChange = onAmountChange,
             label = { Text(stringResource(R.string.advance_amount_label)) },
@@ -954,7 +969,7 @@ fun EmployerAdvanceSection(
             ),
             suffix = { Text(currency) },
             singleLine = true,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(Dimens.RadiusMd),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -965,20 +980,42 @@ fun EmployerAdvanceSection(
             FilterChip(
                 selected = selectedType == "Cash",
                 onClick = { onTypeChange("Cash") },
+                elevation = FilterChipDefaults.filterChipElevation(
+                    elevation = Dimens.SecondaryButtonElevation
+                ),
+                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget),
                 label = { Text(stringResource(R.string.cash)) }
             )
             FilterChip(
                 selected = selectedType == "Bank",
                 onClick = { onTypeChange("Bank") },
+                elevation = FilterChipDefaults.filterChipElevation(
+                    elevation = Dimens.SecondaryButtonElevation
+                ),
+                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget),
                 label = { Text(stringResource(R.string.bank)) }
             )
         }
 
+        val addAdvanceEnabled = selectedEmployee != null && amount.isNotEmpty() && !isAdvanceAmountInvalid
         Button(
             onClick = onAddAdvance,
-            enabled = selectedEmployee != null && amount.isNotEmpty() && !isAdvanceAmountInvalid,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            enabled = addAdvanceEnabled,
+            shape = RoundedCornerShape(Dimens.RadiusMd),
+            elevation = null,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                contentColor = PureWhite,
+                disabledContentColor = OnSurfaceVariantLight
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.MinTouchTarget)
+                .depthRaisedButton(
+                    enabled = addAdvanceEnabled,
+                    cornerRadius = Dimens.RadiusMd
+                )
         ) {
             Text(
                 text = stringResource(
@@ -987,7 +1024,8 @@ fun EmployerAdvanceSection(
                     currency,
                     selectedEmployee?.name ?: stringResource(R.string.nav_employee)
                 ),
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = if (addAdvanceEnabled) PureWhite else OnSurfaceVariantLight
             )
         }
     }

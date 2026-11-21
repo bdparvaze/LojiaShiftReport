@@ -6,7 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -21,6 +21,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -47,9 +49,9 @@ fun MetricCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = modifier
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(0.dp),
+        modifier = modifier.depthCard(shape = RoundedCornerShape(12.dp))
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -102,19 +104,24 @@ fun ShiftReportArchivesTab(
             .background(BackgroundLight)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Search Bar (compact 44.dp, RoundedCornerShape(10.dp), 1.dp OutlineLight, SurfaceLight)
+        // Search Bar (depth inset well with >= 48.dp touch target)
+        var isSearchFocused by remember { mutableStateOf(false) }
         Surface(
             shape = RoundedCornerShape(10.dp),
-            color = SurfaceLight,
-            border = BorderStroke(1.dp, OutlineLight),
+            color = Color.Transparent,
             shadowElevation = 0.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                .heightIn(min = Dimens.MinTouchTarget)
+                .depthInset(
+                    isFocused = isSearchFocused,
+                    shape = RoundedCornerShape(10.dp)
+                )
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.MinTouchTarget)
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -144,13 +151,15 @@ fun ShiftReportArchivesTab(
                             fontSize = 13.sp,
                             color = OnSurfaceLight
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { isSearchFocused = it.isFocused }
                     )
                 }
                 if (searchQuery.isNotEmpty()) {
                     IconButton(
                         onClick = { searchQuery = "" },
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -168,11 +177,12 @@ fun ShiftReportArchivesTab(
         if (filteredReports.isEmpty()) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = SurfaceLight,
-                border = BorderStroke(1.dp, OutlineLight),
+                color = Color.Transparent,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 24.dp)
+                    .cardRise(0)
+                    .depthCard(shape = RoundedCornerShape(12.dp))
             ) {
                 Column(
                     modifier = Modifier.padding(36.dp),
@@ -207,15 +217,16 @@ fun ShiftReportArchivesTab(
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                items(filteredReports, key = { it.id }) { report ->
+                itemsIndexed(filteredReports, key = { _, it -> it.id }) { idx, report ->
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                        border = BorderStroke(1.dp, OutlineLight),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
+                            .cardRise(idx)
+                            .depthCard(shape = RoundedCornerShape(12.dp))
                     ) {
                         Column(
                             modifier = Modifier
@@ -404,9 +415,19 @@ fun ShiftReportArchivesTab(
                                 OutlinedButton(
                                     onClick = { reportToDelete = report },
                                     shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, ErrorRedLight),
+                                    border = null,
+                                    elevation = null,
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = ErrorRedLight
+                                    ),
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                    modifier = Modifier.height(36.dp)
+                                    modifier = Modifier
+                                        .heightIn(min = Dimens.MinTouchTarget)
+                                        .depthSecondaryButton(
+                                            borderColor = ErrorRedLight,
+                                            cornerRadius = 8.dp
+                                        )
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.DeleteOutline,
@@ -430,12 +451,15 @@ fun ShiftReportArchivesTab(
                                 Button(
                                     onClick = { onPreviewPdf(report) },
                                     shape = RoundedCornerShape(8.dp),
+                                    elevation = null,
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = PrimaryIndigoLight,
+                                        containerColor = Color.Transparent,
                                         contentColor = PureWhite
                                     ),
                                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                                    modifier = Modifier.height(36.dp)
+                                    modifier = Modifier
+                                        .heightIn(min = Dimens.MinTouchTarget)
+                                        .depthRaisedButton(cornerRadius = 8.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.PictureAsPdf,
@@ -488,7 +512,8 @@ fun StickySummaryBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .shadow(elevation = Dimens.CardElevation)
+            .background(PureWhite)
             .border(width = 1.dp, color = ShiftColors.Border)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,

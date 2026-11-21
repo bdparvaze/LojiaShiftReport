@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -62,14 +63,17 @@ fun MainAppDrawer(
                 .padding(bottom = 20.dp)
         ) {
             // Compact Header - 140dp
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
-                    .statusBarsPadding()
-                    .height(140.dp)
-                    .padding(16.dp)
+            LojiaGradientHeader(
+                shape = RectangleShape,
+                contentPadding = PaddingValues(0.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .height(140.dp)
+                        .padding(16.dp)
+                ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
@@ -154,13 +158,14 @@ fun MainAppDrawer(
                                 )
                             },
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = Color(0xFF2E7D32),
+                                containerColor = RoleBadgeGreen,
                                 labelColor = Color.White
                             ),
                             border = null,
                             modifier = Modifier.height(28.dp)
                         )
                     }
+                }
                 }
             }
 

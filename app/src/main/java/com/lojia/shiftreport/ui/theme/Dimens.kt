@@ -76,4 +76,8 @@ object Dimens {
     val InsetShadowHeight: Dp = 4.dp
     val CardRiseTranslationY: Dp = 14.dp
     val LiveDotSize: Dp = 8.dp
+    val SecondaryButtonElevation: Dp = 2.dp
+    val SecondaryButtonLipHeight: Dp = 2.dp
+    val TabBarMinHeight: Dp = 48.dp
+    val TopAccentStripHeight: Dp = 4.dp
 }

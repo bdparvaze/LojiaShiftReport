@@ -78,12 +78,14 @@ fun PosReconciliationSummary(
         // ==========================================
         Card(
             shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(0)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.Brass))
+            Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Brass))
             Column(Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -200,12 +202,14 @@ fun PosReconciliationSummary(
         // ==========================================
         Card(
             shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(1)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.NetCashGreen))
+            Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.NetCashGreen))
             Column(Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -315,12 +319,14 @@ fun PosReconciliationSummary(
         // ==========================================
         Card(
             shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(2)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.Primary))
+            Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Primary))
             Column(Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("⚖️", fontSize = 16.sp)
@@ -446,12 +452,14 @@ fun PosReconciliationSummary(
         // ==========================================
         Card(
             shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(3)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
-            Box(Modifier.fillMaxWidth().height(4.dp).background(ShiftColors.Purple))
+            Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Purple))
             Column(Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("📋", fontSize = 16.sp)

@@ -297,7 +297,7 @@ fun DashboardScreen(
                             value = "${MoneyFormat.toPlainDecimal(combinedGrossSales, dashDigits)} $currency",
                             subtitle = stringResource(R.string.shifts_recorded_fmt, shiftReports.size),
                             icon = Icons.Default.MonetizationOn,
-                            accentColor = Color(0xFF059669),
+                            accentColor = PosCashGreenFill,
                             modifier = Modifier.weight(1f)
                         )
                         MonthlyKpiCard(
@@ -305,7 +305,7 @@ fun DashboardScreen(
                             value = "${MoneyFormat.toPlainDecimal(avgSalesPerShift, dashDigits)} $currency",
                             subtitle = stringResource(R.string.per_shift_average),
                             icon = Icons.Default.ShowChart,
-                            accentColor = Color(0xFF2563EB),
+                            accentColor = PosCardBlue,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -323,7 +323,7 @@ fun DashboardScreen(
                             value = "${MoneyFormat.toPlainDecimal(totalExpenses, dashDigits)} $currency",
                             subtitle = stringResource(R.string.operational_costs),
                             icon = Icons.Default.MoneyOff,
-                            accentColor = Color(0xFFDC2626),
+                            accentColor = PosExpenseRedFill,
                             modifier = Modifier.weight(1f)
                         )
                         MonthlyKpiCard(
@@ -331,7 +331,7 @@ fun DashboardScreen(
                             value = "${shiftReports.size}",
                             subtitle = stringResource(R.string.completed_shifts),
                             icon = Icons.Default.Assessment,
-                            accentColor = Color(0xFFD97706),
+                            accentColor = ChartAmber,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -384,7 +384,7 @@ fun DashboardScreen(
                                 amount = MoneyFormat.toMajorUnits(totalCash),
                                 percent = cashPct,
                                 currency = currency,
-                                color = Color(0xFF059669)
+                                color = PosCashGreenFill
                             )
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -394,7 +394,7 @@ fun DashboardScreen(
                                 amount = MoneyFormat.toMajorUnits(totalMada),
                                 percent = madaPct,
                                 currency = currency,
-                                color = Color(0xFF2563EB)
+                                color = PosCardBlue
                             )
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -404,7 +404,7 @@ fun DashboardScreen(
                                 amount = MoneyFormat.toMajorUnits(totalWallet),
                                 percent = walletPct,
                                 currency = currency,
-                                color = Color(0xFFD97706)
+                                color = ChartAmber
                             )
                         }
                     }
@@ -520,7 +520,7 @@ fun DashboardScreen(
                                                 modifier = Modifier
                                                     .size(6.dp)
                                                     .clip(CircleShape)
-                                                    .background(Color(0xFFD97706))
+                                                    .background(ChartAmber)
                                             )
                                         }
                                         Spacer(modifier = Modifier.height(2.dp))
@@ -535,7 +535,7 @@ fun DashboardScreen(
                                             text = "${MoneyFormat.toPlainDecimal(eveningTotal, shiftDigits)} $currency",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFD97706)
+                                            color = WarningOrange
                                         )
                                     }
                                 }

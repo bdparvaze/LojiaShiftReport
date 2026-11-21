@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.delay
 
 private fun readAnimatorDurationScale(context: Context): Float {
@@ -58,9 +59,12 @@ private fun readAnimatorDurationScale(context: Context): Float {
 /**
  * Raised soft-depth card container styling driven strictly by [LocalDepthStyle].
  */
-fun Modifier.depthCard(accent: Boolean = false): Modifier = composed {
+fun Modifier.depthCard(
+    accent: Boolean = false,
+    shape: Shape? = null
+): Modifier = composed {
     val style = LocalDepthStyle.current
-    val shape = RoundedCornerShape(style.cardCornerRadius)
+    val resolvedShape = shape ?: RoundedCornerShape(style.cardCornerRadius)
     val elevation = if (accent) style.cardAccentElevation else style.cardElevation
     val gradientColors = if (accent) {
         listOf(style.cardAccentGradientStart, style.cardAccentGradientEnd)
@@ -76,14 +80,14 @@ fun Modifier.depthCard(accent: Boolean = false): Modifier = composed {
     this
         .shadow(
             elevation = elevation,
-            shape = shape,
+            shape = resolvedShape,
             clip = false,
             ambientColor = style.cardShadowColor.copy(alpha = style.cardAmbientShadowAlpha),
             spotColor = style.cardShadowColor.copy(alpha = style.cardSpotShadowAlpha)
         )
-        .clip(shape)
+        .clip(resolvedShape)
         .background(brush = Brush.verticalGradient(colors = gradientColors))
-        .border(width = style.cardBorderWidth, color = borderColor, shape = shape)
+        .border(width = style.cardBorderWidth, color = borderColor, shape = resolvedShape)
         .drawWithContent {
             drawContent()
             drawLine(
@@ -96,16 +100,70 @@ fun Modifier.depthCard(accent: Boolean = false): Modifier = composed {
 }
 
 /**
- * Pressed-in inset surface styling for input fields and recessed wells.
+ * Raised soft-depth semantic card preserving an explicit semantic tint and border color.
  */
-fun Modifier.depthInset(): Modifier = composed {
+fun Modifier.depthSemanticCard(
+    backgroundColor: Color,
+    borderColor: Color,
+    shape: Shape? = null
+): Modifier = composed {
     val style = LocalDepthStyle.current
-    val shape = RoundedCornerShape(style.insetCornerRadius)
-    val borderColor = style.insetBorderColor.copy(alpha = style.insetBorderAlpha)
+    val resolvedShape = shape ?: RoundedCornerShape(style.cardCornerRadius)
 
     this
-        .clip(shape)
-        .background(color = style.insetBackground)
+        .shadow(
+            elevation = style.cardElevation,
+            shape = resolvedShape,
+            clip = false,
+            ambientColor = style.cardShadowColor.copy(alpha = style.cardAmbientShadowAlpha),
+            spotColor = style.cardShadowColor.copy(alpha = style.cardSpotShadowAlpha)
+        )
+        .clip(resolvedShape)
+        .background(color = backgroundColor)
+        .border(width = style.cardBorderWidth, color = borderColor, shape = resolvedShape)
+        .drawWithContent {
+            drawContent()
+            drawLine(
+                color = PureWhite.copy(alpha = style.cardTopSheenAlpha * 0.65f),
+                start = Offset(0f, 0.5f),
+                end = Offset(size.width, 0.5f),
+                strokeWidth = style.cardBorderWidth.toPx()
+            )
+        }
+}
+
+/**
+ * Pressed-in inset surface styling for input fields and recessed wells.
+ */
+fun Modifier.depthInset(
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    isFocused: Boolean = false,
+    shape: Shape? = null
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val resolvedShape = shape ?: RoundedCornerShape(style.insetCornerRadius)
+    val resolvedBg = when {
+        !enabled -> style.insetDisabledBackground
+        isError -> style.insetErrorBackground
+        isFocused -> style.insetFocusedBackground
+        else -> style.insetBackground
+    }
+    val resolvedBorder = when {
+        !enabled -> style.insetDisabledBorderColor
+        isError -> style.insetErrorBorderColor
+        isFocused -> style.insetFocusedBorderColor
+        else -> style.insetBorderColor.copy(alpha = style.insetBorderAlpha)
+    }
+    val resolvedBorderWidth = if (isFocused || isError) {
+        style.insetBorderWidth * 1.5f
+    } else {
+        style.insetBorderWidth
+    }
+
+    this
+        .clip(resolvedShape)
+        .background(color = resolvedBg)
         .drawWithContent {
             drawContent()
             val shadowPx = style.insetShadowHeight.toPx()
@@ -134,28 +192,34 @@ fun Modifier.depthInset(): Modifier = composed {
                 strokeWidth = strokePx
             )
         }
-        .border(width = style.insetBorderWidth, color = borderColor, shape = shape)
+        .border(width = resolvedBorderWidth, color = resolvedBorder, shape = resolvedShape)
 }
 
 /**
  * Raised 3D button styling with brand gradient face and lower lip, preserving minimum touch targets.
  */
-fun Modifier.depthRaisedButton(enabled: Boolean = true): Modifier = composed {
+fun Modifier.depthRaisedButton(
+    enabled: Boolean = true,
+    isDestructive: Boolean = false,
+    cornerRadius: Dp? = null
+): Modifier = composed {
     val style = LocalDepthStyle.current
-    val shape = RoundedCornerShape(style.buttonCornerRadius)
+    val resolvedCorner = cornerRadius ?: style.buttonCornerRadius
+    val shape = RoundedCornerShape(resolvedCorner)
     val base = this
         .defaultMinSize(
             minWidth = Dimens.MinTouchTarget,
             minHeight = Dimens.MinTouchTarget
         )
 
+    val shadowColor = if (isDestructive) style.destructiveButtonShadowColor else style.buttonShadowColor
     val elevated = if (enabled) {
         base.shadow(
             elevation = style.buttonElevation,
             shape = shape,
             clip = false,
-            ambientColor = style.buttonShadowColor.copy(alpha = style.buttonShadowAlpha),
-            spotColor = style.buttonShadowColor.copy(alpha = style.buttonShadowAlpha)
+            ambientColor = shadowColor.copy(alpha = style.buttonShadowAlpha),
+            spotColor = shadowColor.copy(alpha = style.buttonShadowAlpha)
         )
     } else {
         base
@@ -165,26 +229,26 @@ fun Modifier.depthRaisedButton(enabled: Boolean = true): Modifier = composed {
         .clip(shape)
         .drawBehind {
             val lipPx = style.buttonLipHeight.toPx().coerceAtMost(size.height * 0.25f)
-            val cornerPx = style.buttonCornerRadius.toPx()
-            val cornerRadius = CornerRadius(cornerPx, cornerPx)
+            val cornerPx = resolvedCorner.toPx()
+            val cr = CornerRadius(cornerPx, cornerPx)
 
-            val lipColor = if (enabled) {
-                style.buttonLipColor.copy(alpha = style.buttonLipAlpha)
-            } else {
-                style.buttonLipDisabledColor.copy(alpha = style.buttonLipDisabledAlpha)
+            val lipColor = when {
+                !enabled -> style.buttonLipDisabledColor.copy(alpha = style.buttonLipDisabledAlpha)
+                isDestructive -> style.destructiveButtonLipColor.copy(alpha = style.buttonLipAlpha)
+                else -> style.buttonLipColor.copy(alpha = style.buttonLipAlpha)
             }
             drawRoundRect(
                 color = lipColor,
                 topLeft = Offset.Zero,
                 size = size,
-                cornerRadius = cornerRadius
+                cornerRadius = cr
             )
 
             val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
-            val faceColors = if (enabled) {
-                listOf(style.buttonGradientStart, style.buttonGradientEnd)
-            } else {
-                listOf(style.buttonDisabledStart, style.buttonDisabledEnd)
+            val faceColors = when {
+                !enabled -> listOf(style.buttonDisabledStart, style.buttonDisabledEnd)
+                isDestructive -> listOf(style.destructiveButtonGradientStart, style.destructiveButtonGradientEnd)
+                else -> listOf(style.buttonGradientStart, style.buttonGradientEnd)
             }
             drawRoundRect(
                 brush = Brush.verticalGradient(
@@ -194,10 +258,79 @@ fun Modifier.depthRaisedButton(enabled: Boolean = true): Modifier = composed {
                 ),
                 topLeft = Offset.Zero,
                 size = Size(size.width, faceHeight),
-                cornerRadius = cornerRadius
+                cornerRadius = cr
             )
         }
         .padding(bottom = style.buttonLipHeight)
+}
+
+/**
+ * Lighter raised 3D secondary/outlined button styling with subtle surface gradient, lower lip,
+ * perimeter stroke, and >= 48.dp touch target preservation.
+ */
+fun Modifier.depthSecondaryButton(
+    enabled: Boolean = true,
+    borderColor: Color? = null,
+    cornerRadius: Dp? = null
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val resolvedCorner = cornerRadius ?: style.buttonCornerRadius
+    val shape = RoundedCornerShape(resolvedCorner)
+    val resolvedBorder = borderColor ?: style.secondaryButtonBorderColor
+    val base = this
+        .defaultMinSize(
+            minWidth = Dimens.MinTouchTarget,
+            minHeight = Dimens.MinTouchTarget
+        )
+
+    val elevated = if (enabled) {
+        base.shadow(
+            elevation = style.secondaryButtonElevation,
+            shape = shape,
+            clip = false,
+            ambientColor = style.secondaryButtonShadowColor.copy(alpha = style.secondaryButtonShadowAlpha),
+            spotColor = style.secondaryButtonShadowColor.copy(alpha = style.secondaryButtonShadowAlpha)
+        )
+    } else {
+        base
+    }
+
+    elevated
+        .clip(shape)
+        .drawBehind {
+            val lipPx = style.secondaryButtonLipHeight.toPx().coerceAtMost(size.height * 0.2f)
+            val cornerPx = resolvedCorner.toPx()
+            val cr = CornerRadius(cornerPx, cornerPx)
+
+            val lipColor = style.secondaryButtonLipColor.copy(
+                alpha = if (enabled) style.secondaryButtonLipAlpha else style.secondaryButtonLipDisabledAlpha
+            )
+            drawRoundRect(
+                color = lipColor,
+                topLeft = Offset.Zero,
+                size = size,
+                cornerRadius = cr
+            )
+
+            val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
+            val faceColors = if (enabled) {
+                listOf(style.secondaryButtonGradientStart, style.secondaryButtonGradientEnd)
+            } else {
+                listOf(style.secondaryButtonDisabledStart, style.secondaryButtonDisabledEnd)
+            }
+            drawRoundRect(
+                brush = Brush.verticalGradient(
+                    colors = faceColors,
+                    startY = 0f,
+                    endY = faceHeight
+                ),
+                topLeft = Offset.Zero,
+                size = Size(size.width, faceHeight),
+                cornerRadius = cr
+            )
+        }
+        .border(width = style.cardBorderWidth, color = resolvedBorder, shape = shape)
+        .padding(bottom = style.secondaryButtonLipHeight)
 }
 
 /**

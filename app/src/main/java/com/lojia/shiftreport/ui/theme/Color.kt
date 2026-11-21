@@ -76,8 +76,9 @@ val PosCashGreenFill = Color(0xFF059669)
 val PosCardBlue = Color(0xFF2563EB)
 val PosDueOrange = Color(0xFFC2410C)
 val PosDueOrangeFill = Color(0xFFEA580C)
-val PosExpenseRed = Color(0xFFDC2626)
-val PosShortageRed = Color(0xFFDC2626)
+val PosExpenseRed = ErrorRedLight
+val PosExpenseRedFill = Color(0xFFDC2626)
+val PosShortageRed = PosExpenseRed
 val PosSurplusGreen = Color(0xFF047857)
 val PosVarianceNeutral = Color(0xFF64748B)
 
@@ -87,6 +88,19 @@ val ChartGreen = Color(0xFF059669)
 val ChartOrange = Color(0xFFEA580C)
 val ChartPurple = Color(0xFF7C3AED)
 val ChartTeal = Color(0xFF0F766E)
+val ChartAmber = Color(0xFFD97706)
+val ChartIndigo = Color(0xFF6366F1)
+
+// ============ ROLE & BANNER SEMANTIC TOKENS ============
+val RoleBadgeGreen = Color(0xFF2E7D32)
+val PositiveBannerSurface = Color(0xFFF0FDF4)
+val PositiveBannerBorder = Color(0xFFBBF7D0)
+val LiveDotGreen = Color(0xFF16A34A)
+val PositiveBannerTextDark = Color(0xFF166534)
+val PositiveBannerText = Color(0xFF067647)
+val NegativeBannerSurface = Color(0xFFFEF2F2)
+val NegativeBannerBorder = Color(0xFFFECACA)
+val NegativeBannerText = Color(0xFFB42318)
 
 // --- Common Token Aliases & System Compatibility ---
 val BgLightGrey = SurfaceVariantLight

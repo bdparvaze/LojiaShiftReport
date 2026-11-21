@@ -2,7 +2,6 @@ package com.lojia.shiftreport.report
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -15,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -42,21 +43,34 @@ fun SectionHeader(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val pillShape = RoundedCornerShape(Dimens.RadiusSm)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 10.dp, bottom = 6.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(bg)
-            .border(1.dp, borderColor.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+            .depthSemanticCard(
+                backgroundColor = bg,
+                borderColor = borderColor.copy(alpha = 0.4f),
+                shape = pillShape
+            )
             .padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
             Text(icon, fontSize = 12.sp)
             Spacer(Modifier.width(6.dp))
-            Text(title, color = ShiftColors.Charcoal, fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+            Text(
+                title,
+                color = ShiftColors.Charcoal,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.5.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
         if (onAdd != null) {
             OutlinedButton(
@@ -65,15 +79,24 @@ fun SectionHeader(
                     keyboardController?.hide()
                     onAdd()
                 },
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, accent),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = accent),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                modifier = Modifier.defaultMinSize(minHeight = 28.dp)
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                border = null,
+                elevation = null,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = accent
+                ),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .heightIn(min = Dimens.MinTouchTarget)
+                    .depthSecondaryButton(
+                        borderColor = accent,
+                        cornerRadius = Dimens.RadiusMd
+                    )
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(12.dp))
-                Spacer(Modifier.width(2.dp))
-                Text(stringResource(R.string.add), fontSize = 10.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(stringResource(R.string.add), fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
         }
     }
@@ -84,30 +107,37 @@ fun SectionHeader(
  * ---------------------------------------------------------------------- */
 @Composable
 fun EntryRow(left: String, right: String, onRemove: () -> Unit) {
+    val rowShape = RoundedCornerShape(Dimens.RadiusSm)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 5.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(ShiftColors.Bg)
-            .border(1.dp, ShiftColors.Border, RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .depthCard(shape = rowShape)
+            .padding(start = 10.dp, end = 2.dp, top = 2.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(left, fontSize = 12.5.sp, color = ShiftColors.Text, modifier = Modifier.weight(1f))
         Text(right, fontSize = 12.5.sp, color = ShiftColors.Text, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(ShiftColors.DangerLight)
-                .border(1.dp, ErrorContainerLight, RoundedCornerShape(6.dp)),
-            contentAlignment = Alignment.Center
+        Spacer(Modifier.width(4.dp))
+        IconButton(
+            onClick = onRemove,
+            modifier = Modifier.minimumInteractiveComponentSize()
         ) {
-            IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.remove), tint = ShiftColors.Danger, modifier = Modifier.size(12.dp))
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(ShiftColors.DangerLight)
+                    .border(1.dp, ErrorContainerLight, RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.remove),
+                    tint = ShiftColors.Danger,
+                    modifier = Modifier.size(14.dp)
+                )
             }
         }
     }
@@ -134,11 +164,11 @@ fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = OnBackgroundLight,
     unfocusedTextColor = OnBackgroundLight,
     disabledTextColor = OnSurfaceVariantLight,
-    focusedContainerColor = Color.White,
-    unfocusedContainerColor = Color.White,
-    disabledContainerColor = BackgroundLight,
-    focusedBorderColor = ShiftColors.Primary,
-    unfocusedBorderColor = OutlineLight,
+    focusedContainerColor = DepthTokens.InsetFieldFocusedBackground,
+    unfocusedContainerColor = DepthTokens.InsetFieldBackground,
+    disabledContainerColor = DepthTokens.InsetFieldDisabledBackground,
+    focusedBorderColor = DepthTokens.InsetFieldFocusedBorderColor,
+    unfocusedBorderColor = DepthTokens.InsetFieldBorderColor,
     focusedLabelColor = ShiftColors.Primary,
     unfocusedLabelColor = OnSurfaceVariantLight,
     focusedPlaceholderColor = TextHintColor,
@@ -171,6 +201,7 @@ fun NumberField(
     isInteger: Boolean = false,
     errorText: String? = null
 ) {
+    var isFocused by remember { mutableStateOf(false) }
     var commaUsedAsSeparator by remember { mutableStateOf(false) }
     val showCommaHint = shouldShowAmountCommaHint(
         value = value,
@@ -180,22 +211,18 @@ fun NumberField(
     )
     val displayMessage = if (showCommaHint) stringResource(R.string.amount_comma_hint) else errorText
     val hasError = displayMessage != null
+    val insetShape = RoundedCornerShape(Dimens.RadiusSm)
     Column(modifier) {
         FieldLabel(label)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 46.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (enabled) Color.White else SurfaceVariantLight)
-                .border(
-                    width = 1.dp,
-                    color = when {
-                        hasError -> ErrorRedLight
-                        enabled -> OutlineLight
-                        else -> OutlineVariantLight
-                    },
-                    shape = RoundedCornerShape(8.dp)
+                .defaultMinSize(minHeight = Dimens.TextFieldHeightCompact)
+                .depthInset(
+                    enabled = enabled,
+                    isError = hasError,
+                    isFocused = isFocused,
+                    shape = insetShape
                 )
                 .padding(horizontal = 10.dp, vertical = 6.dp),
             contentAlignment = Alignment.CenterStart
@@ -240,8 +267,11 @@ fun NumberField(
                     fontWeight = FontWeight.Medium,
                     color = if (enabled) ShiftColors.Charcoal else TextDisabledColor
                 ),
+                cursorBrush = SolidColor(if (hasError) ErrorRedLight else ShiftColors.Primary),
                 keyboardOptions = KeyboardOptions(keyboardType = if (isInteger) KeyboardType.Number else KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { isFocused = it.isFocused },
                 decorationBox = @Composable { innerTextField: @Composable () -> Unit ->
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -282,6 +312,7 @@ fun LabeledDropdown(
     onSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val insetShape = RoundedCornerShape(Dimens.RadiusSm)
     Column {
         FieldLabel(label)
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
@@ -289,10 +320,8 @@ fun LabeledDropdown(
                 modifier = Modifier
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White)
-                    .border(1.dp, OutlineLight, RoundedCornerShape(8.dp))
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                    .depthInset(isFocused = expanded, shape = insetShape)
                     .padding(horizontal = 10.dp, vertical = 6.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -316,8 +345,8 @@ fun LabeledDropdown(
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                containerColor = Color.White,
-                shape = RoundedCornerShape(10.dp),
+                containerColor = PureWhite,
+                shape = RoundedCornerShape(Dimens.RadiusMd),
                 border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariantLight)
             ) {
                 options.forEach { opt ->
@@ -341,7 +370,7 @@ fun LabeledDropdown(
                             trailingIconColor = OnBackgroundLight
                         ),
                         modifier = Modifier.background(
-                            if (isSelected) PrimaryContainerLight else Color.White
+                            if (isSelected) PrimaryContainerLight else PureWhite
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     )
@@ -354,9 +383,36 @@ fun LabeledDropdown(
 @Composable
 fun PayTypeSelector(selected: PayType, onChange: (PayType) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.type), fontSize = 12.sp, color = ShiftColors.TextMuted, modifier = Modifier.padding(end = 12.dp))
-        FilterChip(selected = selected == PayType.CASH, onClick = { onChange(PayType.CASH) }, label = { Text(stringResource(R.string.cash)) })
+        Text(
+            stringResource(R.string.type),
+            fontSize = 12.sp,
+            color = ShiftColors.TextMuted,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        FilterChip(
+            selected = selected == PayType.CASH,
+            onClick = { onChange(PayType.CASH) },
+            label = { Text(stringResource(R.string.cash)) },
+            elevation = FilterChipDefaults.filterChipElevation(elevation = Dimens.SecondaryButtonElevation),
+            colors = FilterChipDefaults.filterChipColors(
+                containerColor = LocalDepthStyle.current.cardGradientStart,
+                selectedContainerColor = PrimaryContainerLight,
+                selectedLabelColor = PrimaryIndigoDark
+            ),
+            modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
+        )
         Spacer(Modifier.width(8.dp))
-        FilterChip(selected = selected == PayType.BANK, onClick = { onChange(PayType.BANK) }, label = { Text(stringResource(R.string.bank)) })
+        FilterChip(
+            selected = selected == PayType.BANK,
+            onClick = { onChange(PayType.BANK) },
+            label = { Text(stringResource(R.string.bank)) },
+            elevation = FilterChipDefaults.filterChipElevation(elevation = Dimens.SecondaryButtonElevation),
+            colors = FilterChipDefaults.filterChipColors(
+                containerColor = LocalDepthStyle.current.cardGradientStart,
+                selectedContainerColor = PrimaryContainerLight,
+                selectedLabelColor = PrimaryIndigoDark
+            ),
+            modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
+        )
     }
 }

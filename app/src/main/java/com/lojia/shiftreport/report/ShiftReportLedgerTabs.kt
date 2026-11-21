@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -201,7 +202,7 @@ fun DueLedgerTab(
             .verticalScroll(rememberScrollState())
     ) {
         // Section 1 — Search Bar
-        OutlinedTextField(
+        LojiaTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = {
@@ -233,15 +234,8 @@ fun DueLedgerTab(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp),
+                .heightIn(min = Dimens.MinTouchTarget),
             shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimaryIndigoLight,
-                unfocusedBorderColor = OutlineLight,
-                focusedContainerColor = SurfaceLight,
-                unfocusedContainerColor = SurfaceLight,
-                cursorColor = PrimaryIndigoLight
-            ),
             singleLine = true
         )
 
@@ -254,10 +248,16 @@ fun DueLedgerTab(
         ) {
             // Card 1 — Total Issued Due
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .cardRise(0)
+                    .depthSemanticCard(
+                        backgroundColor = ErrorContainer,
+                        borderColor = ErrorRedLight.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = ErrorContainer),
-                border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.3f)),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
@@ -304,10 +304,16 @@ fun DueLedgerTab(
 
             // Card 2 — Total Collected
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .cardRise(1)
+                    .depthSemanticCard(
+                        backgroundColor = SuccessContainer,
+                        borderColor = SuccessGreen.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SuccessContainer),
-                border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.3f)),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
@@ -357,10 +363,15 @@ fun DueLedgerTab(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp),
+                .padding(top = 12.dp)
+                .cardRise(2)
+                .depthSemanticCard(
+                    backgroundColor = WarningContainer,
+                    borderColor = WarningOrange.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(12.dp)
+                ),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = WarningContainer),
-            border = BorderStroke(1.dp, WarningOrange.copy(alpha = 0.35f)),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
@@ -513,7 +524,7 @@ fun DueLedgerTab(
                 )
             }
         } else {
-            filteredReceipts.forEach { item ->
+            filteredReceipts.forEachIndexed { idx, item ->
                 val matchedEntry = salesList.firstOrNull { it.receiptNo == item.receiptNo }
                     ?: collectionsList.firstOrNull { it.receiptNo == item.receiptNo }
                 val (statusText, statusBg, statusFg) = when {
@@ -528,10 +539,11 @@ fun DueLedgerTab(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 10.dp),
+                        .padding(bottom = 10.dp)
+                        .cardRise(idx + 3)
+                        .depthCard(shape = RoundedCornerShape(12.dp)),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                    border = BorderStroke(1.dp, OutlineLight),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -970,10 +982,19 @@ private fun AdvanceStatementPeriodDialog(
                     OutlinedButton(
                         onClick = { showDateRangePicker = true },
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PrimaryIndigoLight
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
+                            .depthSecondaryButton(
+                                borderColor = PrimaryIndigoLight,
+                                cornerRadius = 10.dp
+                            )
                             .testTag("statement_pick_range_button")
                     ) {
                         Icon(
@@ -1053,13 +1074,17 @@ private fun AdvanceStatementPeriodDialog(
                         }
                     }
                 },
+                elevation = null,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryIndigoLight,
-                    contentColor = PureWhite
+                    containerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    contentColor = PureWhite,
+                    disabledContentColor = OnSurfaceVariantLight
                 ),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .heightIn(min = 48.dp)
+                    .depthRaisedButton(cornerRadius = 10.dp)
                     .testTag("statement_confirm_period_btn")
             ) {
                 Text(
@@ -1181,10 +1206,19 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                 OutlinedButton(
                     onClick = onOpenStatement,
                     shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, PrimaryIndigoLight),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoLight
+                    ),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     modifier = Modifier
                         .heightIn(min = 48.dp)
+                        .depthSecondaryButton(
+                            borderColor = PrimaryIndigoLight,
+                            cornerRadius = 10.dp
+                        )
                         .testTag("employer_statement_button")
                 ) {
                     Icon(
@@ -1209,10 +1243,11 @@ private fun EmployerAdvanceSummaryAndProfilesView(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .cardRise(0)
+                    .depthCard(accent = true, shape = RoundedCornerShape(16.dp))
                     .testTag("employer_period_summary_card"),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                border = BorderStroke(1.dp, OutlineLight),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
@@ -1327,10 +1362,12 @@ private fun EmployerAdvanceSummaryAndProfilesView(
         if (report.profiles.isEmpty() && report.otherBucket == null) {
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .cardRise(1)
+                        .depthCard(shape = RoundedCornerShape(16.dp)),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                    border = BorderStroke(1.dp, OutlineVariantLight),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
@@ -1372,11 +1409,12 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                 }
             }
         } else {
-            items(report.profiles, key = { it.employeeId }) { profile ->
+            itemsIndexed(report.profiles, key = { _, it -> it.employeeId }) { idx, profile ->
                 EmployerEmployeeProfileCard(
                     profile = profile,
                     currency = currency,
                     locale = locale,
+                    modifier = Modifier.cardRise(idx + 1),
                     onClick = { onSelectEmployee(profile.employeeId) }
                 )
             }
@@ -1387,6 +1425,7 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                         bucket = otherBucket,
                         currency = currency,
                         locale = locale,
+                        modifier = Modifier.cardRise(report.profiles.size + 1),
                         onClick = onSelectOther
                     )
                 }
@@ -1450,17 +1489,18 @@ private fun EmployerEmployeeProfileCard(
     profile: EmployerEmployeeAdvanceProfile,
     currency: String,
     locale: Locale,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val displayName = profile.employeeName.ifBlank { stringResource(R.string.staff_label) }
     Card(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .depthCard(shape = RoundedCornerShape(14.dp))
             .testTag("employer_profile_card_${profile.employeeId}"),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -1545,16 +1585,17 @@ private fun EmployerOtherBucketCard(
     bucket: EmployerOtherAdvanceBucket,
     currency: String,
     locale: Locale,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .depthCard(shape = RoundedCornerShape(14.dp))
             .testTag("employer_profile_other_card"),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -1734,10 +1775,11 @@ private fun EmployerEmployeeHistoryView(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .cardRise(0)
+                    .depthCard(accent = true, shape = RoundedCornerShape(16.dp))
                     .testTag("employer_history_header_card"),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                border = BorderStroke(1.dp, OutlineLight),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
@@ -1807,17 +1849,18 @@ private fun EmployerEmployeeHistoryView(
             }
         }
 
-        items(
+        itemsIndexed(
             items = profile.history,
-            key = { "${it.serialNumber}_${it.dateInMillis}_${it.amountMinor}" }
-        ) { entry ->
+            key = { _, it -> "${it.serialNumber}_${it.dateInMillis}_${it.amountMinor}" }
+        ) { idx, entry ->
             EmployerAdvanceHistoryRowCard(
                 entry = entry,
                 showStaffName = false,
                 currency = currency,
                 locale = locale,
                 zone = zone,
-                dateFormatter = dateFormatter
+                dateFormatter = dateFormatter,
+                modifier = Modifier.cardRise(idx + 1)
             )
         }
     }
@@ -1848,10 +1891,11 @@ private fun EmployerOtherHistoryView(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .cardRise(0)
+                    .depthCard(accent = true, shape = RoundedCornerShape(16.dp))
                     .testTag("employer_other_history_header_card"),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                border = BorderStroke(1.dp, OutlineLight),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
@@ -1929,17 +1973,18 @@ private fun EmployerOtherHistoryView(
             }
         }
 
-        items(
+        itemsIndexed(
             items = bucket.history,
-            key = { "${it.serialNumber}_${it.dateInMillis}_${it.amountMinor}" }
-        ) { entry ->
+            key = { _, it -> "${it.serialNumber}_${it.dateInMillis}_${it.amountMinor}" }
+        ) { idx, entry ->
             EmployerAdvanceHistoryRowCard(
                 entry = entry,
                 showStaffName = true,
                 currency = currency,
                 locale = locale,
                 zone = zone,
-                dateFormatter = dateFormatter
+                dateFormatter = dateFormatter,
+                modifier = Modifier.cardRise(idx + 1)
             )
         }
     }
@@ -1980,7 +2025,8 @@ private fun EmployerAdvanceHistoryRowCard(
     currency: String,
     locale: Locale,
     zone: ZoneId,
-    dateFormatter: DateTimeFormatter
+    dateFormatter: DateTimeFormatter,
+    modifier: Modifier = Modifier
 ) {
     val isCash = isCashAdvanceMode(entry.paymentMode)
     val modeColor = if (isCash) SuccessGreen else InfoBlue
@@ -1992,12 +2038,12 @@ private fun EmployerAdvanceHistoryRowCard(
     }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .depthCard(shape = RoundedCornerShape(12.dp))
             .testTag("employer_history_row_${entry.serialNumber}"),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(

@@ -360,14 +360,15 @@ fun MonthlySalesSummaryView(
             .testTag("monthly_sales_summary_view"),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 1. Month Navigator Card (~56dp, 14dp radius, white bg, 1dp border)
+        // 1. Month Navigator Card (~56dp, 14dp radius, depth card)
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = PureWhite,
-            border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
+            color = Color.Transparent,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
+                .cardRise(0)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
             Row(
                 modifier = Modifier
@@ -379,22 +380,30 @@ fun MonthlySalesSummaryView(
                 IconButton(
                     onClick = { calendarMonthOffset -= 1 },
                     modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(SurfaceVariantLight)
+                        .minimumInteractiveComponentSize()
                         .testTag("prev_month_btn")
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_previous_month),
-                        tint = OnBackgroundLight,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(SurfaceVariantLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_previous_month),
+                            tint = OnBackgroundLight,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(min = Dimens.MinTouchTarget)
                         .clip(RoundedCornerShape(8.dp))
                         .clickable { calendarMonthOffset = 0 }
                         .padding(horizontal = 8.dp, vertical = 6.dp)
@@ -418,25 +427,20 @@ fun MonthlySalesSummaryView(
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFFF0FDF4),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBBF7D0))
+                            color = PositiveBannerSurface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PositiveBannerBorder)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF16A34A))
-                                )
+                                LojiaLiveDot()
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = stringResource(R.string.current_month),
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF166534)
+                                    color = PositiveBannerTextDark
                                 )
                             }
                         }
@@ -446,17 +450,23 @@ fun MonthlySalesSummaryView(
                 IconButton(
                     onClick = { calendarMonthOffset += 1 },
                     modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(SurfaceVariantLight)
+                        .minimumInteractiveComponentSize()
                         .testTag("next_month_btn")
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = stringResource(R.string.cd_next_month),
-                        tint = OnBackgroundLight,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(SurfaceVariantLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = stringResource(R.string.cd_next_month),
+                            tint = OnBackgroundLight,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
@@ -471,16 +481,16 @@ fun MonthlySalesSummaryView(
                 value = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(totalMonthRevenue, summaryDigits), summaryDigits)} $currency",
                 subtitle = stringResource(R.string.sales_shifts_count_fmt, dailyDataList.sumOf { it.transactionsCount }),
                 icon = Icons.Default.Paid,
-                accentColor = Color(0xFF059669),
-                modifier = Modifier.weight(1f)
+                accentColor = PosCashGreenFill,
+                modifier = Modifier.weight(1f).cardRise(1)
             )
             MonthlyKpiCard(
                 title = stringResource(R.string.daily_average),
                 value = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(dailyAverageRevenue, summaryDigits), summaryDigits)} $currency",
                 subtitle = stringResource(R.string.across_active_days_fmt, actualActiveDays),
                 icon = Icons.Default.TrendingUp,
-                accentColor = Color(0xFF2563EB),
-                modifier = Modifier.weight(1f)
+                accentColor = PosCardBlue,
+                modifier = Modifier.weight(1f).cardRise(1)
             )
         }
 
@@ -493,8 +503,8 @@ fun MonthlySalesSummaryView(
                 value = if (peakDay != null && peakDay.totalRevenue > 0) "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(peakDay.totalRevenue, summaryDigits), summaryDigits)} $currency" else "${MoneyFormat.zeroPlaceholder(summaryDigits)} $currency",
                 subtitle = if (peakDay != null && peakDay.totalRevenue > 0) "${peakDay.dateString} (${peakDay.dayName})" else stringResource(R.string.no_data_available),
                 icon = Icons.Default.Star,
-                accentColor = Color(0xFFD97706),
-                modifier = Modifier.weight(1f)
+                accentColor = ChartAmber,
+                modifier = Modifier.weight(1f).cardRise(2)
             )
             val projectedSubtitle = when {
                 calendarMonthOffset < 0 -> stringResource(R.string.finalized_month_revenue)
@@ -506,17 +516,19 @@ fun MonthlySalesSummaryView(
                 value = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(projectedMonthClose, summaryDigits), summaryDigits)} $currency",
                 subtitle = projectedSubtitle,
                 icon = Icons.Default.QueryStats,
-                accentColor = Color(0xFF6366F1),
-                modifier = Modifier.weight(1f)
+                accentColor = ChartIndigo,
+                modifier = Modifier.weight(1f).cardRise(2)
             )
         }
 
-        // 3. Chart Hero Card (14dp radius, 14dp padding, white bg, 1dp border)
+        // 3. Chart Hero Card (14dp radius, 14dp padding, depth card)
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = PureWhite,
-            border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-            modifier = Modifier.fillMaxWidth()
+            color = Color.Transparent,
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(3)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
                 // Chart Title & Toggle Bar
@@ -525,7 +537,7 @@ fun MonthlySalesSummaryView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text(
                             text = stringResource(R.string.monthly_revenue_trend),
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -546,39 +558,51 @@ fun MonthlySalesSummaryView(
                     // Chart Mode Selector (Area Curve vs Bar Chart)
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = SurfaceVariantLight,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight)
+                        color = Color.Transparent,
+                        modifier = Modifier.depthInset(shape = RoundedCornerShape(8.dp))
                     ) {
                         Row(modifier = Modifier.padding(2.dp)) {
                             IconButton(
                                 onClick = { selectedChartType = ChartType.AREA_TREND },
                                 modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (selectedChartType == ChartType.AREA_TREND) PureWhite else Color.Transparent)
+                                    .minimumInteractiveComponentSize()
                                     .testTag("chart_mode_area")
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.ShowChart,
-                                    contentDescription = stringResource(R.string.cd_area_trend),
-                                    tint = if (selectedChartType == ChartType.AREA_TREND) PrimaryBlue else TextSecondaryLight,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (selectedChartType == ChartType.AREA_TREND) PureWhite else Color.Transparent),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShowChart,
+                                        contentDescription = stringResource(R.string.cd_area_trend),
+                                        tint = if (selectedChartType == ChartType.AREA_TREND) PrimaryBlue else TextSecondaryLight,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
                             IconButton(
                                 onClick = { selectedChartType = ChartType.BAR_CHART },
                                 modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (selectedChartType == ChartType.BAR_CHART) PureWhite else Color.Transparent)
+                                    .minimumInteractiveComponentSize()
                                     .testTag("chart_mode_bar")
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.BarChart,
-                                    contentDescription = stringResource(R.string.cd_bar_chart),
-                                    tint = if (selectedChartType == ChartType.BAR_CHART) PrimaryBlue else TextSecondaryLight,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (selectedChartType == ChartType.BAR_CHART) PureWhite else Color.Transparent),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.BarChart,
+                                        contentDescription = stringResource(R.string.cd_bar_chart),
+                                        tint = if (selectedChartType == ChartType.BAR_CHART) PrimaryBlue else TextSecondaryLight,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -745,9 +769,11 @@ fun MonthlySalesSummaryView(
         // 4. Automated Full Monthly Financial Breakdown Section
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = PureWhite,
-            border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-            modifier = Modifier.fillMaxWidth()
+            color = Color.Transparent,
+            modifier = Modifier
+                .fillMaxWidth()
+                .cardRise(4)
+                .depthCard(shape = RoundedCornerShape(14.dp))
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -788,66 +814,66 @@ fun MonthlySalesSummaryView(
                 // Row 1: Cash Inflow
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.Payments,
-                    iconTint = Color(0xFF059669),
+                    iconTint = PosCashGreenFill,
                     label = stringResource(R.string.total_cash_in),
                     detail = stringResource(R.string.bank_mada_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalBankIn, summaryDigits), summaryDigits), currency),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalCashIn, summaryDigits), summaryDigits)} $currency",
-                    amountColor = Color(0xFF059669)
+                    amountColor = PosCashGreen
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
 
                 // Row 2: Digital / Bank Card
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.CreditCard,
-                    iconTint = Color(0xFF2563EB),
+                    iconTint = PosCardBlue,
                     label = stringResource(R.string.mada_payments) + " / " + stringResource(R.string.digital_wallet),
                     detail = stringResource(R.string.monthly_mada_digital_settlements),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalBankIn, summaryDigits), summaryDigits)} $currency",
-                    amountColor = Color(0xFF2563EB)
+                    amountColor = PosCardBlue
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
 
                 // Row 3: Due Credit Issued & Collected
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.AccountBalanceWallet,
-                    iconTint = Color(0xFFEA580C),
+                    iconTint = PosDueOrangeFill,
                     label = stringResource(R.string.total_issued_due),
                     detail = stringResource(R.string.due_collected_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalCollectedDue, summaryDigits), summaryDigits), currency),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalIssuedDue, summaryDigits), summaryDigits)} $currency",
-                    amountColor = Color(0xFFEA580C)
+                    amountColor = PosDueOrange
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
 
                 // Row 4: Expenses
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.ReceiptLong,
-                    iconTint = Color(0xFFDC2626),
+                    iconTint = PosExpenseRedFill,
                     label = stringResource(R.string.total_expenses),
                     detail = stringResource(R.string.operational_costs),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalExpenses, summaryDigits), summaryDigits)} $currency",
-                    amountColor = Color(0xFFDC2626)
+                    amountColor = PosExpenseRed
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
 
                 // Row 5: Product Purchases
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.ShoppingBag,
-                    iconTint = Color(0xFF7C3AED),
+                    iconTint = ChartPurple,
                     label = stringResource(R.string.product_purchases),
                     detail = stringResource(R.string.inventory_investment),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalPurchases, summaryDigits), summaryDigits)} $currency",
-                    amountColor = Color(0xFF7C3AED)
+                    amountColor = ChartPurple
                 )
                 HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
 
                 // Row 6: Staff Advances
                 MonthlyFinancialRowItem(
                     icon = Icons.Default.People,
-                    iconTint = Color(0xFFD97706),
+                    iconTint = ChartAmber,
                     label = stringResource(R.string.staff_advances_fmt, MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalStaffAdvances, summaryDigits), summaryDigits), currency).substringBefore(":"),
                     detail = stringResource(R.string.monthly_salary_advance_payouts),
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalStaffAdvances, summaryDigits), summaryDigits)} $currency",
-                    amountColor = Color(0xFFD97706)
+                    amountColor = WarningOrange
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -856,10 +882,10 @@ fun MonthlySalesSummaryView(
                 val isNetPositive = monthNetCashflow >= 0
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = if (isNetPositive) Color(0xFFF0FDF4) else Color(0xFFFEF2F2),
+                    color = if (isNetPositive) PositiveBannerSurface else NegativeBannerSurface,
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        if (isNetPositive) Color(0xFFBBF7D0) else Color(0xFFFECACA)
+                        if (isNetPositive) PositiveBannerBorder else NegativeBannerBorder
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -877,12 +903,12 @@ fun MonthlySalesSummaryView(
                                 text = stringResource(R.string.net_monthly_financial_cashflow),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isNetPositive) Color(0xFF067647) else Color(0xFFB42318)
+                                color = if (isNetPositive) PositiveBannerText else NegativeBannerText
                             )
                             Text(
                                 text = stringResource(R.string.net_cashflow_formula),
                                 fontSize = 10.sp,
-                                color = if (isNetPositive) Color(0xFF067647).copy(alpha = 0.8f) else Color(0xFFB42318).copy(alpha = 0.8f)
+                                color = if (isNetPositive) PositiveBannerText.copy(alpha = 0.85f) else NegativeBannerText.copy(alpha = 0.85f)
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
@@ -890,7 +916,7 @@ fun MonthlySalesSummaryView(
                             text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthNetCashflow, summaryDigits), summaryDigits)} $currency",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (isNetPositive) Color(0xFF067647) else Color(0xFFB42318)
+                            color = if (isNetPositive) PositiveBannerText else NegativeBannerText
                         )
                     }
                 }
