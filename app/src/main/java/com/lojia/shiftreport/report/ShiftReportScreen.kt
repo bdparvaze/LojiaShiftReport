@@ -161,6 +161,7 @@ fun ShiftReportScreen(
     val activeShiftSession by viewModel.activeShiftSession.collectAsState()
     val cashMovements by viewModel.cashMovements.collectAsState()
     val cashiersState by viewModel.cashiers.collectAsState()
+    val employees by viewModel.employees.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
     val businessProfile by viewModel.businessProfile.collectAsState()
     val formState by viewModel.draftFormState.collectAsState()
@@ -238,8 +239,14 @@ fun ShiftReportScreen(
                 )
             },
             onRemovePreviousDue = { id -> viewModel.removePreviousDueCollection(id) },
-            onAddStaffAdvance = { name, amount, digits, paymentMode ->
-                viewModel.addStaffAdvance(name, amount, digits, paymentMode = paymentMode)
+            onAddStaffAdvance = { name, amount, digits, paymentMode, employeeId ->
+                viewModel.addStaffAdvance(
+                    staffName = name,
+                    amount = amount,
+                    digits = digits,
+                    paymentMode = paymentMode,
+                    employeeId = employeeId
+                )
             },
             onRemoveStaffAdvance = { id -> viewModel.removeStaffAdvance(id) },
             onAddUnpaidBill = { ref, amount, digits ->
@@ -278,6 +285,7 @@ fun ShiftReportScreen(
         activeShiftSession = activeShiftSession,
         cashMovements = cashMovements,
         cashierOptions = availableCashiers,
+        employees = employees,
         language = language,
         currentCurrency = currentCurrency,
         onPreviewPdf = onPreviewPdf,
@@ -414,6 +422,7 @@ fun ShiftReportScreenContent(
     activeShiftSession: ShiftSession? = null,
     cashMovements: List<CashMovement> = emptyList(),
     cashierOptions: List<String> = emptyList(),
+    employees: List<Employee> = emptyList(),
     language: AppLanguage = AppLanguage.BENGALI,
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     onPreviewPdf: (ShiftReport) -> Unit = {},
@@ -563,6 +572,7 @@ fun ShiftReportScreenContent(
                 )
                 2 -> EmployerLedgerTab(
                     reports = shiftReports,
+                    employees = employees,
                     currency = currentCurrency
                 )
                 3 -> PaidOutShoppingLedgerTab(

@@ -198,13 +198,15 @@ data class ShiftReport(
             for (i in 0 until arr.length()) {
                 val obj = arr.getJSONObject(i)
                 val mode = obj.optString("paymentMode", obj.optString("type", "CASH")).ifBlank { "CASH" }
+                val empId = obj.optString("employeeId", "").ifBlank { null }
                 list.add(
                     StaffAdvanceItem(
                         id = obj.optString("id", java.util.UUID.randomUUID().toString()),
                         staffName = obj.optString("staffName", obj.optString("name", "")),
                         amount = obj.optLong("amount", 0L),
                         reason = obj.optString("reason", ""),
-                        paymentMode = mode
+                        paymentMode = mode,
+                        employeeId = empId
                     )
                 )
             }
@@ -418,7 +420,8 @@ data class StaffAdvanceItem(
     val staffName: String,
     val amount: Long,
     val reason: String = "",
-    val paymentMode: String = "CASH" // CASH or BANK
+    val paymentMode: String = "CASH", // CASH or BANK
+    val employeeId: String? = null
 )
 
 data class UnpaidBillItem(

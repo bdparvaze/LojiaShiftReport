@@ -2204,4 +2204,20 @@
     <string name="printer_error_bt_connect_failed">Could not establish Bluetooth connection.</string>
     <string name="printer_error_network_connect_failed">Could not connect to network printer at %1$s.</string>
     <string name="auth_recovery_unavailable">Recovery is not available because no security question and answer are configured.</string>
+    <string name="advance_period_profiles_title">Employee Profiles</string>
+    <string name="advance_monthly_salary_label">Monthly Salary</string>
+    <string name="advance_taken_label">Advances</string>
+    <string name="advance_remaining_label">Remaining</string>
+    <string name="advance_excess_label">Excess</string>
+    <string name="advance_other_bucket_title">Other</string>
+    <string name="advance_other_bucket_subtitle">Unmatched staff advances (no saved salary)</string>
+    <string name="advance_entries_count_fmt">%1$d entries</string>
+    <string name="advance_profiles_empty_period">No advances recorded for this month.</string>
+    <string name="advance_history_label">Advance History</string>
+    <string name="advance_serial_fmt">%1$d.</string>
+    <string name="advance_minus_amount_fmt">-%1$s</string>
+    <string name="advance_remaining_amount_fmt">Remaining %1$s</string>
+    <string name="advance_excess_amount_fmt">Excess %1$s</string>
+    <string name="advance_cd_open_history">View advance history</string>
+    <string name="advance_cd_back_to_profiles">Back to employee profiles</string>
 </resources>

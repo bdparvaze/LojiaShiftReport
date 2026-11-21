@@ -51,9 +51,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     private val context = application.applicationContext
     private val db = AppDatabase.getInstance(application)
     private val reportDao = db.reportDao()
+    private val employeeDao = db.employeeDao()
     private val savedAddressDao = db.savedAddressDao()
     private val repository = ShiftReportRepository(reportDao)
     private val serialUpdater = SerialUpdater()
+
+    val employees: StateFlow<List<Employee>> = employeeDao.getAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val savedAddresses: StateFlow<List<SavedAddress>> =
         savedAddressDao.getAll()
@@ -863,14 +867,16 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         amount: Double,
         digits: Int,
         reason: String = "",
-        paymentMode: String = "CASH"
+        paymentMode: String = "CASH",
+        employeeId: String? = null
     ) {
         if (staffName.isBlank() || amount <= 0) return
         staffAdvances.value = staffAdvances.value + StaffAdvanceItem(
             staffName = staffName.trim(),
             amount = staffAdvanceMinor(amount, digits),
             reason = reason.trim(),
-            paymentMode = paymentMode
+            paymentMode = paymentMode,
+            employeeId = employeeId?.trim()?.ifBlank { null }
         )
     }
 

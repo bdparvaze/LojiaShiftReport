@@ -2204,4 +2204,20 @@
     <string name="printer_error_bt_connect_failed">تعذر إنشاء اتصال بلوتوث.</string>
     <string name="printer_error_network_connect_failed">تعذر الاتصال بطابعة الشبكة على %1$s.</string>
     <string name="auth_recovery_unavailable">الاسترداد غير متاح لعدم إعداد سؤال أمان وإجابة.</string>
+    <string name="advance_period_profiles_title">ملفات الموظفين</string>
+    <string name="advance_monthly_salary_label">الراتب الشهري</string>
+    <string name="advance_taken_label">السلف</string>
+    <string name="advance_remaining_label">المتبقي</string>
+    <string name="advance_excess_label">الزيادة</string>
+    <string name="advance_other_bucket_title">أخرى</string>
+    <string name="advance_other_bucket_subtitle">سلف غير مرتبطة بموظف (بدون راتب محفوظ)</string>
+    <string name="advance_entries_count_fmt">%1$d قيود</string>
+    <string name="advance_profiles_empty_period">لم يتم تسجيل أي سلف لهذا الشهر.</string>
+    <string name="advance_history_label">سجل السلف</string>
+    <string name="advance_serial_fmt">%1$d.</string>
+    <string name="advance_minus_amount_fmt">-%1$s</string>
+    <string name="advance_remaining_amount_fmt">المتبقي %1$s</string>
+    <string name="advance_excess_amount_fmt">الزيادة %1$s</string>
+    <string name="advance_cd_open_history">عرض سجل السلف</string>
+    <string name="advance_cd_back_to_profiles">العودة إلى ملفات الموظفين</string>
 </resources>

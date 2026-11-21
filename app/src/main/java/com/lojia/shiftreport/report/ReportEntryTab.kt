@@ -442,16 +442,18 @@ fun ReportEntryTab(
                         val advancesByEmployee by remember(activeEmployees, savedAdvanceItems, staffAdvances, entryDigits) {
                             derivedStateOf {
                                 val range = currentMonthRange(System.currentTimeMillis(), ZoneId.systemDefault())
-                                val unsavedByName = mutableMapOf<String, Long>()
-                                for (item in staffAdvances) {
-                                    val key = normalizeRestoreName(item.staffName)
-                                    if (key.isNotEmpty()) {
-                                        unsavedByName[key] = (unsavedByName[key] ?: 0L) + item.amount
-                                    }
-                                }
                                 activeEmployees.associate { emp ->
-                                    val saved = advancesInMonthMinor(savedAdvanceItems, emp.name, range)
-                                    val unsaved = unsavedByName[normalizeRestoreName(emp.name)] ?: 0L
+                                    val saved = advancesInMonthMinor(savedAdvanceItems, emp.id, emp.name, range)
+                                    val empNormName = normalizeRestoreName(emp.name)
+                                    val unsaved = staffAdvances.sumOf { item ->
+                                        val itemId = item.employeeId?.trim().orEmpty()
+                                        val matched = if (itemId.isNotEmpty()) {
+                                            itemId == emp.id
+                                        } else {
+                                            empNormName.isNotEmpty() && normalizeRestoreName(item.staffName) == empNormName
+                                        }
+                                        if (matched) item.amount else 0L
+                                    }
                                     val advances = saved + unsaved
                                     val salary = emp.monthlySalaryMinor
                                     emp.id to EmployeeAdvanceSummary(
@@ -529,7 +531,8 @@ fun ReportEntryTab(
                                             emp.name,
                                             amt,
                                             entryDigits,
-                                            if (isBank) "BANK" else "CASH"
+                                            if (isBank) "BANK" else "CASH",
+                                            emp.id
                                         )
                                         advanceAmountText = ""
                                         android.widget.Toast.makeText(
@@ -821,7 +824,8 @@ fun ReportEntryTab(
                         result.name,
                         result.amount,
                         entryDigits,
-                        result.type.name
+                        result.type.name,
+                        null
                     )
                     ModalType.WALKOUT -> formActions.onAddUnpaidBill(result.name, result.amount, entryDigits)
                     ModalType.ITEM -> formActions.onAddPurchasedItem(

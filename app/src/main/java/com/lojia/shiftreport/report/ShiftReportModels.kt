@@ -177,7 +177,7 @@ data class ShiftFormActions(
     val onRemoveDueCredit: (String) -> Unit = {},
     val onAddPreviousDue: (String, Double, Int, String) -> Unit = { _, _, _, _ -> },
     val onRemovePreviousDue: (String) -> Unit = {},
-    val onAddStaffAdvance: (String, Double, Int, String) -> Unit = { _, _, _, _ -> },
+    val onAddStaffAdvance: (String, Double, Int, String, String?) -> Unit = { _, _, _, _, _ -> },
     val onRemoveStaffAdvance: (String) -> Unit = {},
     val onAddUnpaidBill: (String, Double, Int) -> Unit = { _, _, _ -> },
     val onRemoveUnpaidBill: (String) -> Unit = {},

@@ -2204,4 +2204,20 @@
     <string name="printer_error_bt_connect_failed">ব্লুটুথ সংযোগ স্থাপন করা যায়নি।</string>
     <string name="printer_error_network_connect_failed">%1$s-এ নেটওয়ার্ক প্রিন্টারে সংযোগ করা যায়নি।</string>
     <string name="auth_recovery_unavailable">কোনো নিরাপত্তা প্রশ্ন ও উত্তর সেট করা না থাকায় পুনরুদ্ধার সম্ভব নয়।</string>
+    <string name="advance_period_profiles_title">কর্মচারী প্রোফাইল</string>
+    <string name="advance_monthly_salary_label">মাসিক বেতন</string>
+    <string name="advance_taken_label">অগ্রিম</string>
+    <string name="advance_remaining_label">বাকি</string>
+    <string name="advance_excess_label">অতিরিক্ত</string>
+    <string name="advance_other_bucket_title">অন্যান্য</string>
+    <string name="advance_other_bucket_subtitle">অসংযুক্ত কর্মচারীর অগ্রিম (সংরক্ষিত বেতন নেই)</string>
+    <string name="advance_entries_count_fmt">%1$dটি এন্ট্রি</string>
+    <string name="advance_profiles_empty_period">এই মাসের জন্য কোনো অগ্রিম রেকর্ড করা হয়নি।</string>
+    <string name="advance_history_label">অগ্রিমের ইতিহাস</string>
+    <string name="advance_serial_fmt">%1$d.</string>
+    <string name="advance_minus_amount_fmt">-%1$s</string>
+    <string name="advance_remaining_amount_fmt">বাকি %1$s</string>
+    <string name="advance_excess_amount_fmt">অতিরিক্ত %1$s</string>
+    <string name="advance_cd_open_history">অগ্রিমের ইতিহাস দেখুন</string>
+    <string name="advance_cd_back_to_profiles">কর্মচারী প্রোফাইলে ফিরে যান</string>
 </resources>

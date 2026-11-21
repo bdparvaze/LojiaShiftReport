@@ -43,4 +43,28 @@ fun advancesInMonthMinor(
     return total
 }
 
+fun advancesInMonthMinor(
+    items: List<EmployerAdvanceItem>,
+    employeeId: String,
+    employeeName: String,
+    range: LongRange
+): Long {
+    val targetId = employeeId.trim()
+    val targetName = normalizeRestoreName(employeeName)
+    var total = 0L
+    for (item in items) {
+        if (item.dateInMillis !in range) continue
+        val itemId = item.employeeId?.trim().orEmpty()
+        val matched = if (itemId.isNotEmpty()) {
+            targetId.isNotEmpty() && itemId == targetId
+        } else {
+            targetName.isNotEmpty() && normalizeRestoreName(item.staffName) == targetName
+        }
+        if (matched) {
+            total += item.amountMinor
+        }
+    }
+    return total
+}
+
 fun balanceMinor(salaryMinor: Long, advancesMinor: Long): Long = salaryMinor - advancesMinor

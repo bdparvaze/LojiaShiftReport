@@ -96,6 +96,9 @@ object ShiftReportSerializer {
             obj.put("amount", item.amount)
             obj.put("reason", item.reason)
             obj.put("paymentMode", item.paymentMode)
+            if (!item.employeeId.isNullOrBlank()) {
+                obj.put("employeeId", item.employeeId)
+            }
             arr.put(obj)
         }
         return arr.toString()
@@ -109,13 +112,15 @@ object ShiftReportSerializer {
             for (i in 0 until arr.length()) {
                 val obj = arr.getJSONObject(i)
                 val mode = obj.optString("paymentMode", obj.optString("type", "CASH")).ifBlank { "CASH" }
+                val empId = obj.optString("employeeId", "").ifBlank { null }
                 list.add(
                     StaffAdvanceItem(
                         id = obj.optString("id", UUID.randomUUID().toString()),
                         staffName = obj.optString("staffName", ""),
                         amount = obj.optLong("amount", 0L),
                         reason = obj.optString("reason", ""),
-                        paymentMode = mode
+                        paymentMode = mode,
+                        employeeId = empId
                     )
                 )
             }
