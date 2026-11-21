@@ -27,14 +27,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.*
+import com.lojia.shiftreport.report.EmployerAdvanceStatement
+import com.lojia.shiftreport.report.isBankAdvanceMode
+import com.lojia.shiftreport.report.isCashAdvanceMode
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
+import com.lojia.shiftreport.util.PdfLogoRenderer
 import com.lojia.shiftreport.util.PdfReportGenerator
+import com.lojia.shiftreport.util.PdfShareUtils
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 
 @Composable
@@ -715,4 +733,494 @@ private fun PreviewDivider() {
         color = OutlineVariantLight,
         modifier = Modifier.padding(vertical = 2.dp)
     )
+}
+
+private enum class StatementActionType {
+    OPEN_PDF,
+    PRINT,
+    SHARE
+}
+
+@Composable
+fun EmployerAdvanceStatementPreviewDialog(
+    statement: EmployerAdvanceStatement,
+    businessProfile: BusinessProfile?,
+    periodLabel: String,
+    language: AppLanguage,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val activeLocale = remember(configuration, language) {
+        Locale.forLanguageTag(language.code)
+    }
+    val zone = remember { ZoneId.systemDefault() }
+    val generatedMillis = remember { System.currentTimeMillis() }
+    val scope = rememberCoroutineScope()
+
+    val currencyCode = MoneyFormat.resolveCurrency(businessProfile?.currency)
+    val businessName = businessProfile?.businessName?.trim()?.takeIf { it.isNotEmpty() }
+    val logoBitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(
+        initialValue = null,
+        key1 = businessProfile?.logoUri
+    ) {
+        val rawUri = businessProfile?.logoUri?.takeIf { it.isNotBlank() }
+        value = if (rawUri == null) {
+            null
+        } else {
+            withContext(Dispatchers.IO) {
+                PdfLogoRenderer.loadBusinessLogoBitmap(context, rawUri, 160)?.let { loaded ->
+                    PdfLogoRenderer.getCircularBitmap(loaded, 120).asImageBitmap()
+                }
+            }
+        }
+    }
+
+    val generatedText = remember(generatedMillis, activeLocale, zone) {
+        Instant.ofEpochMilli(generatedMillis).atZone(zone)
+            .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(activeLocale))
+    }
+    val entryDateFormatter = remember(activeLocale) {
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(activeLocale)
+    }
+
+    var tempPdfResult by remember { mutableStateOf<PdfReportGenerator.ExportResult?>(null) }
+    var isProcessing by remember { mutableStateOf(false) }
+    var pendingAuthAction by remember { mutableStateOf<StatementActionType?>(null) }
+
+    val closeAndCleanup = {
+        PdfShareUtils.deleteTempStatementFile(tempPdfResult?.file)
+        tempPdfResult = null
+        onDismiss()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            PdfShareUtils.deleteTempStatementFile(tempPdfResult?.file)
+        }
+    }
+
+    suspend fun ensureTempPdf(): PdfReportGenerator.ExportResult {
+        val cached = tempPdfResult
+        if (cached != null && cached.isSuccess && cached.file?.exists() == true && cached.uri != null) {
+            return cached
+        }
+        val generated = withContext(Dispatchers.IO) {
+            PdfReportGenerator.generateEmployerAdvanceStatementPdf(
+                context = context,
+                statement = statement,
+                businessProfile = businessProfile,
+                periodLabel = periodLabel,
+                language = language,
+                zone = zone,
+                nowMillis = generatedMillis
+            )
+        }
+        if (generated.isSuccess) {
+            tempPdfResult = generated
+        }
+        return generated
+    }
+
+    fun executeAuthorizedAction(action: StatementActionType) {
+        if (isProcessing) return
+        isProcessing = true
+        scope.launch {
+            val result = ensureTempPdf()
+            isProcessing = false
+            val file = result.file
+            val uri = result.uri
+            if (!result.isSuccess || file == null || uri == null) {
+                Toast.makeText(
+                    context,
+                    context.getString(
+                        R.string.export_failed_msg,
+                        result.errorMessage ?: context.getString(R.string.pdf_write_failed_error)
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+            when (action) {
+                StatementActionType.OPEN_PDF -> PdfShareUtils.openPdfFile(context, uri)
+                StatementActionType.PRINT -> PdfShareUtils.printPdfFile(
+                    context = context,
+                    pdfFile = file,
+                    jobName = context.getString(R.string.advance_statement_title)
+                )
+                StatementActionType.SHARE -> PdfShareUtils.sharePdfFile(
+                    context = context,
+                    uri = uri,
+                    title = context.getString(R.string.advance_statement_title)
+                )
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = closeAndCleanup,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth(0.92f)
+            .heightIn(max = 620.dp)
+            .testTag("employer_statement_preview_dialog"),
+        containerColor = SurfaceLight,
+        title = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .minimumInteractiveComponentSize(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.advance_statement_title),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceLight,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                IconButton(
+                    onClick = closeAndCleanup,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.close),
+                        tint = OnSurfaceVariantLight,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(
+                    color = PrimaryIndigoLight,
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            if (businessName != null) {
+                                Text(
+                                    text = businessName,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PureWhite,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.advance_statement_title),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PureWhite.copy(alpha = 0.95f)
+                            )
+                            Text(
+                                text = "${stringResource(R.string.statement_period_label)}: $periodLabel",
+                                fontSize = 11.sp,
+                                color = PureWhite.copy(alpha = 0.9f)
+                            )
+                            Text(
+                                text = "${stringResource(R.string.statement_generated_at_label)}: $generatedText",
+                                fontSize = 10.sp,
+                                color = PureWhite.copy(alpha = 0.82f)
+                            )
+                        }
+                        logoBitmap?.let { bmp ->
+                            Image(
+                                bitmap = bmp,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                            )
+                        }
+                    }
+                }
+
+                if (statement.employees.isEmpty() && statement.otherBucket == null) {
+                    Surface(
+                        color = BackgroundLight,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, OutlineLight),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("statement_empty_period_card")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.statement_empty_period_msg),
+                            fontSize = 13.sp,
+                            color = OnSurfaceVariantLight,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    statement.employees.forEach { section ->
+                        PreviewSection(title = section.employeeName) {
+                            PreviewRow(
+                                label = stringResource(R.string.cash),
+                                value = MoneyFormat.formatMinor(section.cashTotalMinor, currencyCode, activeLocale),
+                                color = SuccessGreen
+                            )
+                            PreviewRow(
+                                label = stringResource(R.string.bank),
+                                value = MoneyFormat.formatMinor(section.bankTotalMinor, currencyCode, activeLocale),
+                                color = InfoBlue
+                            )
+                            PreviewRow(
+                                label = stringResource(R.string.total),
+                                value = "${MoneyFormat.formatMinor(section.grandTotalMinor, currencyCode, activeLocale)} (${stringResource(R.string.advance_entries_count_fmt, section.entryCount)})",
+                                bold = true,
+                                highlight = PrimaryIndigoLight
+                            )
+                            if (statement.isSingleCalendarMonth) {
+                                PreviewRow(
+                                    label = stringResource(R.string.advance_monthly_salary_label),
+                                    value = MoneyFormat.formatMinor(section.monthlySalaryMinor ?: 0L, currencyCode, activeLocale)
+                                )
+                                PreviewRow(
+                                    label = stringResource(R.string.advance_taken_label),
+                                    value = stringResource(
+                                        R.string.advance_minus_amount_fmt,
+                                        MoneyFormat.formatMinor(section.advancesInMonthMinor ?: 0L, currencyCode, activeLocale)
+                                    ),
+                                    color = WarningOrange
+                                )
+                                val exc = section.excessMinor ?: 0L
+                                val rem = section.remainingMinor ?: 0L
+                                if (exc > 0L) {
+                                    PreviewRow(
+                                        label = stringResource(R.string.advance_excess_label),
+                                        value = MoneyFormat.formatMinor(exc, currencyCode, activeLocale),
+                                        bold = true,
+                                        color = ErrorRedLight
+                                    )
+                                } else {
+                                    PreviewRow(
+                                        label = stringResource(R.string.advance_remaining_label),
+                                        value = MoneyFormat.formatMinor(rem, currencyCode, activeLocale),
+                                        bold = true,
+                                        color = SuccessGreen
+                                    )
+                                }
+                            }
+                            PreviewDivider()
+                            section.entries.forEach { entry ->
+                                val modeText = when {
+                                    isCashAdvanceMode(entry.paymentMode) -> stringResource(R.string.cash)
+                                    isBankAdvanceMode(entry.paymentMode) -> stringResource(R.string.bank)
+                                    else -> entry.paymentMode
+                                }
+                                val entryDate = Instant.ofEpochMilli(entry.dateInMillis)
+                                    .atZone(zone)
+                                    .format(entryDateFormatter)
+                                val entryLine = "${stringResource(R.string.advance_serial_fmt, entry.serialNumber)} $entryDate • $modeText • ${entry.cashierName}"
+                                PreviewRow(
+                                    label = entryLine,
+                                    value = MoneyFormat.formatMinor(entry.amountMinor, currencyCode, activeLocale),
+                                    multiline = true
+                                )
+                            }
+                        }
+                    }
+
+                    statement.otherBucket?.let { other ->
+                        PreviewSection(title = stringResource(R.string.advance_other_bucket_title)) {
+                            PreviewRow(
+                                label = stringResource(R.string.cash),
+                                value = MoneyFormat.formatMinor(other.cashTotalMinor, currencyCode, activeLocale),
+                                color = SuccessGreen
+                            )
+                            PreviewRow(
+                                label = stringResource(R.string.bank),
+                                value = MoneyFormat.formatMinor(other.bankTotalMinor, currencyCode, activeLocale),
+                                color = InfoBlue
+                            )
+                            PreviewRow(
+                                label = stringResource(R.string.total),
+                                value = "${MoneyFormat.formatMinor(other.advancesTotalMinor, currencyCode, activeLocale)} (${stringResource(R.string.advance_entries_count_fmt, other.advanceCount)})",
+                                bold = true,
+                                highlight = PrimaryIndigoLight
+                            )
+                            PreviewDivider()
+                            other.history.forEach { entry ->
+                                val modeText = when {
+                                    isCashAdvanceMode(entry.paymentMode) -> stringResource(R.string.cash)
+                                    isBankAdvanceMode(entry.paymentMode) -> stringResource(R.string.bank)
+                                    else -> entry.paymentMode
+                                }
+                                val entryDate = Instant.ofEpochMilli(entry.dateInMillis)
+                                    .atZone(zone)
+                                    .format(entryDateFormatter)
+                                val entryLine = "${stringResource(R.string.advance_serial_fmt, entry.serialNumber)} $entryDate • $modeText • ${entry.cashierName}"
+                                PreviewRow(
+                                    label = entryLine,
+                                    value = MoneyFormat.formatMinor(entry.amountMinor, currencyCode, activeLocale),
+                                    multiline = true
+                                )
+                            }
+                        }
+                    }
+                }
+
+                PreviewDivider()
+                PreviewSection(title = stringResource(R.string.statement_summary_totals_title)) {
+                    PreviewRow(
+                        label = stringResource(R.string.cash),
+                        value = MoneyFormat.formatMinor(statement.totalCashMinor, currencyCode, activeLocale),
+                        color = SuccessGreen
+                    )
+                    PreviewRow(
+                        label = stringResource(R.string.bank),
+                        value = MoneyFormat.formatMinor(statement.totalBankMinor, currencyCode, activeLocale),
+                        color = InfoBlue
+                    )
+                    PreviewRow(
+                        label = stringResource(R.string.ledger_total_advances),
+                        value = "${MoneyFormat.formatMinor(statement.totalAdvancesMinor, currencyCode, activeLocale)} (${stringResource(R.string.advance_entries_count_fmt, statement.totalEntryCount)})",
+                        bold = true,
+                        highlight = PrimaryIndigoLight
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { pendingAuthAction = StatementActionType.OPEN_PDF },
+                    enabled = !isProcessing,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryIndigoLight,
+                        contentColor = PureWhite
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .testTag("statement_open_pdf_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PictureAsPdf,
+                        contentDescription = stringResource(R.string.statement_cd_open_pdf),
+                        tint = PureWhite,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.statement_open_pdf_btn),
+                        maxLines = 1,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Button(
+                    onClick = { pendingAuthAction = StatementActionType.PRINT },
+                    enabled = !isProcessing,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = SuccessGreen,
+                        contentColor = PureWhite
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .testTag("statement_print_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Print,
+                        contentDescription = stringResource(R.string.statement_cd_print),
+                        tint = PureWhite,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.print_btn),
+                        maxLines = 1,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { pendingAuthAction = StatementActionType.SHARE },
+                    enabled = !isProcessing,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, PrimaryIndigoLight),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .testTag("statement_share_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = stringResource(R.string.statement_cd_share),
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.share),
+                        maxLines = 1,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        },
+        dismissButton = null
+    )
+
+    pendingAuthAction?.let { action ->
+        AdminAuthDialog(
+            onDismissRequest = { pendingAuthAction = null },
+            onAuthSuccess = {
+                val resolvedAction = action
+                pendingAuthAction = null
+                executeAuthorizedAction(resolvedAction)
+            }
+        )
+    }
 }

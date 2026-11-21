@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.LocalMall
@@ -39,16 +40,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.auth.AdminAuthDialog
+import com.lojia.shiftreport.data.AppLanguage
+import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.Employee
 import com.lojia.shiftreport.data.ShiftReport
+import com.lojia.shiftreport.ui.common.EmployerAdvanceStatementPreviewDialog
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
@@ -57,6 +66,7 @@ import com.lojia.shiftreport.util.summarizeDueMinor
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -724,15 +734,22 @@ private sealed class EmployerAdvanceHistoryTarget {
     data object OtherTarget : EmployerAdvanceHistoryTarget()
 }
 
+private data class StatementPreviewPayload(
+    val statement: EmployerAdvanceStatement,
+    val periodLabel: String
+)
+
 @Composable
 fun EmployerLedgerTab(
     reports: List<ShiftReport>,
     employees: List<Employee> = emptyList(),
-    currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
+    currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
+    businessProfile: BusinessProfile? = null,
+    language: AppLanguage = AppLanguage.ENGLISH
 ) {
     val configuration = LocalConfiguration.current
-    val activeLocale = remember(configuration) {
-        if (!configuration.locales.isEmpty) configuration.locales[0] else Locale.getDefault()
+    val activeLocale = remember(configuration, language) {
+        Locale.forLanguageTag(language.code)
     }
     val zone = remember { ZoneId.systemDefault() }
     val nowMillis = remember { System.currentTimeMillis() }
@@ -754,6 +771,9 @@ fun EmployerLedgerTab(
     }
 
     var selectedTarget by remember { mutableStateOf<EmployerAdvanceHistoryTarget?>(null) }
+    var showOpenStatementAuth by remember { mutableStateOf(false) }
+    var showPeriodChooser by remember { mutableStateOf(false) }
+    var activeStatementPreview by remember { mutableStateOf<StatementPreviewPayload?>(null) }
 
     val selectedProfile = remember(selectedTarget, periodReport) {
         when (val target = selectedTarget) {
@@ -804,6 +824,7 @@ fun EmployerLedgerTab(
             periodLabel = periodLabel,
             currency = currency,
             locale = activeLocale,
+            onOpenStatement = { showOpenStatementAuth = true },
             onSelectEmployee = { employeeId ->
                 selectedTarget = EmployerAdvanceHistoryTarget.EmployeeTarget(employeeId)
             },
@@ -811,6 +832,316 @@ fun EmployerLedgerTab(
                 selectedTarget = EmployerAdvanceHistoryTarget.OtherTarget
             }
         )
+    }
+
+    if (showOpenStatementAuth) {
+        AdminAuthDialog(
+            onDismissRequest = { showOpenStatementAuth = false },
+            onAuthSuccess = {
+                showOpenStatementAuth = false
+                showPeriodChooser = true
+            }
+        )
+    }
+
+    if (showPeriodChooser) {
+        AdvanceStatementPeriodDialog(
+            locale = activeLocale,
+            zone = zone,
+            dateFormatter = entryDateFormatter,
+            onDismiss = { showPeriodChooser = false },
+            onConfirm = { chosenRange, chosenLabel ->
+                showPeriodChooser = false
+                val statement = buildEmployerAdvanceStatement(
+                    advances = parsedAdvances,
+                    employees = employees,
+                    range = chosenRange,
+                    zone = zone
+                )
+                activeStatementPreview = StatementPreviewPayload(
+                    statement = statement,
+                    periodLabel = chosenLabel
+                )
+            }
+        )
+    }
+
+    activeStatementPreview?.let { payload ->
+        EmployerAdvanceStatementPreviewDialog(
+            statement = payload.statement,
+            businessProfile = businessProfile,
+            periodLabel = payload.periodLabel,
+            language = language,
+            onDismiss = { activeStatementPreview = null }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AdvanceStatementPeriodDialog(
+    locale: Locale,
+    zone: ZoneId,
+    dateFormatter: DateTimeFormatter,
+    onDismiss: () -> Unit,
+    onConfirm: (LongRange?, String) -> Unit
+) {
+    val context = LocalContext.current
+    var selectedOption by remember { mutableStateOf(AdvanceStatementPeriodOption.THIS_MONTH) }
+    var customStartDate by remember { mutableStateOf<LocalDate?>(null) }
+    var customEndDate by remember { mutableStateOf<LocalDate?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showDateRangePicker by remember { mutableStateOf(false) }
+
+    val customRangeText = remember(customStartDate, customEndDate, dateFormatter) {
+        val s = customStartDate
+        val e = customEndDate
+        if (s != null && e != null) {
+            context.getString(
+                R.string.statement_date_range_fmt,
+                s.format(dateFormatter),
+                e.format(dateFormatter)
+            )
+        } else {
+            null
+        }
+    }
+
+    val options = listOf(
+        AdvanceStatementPeriodOption.THIS_MONTH to stringResource(R.string.statement_period_this_month),
+        AdvanceStatementPeriodOption.LAST_MONTH to stringResource(R.string.statement_period_last_month),
+        AdvanceStatementPeriodOption.ALL_TIME to stringResource(R.string.statement_period_all_time),
+        AdvanceStatementPeriodOption.CUSTOM_RANGE to stringResource(R.string.statement_period_custom_range)
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = SurfaceLight,
+        title = {
+            Text(
+                text = stringResource(R.string.statement_select_period_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceLight
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectableGroup(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                options.forEach { (option, label) ->
+                    val isSelected = selectedOption == option
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .selectable(
+                                selected = isSelected,
+                                onClick = {
+                                    selectedOption = option
+                                    errorMessage = null
+                                },
+                                role = Role.RadioButton
+                            )
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = null,
+                            colors = RadioButtonDefaults.colors(selectedColor = PrimaryIndigoLight)
+                        )
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = OnSurfaceLight
+                        )
+                    }
+                }
+
+                if (selectedOption == AdvanceStatementPeriodOption.CUSTOM_RANGE) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedButton(
+                        onClick = { showDateRangePicker = true },
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, PrimaryIndigoLight),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .testTag("statement_pick_range_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarMonth,
+                            contentDescription = null,
+                            tint = PrimaryIndigoLight,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = customRangeText ?: stringResource(R.string.statement_pick_date_range),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = PrimaryIndigoLight,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (customRangeText == null) {
+                        Text(
+                            text = stringResource(R.string.statement_custom_range_prompt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceVariantLight,
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                        )
+                    }
+                }
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ErrorRedLight,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(top = 6.dp)
+                            .testTag("statement_period_error_text")
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val now = System.currentTimeMillis()
+                    when (selectedOption) {
+                        AdvanceStatementPeriodOption.THIS_MONTH -> {
+                            val range = com.lojia.shiftreport.util.currentMonthRange(now, zone)
+                            val lbl = formatEmployerAdvancePeriodLabel(now, locale, zone)
+                            onConfirm(range, lbl)
+                        }
+                        AdvanceStatementPeriodOption.LAST_MONTH -> {
+                            val range = previousMonthRange(now, zone)
+                            val lbl = formatEmployerAdvancePeriodLabel(range.first, locale, zone)
+                            onConfirm(range, lbl)
+                        }
+                        AdvanceStatementPeriodOption.ALL_TIME -> {
+                            onConfirm(null, context.getString(R.string.statement_period_all_time))
+                        }
+                        AdvanceStatementPeriodOption.CUSTOM_RANGE -> {
+                            val start = customStartDate
+                            val end = customEndDate
+                            val range = if (start != null && end != null) {
+                                customDayRange(start, end, zone)
+                            } else {
+                                null
+                            }
+                            if (range == null || start == null || end == null) {
+                                errorMessage = context.getString(R.string.statement_invalid_date_range_error)
+                            } else {
+                                val lbl = context.getString(
+                                    R.string.statement_date_range_fmt,
+                                    start.format(dateFormatter),
+                                    end.format(dateFormatter)
+                                )
+                                onConfirm(range, lbl)
+                            }
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryIndigoLight,
+                    contentColor = PureWhite
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("statement_confirm_period_btn")
+            ) {
+                Text(
+                    text = stringResource(R.string.statement_generate_preview_btn),
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.heightIn(min = 48.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.cancel),
+                    color = OnSurfaceVariantLight
+                )
+            }
+        }
+    )
+
+    if (showDateRangePicker) {
+        val rangePickerState = rememberDateRangePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDateRangePicker = false },
+            colors = DatePickerDefaults.colors(containerColor = SurfaceLight),
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val startMillis = rangePickerState.selectedStartDateMillis
+                        val endMillis = rangePickerState.selectedEndDateMillis
+                        if (startMillis != null && endMillis != null) {
+                            val startLocal = utcMillisToLocalDate(startMillis)
+                            val endLocal = utcMillisToLocalDate(endMillis)
+                            if (startLocal.isAfter(endLocal)) {
+                                errorMessage = context.getString(R.string.statement_invalid_date_range_error)
+                            } else {
+                                customStartDate = startLocal
+                                customEndDate = endLocal
+                                errorMessage = null
+                            }
+                        }
+                        showDateRangePicker = false
+                    },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.ok),
+                        color = PrimaryIndigoLight,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDateRangePicker = false },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = OnSurfaceVariantLight
+                    )
+                }
+            }
+        ) {
+            DateRangePicker(
+                state = rangePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = SurfaceLight,
+                    titleContentColor = OnSurfaceLight,
+                    headlineContentColor = OnSurfaceLight,
+                    weekdayContentColor = OnSurfaceVariantLight,
+                    subheadContentColor = OnSurfaceLight,
+                    dayContentColor = OnSurfaceLight,
+                    selectedDayContainerColor = PrimaryIndigoLight,
+                    selectedDayContentColor = PureWhite
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(440.dp)
+            )
+        }
     }
 }
 
@@ -820,6 +1151,7 @@ private fun EmployerAdvanceSummaryAndProfilesView(
     periodLabel: String,
     currency: String,
     locale: Locale,
+    onOpenStatement: () -> Unit,
     onSelectEmployee: (String) -> Unit,
     onSelectOther: () -> Unit
 ) {
@@ -830,6 +1162,49 @@ private fun EmployerAdvanceSummaryAndProfilesView(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.ledger_employer_advances_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                OutlinedButton(
+                    onClick = onOpenStatement,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, PrimaryIndigoLight),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag("employer_statement_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Description,
+                        contentDescription = stringResource(R.string.statement_cd_button),
+                        tint = PrimaryIndigoLight,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.advance_statement_btn),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrimaryIndigoLight,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+
         item {
             Card(
                 modifier = Modifier

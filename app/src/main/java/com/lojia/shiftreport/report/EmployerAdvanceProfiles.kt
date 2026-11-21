@@ -77,14 +77,28 @@ private data class IndexedEmployerAdvance(
     val item: EmployerAdvanceItem
 )
 
-fun buildEmployerAdvancePeriodReport(
+internal data class AggregatedEmployeeAdvanceGroup(
+    val employee: Employee,
+    val totalMinor: Long,
+    val cashMinor: Long,
+    val bankMinor: Long,
+    val history: List<EmployerAdvanceHistoryEntry>
+)
+
+internal data class AggregatedEmployerAdvanceResult(
+    val totalAdvancesMinor: Long,
+    val cashTotalMinor: Long,
+    val bankTotalMinor: Long,
+    val advanceCount: Int,
+    val employeeGroups: List<AggregatedEmployeeAdvanceGroup>,
+    val otherBucket: EmployerOtherAdvanceBucket?
+)
+
+internal fun aggregateEmployerAdvances(
     advances: List<EmployerAdvanceItem>,
     employees: List<Employee>,
-    nowMillis: Long = System.currentTimeMillis(),
-    zone: ZoneId = ZoneId.systemDefault()
-): EmployerAdvancePeriodReport {
-    val periodRange = currentMonthRange(nowMillis, zone)
-
+    range: LongRange?
+): AggregatedEmployerAdvanceResult {
     val employeeById = LinkedHashMap<String, Employee>(employees.size)
     val employeeByNormalizedName = LinkedHashMap<String, Employee>(employees.size)
     val orderedEmployees = employees.sortedWith(
@@ -108,7 +122,8 @@ fun buildEmployerAdvancePeriodReport(
     val otherAdvances = ArrayList<IndexedEmployerAdvance>()
 
     advances.forEachIndexed { idx, item ->
-        if (item.dateInMillis in periodRange && item.amountMinor > 0L) {
+        val inPeriod = range == null || item.dateInMillis in range
+        if (inPeriod && item.amountMinor > 0L) {
             val indexed = IndexedEmployerAdvance(idx, item)
             periodAdvances.add(indexed)
 
@@ -140,7 +155,7 @@ fun buildEmployerAdvancePeriodReport(
         periodAdvances.filter { isBankAdvanceMode(it.item.paymentMode) }.map { it.item.amountMinor }
     )
 
-    val profiles = advancesByEmployeeId.entries.mapNotNull { (empId, entries) ->
+    val employeeGroups = advancesByEmployeeId.entries.mapNotNull { (empId, entries) ->
         val emp = employeeById[empId] ?: return@mapNotNull null
         if (entries.isEmpty()) return@mapNotNull null
 
@@ -166,26 +181,18 @@ fun buildEmployerAdvancePeriodReport(
         val empBankMinor = MoneyFormat.sumOfMinor(
             entries.filter { isBankAdvanceMode(it.item.paymentMode) }.map { it.item.amountMinor }
         )
-        val signedRemaining = balanceMinor(emp.monthlySalaryMinor, empTotalMinor)
-        val positiveExcess = if (signedRemaining < 0L) -signedRemaining else 0L
 
-        EmployerEmployeeAdvanceProfile(
-            employeeId = emp.id,
-            employeeName = emp.name,
-            monthlySalaryMinor = emp.monthlySalaryMinor,
-            advancesTotalMinor = empTotalMinor,
-            cashTotalMinor = empCashMinor,
-            bankTotalMinor = empBankMinor,
-            remainingMinor = signedRemaining,
-            excessMinor = positiveExcess,
-            advanceCount = sortedHistory.size,
-            isActive = emp.isActive,
+        AggregatedEmployeeAdvanceGroup(
+            employee = emp,
+            totalMinor = empTotalMinor,
+            cashMinor = empCashMinor,
+            bankMinor = empBankMinor,
             history = sortedHistory
         )
     }.sortedWith(
-        compareByDescending<EmployerEmployeeAdvanceProfile> { it.advancesTotalMinor }
-            .thenBy { it.employeeName.lowercase(Locale.ROOT) }
-            .thenBy { it.employeeId }
+        compareByDescending<AggregatedEmployeeAdvanceGroup> { it.totalMinor }
+            .thenBy { it.employee.name.lowercase(Locale.ROOT) }
+            .thenBy { it.employee.id }
     )
 
     val otherBucket = if (otherAdvances.isNotEmpty()) {
@@ -221,13 +228,50 @@ fun buildEmployerAdvancePeriodReport(
         null
     }
 
-    return EmployerAdvancePeriodReport(
-        periodRange = periodRange,
+    return AggregatedEmployerAdvanceResult(
         totalAdvancesMinor = totalAdvancesMinor,
         cashTotalMinor = cashTotalMinor,
         bankTotalMinor = bankTotalMinor,
         advanceCount = periodAdvances.size,
-        profiles = profiles,
+        employeeGroups = employeeGroups,
         otherBucket = otherBucket
+    )
+}
+
+fun buildEmployerAdvancePeriodReport(
+    advances: List<EmployerAdvanceItem>,
+    employees: List<Employee>,
+    nowMillis: Long = System.currentTimeMillis(),
+    zone: ZoneId = ZoneId.systemDefault()
+): EmployerAdvancePeriodReport {
+    val periodRange = currentMonthRange(nowMillis, zone)
+    val aggregated = aggregateEmployerAdvances(advances, employees, periodRange)
+
+    val profiles = aggregated.employeeGroups.map { group ->
+        val signedRemaining = balanceMinor(group.employee.monthlySalaryMinor, group.totalMinor)
+        val positiveExcess = if (signedRemaining < 0L) -signedRemaining else 0L
+        EmployerEmployeeAdvanceProfile(
+            employeeId = group.employee.id,
+            employeeName = group.employee.name,
+            monthlySalaryMinor = group.employee.monthlySalaryMinor,
+            advancesTotalMinor = group.totalMinor,
+            cashTotalMinor = group.cashMinor,
+            bankTotalMinor = group.bankMinor,
+            remainingMinor = signedRemaining,
+            excessMinor = positiveExcess,
+            advanceCount = group.history.size,
+            isActive = group.employee.isActive,
+            history = group.history
+        )
+    }
+
+    return EmployerAdvancePeriodReport(
+        periodRange = periodRange,
+        totalAdvancesMinor = aggregated.totalAdvancesMinor,
+        cashTotalMinor = aggregated.cashTotalMinor,
+        bankTotalMinor = aggregated.bankTotalMinor,
+        advanceCount = aggregated.advanceCount,
+        profiles = profiles,
+        otherBucket = aggregated.otherBucket
     )
 }

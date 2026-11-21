@@ -288,6 +288,7 @@ fun ShiftReportScreen(
         employees = employees,
         language = language,
         currentCurrency = currentCurrency,
+        businessProfile = businessProfile,
         onPreviewPdf = onPreviewPdf,
         onSaveReportData = { data ->
             val digits = MoneyFormat.minorUnitDigits(currentCurrency)
@@ -425,6 +426,7 @@ fun ShiftReportScreenContent(
     employees: List<Employee> = emptyList(),
     language: AppLanguage = AppLanguage.BENGALI,
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
+    businessProfile: BusinessProfile? = null,
     onPreviewPdf: (ShiftReport) -> Unit = {},
     onSaveReportData: (ShiftReportData) -> Unit = {},
     onOpenShift: (String, String, Double) -> Unit = { _, _, _ -> },
@@ -573,7 +575,9 @@ fun ShiftReportScreenContent(
                 2 -> EmployerLedgerTab(
                     reports = shiftReports,
                     employees = employees,
-                    currency = currentCurrency
+                    currency = currentCurrency,
+                    businessProfile = businessProfile,
+                    language = language
                 )
                 3 -> PaidOutShoppingLedgerTab(
                     reports = shiftReports,

@@ -1588,6 +1588,27 @@ object PdfReportGenerator {
         PdfShareUtils.sendEmailWithPdf(context, pdfUri, recipientEmail)
 
     /**
+     * Generates an Employer Advance Statement PDF for any period in app-private cache storage.
+     */
+    fun generateEmployerAdvanceStatementPdf(
+        context: Context,
+        statement: com.lojia.shiftreport.report.EmployerAdvanceStatement,
+        businessProfile: BusinessProfile?,
+        periodLabel: String,
+        language: AppLanguage = AppLanguage.fromCode(LanguagePreferences.getLanguage(context)),
+        zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
+        nowMillis: Long = System.currentTimeMillis()
+    ): ExportResult = EmployerAdvanceStatementPdfRenderer.generate(
+        context = context,
+        statement = statement,
+        businessProfile = businessProfile,
+        periodLabel = periodLabel,
+        language = language,
+        zone = zone,
+        nowMillis = nowMillis
+    )
+
+    /**
      * Shares the exported PDF file directly to WhatsApp, falling back to a generic chooser if not installed.
      */
     fun sharePdfToWhatsApp(context: Context, pdfUri: Uri, message: String = "") =
