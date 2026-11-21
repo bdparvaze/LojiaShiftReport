@@ -87,13 +87,17 @@ fun LojiaTheme(
         fontScale = currentDensity.fontScale.coerceIn(0.85f, 1.25f)
     )
 
+    val depthStyle = androidx.compose.runtime.remember { DepthStyle() }
+
     androidx.compose.runtime.CompositionLocalProvider(
         androidx.compose.ui.platform.LocalDensity provides clampedDensity,
-        androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection
+        androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection,
+        LocalDepthStyle provides depthStyle
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = currentTypography,
+            shapes = LojiaShapes,
             content = content
         )
     }

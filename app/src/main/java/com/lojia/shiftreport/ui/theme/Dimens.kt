@@ -63,4 +63,17 @@ object Dimens {
     val IconMd: Dp = 22.dp
     val IconLg: Dp = 28.dp
     val IconXl: Dp = 36.dp
+
+    // =========================================================================
+    // DEPTH ELEVATION, BORDER & COMPONENT TOKENS
+    // =========================================================================
+    val CardElevation: Dp = 4.dp
+    val CardAccentElevation: Dp = 6.dp
+    val RaisedButtonElevation: Dp = 6.dp
+    val ButtonLipHeight: Dp = 4.dp
+    val CardBorderWidth: Dp = 1.dp
+    val InsetBorderWidth: Dp = 1.dp
+    val InsetShadowHeight: Dp = 4.dp
+    val CardRiseTranslationY: Dp = 14.dp
+    val LiveDotSize: Dp = 8.dp
 }
