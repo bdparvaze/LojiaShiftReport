@@ -160,17 +160,16 @@ fun QuickPinScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(style.pageBackground)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(horizontal = Dimens.QuickPinSidePadding),
+            .background(style.pageBackground),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = Dimens.QuickPinMaxWidth)
+                .widthIn(max = Dimens.QuickPinMaxWidth + Dimens.QuickPinSidePadding * 2)
                 .verticalScroll(rememberScrollState())
-                .padding(vertical = Dimens.SpacingLg)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = Dimens.QuickPinSidePadding, vertical = Dimens.SpacingLg)
                 .cardRise(0),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center

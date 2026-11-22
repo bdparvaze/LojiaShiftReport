@@ -136,18 +136,8 @@ fun SixDigitPinInput(
                             enabled = true,
                             isError = isError,
                             isFocused = isCurrent,
-                            shape = boxShape
-                        )
-                        .then(
-                            if (isFilled && !isError && !isCurrent) {
-                                Modifier.border(
-                                    width = 1.5.dp,
-                                    color = borderColor,
-                                    shape = boxShape
-                                )
-                            } else {
-                                Modifier
-                            }
+                            shape = boxShape,
+                            borderColorOverride = if (isFilled && !isError && !isCurrent) borderColor else null
                         )
                         .testTag("pin_box_$i"),
                     contentAlignment = Alignment.Center

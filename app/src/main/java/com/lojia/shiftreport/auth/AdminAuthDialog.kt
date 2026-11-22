@@ -204,10 +204,10 @@ fun AdminAuthDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(OverlayScrim)
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .background(OverlayScrim)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -372,14 +372,8 @@ fun AdminAuthDialog(
                                                 isError = isError && !isSuccess,
                                                 isFocused = isFilled || isFocused,
                                                 shape = boxShape,
-                                                cornerRadius = Dimens.RadiusMd
-                                            )
-                                            .then(
-                                                if (isSuccess) {
-                                                    Modifier.border(Dimens.InsetFocusedBorderWidth, SuccessGreen, boxShape)
-                                                } else {
-                                                    Modifier
-                                                }
+                                                cornerRadius = Dimens.RadiusMd,
+                                                borderColorOverride = if (isSuccess) SuccessGreen else null
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {

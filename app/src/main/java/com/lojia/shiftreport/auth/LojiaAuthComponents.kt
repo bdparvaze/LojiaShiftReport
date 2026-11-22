@@ -298,18 +298,8 @@ fun LojiaInputField(
                     shape = fieldShape,
                     cornerRadius = Dimens.RadiusInputRegister,
                     borderWidth = Dimens.InsetRegisterBorderWidth,
-                    focusedBorderWidth = Dimens.InsetFocusedBorderWidth
-                )
-                .then(
-                    if (validationState == FieldValidationState.SUCCESS && enabled) {
-                        Modifier.border(
-                            width = Dimens.InsetRegisterBorderWidth,
-                            color = SuccessGreen,
-                            shape = fieldShape
-                        )
-                    } else {
-                        Modifier
-                    }
+                    focusedBorderWidth = Dimens.InsetFocusedBorderWidth,
+                    borderColorOverride = if (validationState == FieldValidationState.SUCCESS && enabled) SuccessGreen else null
                 )
                 .padding(horizontal = Dimens.RegisterFieldPaddingHorizontal, vertical = Dimens.SpacingXs),
             contentAlignment = Alignment.CenterStart

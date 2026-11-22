@@ -235,17 +235,21 @@ fun LojiaRegisterScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(LocalDepthStyle.current.pageBackground)
-            .padding(horizontal = Dimens.SpacingLg)
             .imePadding(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = Dimens.RegisterScreenMaxWidth)
+                .widthIn(max = Dimens.RegisterScreenMaxWidth + Dimens.SpacingLg * 2)
                 .wrapContentHeight(Alignment.CenterVertically)
                 .verticalScroll(rememberScrollState())
-                .padding(top = Dimens.RegisterHeaderTopPadding, bottom = Dimens.SpacingXxl),
+                .padding(
+                    start = Dimens.SpacingLg,
+                    end = Dimens.SpacingLg,
+                    top = Dimens.RegisterHeaderTopPadding,
+                    bottom = Dimens.SpacingXxl
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

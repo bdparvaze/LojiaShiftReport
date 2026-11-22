@@ -38,7 +38,7 @@
     <color name="on_info">#FFFFFFFF</color>
 
     <!-- ============ BACKGROUND / SURFACE ============ -->
-    <color name="background">#FFF8FAFC</color>
+    <color name="background">#FFF4F7FD</color>
     <color name="surface">#FFFFFFFF</color>
     <color name="surface_variant">#FFF1F5F9</color>
     <color name="surface_elevated">#FFFFFFFF</color>

@@ -460,16 +460,16 @@ fun BiometricLockScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(LocalDepthStyle.current.pageBackground)
-                        .padding(horizontal = Dimens.AuthScreenSidePadding)
                         .imePadding(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .widthIn(max = Dimens.AuthCardMaxWidth)
+                            .widthIn(max = Dimens.AuthCardMaxWidth + Dimens.AuthScreenSidePadding * 2)
                             .wrapContentHeight(Alignment.CenterVertically)
-                            .verticalScroll(rememberScrollState()),
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = Dimens.AuthScreenSidePadding, vertical = Dimens.SpacingLg),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {

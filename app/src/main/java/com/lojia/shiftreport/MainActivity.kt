@@ -119,7 +119,16 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             val appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(savedLang)
             androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
         }
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = androidx.activity.SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        )
 
         // Schedule periodic background shift report sync via WorkManager
         if (com.lojia.shiftreport.BuildConfig.CLOUD_SYNC_ENABLED) {
@@ -288,7 +297,10 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                 scope.launch { drawerState.close() }
             }
 
-            LojiaTheme(language = currentLanguage) {
+            LojiaTheme(
+                language = currentLanguage,
+                isLightSystemBarCanvas = !isAuthenticated
+            ) {
                 if (!isAuthenticated) {
                         BiometricLockScreen(
                             activity = this@MainActivity,

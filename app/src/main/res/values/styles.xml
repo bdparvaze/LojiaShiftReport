@@ -35,9 +35,9 @@
         <item name="colorOutline">@color/border</item>
         <item name="colorOutlineVariant">@color/divider</item>
 
-        <!-- Status bar -->
-        <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+        <!-- Status bar / Navigation bar (edge-to-edge) -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
 
         <!-- Custom styles -->
         <item name="materialButtonStyle">@style/PrimaryButton</item>

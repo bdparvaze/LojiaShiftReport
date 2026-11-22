@@ -33,15 +33,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -65,6 +69,10 @@ private fun readAnimatorDurationScale(context: Context): Float {
     }
 }
 
+/**
+ * Draws a Gaussian drop shadow outside a clipped shape using exact CSS-to-Gaussian
+ * sigma mapping `sigma = B / 2` where B is the CSS blur radius in px.
+ */
 private fun DrawScope.drawSoftDropShadow(
     color: Color,
     offsetY: Dp,
@@ -75,12 +83,13 @@ private fun DrawScope.drawSoftDropShadow(
     if (blurPx <= 0.5f || color.alpha <= 0f) return
     val offsetPx = offsetY.toPx()
     val radiusPx = cornerRadius.toPx()
+    val sigmaPx = (blurPx / 2f).coerceAtLeast(0.5f)
     drawIntoCanvas { canvas ->
         val paint = android.graphics.Paint().apply {
             isAntiAlias = true
             this.color = color.toArgb()
             maskFilter = android.graphics.BlurMaskFilter(
-                (blurPx * 0.55f).coerceAtLeast(1f),
+                sigmaPx,
                 android.graphics.BlurMaskFilter.Blur.NORMAL
             )
         }
@@ -91,6 +100,53 @@ private fun DrawScope.drawSoftDropShadow(
             size.height + offsetPx
         )
         canvas.nativeCanvas.drawRoundRect(rect, radiusPx, radiusPx, paint)
+    }
+}
+
+/**
+ * Draws a crisp perimeter stroke fully inside [shape] bounds so anti-aliased clipping
+ * and inner fills/highlights never wash out or overwrite the border color.
+ */
+private fun DrawScope.drawInsetShapeBorder(
+    shape: Shape,
+    borderWidthPx: Float,
+    color: Color
+) {
+    if (borderWidthPx <= 0f || color.alpha <= 0f) return
+    val w = (size.width - borderWidthPx).coerceAtLeast(0f)
+    val h = (size.height - borderWidthPx).coerceAtLeast(0f)
+    if (w <= 0f || h <= 0f) return
+    val half = borderWidthPx * 0.5f
+    val outline = shape.createOutline(size, layoutDirection, this)
+    if (outline is Outline.Rounded) {
+        val rr = outline.roundRect
+        val shrink = { cr: CornerRadius ->
+            CornerRadius((cr.x - half).coerceAtLeast(0f), (cr.y - half).coerceAtLeast(0f))
+        }
+        val insetRr = RoundRect(
+            left = rr.left + half,
+            top = rr.top + half,
+            right = rr.right - half,
+            bottom = rr.bottom - half,
+            topLeftCornerRadius = shrink(rr.topLeftCornerRadius),
+            topRightCornerRadius = shrink(rr.topRightCornerRadius),
+            bottomRightCornerRadius = shrink(rr.bottomRightCornerRadius),
+            bottomLeftCornerRadius = shrink(rr.bottomLeftCornerRadius)
+        )
+        drawOutline(
+            outline = Outline.Rounded(insetRr),
+            color = color,
+            style = Stroke(width = borderWidthPx)
+        )
+    } else {
+        val insetOutline = shape.createOutline(Size(w, h), layoutDirection, this)
+        translate(left = half, top = half) {
+            drawOutline(
+                outline = insetOutline,
+                color = color,
+                style = Stroke(width = borderWidthPx)
+            )
+        }
     }
 }
 
@@ -148,10 +204,12 @@ fun Modifier.depthCard(
             )
         }
         .clip(resolvedShape)
-        .background(brush = Brush.verticalGradient(colors = gradientColors))
-        .border(width = style.cardBorderWidth, color = borderColor, shape = resolvedShape)
-        .drawWithContent {
-            drawContent()
+        .drawBehind {
+            val outline = resolvedShape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(colors = gradientColors)
+            )
             val borderPx = style.cardBorderWidth.toPx()
             val sheenY = borderPx + borderPx * 0.5f
             val insetX = resolvedRadius.toPx().coerceAtMost(size.width * 0.25f) * 0.25f + borderPx
@@ -160,6 +218,11 @@ fun Modifier.depthCard(
                 start = Offset(insetX, sheenY),
                 end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
                 strokeWidth = borderPx
+            )
+            drawInsetShapeBorder(
+                shape = resolvedShape,
+                borderWidthPx = borderPx,
+                color = borderColor
             )
         }
 }
@@ -193,10 +256,9 @@ fun Modifier.depthSemanticCard(
             )
         }
         .clip(resolvedShape)
-        .background(color = backgroundColor)
-        .border(width = style.cardBorderWidth, color = borderColor, shape = resolvedShape)
-        .drawWithContent {
-            drawContent()
+        .drawBehind {
+            val outline = resolvedShape.createOutline(size, layoutDirection, this)
+            drawOutline(outline = outline, color = backgroundColor)
             val borderPx = style.cardBorderWidth.toPx()
             val sheenY = borderPx + borderPx * 0.5f
             val insetX = borderPx
@@ -206,11 +268,17 @@ fun Modifier.depthSemanticCard(
                 end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
                 strokeWidth = borderPx
             )
+            drawInsetShapeBorder(
+                shape = resolvedShape,
+                borderWidthPx = borderPx,
+                color = borderColor
+            )
         }
 }
 
 /**
  * Pressed-in inset surface styling for input fields and recessed wells.
+ * Draws gradient fill -> inner shadows -> bottom white highlight -> crisp perimeter border on top.
  */
 fun Modifier.depthInset(
     enabled: Boolean = true,
@@ -220,7 +288,8 @@ fun Modifier.depthInset(
     cornerRadius: Dp? = null,
     borderWidth: Dp? = null,
     focusedBorderWidth: Dp? = null,
-    gradientColors: List<Color>? = null
+    gradientColors: List<Color>? = null,
+    borderColorOverride: Color? = null
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val resolvedRadius = cornerRadius ?: style.insetCornerRadius
@@ -233,6 +302,7 @@ fun Modifier.depthInset(
         else -> listOf(style.insetGradientStart, style.insetBackground)
     }
     val resolvedBorder = when {
+        borderColorOverride != null -> borderColorOverride
         !enabled -> style.insetDisabledBorderColor
         isError -> style.insetErrorBorderColor
         isFocused -> style.insetFocusedBorderColor
@@ -244,10 +314,17 @@ fun Modifier.depthInset(
 
     this
         .clip(resolvedShape)
-        .background(brush = Brush.verticalGradient(colors = resolvedGradient))
-        .drawWithContent {
-            drawContent()
+        .drawBehind {
+            val outline = resolvedShape.createOutline(size, layoutDirection, this)
+            // 1) Recessed vertical gradient fill
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(colors = resolvedGradient)
+            )
+
+            // 2) Top inner shadow (inset 0 2dp 4dp rgba(16,24,40,0.07))
             val shadowHeightPx = (style.insetShadowOffsetY + style.insetShadowBlur).toPx()
+                .coerceAtMost(size.height * 0.45f)
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -259,6 +336,8 @@ fun Modifier.depthInset(
                 ),
                 size = Size(size.width, shadowHeightPx)
             )
+
+            // 3) Bottom 1dp white bevel highlight inside the perimeter stroke
             val borderPx = resolvedBorderWidth.toPx()
             val highlightPx = 1.dp.toPx()
             val bottomY = (size.height - borderPx - highlightPx * 0.5f).coerceAtLeast(0f)
@@ -268,13 +347,19 @@ fun Modifier.depthInset(
                 end = Offset((size.width - borderPx).coerceAtLeast(borderPx), bottomY),
                 strokeWidth = highlightPx
             )
+
+            // 4) Crisp perimeter border drawn LAST above fill, inner shadows, and highlights
+            drawInsetShapeBorder(
+                shape = resolvedShape,
+                borderWidthPx = borderPx,
+                color = resolvedBorder
+            )
         }
-        .border(width = resolvedBorderWidth, color = resolvedBorder, shape = resolvedShape)
 }
 
 /**
- * Raised 3D button styling with brand gradient face and lower lip, preserving minimum touch targets
- * and tactile press compression honoring reduced motion.
+ * Raised 3D button styling with brand gradient face and crisp unblurred lower lip,
+ * preserving minimum touch targets and tactile press compression honoring reduced motion.
  */
 fun Modifier.depthRaisedButton(
     enabled: Boolean = true,
@@ -333,6 +418,7 @@ fun Modifier.depthRaisedButton(
                 isDestructive -> style.destructiveButtonLipColor.copy(alpha = style.buttonLipAlpha)
                 else -> style.buttonLipColor.copy(alpha = style.buttonLipAlpha)
             }
+            // 1) Unblurred solid 4dp bottom lip
             drawRoundRect(
                 color = lipColor,
                 topLeft = Offset.Zero,
@@ -340,6 +426,7 @@ fun Modifier.depthRaisedButton(
                 cornerRadius = cr
             )
 
+            // 2) Raised gradient face above the lip
             val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
             val faceColors = when {
                 !enabled -> listOf(style.buttonDisabledStart, style.buttonDisabledEnd)
@@ -357,6 +444,7 @@ fun Modifier.depthRaisedButton(
                 cornerRadius = cr
             )
 
+            // 3) Top 1dp white specular highlight
             if (enabled) {
                 val highlightPx = 1.dp.toPx()
                 val insetX = (cornerPx * 0.35f).coerceAtMost(size.width * 0.25f)
@@ -372,7 +460,7 @@ fun Modifier.depthRaisedButton(
 }
 
 /**
- * Lighter raised 3D secondary/outlined button styling with subtle surface gradient, lower lip,
+ * Lighter raised 3D secondary/outlined button styling with subtle surface gradient, unblurred lower lip,
  * perimeter stroke, soft shadow, and >= 48.dp touch target preservation.
  */
 fun Modifier.depthSecondaryButton(
@@ -465,19 +553,21 @@ fun Modifier.depthSecondaryButton(
                 size = Size(size.width, faceHeight),
                 cornerRadius = cr
             )
-        }
-        .then(
+
             if (resolvedBorderWidth > 0.dp) {
-                Modifier.border(width = resolvedBorderWidth, color = resolvedBorderColor, shape = shape)
-            } else {
-                Modifier
+                drawInsetShapeBorder(
+                    shape = shape,
+                    borderWidthPx = resolvedBorderWidth.toPx(),
+                    color = resolvedBorderColor
+                )
             }
-        )
+        }
         .padding(bottom = resolvedLipHeight)
 }
 
 /**
  * Square raised 3D keypad key styling for the Quick PIN screen matching Stage 26D boards.
+ * Draws outer drop shadow -> unblurred solid 4dp #D5DCEB bottom lip -> #FFFFFF..#F1F4FB face.
  */
 fun Modifier.depthKeypadKey(
     enabled: Boolean = true,
@@ -524,6 +614,7 @@ fun Modifier.depthKeypadKey(
             val cornerPx = resolvedCorner.toPx()
             val cr = CornerRadius(cornerPx, cornerPx)
 
+            // 1) Crisp unblurred 4dp solid #D5DCEB lip (no maskFilter)
             drawRoundRect(
                 color = if (enabled) style.keypadLipColor else style.buttonLipDisabledColor,
                 topLeft = Offset.Zero,
@@ -531,6 +622,7 @@ fun Modifier.depthKeypadKey(
                 cornerRadius = cr
             )
 
+            // 2) Full vertical gradient #FFFFFF -> #F1F4FB face above the 4dp lip
             val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
             val faceColors = if (enabled) {
                 listOf(style.keypadGradientStart, style.keypadGradientEnd)

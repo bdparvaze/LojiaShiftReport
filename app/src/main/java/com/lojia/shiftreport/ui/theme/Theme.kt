@@ -51,6 +51,7 @@ val LightColorScheme = lightColorScheme(
 @Composable
 fun LojiaTheme(
     language: com.lojia.shiftreport.data.AppLanguage? = null,
+    isLightSystemBarCanvas: Boolean = false,
     content: @Composable () -> Unit
 ) {
     // Enforce the crisp White & Black Business LightColorScheme across the entire app
@@ -58,8 +59,28 @@ fun LojiaTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            val activity = generateSequence(view.context) { ctx ->
+                (ctx as? android.content.ContextWrapper)?.baseContext
+            }.filterIsInstance<Activity>().firstOrNull()
+            val window = activity?.window
+            if (window != null) {
+                val controller = WindowCompat.getInsetsController(window, view)
+                val targetWindowBg = if (isLightSystemBarCanvas) {
+                    DepthTokens.PageBackground
+                } else {
+                    colorScheme.background
+                }
+                window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(targetWindowBg.toArgb()))
+                controller.isAppearanceLightStatusBars = isLightSystemBarCanvas
+                controller.isAppearanceLightNavigationBars = true
+                @Suppress("DEPRECATION")
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                @Suppress("DEPRECATION")
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
+            }
         }
     }
 
