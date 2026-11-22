@@ -40,6 +40,7 @@ import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.common.LojiaDimens
+import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.AppConstants
 import com.lojia.shiftreport.util.MoneyFormat
@@ -165,13 +166,10 @@ fun RegionalPreferencesCard(
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
     val langInfo = getLanguageDisplayInfo(currentLanguage)
 
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, OutlineVariantLight),
+    Box(
         modifier = modifier
             .fillMaxWidth()
+            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
             .testTag("regional_preferences_card")
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -310,12 +308,10 @@ fun RegionalPreferencesDetailView(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                border = BorderStroke(1.dp, OutlineVariantLight),
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Row 1: Country selector (disabled when financial data exists)
@@ -355,12 +351,14 @@ fun RegionalPreferencesDetailView(
             }
 
             if (isCurrencyLocked) {
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = WarningContainer),
-                    border = BorderStroke(1.dp, WarningOrange.copy(alpha = 0.35f)),
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .depthSemanticCard(
+                            backgroundColor = WarningContainer,
+                            borderColor = WarningOrange.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(Dimens.RadiusMd)
+                        )
                         .testTag("currency_locked_banner")
                 ) {
                     Row(
@@ -371,14 +369,14 @@ fun RegionalPreferencesDetailView(
                         Icon(
                             imageVector = Icons.Outlined.Lock,
                             contentDescription = null,
-                            tint = WarningOrange,
+                            tint = WarningText,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = stringResource(R.string.currency_locked_message),
                             fontSize = 12.5.sp,
                             lineHeight = 17.sp,
-                            color = OnSurfaceLight
+                            color = WarningText
                         )
                     }
                 }
@@ -434,7 +432,7 @@ fun RegionalPreferencesDetailView(
                     )
                     IconButton(
                         onClick = { activeSheet = null },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -446,7 +444,7 @@ fun RegionalPreferencesDetailView(
                 }
 
                 // Search Box
-                OutlinedTextField(
+                LojiaTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = {
@@ -466,7 +464,10 @@ fun RegionalPreferencesDetailView(
                     },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
                         {
-                            IconButton(onClick = { searchQuery = "" }) {
+                            IconButton(
+                                onClick = { searchQuery = "" },
+                                modifier = Modifier.minimumInteractiveComponentSize()
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = stringResource(R.string.cd_clear),
@@ -477,26 +478,15 @@ fun RegionalPreferencesDetailView(
                         }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = OnSurfaceLight,
-                        unfocusedTextColor = OnSurfaceLight,
-                        focusedContainerColor = BackgroundLight,
-                        unfocusedContainerColor = BackgroundLight,
-                        focusedBorderColor = PrimaryIndigoLight,
-                        unfocusedBorderColor = OutlineVariantLight,
-                        cursorColor = PrimaryIndigoLight
-                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 12.dp)
                         .testTag("input_search_country_currency")
                 )
 
-                HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
-
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     items(filteredCountries, key = { it.code }) { country ->
                         val isSelected = country == currentCountry
@@ -506,6 +496,11 @@ fun RegionalPreferencesDetailView(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                                .depthCard(
+                                    accent = isSelected,
+                                    shape = RoundedCornerShape(Dimens.RadiusMd)
+                                )
                                 .clickable {
                                     pendingAuthSubtitle = countryName
                                     pendingAuthAction = {
@@ -514,7 +509,6 @@ fun RegionalPreferencesDetailView(
                                         activeSheet = null
                                     }
                                 }
-                                .background(if (isSelected) PrimaryContainerLight else SurfaceLight)
                                 .padding(horizontal = 12.dp, vertical = 14.dp)
                                 .testTag("option_country_${country.code}"),
                             verticalAlignment = Alignment.CenterVertically,
@@ -549,7 +543,6 @@ fun RegionalPreferencesDetailView(
                                 )
                             }
                         }
-                        HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
                     }
                 }
             }
@@ -572,13 +565,14 @@ fun RegionalPreferencesDetailView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // Sheet Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -590,7 +584,7 @@ fun RegionalPreferencesDetailView(
                     )
                     IconButton(
                         onClick = { activeSheet = null },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -601,8 +595,6 @@ fun RegionalPreferencesDetailView(
                     }
                 }
 
-                HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
-
                 AppLanguage.entries.forEach { lang ->
                     val isSelected = lang == currentLanguage
                     val info = getLanguageDisplayInfo(lang)
@@ -610,11 +602,15 @@ fun RegionalPreferencesDetailView(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                            .depthCard(
+                                accent = isSelected,
+                                shape = RoundedCornerShape(Dimens.RadiusMd)
+                            )
                             .clickable {
                                 reportViewModel.setLanguage(lang)
                                 activeSheet = null
                             }
-                            .background(if (isSelected) PrimaryContainerLight else SurfaceLight)
                             .padding(horizontal = 12.dp, vertical = 14.dp)
                             .testTag("option_language_${lang.code}"),
                         verticalAlignment = Alignment.CenterVertically,
@@ -647,7 +643,6 @@ fun RegionalPreferencesDetailView(
                             )
                         }
                     }
-                    HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
                 }
             }
         }
@@ -700,7 +695,7 @@ fun RegionalPreferencesDetailView(
                     )
                     IconButton(
                         onClick = { activeSheet = null },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -712,7 +707,7 @@ fun RegionalPreferencesDetailView(
                 }
 
                 // Search Box
-                OutlinedTextField(
+                LojiaTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = {
@@ -732,7 +727,10 @@ fun RegionalPreferencesDetailView(
                     },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
                         {
-                            IconButton(onClick = { searchQuery = "" }) {
+                            IconButton(
+                                onClick = { searchQuery = "" },
+                                modifier = Modifier.minimumInteractiveComponentSize()
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = stringResource(R.string.cd_clear),
@@ -743,26 +741,15 @@ fun RegionalPreferencesDetailView(
                         }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = OnSurfaceLight,
-                        unfocusedTextColor = OnSurfaceLight,
-                        focusedContainerColor = BackgroundLight,
-                        unfocusedContainerColor = BackgroundLight,
-                        focusedBorderColor = PrimaryIndigoLight,
-                        unfocusedBorderColor = OutlineVariantLight,
-                        cursorColor = PrimaryIndigoLight
-                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 12.dp)
                         .testTag("input_search_currency")
                 )
 
-                HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
-
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     items(filteredCurrencies, key = { it.code }) { currency ->
                         val isSelected = currency.code.equals(activeCurrency.code, ignoreCase = true)
@@ -770,6 +757,11 @@ fun RegionalPreferencesDetailView(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                                .depthCard(
+                                    accent = isSelected,
+                                    shape = RoundedCornerShape(Dimens.RadiusMd)
+                                )
                                 .clickable {
                                     pendingAuthSubtitle = currency.code
                                     pendingAuthAction = {
@@ -777,7 +769,6 @@ fun RegionalPreferencesDetailView(
                                         activeSheet = null
                                     }
                                 }
-                                .background(if (isSelected) PrimaryContainerLight else SurfaceLight)
                                 .padding(horizontal = 12.dp, vertical = 12.dp)
                                 .testTag("option_currency_${currency.code}"),
                             verticalAlignment = Alignment.CenterVertically,
@@ -834,7 +825,6 @@ fun RegionalPreferencesDetailView(
                                 )
                             }
                         }
-                        HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
                     }
                 }
             }

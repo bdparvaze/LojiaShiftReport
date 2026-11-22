@@ -75,26 +75,27 @@ fun OtpInputField(
                     val isActive = i == pin.length
                     val digit = if (isFilled) pin[i].toString() else ""
                     
+                    val boxShape = RoundedCornerShape(Dimens.RadiusMd)
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .aspectRatio(1f) // Maintains perfectly balanced square shapes
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                when {
-                                    isActive -> SecondaryContainerLight
-                                    isFilled -> SuccessContainer
-                                    else -> SurfaceVariantLight
-                                }
+                            .aspectRatio(1f)
+                            .depthInset(
+                                enabled = true,
+                                isError = false,
+                                isFocused = isActive,
+                                shape = boxShape
                             )
-                            .border(
-                                width = if (isActive) 2.dp else 1.dp,
-                                color = when {
-                                    isActive -> SecondaryTealLight
-                                    isFilled -> PosCashGreenFill
-                                    else -> OutlineLight
-                                },
-                                shape = RoundedCornerShape(10.dp)
+                            .then(
+                                if (isFilled) {
+                                    Modifier.border(
+                                        width = 1.5.dp,
+                                        color = PosCashGreen,
+                                        shape = boxShape
+                                    )
+                                } else {
+                                    Modifier
+                                }
                             ),
                         contentAlignment = Alignment.Center
                     ) {

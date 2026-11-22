@@ -254,13 +254,14 @@ fun DocumentScannerScreen(
                             if (!isSelectionMode) selectedDocs.clear()
                         },
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = if (isSelectionMode) PrimaryIndigo.copy(alpha = 0.15f) else PureWhite
-                        )
+                            containerColor = if (isSelectionMode) PrimaryContainerLight else PureWhite
+                        ),
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = if (isSelectionMode) Icons.Outlined.ChecklistRtl else Icons.Outlined.Checklist,
                             contentDescription = stringResource(R.string.cd_select_mode),
-                            tint = if (isSelectionMode) PrimaryIndigo else TextHintColor
+                            tint = if (isSelectionMode) PrimaryIndigoDark else OnSurfaceVariantLight
                         )
                     }
                 }
@@ -269,10 +270,14 @@ fun DocumentScannerScreen(
             // Batch selection actions bar
             if (isSelectionMode && selectedDocs.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    color = PrimaryIndigo.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSemanticCard(
+                            backgroundColor = PrimaryContainerLight,
+                            borderColor = PrimaryIndigoLight.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(Dimens.RadiusMd)
+                        )
                 ) {
                     Row(
                         modifier = Modifier
@@ -285,10 +290,13 @@ fun DocumentScannerScreen(
                             text = stringResource(R.string.doc_selected_count, selectedDocs.size),
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
-                            color = PrimaryIndigo
+                            color = PrimaryIndigoDark
                         )
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             TextButton(
                                 onClick = {
                                     if (selectedDocs.size == filteredDocs.size) {
@@ -297,24 +305,33 @@ fun DocumentScannerScreen(
                                         selectedDocs.clear()
                                         selectedDocs.addAll(filteredDocs)
                                     }
-                                }
+                                },
+                                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                             ) {
                                 Text(
                                     text = if (selectedDocs.size == filteredDocs.size) stringResource(R.string.doc_deselect_all) else stringResource(R.string.doc_select_all),
                                     fontSize = 12.sp,
-                                    color = PrimaryIndigo
+                                    color = PrimaryIndigoDark,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
 
                             Button(
                                 onClick = { showBatchDeleteConfirm = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                shape = RoundedCornerShape(8.dp)
+                                elevation = null,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = PureWhite
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusSm),
+                                modifier = Modifier
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthRaisedButton(isDestructive = true, cornerRadius = Dimens.RadiusSm)
                             ) {
                                 Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.delete), fontSize = 12.sp)
+                                Text(stringResource(R.string.delete), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -334,34 +351,37 @@ fun DocumentScannerScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    items(filteredDocs, key = { it.id }) { doc ->
-                        ScannedDocumentItemCard(
-                            document = doc,
-                            isSelectionMode = isSelectionMode,
-                            isSelected = selectedDocs.contains(doc),
-                            onToggleSelect = {
-                                if (selectedDocs.contains(doc)) {
-                                    selectedDocs.remove(doc)
-                                } else {
-                                    selectedDocs.add(doc)
-                                }
-                            },
-                            onViewClick = { viewModel.viewDocument(context, doc) },
-                            onSharePdfClick = { viewModel.shareDocument(context, doc) },
-                            onShareDocxClick = { viewModel.shareDocx(context, doc) },
-                            onExtractTextClick = {
-                                documentForOcr = doc
-                                ocrLoading = true
-                                ocrTextResult = doc.ocrText
-                                viewModel.extractTextAndGenerateDocx(doc) { text, _ ->
-                                    ocrTextResult = text
-                                    ocrLoading = false
-                                }
-                            },
-                            onPasswordProtectClick = { documentForPasswordProtect = doc },
-                            onRenameClick = { documentToRename = doc },
-                            onDeleteClick = { documentToDelete = doc }
-                        )
+                    items(filteredDocs.size, key = { idx -> filteredDocs[idx].id }) { index ->
+                        val doc = filteredDocs[index]
+                        Box(modifier = Modifier.cardRise(index)) {
+                            ScannedDocumentItemCard(
+                                document = doc,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = selectedDocs.contains(doc),
+                                onToggleSelect = {
+                                    if (selectedDocs.contains(doc)) {
+                                        selectedDocs.remove(doc)
+                                    } else {
+                                        selectedDocs.add(doc)
+                                    }
+                                },
+                                onViewClick = { viewModel.viewDocument(context, doc) },
+                                onSharePdfClick = { viewModel.shareDocument(context, doc) },
+                                onShareDocxClick = { viewModel.shareDocx(context, doc) },
+                                onExtractTextClick = {
+                                    documentForOcr = doc
+                                    ocrLoading = true
+                                    ocrTextResult = doc.ocrText
+                                    viewModel.extractTextAndGenerateDocx(doc) { text, _ ->
+                                        ocrTextResult = text
+                                        ocrLoading = false
+                                    }
+                                },
+                                onPasswordProtectClick = { documentForPasswordProtect = doc },
+                                onRenameClick = { documentToRename = doc },
+                                onDeleteClick = { documentToDelete = doc }
+                            )
+                        }
                     }
                 }
             }

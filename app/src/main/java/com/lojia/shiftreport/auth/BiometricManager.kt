@@ -481,6 +481,7 @@ fun BiometricLockScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 4.dp)
+                                .cardRise(0)
                         ) {
                             LojiaPasswordLoginContent(
                                 loginUser = loginUser,
@@ -604,7 +605,7 @@ private fun LojiaPasswordLoginContent(
     val borderGray = OutlineLight
     val errorRed = ErrorRedLight
 
-    OutlinedTextField(
+    com.lojia.shiftreport.ui.common.LojiaTextField(
         value = loginUser,
         onValueChange = onLoginUserChange,
         label = {
@@ -630,7 +631,7 @@ private fun LojiaPasswordLoginContent(
             )
         },
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.RadiusMd),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -644,19 +645,6 @@ private fun LojiaPasswordLoginContent(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedBorderColor = primaryIndigo,
-            unfocusedBorderColor = borderGray,
-            focusedTextColor = charcoalText,
-            unfocusedTextColor = charcoalText,
-            focusedLabelColor = primaryIndigo,
-            unfocusedLabelColor = mediumGray,
-            focusedLeadingIconColor = primaryIndigo,
-            unfocusedLeadingIconColor = mediumGray,
-            cursorColor = primaryIndigo
-        ),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("etLoginUser")
@@ -664,7 +652,7 @@ private fun LojiaPasswordLoginContent(
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    OutlinedTextField(
+    com.lojia.shiftreport.ui.common.LojiaTextField(
         value = loginPass,
         onValueChange = onLoginPassChange,
         label = {
@@ -692,7 +680,7 @@ private fun LojiaPasswordLoginContent(
         trailingIcon = {
             IconButton(
                 onClick = onTogglePasswordVisible,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(Dimens.MinTouchTarget)
             ) {
                 Icon(
                     imageVector = if (loginPassVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
@@ -703,7 +691,7 @@ private fun LojiaPasswordLoginContent(
         },
         singleLine = true,
         visualTransformation = if (loginPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.RadiusMd),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
@@ -720,21 +708,6 @@ private fun LojiaPasswordLoginContent(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedBorderColor = primaryIndigo,
-            unfocusedBorderColor = borderGray,
-            focusedTextColor = charcoalText,
-            unfocusedTextColor = charcoalText,
-            focusedLabelColor = primaryIndigo,
-            unfocusedLabelColor = mediumGray,
-            focusedLeadingIconColor = primaryIndigo,
-            unfocusedLeadingIconColor = mediumGray,
-            focusedTrailingIconColor = primaryIndigo,
-            unfocusedTrailingIconColor = mediumGray,
-            cursorColor = primaryIndigo
-        ),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("etLoginPass")
@@ -750,9 +723,9 @@ private fun LojiaPasswordLoginContent(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                 .clickable { onRememberMeChange(!rememberMe) }
-                .padding(end = 8.dp)
-                .padding(vertical = 4.dp)
+                .padding(end = 8.dp, top = 4.dp, bottom = 4.dp)
                 .testTag("cbRemember")
         ) {
             Box(
@@ -771,7 +744,7 @@ private fun LojiaPasswordLoginContent(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = PureWhite,
                         modifier = Modifier.size(12.dp)
                     )
                 }
@@ -797,8 +770,11 @@ private fun LojiaPasswordLoginContent(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
+                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                .clip(RoundedCornerShape(Dimens.RadiusSm))
                 .clickable { onForgotPassword() }
-                .padding(vertical = 4.dp)
+                .wrapContentHeight(Alignment.CenterVertically)
+                .padding(horizontal = 4.dp)
                 .testTag("tvForgot")
         )
     }
@@ -806,13 +782,15 @@ private fun LojiaPasswordLoginContent(
     Spacer(modifier = Modifier.height(14.dp))
 
     if (!loginErrorMessage.isNullOrBlank()) {
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = ErrorContainerLight,
-            border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.3f)),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 10.dp)
+                .depthSemanticCard(
+                    backgroundColor = NegativeBannerSurface,
+                    borderColor = NegativeBannerBorder,
+                    shape = RoundedCornerShape(Dimens.RadiusSm)
+                )
         ) {
             Text(
                 text = loginErrorMessage,
@@ -820,7 +798,7 @@ private fun LojiaPasswordLoginContent(
                 fontFamily = PoppinsFontFamily,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
             )
         }
     }
@@ -857,7 +835,11 @@ private fun LojiaPasswordLoginContent(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
+                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                .clip(RoundedCornerShape(Dimens.RadiusSm))
                 .clickable { onRegisterClick() }
+                .wrapContentHeight(Alignment.CenterVertically)
+                .padding(horizontal = 6.dp)
                 .testTag("goRegister")
         )
     }
@@ -890,150 +872,207 @@ fun LojiaPasswordRecoveryDialog(
         .ifBlank { prefs.getRecoveryAnswerHash().trim() }
     val recoveryConfigured = SecurityRecoveryVerifier.isRecoveryConfigured(question, storedAnswer)
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.widthIn(max = Dimens.DialogMaxWidth),
-        title = {
+    com.lojia.shiftreport.ui.common.LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Text(
                 text = stringResource(R.string.auth_password_recovery_title),
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = LojiaColors.P600
+                color = PrimaryIndigoLight
             )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (!recoveryConfigured) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = LojiaColors.P50,
-                        border = BorderStroke(1.dp, LojiaColors.P100),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+
+            if (!recoveryConfigured) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSemanticCard(
+                            backgroundColor = DepthTokens.CardAccentGradientStart,
+                            borderColor = PrimaryContainerLight,
+                            shape = RoundedCornerShape(Dimens.RadiusSm)
+                        )
+                ) {
+                    Text(
+                        text = stringResource(R.string.auth_recovery_unavailable),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurfaceLight,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            } else {
+                Text(
+                    text = stringResource(R.string.auth_answer_security_question),
+                    fontSize = 12.sp,
+                    color = OnSurfaceVariantLight
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSemanticCard(
+                            backgroundColor = DepthTokens.CardAccentGradientStart,
+                            borderColor = PrimaryContainerLight,
+                            shape = RoundedCornerShape(Dimens.RadiusSm)
+                        )
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
                         Text(
-                            text = stringResource(R.string.auth_recovery_unavailable),
+                            text = stringResource(R.string.auth_question_label),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryIndigoLight
+                        )
+                        Text(
+                            text = question,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
-                            color = LojiaColors.N900,
-                            modifier = Modifier.padding(12.dp)
+                            color = OnSurfaceLight
                         )
                     }
-                } else {
-                    Text(
-                        text = stringResource(R.string.auth_answer_security_question),
-                        fontSize = 12.sp,
-                        color = LojiaColors.N600
-                    )
+                }
 
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = LojiaColors.P50,
-                        border = BorderStroke(1.dp, LojiaColors.P100),
-                        modifier = Modifier.fillMaxWidth()
+                if (!isAnswerCorrect) {
+                    LojiaInputField(
+                        value = recoveryAnswer,
+                        onValueChange = {
+                            recoveryAnswer = it
+                            recoveryError = null
+                        },
+                        label = stringResource(R.string.auth_answer_label),
+                        placeholder = stringResource(R.string.auth_enter_answer_placeholder),
+                        errorMessage = recoveryError,
+                        validationState = if (recoveryError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
+                        testTag = "recoveryAnswer"
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = SuccessContainer,
+                                borderColor = AuthSuccessMint,
+                                shape = RoundedCornerShape(Dimens.RadiusSm)
+                            )
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = stringResource(R.string.auth_question_label),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = LojiaColors.P600
+                                text = stringResource(R.string.auth_identity_verified),
+                                fontSize = 12.sp,
+                                color = SuccessGreen,
+                                fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = question,
+                                text = stringResource(R.string.auth_recovery_success_msg),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = LojiaColors.N900
+                                color = OnSurfaceLight
                             )
                         }
                     }
+                }
+            }
 
+            val confirmActionContent: @Composable () -> Unit = {
+                if (recoveryConfigured) {
+                    val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
                     if (!isAnswerCorrect) {
-                        LojiaInputField(
-                            value = recoveryAnswer,
-                            onValueChange = {
-                                recoveryAnswer = it
-                                recoveryError = null
-                            },
-                            label = stringResource(R.string.auth_answer_label),
-                            placeholder = stringResource(R.string.auth_enter_answer_placeholder),
-                            errorMessage = recoveryError,
-                            validationState = if (recoveryError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
-                            testTag = "recoveryAnswer"
-                        )
-                    } else {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = LojiaColors.OkBg,
-                            border = BorderStroke(1.dp, LojiaColors.G200),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = stringResource(R.string.auth_identity_verified),
-                                    fontSize = 12.sp,
-                                    color = LojiaColors.G500,
-                                    fontWeight = FontWeight.Bold
+                        Button(
+                            onClick = {
+                                val result = SecurityRecoveryVerifier.verifyAnswerWithUpgrade(
+                                    enteredAnswer = recoveryAnswer,
+                                    storedAnswerOrHash = storedAnswer
                                 )
-                                Text(
-                                    text = stringResource(R.string.auth_recovery_success_msg),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = LojiaColors.N900
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            if (recoveryConfigured) {
-                val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
-                if (!isAnswerCorrect) {
-                    TextButton(
-                        onClick = {
-                            val result = SecurityRecoveryVerifier.verifyAnswerWithUpgrade(
-                                enteredAnswer = recoveryAnswer,
-                                storedAnswerOrHash = storedAnswer
-                            )
-                            if (result.isMatch) {
-                                if (result.newHashToStore != null) {
-                                    prefs.saveRecoveryAnswerHash(result.newHashToStore)
-                                    coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                        try {
-                                            val db = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
-                                            val existing = db.reportDao().getUserProfileOnce()
-                                            if (existing != null) {
-                                                db.reportDao().saveUserProfile(
-                                                    existing.copy(securityAnswer = result.newHashToStore)
-                                                )
-                                            }
-                                        } catch (_: Exception) {}
+                                if (result.isMatch) {
+                                    if (result.newHashToStore != null) {
+                                        prefs.saveRecoveryAnswerHash(result.newHashToStore)
+                                        coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                            try {
+                                                val db = com.lojia.shiftreport.data.AppDatabase.getInstance(context)
+                                                val existing = db.reportDao().getUserProfileOnce()
+                                                if (existing != null) {
+                                                    db.reportDao().saveUserProfile(
+                                                        existing.copy(securityAnswer = result.newHashToStore)
+                                                    )
+                                                }
+                                            } catch (_: Exception) {}
+                                        }
                                     }
+                                    isAnswerCorrect = true
+                                } else {
+                                    recoveryError = incorrectAnswerError
                                 }
-                                isAnswerCorrect = true
-                            } else {
-                                recoveryError = incorrectAnswerError
-                            }
+                            },
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            elevation = null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = PureWhite
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                        ) {
+                            Text(stringResource(R.string.auth_verify_btn), fontWeight = FontWeight.Bold)
                         }
-                    ) {
-                        Text(stringResource(R.string.auth_verify_btn), color = LojiaColors.P500, fontWeight = FontWeight.Bold)
-                    }
-                } else {
-                    TextButton(
-                        onClick = {
-                            onDismiss()
-                            onAuthenticated()
+                    } else {
+                        Button(
+                            onClick = {
+                                onDismiss()
+                                onAuthenticated()
+                            },
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            elevation = null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = PureWhite
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                        ) {
+                            Text(stringResource(R.string.auth_complete_login_btn), fontWeight = FontWeight.Bold)
                         }
-                    ) {
-                        Text(stringResource(R.string.auth_complete_login_btn), color = LojiaColors.G500, fontWeight = FontWeight.Bold)
                     }
                 }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel), color = LojiaColors.N500)
+
+            val cancelActionContent: @Composable () -> Unit = {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) { cancelActionContent() }
+                if (recoveryConfigured) {
+                    Box(modifier = Modifier.weight(1f)) { confirmActionContent() }
+                }
             }
         }
-    )
+    }
 }

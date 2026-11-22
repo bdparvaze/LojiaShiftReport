@@ -37,6 +37,9 @@ import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.data.Employee
 import com.lojia.shiftreport.data.PreferencesRepository
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
@@ -44,14 +47,6 @@ import com.lojia.shiftreport.util.isValidMonthlySalary
 import com.lojia.shiftreport.util.normalizeRestoreName
 import kotlinx.coroutines.launch
 import java.util.Locale
-
-private val FoodicsBlue = Color(0xFF2563EB)
-private val FoodicsBg = Color(0xFFF9FAFB)
-private val FoodicsTextBlack = Color(0xFF111827)
-private val FoodicsTextGray = Color(0xFF6B7280)
-private val FoodicsBorderLight = Color(0xFFE5E7EB)
-private val FoodicsGreen = Color(0xFF10B981)
-private val FoodicsOrange = Color(0xFFF59E0B)
 
 internal fun isDuplicateEmployeeName(
     employeeId: String?,
@@ -107,13 +102,14 @@ fun EmployeeManagementSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(FoodicsBg)
+            .background(BackgroundLight)
     ) {
         // 1. HEADER - Top Section
-        Surface(
-            color = Color.White,
-            shadowElevation = 2.dp,
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
         ) {
             Row(
                 modifier = Modifier
@@ -127,7 +123,7 @@ fun EmployeeManagementSection(
                         text = stringResource(R.string.nav_employee),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FoodicsTextBlack,
+                        color = OnBackgroundLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -135,19 +131,21 @@ fun EmployeeManagementSection(
                     Text(
                         text = stringResource(R.string.employees_count_format, employees.size, activeCount),
                         fontSize = 14.sp,
-                        color = FoodicsTextGray
+                        color = OnSurfaceVariantLight
                     )
                 }
 
                 Button(
                     onClick = { showAdminAuthForAdd = true },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = FoodicsBlue,
-                        contentColor = Color.White
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
                     ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(44.dp)
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -165,7 +163,7 @@ fun EmployeeManagementSection(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 2. STATS CARDS - 3 Cards Row
         Row(
@@ -176,23 +174,26 @@ fun EmployeeManagementSection(
         ) {
             EmployeeStatCard(
                 icon = Icons.Default.People,
-                iconTint = FoodicsBlue,
+                iconTint = PrimaryBlueLight,
                 count = employees.size.toString(),
                 label = stringResource(R.string.total),
+                index = 0,
                 modifier = Modifier.weight(1f)
             )
             EmployeeStatCard(
                 icon = Icons.Default.CheckCircle,
-                iconTint = FoodicsGreen,
+                iconTint = SuccessGreen,
                 count = activeCount.toString(),
                 label = stringResource(R.string.active),
+                index = 1,
                 modifier = Modifier.weight(1f)
             )
             EmployeeStatCard(
                 icon = Icons.Default.Block,
-                iconTint = FoodicsOrange,
+                iconTint = WarningOrange,
                 count = inactiveCount.toString(),
                 label = stringResource(R.string.inactive),
+                index = 2,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -200,13 +201,13 @@ fun EmployeeManagementSection(
         Spacer(modifier = Modifier.height(16.dp))
 
         // 3. SEARCH BAR
-        OutlinedTextField(
+        LojiaTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = {
                 Text(
                     text = stringResource(R.string.employee_search_hint),
-                    color = FoodicsTextGray,
+                    color = OnSurfaceVariantLight,
                     fontSize = 14.sp
                 )
             },
@@ -214,34 +215,24 @@ fun EmployeeManagementSection(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    tint = FoodicsTextGray
+                    tint = OnSurfaceVariantLight
                 )
             },
             singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedBorderColor = FoodicsBlue,
-                unfocusedBorderColor = FoodicsBorderLight
-            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(52.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // 4. EMPLOYEE LIST OR 5. EMPTY STATE
         if (filteredEmployees.isEmpty()) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
             ) {
                 Column(
                     modifier = Modifier
@@ -252,7 +243,7 @@ fun EmployeeManagementSection(
                     Icon(
                         imageVector = Icons.Default.People,
                         contentDescription = null,
-                        tint = Color(0xFFD1D5DB),
+                        tint = TextDisabledColor,
                         modifier = Modifier.size(64.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -260,26 +251,29 @@ fun EmployeeManagementSection(
                         text = if (employees.isEmpty()) stringResource(R.string.empty_employee_title) else stringResource(R.string.empty_employee_no_match),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FoodicsTextBlack,
+                        color = OnBackgroundLight,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.empty_employee_hint),
                         fontSize = 14.sp,
-                        color = FoodicsTextGray,
+                        color = OnSurfaceVariantLight,
                         textAlign = TextAlign.Center
                     )
                     if (employees.isEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = { showAdminAuthForAdd = true },
+                            elevation = null,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = FoodicsBlue,
-                                contentColor = Color.White
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                contentColor = PureWhite,
+                                disabledContentColor = OnSurfaceVariantLight
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(44.dp)
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
@@ -304,11 +298,12 @@ fun EmployeeManagementSection(
                     .padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                filteredEmployees.forEach { emp ->
+                filteredEmployees.forEachIndexed { index, emp ->
                     key(emp.id) {
                         EmployeeItemCard(
                             employee = emp,
                             activeCurrency = activeCurrency,
+                            index = index,
                             onEditClick = { employeePendingEditAuth = emp }
                         )
                     }
@@ -406,13 +401,14 @@ private fun EmployeeStatCard(
     iconTint: Color,
     count: String,
     label: String,
+    index: Int = 0,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = modifier.height(80.dp)
+    Box(
+        modifier = modifier
+            .height(80.dp)
+            .cardRise(index)
+            .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
     ) {
         Row(
             modifier = Modifier
@@ -432,12 +428,12 @@ private fun EmployeeStatCard(
                     text = count,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = FoodicsTextBlack
+                    color = OnBackgroundLight
                 )
                 Text(
                     text = label,
                     fontSize = 12.sp,
-                    color = FoodicsTextGray,
+                    color = OnSurfaceVariantLight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -450,16 +446,16 @@ private fun EmployeeStatCard(
 private fun EmployeeItemCard(
     employee: Employee,
     activeCurrency: String,
+    index: Int = 0,
     onEditClick: () -> Unit
 ) {
     val initial = employee.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
 
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, FoodicsBorderLight),
-        modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(index)
+            .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
     ) {
         Row(
             modifier = Modifier
@@ -472,14 +468,14 @@ private fun EmployeeItemCard(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFDBEAFE)),
+                    .background(PrimaryContainerLight),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initial,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = FoodicsBlue
+                    color = PrimaryBlueLight
                 )
             }
 
@@ -495,7 +491,7 @@ private fun EmployeeItemCard(
                         text = employee.name,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FoodicsTextBlack,
+                        color = OnBackgroundLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
@@ -505,7 +501,7 @@ private fun EmployeeItemCard(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                if (employee.isActive) Color(0xFFD1FAE5) else Color(0xFFF3F4F6)
+                                if (employee.isActive) SuccessContainer else SurfaceVariantLight
                             )
                             .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
@@ -513,7 +509,7 @@ private fun EmployeeItemCard(
                             text = if (employee.isActive) stringResource(R.string.active) else stringResource(R.string.inactive),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (employee.isActive) Color(0xFF065F46) else FoodicsTextGray
+                            color = if (employee.isActive) SuccessTextDark else OnSurfaceVariantLight
                         )
                     }
                 }
@@ -524,7 +520,7 @@ private fun EmployeeItemCard(
                         com.lojia.shiftreport.util.MoneyFormat.formatMinor(employee.monthlySalaryMinor, activeCurrency)
                     ),
                     fontSize = 14.sp,
-                    color = FoodicsTextGray
+                    color = OnSurfaceVariantLight
                 )
 
                 if (!employee.phone.isNullOrBlank()) {
@@ -535,32 +531,37 @@ private fun EmployeeItemCard(
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = null,
-                            tint = FoodicsTextGray,
+                            tint = OnSurfaceVariantLight,
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = employee.phone,
                             fontSize = 13.sp,
-                            color = FoodicsTextGray
+                            color = OnSurfaceVariantLight
                         )
                     }
                 }
             }
 
-            // Right: Edit IconButton
+            // Right: Edit IconButton (48dp touch target)
             IconButton(
                 onClick = onEditClick,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFEFF6FF))
+                modifier = Modifier.minimumInteractiveComponentSize()
             ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.employee_edit_label),
-                    tint = FoodicsBlue,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(DepthTokens.CardAccentGradientStart),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.employee_edit_label),
+                        tint = PrimaryBlueLight,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -600,108 +601,138 @@ private fun AddEditEmployeeDialog(
     val isSalaryZero = salaryClass is MoneyInput.Valid && !isValidMonthlySalary(salaryClass.minor)
     val canSave = name.isNotBlank() && !isDuplicateName && salaryMinor != null && salaryMinor > 0L
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Text(
                 text = if (existing != null) stringResource(R.string.employee_edit_label) else stringResource(R.string.employee_add_new_title),
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceLight
             )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .navigationBarsPadding()
-                    .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.employee_name_label)) },
-                    placeholder = { Text(stringResource(R.string.employee_name_hint)) },
-                    isError = isDuplicateName,
-                    supportingText = if (isDuplicateName) {
-                        { Text(stringResource(R.string.employee_name_exists_error)) }
-                    } else null,
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
 
-                OutlinedTextField(
-                    value = salaryText,
-                    onValueChange = { salaryText = it },
-                    label = { Text(stringResource(R.string.monthly_salary_label)) },
-                    placeholder = { Text(stringResource(R.string.employee_salary_hint)) },
-                    isError = isSalaryInvalid || isSalaryZero,
-                    supportingText = when {
-                        isSalaryInvalid -> {
-                            { Text(stringResource(R.string.valid_amount_error)) }
-                        }
-                        isSalaryZero -> {
-                            { Text(stringResource(R.string.employee_salary_required)) }
-                        }
-                        else -> null
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = if (activeDigits == 0) KeyboardType.Number else KeyboardType.Decimal
-                    ),
-                    suffix = { Text(activeCurrency) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
+            LojiaTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text(stringResource(R.string.employee_name_label)) },
+                placeholder = { Text(stringResource(R.string.employee_name_hint)) },
+                isError = isDuplicateName,
+                supportingText = if (isDuplicateName) {
+                    { Text(stringResource(R.string.employee_name_exists_error)) }
+                } else null,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text(stringResource(R.string.phone_optional_label)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                if (existing != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.active_status_label),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Switch(
-                            checked = isActive,
-                            onCheckedChange = { isActive = it }
-                        )
+            LojiaTextField(
+                value = salaryText,
+                onValueChange = { salaryText = it },
+                label = { Text(stringResource(R.string.monthly_salary_label)) },
+                placeholder = { Text(stringResource(R.string.employee_salary_hint)) },
+                isError = isSalaryInvalid || isSalaryZero,
+                supportingText = when {
+                    isSalaryInvalid -> {
+                        { Text(stringResource(R.string.valid_amount_error)) }
                     }
+                    isSalaryZero -> {
+                        { Text(stringResource(R.string.employee_salary_required)) }
+                    }
+                    else -> null
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (activeDigits == 0) KeyboardType.Number else KeyboardType.Decimal
+                ),
+                suffix = { Text(activeCurrency) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            LojiaTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text(stringResource(R.string.phone_optional_label)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (existing != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.active_status_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Switch(
+                        checked = isActive,
+                        onCheckedChange = { isActive = it }
+                    )
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (salaryClass !is MoneyInput.Valid) return@Button
-                    val sMinor = salaryClass.minor
-                    if (sMinor <= 0L) return@Button
-                    onSave(name.trim(), sMinor, phone.trim().ifBlank { null }, isActive)
-                },
-                enabled = canSave,
-                colors = ButtonDefaults.buttonColors(containerColor = FoodicsBlue),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.save))
+
+            val confirmAction = @Composable {
+                Button(
+                    onClick = {
+                        if (salaryClass !is MoneyInput.Valid) return@Button
+                        val sMinor = salaryClass.minor
+                        if (sMinor <= 0L) return@Button
+                        onSave(name.trim(), sMinor, phone.trim().ifBlank { null }, isActive)
+                    },
+                    enabled = canSave,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(enabled = canSave, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            val dismissAction = @Composable {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    elevation = null,
+                    border = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                Box(modifier = Modifier.weight(1f)) { confirmAction() }
             }
         }
-    )
+    }
 }

@@ -7,9 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,11 +17,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -36,15 +36,11 @@ import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -52,6 +48,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,6 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
@@ -78,24 +76,29 @@ import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppCountry
 import com.lojia.shiftreport.data.SavedAddress
 import com.lojia.shiftreport.report.ReportViewModel
+import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.common.lojiaDefaultTextFieldColors
 import com.lojia.shiftreport.ui.common.rememberPhoneNumberHint
 import com.lojia.shiftreport.ui.common.splitPhoneNumber
 import com.lojia.shiftreport.ui.theme.BackgroundLight
-import com.lojia.shiftreport.ui.theme.ErrorRedLight
+import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.LojiaGradientHeader
 import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
-import com.lojia.shiftreport.ui.theme.OutlineLight
 import com.lojia.shiftreport.ui.theme.OutlineVariantLight
+import com.lojia.shiftreport.ui.theme.PositiveBannerBorder
 import com.lojia.shiftreport.ui.theme.PrimaryContainerLight
 import com.lojia.shiftreport.ui.theme.PrimaryIndigoDark
 import com.lojia.shiftreport.ui.theme.PrimaryIndigoLight
 import com.lojia.shiftreport.ui.theme.PureWhite
 import com.lojia.shiftreport.ui.theme.SuccessContainer
-import com.lojia.shiftreport.ui.theme.SuccessGreen
+import com.lojia.shiftreport.ui.theme.SuccessTextDark
 import com.lojia.shiftreport.ui.theme.SurfaceLight
-import com.lojia.shiftreport.ui.theme.SurfaceVariantLight
-import com.lojia.shiftreport.ui.theme.TextDisabledColor
 import com.lojia.shiftreport.ui.theme.TextHintColor
+import com.lojia.shiftreport.ui.theme.cardRise
+import com.lojia.shiftreport.ui.theme.depthCard
+import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthSemanticCard
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -186,55 +189,57 @@ fun AddEditAddressScreen(
             mobileNumber.isNotBlank() &&
             addressLine.isNotBlank()
 
-    val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = PrimaryIndigoLight,
-        unfocusedBorderColor = OutlineLight,
-        disabledBorderColor = OutlineLight,
-        focusedContainerColor = SurfaceLight,
-        unfocusedContainerColor = SurfaceLight,
-        disabledContainerColor = SurfaceLight,
-        focusedTextColor = OnSurfaceLight,
-        unfocusedTextColor = OnSurfaceLight,
-        disabledTextColor = OnSurfaceLight,
-        cursorColor = PrimaryIndigoLight
+    val textFieldColors = lojiaDefaultTextFieldColors().copy(
+        disabledTextColor = OnSurfaceLight
     )
 
     Scaffold(
         containerColor = BackgroundLight,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(if (addressId != null) R.string.edit_address else R.string.add_new_address),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PureWhite
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag("btn_add_edit_address_back")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_back),
-                            tint = PureWhite
+            LojiaGradientHeader(
+                shape = RoundedCornerShape(
+                    bottomStart = Dimens.RadiusXl,
+                    bottomEnd = Dimens.RadiusXl
+                ),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(if (addressId != null) R.string.edit_address else R.string.add_new_address),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PureWhite
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryIndigoLight,
-                    titleContentColor = PureWhite,
-                    navigationIconContentColor = PureWhite
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("btn_add_edit_address_back")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.cd_back),
+                                tint = PureWhite
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = PureWhite,
+                        navigationIconContentColor = PureWhite
+                    ),
+                    modifier = Modifier.statusBarsPadding()
                 )
-            )
+            }
         },
         bottomBar = {
             Surface(
                 color = SurfaceLight,
-                shadowElevation = 8.dp,
+                border = BorderStroke(0.5.dp, OutlineVariantLight),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
@@ -264,23 +269,30 @@ fun AddEditAddressScreen(
                             pendingAddressToSave = savedAddress
                         },
                         enabled = canSave,
-                        shape = RoundedCornerShape(26.dp),
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusPill),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ErrorRedLight,
+                            containerColor = Color.Transparent,
                             contentColor = PureWhite,
-                            disabledContainerColor = TextDisabledColor,
-                            disabledContentColor = PureWhite
+                            disabledContainerColor = Color.Transparent,
+                            disabledContentColor = OnSurfaceVariantLight
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = Dimens.MinTouchTarget)
                             .height(52.dp)
+                            .depthRaisedButton(
+                                enabled = canSave,
+                                isDestructive = true,
+                                cornerRadius = Dimens.RadiusPill
+                            )
                             .testTag("btn_save_address")
                     ) {
                         Text(
                             text = stringResource(R.string.save),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PureWhite
+                            color = if (canSave) PureWhite else OnSurfaceVariantLight
                         )
                     }
                 }
@@ -294,28 +306,33 @@ fun AddEditAddressScreen(
                 .background(BackgroundLight)
         ) {
             // Encryption Banner
-            Surface(
-                color = SuccessContainer,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
+                    .depthSemanticCard(
+                        backgroundColor = SuccessContainer,
+                        borderColor = PositiveBannerBorder
+                    )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
-                        tint = SuccessGreen,
+                        tint = SuccessTextDark,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = stringResource(R.string.all_info_encrypted),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = SuccessGreen
+                        color = SuccessTextDark
                     )
                 }
             }
@@ -342,10 +359,11 @@ fun AddEditAddressScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = Dimens.MinTouchTarget)
                             .clickable { showCountrySheet = true }
                             .testTag("field_address_country")
                     ) {
-                        OutlinedTextField(
+                        LojiaTextField(
                             value = "${countryCodeToFlagEmoji(selectedCountry.code)}  ${stringResource(selectedCountry.nameRes)}",
                             onValueChange = {},
                             readOnly = true,
@@ -358,7 +376,7 @@ fun AddEditAddressScreen(
                                 )
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -377,12 +395,11 @@ fun AddEditAddressScreen(
                     )
 
                     // Mini-map thumbnail card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                        border = BorderStroke(1.dp, OutlineLight),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .cardRise(0)
+                            .depthCard()
                     ) {
                         Row(
                             modifier = Modifier
@@ -443,7 +460,7 @@ fun AddEditAddressScreen(
                     }
 
                     // Street address text input (also populated by map picker)
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = addressLine,
                         onValueChange = { addressLine = it },
                         label = {
@@ -460,7 +477,9 @@ fun AddEditAddressScreen(
                                 color = TextHintColor
                             )
                         },
-                        shape = RoundedCornerShape(10.dp),
+                        singleLine = false,
+                        maxLines = 2,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -468,7 +487,7 @@ fun AddEditAddressScreen(
                     )
 
                     // Apt, suite, unit (optional)
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = aptSuite,
                         onValueChange = { aptSuite = it },
                         label = {
@@ -479,7 +498,7 @@ fun AddEditAddressScreen(
                             )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -489,7 +508,7 @@ fun AddEditAddressScreen(
                     // Address label with Suggestion chip on trailing
                     val storeSuggestion = stringResource(R.string.address_tag_store)
                     val warehouseSuggestion = stringResource(R.string.address_tag_warehouse)
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = addressLabel,
                         onValueChange = { addressLabel = it },
                         label = {
@@ -522,7 +541,7 @@ fun AddEditAddressScreen(
                             }
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -541,7 +560,7 @@ fun AddEditAddressScreen(
                         color = OnSurfaceLight
                     )
 
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
                         label = {
@@ -552,14 +571,14 @@ fun AddEditAddressScreen(
                             )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("input_first_name")
                     )
 
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
                         label = {
@@ -570,7 +589,7 @@ fun AddEditAddressScreen(
                             )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -583,7 +602,7 @@ fun AddEditAddressScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
+                        LojiaTextField(
                             value = dialCode,
                             onValueChange = {},
                             readOnly = true,
@@ -595,14 +614,14 @@ fun AddEditAddressScreen(
                                 )
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier
                                 .width(96.dp)
                                 .testTag("input_mobile_dial_code")
                         )
 
-                        OutlinedTextField(
+                        LojiaTextField(
                             value = mobileNumber,
                             onValueChange = { raw ->
                                 mobileNumber = raw.filter { it.isDigit() || it == ' ' || it == '-' }
@@ -617,7 +636,9 @@ fun AddEditAddressScreen(
                             trailingIcon = {
                                 IconButton(
                                     onClick = requestPhoneHint,
-                                    modifier = Modifier.testTag("btn_phone_hint_autofill")
+                                    modifier = Modifier
+                                        .minimumInteractiveComponentSize()
+                                        .testTag("btn_phone_hint_autofill")
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.AutoAwesome,
@@ -629,7 +650,7 @@ fun AddEditAddressScreen(
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier
                                 .weight(1f)
@@ -643,7 +664,7 @@ fun AddEditAddressScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
+                        LojiaTextField(
                             value = dialCode,
                             onValueChange = {},
                             readOnly = true,
@@ -655,14 +676,14 @@ fun AddEditAddressScreen(
                                 )
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier
                                 .width(96.dp)
                                 .testTag("input_alt_dial_code")
                         )
 
-                        OutlinedTextField(
+                        LojiaTextField(
                             value = alternatePhone,
                             onValueChange = { raw ->
                                 alternatePhone = raw.filter { it.isDigit() || it == ' ' || it == '-' }
@@ -676,7 +697,7 @@ fun AddEditAddressScreen(
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier
                                 .weight(1f)
@@ -728,7 +749,10 @@ fun AddEditAddressScreen(
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
                     )
-                    IconButton(onClick = { showCountrySheet = false }) {
+                    IconButton(
+                        onClick = { showCountrySheet = false },
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = stringResource(R.string.cd_close),
@@ -737,7 +761,7 @@ fun AddEditAddressScreen(
                     }
                 }
 
-                OutlinedTextField(
+                LojiaTextField(
                     value = countrySearch,
                     onValueChange = { countrySearch = it },
                     placeholder = {
@@ -755,7 +779,7 @@ fun AddEditAddressScreen(
                         )
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     colors = textFieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -765,54 +789,63 @@ fun AddEditAddressScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
 
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = Dimens.SpacingXs)
+                ) {
                     items(filteredCountries, key = { it.code }) { country ->
                         val isSelected = country == selectedCountry
-                        Row(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXxs)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthCard(accent = isSelected, shape = RoundedCornerShape(Dimens.RadiusMd))
                                 .clickable {
                                     selectedCountry = country
                                     dialCode = country.dialCode.ifBlank { "+966" }
                                     showCountrySheet = false
                                 }
-                                .background(if (isSelected) PrimaryContainerLight else SurfaceLight)
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.weight(1f)
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = countryCodeToFlagEmoji(country.code),
-                                    fontSize = 20.sp,
-                                    color = OnSurfaceLight
-                                )
-                                Text(
-                                    text = stringResource(country.nameRes),
-                                    fontSize = 14.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = OnSurfaceLight
-                                )
-                                Text(
-                                    text = country.dialCode,
-                                    fontSize = 12.sp,
-                                    color = OnSurfaceVariantLight
-                                )
-                            }
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = stringResource(R.string.cd_selected),
-                                    tint = PrimaryIndigoLight,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = countryCodeToFlagEmoji(country.code),
+                                        fontSize = 20.sp,
+                                        color = OnSurfaceLight
+                                    )
+                                    Text(
+                                        text = stringResource(country.nameRes),
+                                        fontSize = 14.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = OnSurfaceLight
+                                    )
+                                    Text(
+                                        text = country.dialCode,
+                                        fontSize = 12.sp,
+                                        color = OnSurfaceVariantLight
+                                    )
+                                }
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = stringResource(R.string.cd_selected),
+                                        tint = PrimaryIndigoLight,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
-                        HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
                     }
                 }
             }

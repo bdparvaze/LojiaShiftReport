@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
-import com.lojia.shiftreport.ui.theme.PrimaryIndigo
+import com.lojia.shiftreport.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -96,7 +96,9 @@ fun ProfileImageCropperDialog(
                 )
                 IconButton(
                     onClick = onDismiss,
-                    modifier = Modifier.testTag("btn_close_cropper")
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .testTag("btn_close_cropper")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
@@ -183,6 +185,8 @@ fun ProfileImageCropperDialog(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Action Buttons (Cancel / Save)
+            val style = LocalDepthStyle.current
+            val isSaveEnabled = !isLoading && !isSaving && originalBitmap != null
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -191,13 +195,23 @@ fun ProfileImageCropperDialog(
             ) {
                 OutlinedButton(
                     onClick = onDismiss,
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag("btn_cancel_crop"),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(Dimens.RadiusMd)
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
                 }
 
                 Button(
@@ -245,17 +259,24 @@ fun ProfileImageCropperDialog(
                             }
                         }
                     },
-                    enabled = !isLoading && !isSaving && originalBitmap != null,
+                    enabled = isSaveEnabled,
+                    elevation = null,
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = isSaveEnabled, cornerRadius = Dimens.RadiusMd)
                         .testTag("btn_save_crop"),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                    shape = RoundedCornerShape(12.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd)
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(
-                            color = Color.White,
+                            color = PureWhite,
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp
                         )

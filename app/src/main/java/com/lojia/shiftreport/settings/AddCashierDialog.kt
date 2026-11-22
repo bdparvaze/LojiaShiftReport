@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -22,15 +23,11 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PointOfSale
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +48,8 @@ import com.lojia.shiftreport.auth.AuthPinConstants
 import com.lojia.shiftreport.auth.SixDigitPinInput
 import com.lojia.shiftreport.data.Cashier
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 
 /**
@@ -71,51 +71,49 @@ fun AddCashierDialog(
 
     val isEditing = existingCashier != null
 
-    AlertDialog(
+    LojiaDialog(
         onDismissRequest = onDismissRequest,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = SurfaceLight,
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryContainerLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isEditing) Icons.Outlined.PointOfSale else Icons.Outlined.PersonAdd,
-                        contentDescription = null,
-                        tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Column {
-                    Text(
-                        text = stringResource(if (isEditing) R.string.edit_cashier else R.string.add_cashier_4),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OnBackgroundLight
-                    )
-                    Text(
-                        text = stringResource(R.string.cashier_management_desc),
-                        fontSize = 11.5.sp,
-                        color = OnSurfaceVariantLight
-                    )
-                }
-            }
-        },
-        text = {
+        content = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.DialogPaddingComfortable),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryContainerLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isEditing) Icons.Outlined.PointOfSale else Icons.Outlined.PersonAdd,
+                            contentDescription = null,
+                            tint = PrimaryIndigoLight,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = stringResource(if (isEditing) R.string.edit_cashier else R.string.add_cashier_4),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnBackgroundLight
+                        )
+                        Text(
+                            text = stringResource(R.string.cashier_management_desc),
+                            fontSize = 11.5.sp,
+                            color = OnSurfaceVariantLight
+                        )
+                    }
+                }
+
                 // Name Input
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
@@ -124,7 +122,7 @@ fun AddCashierDialog(
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
-                    OutlinedTextField(
+                    LojiaTextField(
                         value = nameInput,
                         onValueChange = {
                             nameInput = it
@@ -147,14 +145,6 @@ fun AddCashierDialog(
                         },
                         isError = isNameError,
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryIndigoLight,
-                            unfocusedBorderColor = OutlineLight,
-                            focusedContainerColor = BackgroundLight,
-                            unfocusedContainerColor = BackgroundLight,
-                            errorBorderColor = ErrorRedLight
-                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("input_cashier_name")
@@ -184,17 +174,16 @@ fun AddCashierDialog(
                     ) {
                         listOf("CASHIER" to R.string.cashier, "ADMIN" to R.string.administrator).forEach { (roleKey, strRes) ->
                             val selected = selectedRole.equals(roleKey, ignoreCase = true)
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selected) PrimaryContainerLight else SurfaceVariantLight,
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (selected) PrimaryIndigoLight else OutlineLight
-                                ),
+                            Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable { selectedRole = roleKey }
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthCard(
+                                        accent = selected,
+                                        shape = RoundedCornerShape(Dimens.RadiusMd)
+                                    )
+                                    .clickable { selectedRole = roleKey },
+                                contentAlignment = Alignment.Center
                             ) {
                                 Row(
                                     modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
@@ -240,36 +229,73 @@ fun AddCashierDialog(
                             .testTag("cashier_six_digit_pin_input")
                     )
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val clean = nameInput.trim()
-                    if (clean.isBlank()) {
-                        isNameError = true
-                    } else {
-                        if (onConfirmSave != null) {
-                            onConfirmSave(clean, pinInput.trim(), selectedRole)
-                        } else {
-                            onConfirmAdd(clean)
-                        }
-                        onDismissRequest()
+
+                val confirmAction = @Composable {
+                    Button(
+                        onClick = {
+                            val clean = nameInput.trim()
+                            if (clean.isBlank()) {
+                                isNameError = true
+                            } else {
+                                if (onConfirmSave != null) {
+                                    onConfirmSave(clean, pinInput.trim(), selectedRole)
+                                } else {
+                                    onConfirmAdd(clean)
+                                }
+                                onDismissRequest()
+                            }
+                        },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                            .testTag("btnSaveCashier")
+                    ) {
+                        Text(
+                            text = stringResource(if (isEditing) R.string.save_5 else R.string.add_cashier),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.testTag("btnSaveCashier")
-            ) {
-                Text(stringResource(if (isEditing) R.string.save_5 else R.string.add_cashier))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismissRequest,
-                modifier = Modifier.testTag("btnCancelCashier")
-            ) {
-                Text(stringResource(R.string.cancel_18))
+                }
+                val dismissAction = @Composable {
+                    OutlinedButton(
+                        onClick = onDismissRequest,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                            .testTag("btnCancelCashier")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.cancel_18),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                    Box(modifier = Modifier.weight(1f)) { confirmAction() }
+                }
             }
         },
         modifier = Modifier.testTag("addCashierDialog")

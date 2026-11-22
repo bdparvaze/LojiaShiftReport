@@ -60,6 +60,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.res.stringResource
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -527,12 +528,10 @@ fun GoogleMapsLocationPickerModal(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Header Bar with Google Maps Logo & Close Button
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = SurfaceLight,
-                        shadowElevation = 6.dp,
-                        border = BorderStroke(1.dp, OutlineLight),
-                        modifier = Modifier.fillMaxWidth()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                     ) {
                         Row(
                             modifier = Modifier
@@ -575,7 +574,7 @@ fun GoogleMapsLocationPickerModal(
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.maps_live_badge),
-                                                color = SuccessGreen,
+                                                color = SuccessTextDark,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.ExtraBold,
                                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -595,7 +594,7 @@ fun GoogleMapsLocationPickerModal(
                             IconButton(
                                 onClick = onDismiss,
                                 modifier = Modifier
-                                    .size(32.dp)
+                                    .size(Dimens.MinTouchTarget)
                                     .clip(CircleShape)
                                     .background(SurfaceVariantLight)
                             ) {
@@ -610,17 +609,15 @@ fun GoogleMapsLocationPickerModal(
                     }
 
                     // Floating Search Text Field with Instant Geocode Button
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = SurfaceLight,
-                        shadowElevation = 4.dp,
-                        border = BorderStroke(1.dp, OutlineLight),
-                        modifier = Modifier.fillMaxWidth()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 2.dp),
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
@@ -630,7 +627,7 @@ fun GoogleMapsLocationPickerModal(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            TextField(
+                            LojiaTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
                                 placeholder = {
@@ -641,12 +638,6 @@ fun GoogleMapsLocationPickerModal(
                                     )
                                 },
                                 singleLine = true,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = PrimaryIndigoLight,
-                                    unfocusedIndicatorColor = OutlineLight
-                                ),
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("input_search_maps")
@@ -655,21 +646,26 @@ fun GoogleMapsLocationPickerModal(
                             if (searchQuery.isNotBlank()) {
                                 IconButton(
                                     onClick = { searchQuery = "" },
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.minimumInteractiveComponentSize()
                                 ) {
                                     Icon(Icons.Outlined.Clear, contentDescription = stringResource(R.string.cd_clear), tint = TextHintColor, modifier = Modifier.size(16.dp))
                                 }
                             }
 
+                            Spacer(modifier = Modifier.width(6.dp))
+
                             Button(
                                 onClick = { searchCoordinates(searchQuery) },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusSm),
+                                elevation = null,
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryIndigoLight,
+                                    containerColor = Color.Transparent,
                                     contentColor = PureWhite
                                 ),
-                                modifier = Modifier.defaultMinSize(minWidth = 56.dp, minHeight = 34.dp)
+                                modifier = Modifier
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusSm)
                             ) {
                                 Text(stringResource(R.string.search), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
@@ -737,48 +733,41 @@ fun GoogleMapsLocationPickerModal(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // My Location (GPS) Fab
-                    Surface(
-                        shape = CircleShape,
-                        color = SurfaceLight,
-                        shadowElevation = 6.dp,
-                        border = BorderStroke(1.dp, OutlineLight),
+                    Box(
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(Dimens.MinTouchTarget)
+                            .depthCard(shape = CircleShape)
                             .clickable { requestGpsWithPermission() }
-                            .testTag("btn_gps_my_location")
+                            .testTag("btn_gps_my_location"),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (isDetectingGps) {
-                                CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp, color = PrimaryIndigoLight)
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Outlined.MyLocation,
-                                    contentDescription = stringResource(R.string.cd_my_gps_location),
-                                    tint = PrimaryIndigoLight,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                        if (isDetectingGps) {
+                            CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp, color = PrimaryIndigoLight)
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.MyLocation,
+                                contentDescription = stringResource(R.string.cd_my_gps_location),
+                                tint = PrimaryIndigoLight,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     }
 
                     // Stacked Zoom Controls
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = SurfaceLight,
-                        shadowElevation = 6.dp,
-                        border = BorderStroke(1.dp, OutlineLight)
+                    Box(
+                        modifier = Modifier.depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                     ) {
                         Column {
                             IconButton(
                                 onClick = { zoomLevel = (zoomLevel + 0.3f).coerceAtMost(2.5f) },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(Dimens.MinTouchTarget)
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_zoom_in), tint = OnSurfaceLight)
                             }
                             HorizontalDivider(color = OutlineLight, thickness = 1.dp)
                             IconButton(
                                 onClick = { zoomLevel = (zoomLevel - 0.3f).coerceAtLeast(0.6f) },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(Dimens.MinTouchTarget)
                             ) {
                                 Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.cd_zoom_out), tint = OnSurfaceLight)
                             }
@@ -786,38 +775,31 @@ fun GoogleMapsLocationPickerModal(
                     }
 
                     // Launch in Native Google Maps Application
-                    Surface(
-                        shape = CircleShape,
-                        color = SurfaceLight,
-                        shadowElevation = 6.dp,
-                        border = BorderStroke(1.dp, OutlineLight),
+                    Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(Dimens.MinTouchTarget)
+                            .depthCard(shape = CircleShape)
                             .clickable { launchExternalGoogleMaps() }
-                            .testTag("btn_open_google_maps_app")
+                            .testTag("btn_open_google_maps_app"),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Outlined.OpenInNew,
-                                contentDescription = stringResource(R.string.cd_open_google_maps),
-                                tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Outlined.OpenInNew,
+                            contentDescription = stringResource(R.string.cd_open_google_maps),
+                            tint = PrimaryIndigoLight,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
 
                 // =============================================================
                 // 4. GOOGLE-STANDARD BOTTOM SHEET ADDRESS CARD
                 // =============================================================
-                Surface(
+                Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .shadow(elevation = 16.dp, shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                    color = SurfaceLight,
-                    border = BorderStroke(1.dp, OutlineLight)
+                        .depthCard(shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 ) {
                     Column(
                         modifier = Modifier
@@ -897,7 +879,7 @@ fun GoogleMapsLocationPickerModal(
                         }
 
                         // Detailed Editable Address Box
-                        OutlinedTextField(
+                        LojiaTextField(
                             value = addressText,
                             onValueChange = { addressText = it },
                             label = { Text(stringResource(R.string.permanent_store_address_label)) },
@@ -910,13 +892,8 @@ fun GoogleMapsLocationPickerModal(
                                     CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = PrimaryIndigoLight)
                                 }
                             },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryIndigoLight,
-                                unfocusedBorderColor = OutlineLight,
-                                focusedContainerColor = BackgroundLight,
-                                unfocusedContainerColor = BackgroundLight
-                            ),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            singleLine = false,
                             maxLines = 2,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -965,18 +942,23 @@ fun GoogleMapsLocationPickerModal(
                         ) {
                             OutlinedButton(
                                 onClick = onDismiss,
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, PrimaryIndigoLight),
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
+                                border = null,
+                                elevation = null,
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = SurfaceLight,
-                                    contentColor = PrimaryIndigoLight
+                                    containerColor = Color.Transparent,
+                                    contentColor = PrimaryIndigoDark
                                 ),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(48.dp)
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthSecondaryButton(
+                                        borderColor = PrimaryIndigoLight,
+                                        cornerRadius = Dimens.RadiusMd
+                                    )
                                     .testTag("btn_cancel_maps_modal")
                             ) {
-                                Text(stringResource(R.string.cancel), color = PrimaryIndigoLight, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.cancel), color = PrimaryIndigoDark, fontWeight = FontWeight.SemiBold)
                             }
 
                             Button(
@@ -986,14 +968,16 @@ fun GoogleMapsLocationPickerModal(
                                     }
                                     onLocationConfirmed(finalAddress, currentLat, currentLng)
                                 },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
+                                elevation = null,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryIndigoLight,
+                                    containerColor = Color.Transparent,
                                     contentColor = PureWhite
                                 ),
                                 modifier = Modifier
                                     .weight(2f)
-                                    .height(48.dp)
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                                     .testTag("btn_save_permanent_address")
                             ) {
                                 Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = PureWhite, modifier = Modifier.size(18.dp))
@@ -1019,14 +1003,14 @@ private fun DrawScope.drawGoogleMapsStyleCanvas(
     val width = size.width
     val height = size.height
 
-    // 1. Natural Land Background (Google Maps Soft Buff/Warm Gray #F8F9FA / #F1F3F4)
-    drawRect(color = Color(0xFFF1F3F4))
+    // 1. Natural Land Background (MapLandBg)
+    drawRect(color = MapLandBg)
 
     // Calculate dynamic panning offsets based on coordinates
     val offsetX = ((lng * 12000.0 * zoom) % width).toFloat()
     val offsetY = ((lat * 12000.0 * zoom) % height).toFloat()
 
-    // 2. Waterways & Rivers (Google Blue #C4E8FD / #AAD3DF)
+    // 2. Waterways & Rivers (MapWaterBlue)
     val riverPath = Path().apply {
         val riverY = (height * 0.35f + offsetY * 0.4f) % height
         moveTo(0f, riverY)
@@ -1043,13 +1027,13 @@ private fun DrawScope.drawGoogleMapsStyleCanvas(
         )
         close()
     }
-    drawPath(riverPath, Color(0xFFC4E8FD))
+    drawPath(riverPath, MapWaterBlue)
 
-    // 3. Green Parks & Natural Zones (Google Maps Light Green #CEEAD6)
+    // 3. Green Parks & Natural Zones (MapWaterTint & MapParkGreen)
     val parkX1 = (width * 0.15f + offsetX * 0.5f) % width
     val parkY1 = (height * 0.12f + offsetY * 0.5f) % height
     drawRoundRect(
-        color = Color(0xFFD2E3FC).copy(alpha = 0.25f),
+        color = MapWaterTint.copy(alpha = 0.25f),
         topLeft = Offset(parkX1, parkY1),
         size = Size(160f * zoom, 120f * zoom),
         cornerRadius = CornerRadius(24f, 24f)
@@ -1058,20 +1042,20 @@ private fun DrawScope.drawGoogleMapsStyleCanvas(
     val parkX2 = (width * 0.65f + offsetX * 0.6f) % width
     val parkY2 = (height * 0.55f + offsetY * 0.6f) % height
     drawRoundRect(
-        color = Color(0xFFCEEAD6),
+        color = MapParkGreen,
         topLeft = Offset(parkX2, parkY2),
         size = Size(200f * zoom, 140f * zoom),
         cornerRadius = CornerRadius(30f, 30f)
     )
 
-    // 4. Urban Parcels / City Blocks (Google subtle #E8EAED)
+    // 4. Urban Parcels / City Blocks (MapUrbanBlock)
     val blockSize = 70f * zoom
     var bx = -blockSize + (offsetX % blockSize)
     while (bx < width + blockSize) {
         var by = -blockSize + (offsetY % blockSize)
         while (by < height + blockSize) {
             drawRoundRect(
-                color = Color(0xFFE8EAED).copy(alpha = 0.5f),
+                color = MapUrbanBlock.copy(alpha = 0.5f),
                 topLeft = Offset(bx + 6f, by + 6f),
                 size = Size(blockSize - 12f, blockSize - 12f),
                 cornerRadius = CornerRadius(8f, 8f)
@@ -1105,16 +1089,16 @@ private fun DrawScope.drawGoogleMapsStyleCanvas(
         sy += streetStep
     }
 
-    // 6. Major Arterial Highways (Google Maps Warm Gold / Amber #FDE293 & #F9AB00)
+    // 6. Major Arterial Highways (MapHighwayFill & MapHighwayBorder)
     val highwayY = (height * 0.48f + offsetY * 0.8f) % height
     drawLine(
-        color = Color(0xFFF9AB00).copy(alpha = 0.6f),
+        color = MapHighwayBorder.copy(alpha = 0.6f),
         start = Offset(0f, highwayY),
         end = Offset(width, highwayY),
         strokeWidth = 16f * zoom
     )
     drawLine(
-        color = Color(0xFFFEEFC3),
+        color = MapHighwayFill,
         start = Offset(0f, highwayY),
         end = Offset(width, highwayY),
         strokeWidth = 13f * zoom
@@ -1122,13 +1106,13 @@ private fun DrawScope.drawGoogleMapsStyleCanvas(
 
     val highwayX = (width * 0.52f + offsetX * 0.8f) % width
     drawLine(
-        color = Color(0xFFF9AB00).copy(alpha = 0.6f),
+        color = MapHighwayBorder.copy(alpha = 0.6f),
         start = Offset(highwayX, 0f),
         end = Offset(highwayX, height),
         strokeWidth = 16f * zoom
     )
     drawLine(
-        color = Color(0xFFFEEFC3),
+        color = MapHighwayFill,
         start = Offset(highwayX, 0f),
         end = Offset(highwayX, height),
         strokeWidth = 13f * zoom

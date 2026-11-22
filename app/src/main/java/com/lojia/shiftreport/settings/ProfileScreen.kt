@@ -71,15 +71,32 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.settings.ProfileImageCropper.ProfileImageCropperDialog
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.theme.BackgroundLight
+import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.ErrorContainerLight
+import com.lojia.shiftreport.ui.theme.ErrorRedLight
+import com.lojia.shiftreport.ui.theme.OnBackgroundLight
+import com.lojia.shiftreport.ui.theme.OnSurfaceLight
+import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
+import com.lojia.shiftreport.ui.theme.OutlineLight
+import com.lojia.shiftreport.ui.theme.PrimaryBlueDark
+import com.lojia.shiftreport.ui.theme.PrimaryBlueLight
+import com.lojia.shiftreport.ui.theme.PrimaryContainerLight
+import com.lojia.shiftreport.ui.theme.PureWhite
+import com.lojia.shiftreport.ui.theme.SuccessGreen
+import com.lojia.shiftreport.ui.theme.SurfaceVariantLight
+import com.lojia.shiftreport.ui.theme.TextHintColor
+import com.lojia.shiftreport.ui.theme.WarningContainer
+import com.lojia.shiftreport.ui.theme.WarningOrange
+import com.lojia.shiftreport.ui.theme.WarningText
+import com.lojia.shiftreport.ui.theme.cardRise
+import com.lojia.shiftreport.ui.theme.depthCard
+import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthSecondaryButton
+import com.lojia.shiftreport.ui.theme.depthSemanticCard
 import com.lojia.shiftreport.util.SecurityUtils
-
-private val ProfileBlue = Color(0xFF2563EB)
-private val ProfileBg = Color(0xFFF9FAFB)
-private val ProfileTextBlack = Color(0xFF111827)
-private val ProfileTextGray = Color(0xFF6B7280)
-private val ProfileBorderLight = Color(0xFFE5E7EB)
-private val ProfileRed = Color(0xFFDC2626)
-private val ProfileRedBg = Color(0xFFFEF2F2)
 
 @Composable
 private fun recoveryQuestionOptions(): List<String> = listOf(
@@ -159,7 +176,7 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(ProfileBg)
+            .background(BackgroundLight)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -218,10 +235,10 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .size(96.dp)
-                    .shadow(4.dp, CircleShape)
+                    .shadow(Dimens.CardElevation, CircleShape)
                     .clip(CircleShape)
                     .clickable { imagePickerLauncher.launch("image/*") }
-                    .border(3.dp, Color.White, CircleShape),
+                    .border(3.dp, PureWhite, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 if (profileBitmap != null) {
@@ -238,7 +255,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
-                            .background(Color(0xFFDBEAFE)),
+                            .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -246,7 +263,7 @@ fun ProfileScreen(
                                 ?: storeOwnerLabel.first().uppercaseChar().toString(),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ProfileBlue
+                            color = PrimaryBlueLight
                         )
                     }
                 }
@@ -256,14 +273,14 @@ fun ProfileScreen(
                         .align(Alignment.BottomEnd)
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(ProfileBlue)
-                        .border(2.dp, Color.White, CircleShape),
+                        .background(PrimaryBlueLight)
+                        .border(2.dp, PureWhite, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = stringResource(R.string.profile_edit_picture_cd),
-                        tint = Color.White,
+                        tint = PureWhite,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -273,7 +290,7 @@ fun ProfileScreen(
                 text = displayFullName,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = ProfileTextBlack,
+                color = OnBackgroundLight,
                 modifier = Modifier.padding(top = 12.dp)
             )
         }
@@ -303,6 +320,7 @@ fun ProfileScreen(
             icon = Icons.Default.Person,
             title = stringResource(R.string.profile_full_name_label),
             value = displayFullName,
+            riseIndex = 0,
             onClick = { showEditNameDialog = true }
         )
 
@@ -310,11 +328,15 @@ fun ProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(ProfileBg)
+                .cardRise(1)
+                .depthSemanticCard(
+                    backgroundColor = BackgroundLight,
+                    borderColor = OutlineLight,
+                    shape = RoundedCornerShape(Dimens.RadiusLg)
+                )
                 .drawBehind {
                     drawRoundRect(
-                        color = Color(0xFFD1D5DB),
+                        color = OutlineLight,
                         style = Stroke(
                             width = 1.dp.toPx(),
                             pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)
@@ -322,6 +344,7 @@ fun ProfileScreen(
                         cornerRadius = CornerRadius(16.dp.toPx())
                     )
                 }
+                .heightIn(min = Dimens.MinTouchTarget)
                 .clickable {
                     clipboardManager.setText(AnnotatedString(displayUsername))
                     Toast.makeText(
@@ -341,13 +364,13 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFF3F4F6)),
+                        .background(SurfaceVariantLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Badge,
                         contentDescription = null,
-                        tint = ProfileTextGray,
+                        tint = OnSurfaceVariantLight,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -363,20 +386,20 @@ fun ProfileScreen(
                             text = stringResource(R.string.profile_userid_label),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ProfileTextBlack
+                            color = OnBackgroundLight
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFFF3F4F6))
+                                .background(SurfaceVariantLight)
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.profile_cannot_be_changed),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = ProfileTextGray
+                                color = OnSurfaceVariantLight
                             )
                         }
                     }
@@ -384,7 +407,7 @@ fun ProfileScreen(
                         text = displayUsername,
                         fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
-                        color = ProfileTextGray,
+                        color = OnSurfaceVariantLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -393,14 +416,14 @@ fun ProfileScreen(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = stringResource(R.string.profile_locked_cd),
-                    tint = Color(0xFF9CA3AF),
+                    tint = TextHintColor,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Default.ContentCopy,
                     contentDescription = stringResource(R.string.profile_copy_userid_cd),
-                    tint = ProfileBlue,
+                    tint = PrimaryBlueLight,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -411,6 +434,7 @@ fun ProfileScreen(
             icon = Icons.Default.Email,
             title = stringResource(R.string.profile_email_label),
             value = displayEmail,
+            riseIndex = 2,
             onClick = { showEditEmailDialog = true }
         )
 
@@ -419,6 +443,7 @@ fun ProfileScreen(
             icon = Icons.Default.Phone,
             title = stringResource(R.string.profile_phone_label),
             value = displayPhone,
+            riseIndex = 3,
             onClick = { showEditPhoneDialog = true }
         )
 
@@ -431,6 +456,7 @@ fun ProfileScreen(
             } else {
                 stringResource(R.string.profile_add_address_hint)
             },
+            riseIndex = 4,
             onClick = {
                 reportViewModel.selectReportSettingsMenu("saved_addresses")
             }
@@ -448,17 +474,17 @@ fun ProfileScreen(
             } else {
                 stringResource(R.string.profile_set_recovery_hint)
             },
+            riseIndex = 5,
             onClick = { showEditRecoveryDialog = true }
         )
 
         // 7. Password
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            border = BorderStroke(1.dp, ProfileBorderLight),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .cardRise(6)
+                .depthCard()
+                .heightIn(min = Dimens.MinTouchTarget)
                 .clickable { showProfileChangePasswordDialog = true }
         ) {
             Row(
@@ -471,13 +497,13 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(ProfileRedBg),
+                        .background(ErrorContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Key,
                         contentDescription = null,
-                        tint = ProfileRed,
+                        tint = ErrorRedLight,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -492,12 +518,12 @@ fun ProfileScreen(
                         text = stringResource(R.string.password),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ProfileTextBlack
+                        color = OnBackgroundLight
                     )
                     Text(
                         text = "•••••••• • ${stringResource(R.string.change_password_desc)}",
                         fontSize = 13.sp,
-                        color = ProfileTextGray,
+                        color = OnSurfaceVariantLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -506,7 +532,7 @@ fun ProfileScreen(
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = Color(0xFF9CA3AF),
+                    tint = TextHintColor,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -658,12 +684,12 @@ private fun ProfileSectionTitle(title: String) {
         text = title,
         fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
-        color = ProfileBlue,
+        color = PrimaryBlueLight,
         modifier = Modifier
             .padding(top = 12.dp, bottom = 4.dp)
             .drawBehind {
                 drawLine(
-                    color = ProfileBlue,
+                    color = PrimaryBlueLight,
                     start = Offset(0f, 0f),
                     end = Offset(0f, size.height),
                     strokeWidth = 3.dp.toPx()
@@ -678,15 +704,15 @@ private fun ProfileItemCard(
     icon: ImageVector,
     title: String,
     value: String,
+    riseIndex: Int = 0,
     onClick: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, ProfileBorderLight),
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .cardRise(riseIndex)
+            .depthCard()
+            .heightIn(min = Dimens.MinTouchTarget)
             .clickable(onClick = onClick)
     ) {
         Row(
@@ -699,13 +725,13 @@ private fun ProfileItemCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEFF6FF)),
+                    .background(PrimaryContainerLight),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = ProfileBlue,
+                    tint = PrimaryBlueLight,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -720,12 +746,12 @@ private fun ProfileItemCard(
                     text = title,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ProfileTextBlack
+                    color = OnBackgroundLight
                 )
                 Text(
                     text = value,
                     fontSize = 13.sp,
-                    color = ProfileTextGray,
+                    color = OnSurfaceVariantLight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -734,7 +760,7 @@ private fun ProfileItemCard(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = Color(0xFF9CA3AF),
+                tint = TextHintColor,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -752,106 +778,114 @@ private fun EditFullNameDialog(
     var lastName by remember { mutableStateOf(initialLast) }
     val isValid = firstName.isNotBlank() && lastName.isNotBlank()
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        maxWidth = Dimens.DialogMaxWidth
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .widthIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .imePadding(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEFF6FF)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = ProfileBlue)
-                        }
-                        Text(stringResource(R.string.profile_edit_full_name_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
-                    }
+                    Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlueLight)
+                }
+                Text(stringResource(R.string.profile_edit_full_name_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+            }
 
-                    OutlinedTextField(
-                        value = firstName,
-                        onValueChange = { firstName = it },
-                        label = { Text(stringResource(R.string.profile_first_name_label)) },
-                        singleLine = true,
-                        isError = firstName.isBlank(),
-                        supportingText = if (firstName.isBlank()) {
-                            { Text(stringResource(R.string.profile_first_name_required)) }
-                        } else null,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+            LojiaTextField(
+                value = firstName,
+                onValueChange = { firstName = it },
+                label = { Text(stringResource(R.string.profile_first_name_label)) },
+                singleLine = true,
+                isError = firstName.isBlank(),
+                supportingText = if (firstName.isBlank()) {
+                    { Text(stringResource(R.string.profile_first_name_required)) }
+                } else null,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            LojiaTextField(
+                value = lastName,
+                onValueChange = { lastName = it },
+                label = { Text(stringResource(R.string.profile_last_name_label)) },
+                singleLine = true,
+                isError = lastName.isBlank(),
+                supportingText = if (lastName.isBlank()) {
+                    { Text(stringResource(R.string.profile_last_name_required)) }
+                } else null,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .depthSemanticCard(
+                        backgroundColor = PrimaryContainerLight,
+                        borderColor = OutlineLight,
+                        shape = RoundedCornerShape(Dimens.RadiusMd)
                     )
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_full_name_info),
+                    fontSize = 12.sp,
+                    color = PrimaryBlueDark,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
 
-                    OutlinedTextField(
-                        value = lastName,
-                        onValueChange = { lastName = it },
-                        label = { Text(stringResource(R.string.profile_last_name_label)) },
-                        singleLine = true,
-                        isError = lastName.isBlank(),
-                        supportingText = if (lastName.isBlank()) {
-                            { Text(stringResource(R.string.profile_last_name_required)) }
-                        } else null,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = ProfileBlue.copy(alpha = 0.08f),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.profile_full_name_info),
-                            fontSize = 12.sp,
-                            color = ProfileBlue,
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = { onSave(firstName.trim(), lastName.trim()) },
-                            enabled = isValid,
-                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
-                        }
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight)
+                }
+                Button(
+                    onClick = { onSave(firstName.trim(), lastName.trim()) },
+                    enabled = isValid,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = isValid, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -868,92 +902,100 @@ private fun EditEmailDialog(
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val isDifferent = email.trim() != currentEmail.trim()
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        maxWidth = Dimens.DialogMaxWidth
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .widthIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .imePadding(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEFF6FF)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Email, contentDescription = null, tint = ProfileBlue)
-                        }
-                        Text(stringResource(R.string.profile_edit_email_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
-                    }
+                    Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryBlueLight)
+                }
+                Text(stringResource(R.string.profile_edit_email_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+            }
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text(stringResource(R.string.profile_email_required_label)) },
-                        singleLine = true,
-                        isError = email.isNotBlank() && !isEmailValid,
-                        supportingText = if (email.isNotBlank() && !isEmailValid) {
-                            { Text(stringResource(R.string.profile_invalid_email_error), color = ProfileRed) }
-                        } else null,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+            LojiaTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text(stringResource(R.string.profile_email_required_label)) },
+                singleLine = true,
+                isError = email.isNotBlank() && !isEmailValid,
+                supportingText = if (email.isNotBlank() && !isEmailValid) {
+                    { Text(stringResource(R.string.profile_invalid_email_error), color = ErrorRedLight) }
+                } else null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .depthSemanticCard(
+                        backgroundColor = PrimaryContainerLight,
+                        borderColor = OutlineLight,
+                        shape = RoundedCornerShape(Dimens.RadiusMd)
                     )
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_email_verification_note),
+                    fontSize = 12.sp,
+                    color = PrimaryBlueDark,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = ProfileBlue.copy(alpha = 0.08f),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.profile_email_verification_note),
-                            fontSize = 12.sp,
-                            color = ProfileBlue,
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = { onSave(email.trim()) },
-                            enabled = isEmailValid && isDifferent,
-                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
-                        }
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight)
+                }
+                Button(
+                    onClick = { onSave(email.trim()) },
+                    enabled = isEmailValid && isDifferent,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = isEmailValid && isDifferent, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -970,80 +1012,84 @@ private fun EditPhoneDialog(
     val digitsCount = phone.count { it.isDigit() }
     val isValid = digitsCount in 10..15
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        maxWidth = Dimens.DialogMaxWidth
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .widthIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .imePadding(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEFF6FF)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Phone, contentDescription = null, tint = ProfileBlue)
-                        }
-                        Text(stringResource(R.string.profile_edit_phone_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
-                    }
+                    Icon(Icons.Default.Phone, contentDescription = null, tint = PrimaryBlueLight)
+                }
+                Text(stringResource(R.string.profile_edit_phone_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+            }
 
-                    OutlinedTextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        label = { Text(stringResource(R.string.profile_phone_required_label)) },
-                        placeholder = { Text("+966 50 000 0000") },
-                        singleLine = true,
-                        isError = phone.isNotBlank() && !isValid,
-                        supportingText = if (phone.isNotBlank() && !isValid) {
-                            { Text(stringResource(R.string.profile_phone_digits_error), color = ProfileRed) }
-                        } else null,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            LojiaTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text(stringResource(R.string.profile_phone_required_label)) },
+                placeholder = { Text("+966 50 000 0000") },
+                singleLine = true,
+                isError = phone.isNotBlank() && !isValid,
+                supportingText = if (phone.isNotBlank() && !isValid) {
+                    { Text(stringResource(R.string.profile_phone_digits_error), color = ErrorRedLight) }
+                } else null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = { onSave(phone.trim()) },
-                            enabled = isValid,
-                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
-                        }
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight)
+                }
+                Button(
+                    onClick = { onSave(phone.trim()) },
+                    enabled = isValid,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = isValid, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1062,128 +1108,139 @@ private fun EditRecoveryQuestionDialog(
     var answer by remember { mutableStateOf("") }
     var answerVisible by remember { mutableStateOf(false) }
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        maxWidth = Dimens.DialogMaxWidth
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .widthIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .imePadding(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEFF6FF)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.HelpOutline, contentDescription = null, tint = ProfileBlue)
-                        }
-                        Text(stringResource(R.string.profile_edit_recovery_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
-                    }
+                    Icon(Icons.Default.HelpOutline, contentDescription = null, tint = PrimaryBlueLight)
+                }
+                Text(stringResource(R.string.profile_edit_recovery_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+            }
 
-                    val recoveryQuestions = recoveryQuestionOptions()
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedQuestion,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.security_question_label)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                                .fillMaxWidth()
+            val recoveryQuestions = recoveryQuestionOptions()
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                LojiaTextField(
+                    value = selectedQuestion,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.security_question_label)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    recoveryQuestions.forEach { q ->
+                        DropdownMenuItem(
+                            text = { Text(q) },
+                            onClick = {
+                                selectedQuestion = q
+                                expanded = false
+                            }
                         )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            recoveryQuestions.forEach { q ->
-                                DropdownMenuItem(
-                                    text = { Text(q) },
-                                    onClick = {
-                                        selectedQuestion = q
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
                     }
+                }
+            }
 
-                    OutlinedTextField(
-                        value = answer,
-                        onValueChange = { answer = it },
-                        label = { Text(stringResource(R.string.profile_answer_label)) },
-                        singleLine = true,
-                        visualTransformation = if (answerVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { answerVisible = !answerVisible }) {
-                                Icon(
-                                    imageVector = if (answerVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+            LojiaTextField(
+                value = answer,
+                onValueChange = { answer = it },
+                label = { Text(stringResource(R.string.profile_answer_label)) },
+                singleLine = true,
+                visualTransformation = if (answerVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { answerVisible = !answerVisible },
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
+                        Icon(
+                            imageVector = if (answerVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = null
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .depthSemanticCard(
+                        backgroundColor = WarningContainer,
+                        borderColor = WarningOrange.copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(Dimens.RadiusMd)
                     )
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_recovery_info),
+                    fontSize = 12.sp,
+                    color = WarningText,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFFEF3C7),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.profile_recovery_info),
-                            fontSize = 12.sp,
-                            color = Color(0xFF92400E),
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = { onSave(selectedQuestion, answer.trim()) },
-                            enabled = answer.trim().length >= 3,
-                            colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
-                        }
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight)
+                }
+                Button(
+                    onClick = { onSave(selectedQuestion, answer.trim()) },
+                    enabled = answer.trim().length >= 3,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = answer.trim().length >= 3, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1217,9 +1274,9 @@ private fun ProfileChangePasswordDialog(
         else -> stringResource(R.string.profile_strength_medium)
     }
     val strengthColor = when (strengthLevel) {
-        2 -> Color(0xFF10B981)
-        1 -> Color(0xFFF59E0B)
-        else -> ProfileRed
+        2 -> SuccessGreen
+        1 -> WarningOrange
+        else -> ErrorRedLight
     }
 
     val isValid = currentPass.isNotEmpty() &&
@@ -1227,137 +1284,154 @@ private fun ProfileChangePasswordDialog(
         newPass != currentPass &&
         confirmPass == newPass
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        maxWidth = Dimens.DialogMaxWidth
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable)
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .widthIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .imePadding(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(ErrorContainerLight),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(ProfileRedBg),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Key, contentDescription = null, tint = ProfileRed)
-                        }
-                        Text(stringResource(R.string.change_password_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ProfileTextBlack)
-                    }
+                    Icon(Icons.Default.Key, contentDescription = null, tint = ErrorRedLight)
+                }
+                Text(stringResource(R.string.change_password_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+            }
 
-                    OutlinedTextField(
-                        value = currentPass,
-                        onValueChange = { currentPass = it; errorText = null },
-                        label = { Text(stringResource(R.string.profile_current_password_label)) },
-                        singleLine = true,
-                        visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showCurrent = !showCurrent }) {
-                                Icon(if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    OutlinedTextField(
-                        value = newPass,
-                        onValueChange = { newPass = it; errorText = null },
-                        label = { Text(stringResource(R.string.profile_new_password_label)) },
-                        singleLine = true,
-                        visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showNew = !showNew }) {
-                                Icon(if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (newPass.isNotEmpty()) {
-                        Text(
-                            text = stringResource(R.string.profile_password_strength_format, strengthLabel),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = strengthColor
-                        )
-                    }
-
-                    OutlinedTextField(
-                        value = confirmPass,
-                        onValueChange = { confirmPass = it; errorText = null },
-                        label = { Text(stringResource(R.string.profile_confirm_password_label)) },
-                        singleLine = true,
-                        isError = confirmPass.isNotEmpty() && confirmPass != newPass,
-                        visualTransformation = if (showConfirm) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showConfirm = !showConfirm }) {
-                                Icon(if (showConfirm) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (errorText != null) {
-                        Text(
-                            text = errorText!!,
-                            color = ProfileRed,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+            LojiaTextField(
+                value = currentPass,
+                onValueChange = { currentPass = it; errorText = null },
+                label = { Text(stringResource(R.string.profile_current_password_label)) },
+                singleLine = true,
+                visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showCurrent = !showCurrent },
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
-                        TextButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.cancel), color = ProfileTextGray)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                val currentOk = currentPasswordHash.isBlank() ||
-                                    SecurityUtils.verifySecretWithUpgrade(currentPass, currentPasswordHash).isMatch
-                                if (!currentOk) {
-                                    errorText = context.getString(R.string.profile_current_password_incorrect)
-                                } else {
-                                    onSave(newPass)
-                                }
-                            },
-                            enabled = isValid,
-                            colors = ButtonDefaults.buttonColors(containerColor = ProfileRed),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Text(stringResource(R.string.profile_change_action), fontWeight = FontWeight.Bold)
-                        }
+                        Icon(if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
                     }
+                },
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            LojiaTextField(
+                value = newPass,
+                onValueChange = { newPass = it; errorText = null },
+                label = { Text(stringResource(R.string.profile_new_password_label)) },
+                singleLine = true,
+                visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showNew = !showNew },
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
+                        Icon(if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
+                    }
+                },
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (newPass.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.profile_password_strength_format, strengthLabel),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = strengthColor
+                )
+            }
+
+            LojiaTextField(
+                value = confirmPass,
+                onValueChange = { confirmPass = it; errorText = null },
+                label = { Text(stringResource(R.string.profile_confirm_password_label)) },
+                singleLine = true,
+                isError = confirmPass.isNotEmpty() && confirmPass != newPass,
+                visualTransformation = if (showConfirm) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showConfirm = !showConfirm },
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
+                        Icon(if (showConfirm) Icons.Default.VisibilityOff else Icons.Default.Visibility, null)
+                    }
+                },
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (errorText != null) {
+                Text(
+                    text = errorText!!,
+                    color = ErrorRedLight,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight)
+                }
+                Button(
+                    onClick = {
+                        val currentOk = currentPasswordHash.isBlank() ||
+                            SecurityUtils.verifySecretWithUpgrade(currentPass, currentPasswordHash).isMatch
+                        if (!currentOk) {
+                            errorText = context.getString(R.string.profile_current_password_incorrect)
+                        } else {
+                            onSave(newPass)
+                        }
+                    },
+                    enabled = isValid,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(
+                            enabled = isValid,
+                            isDestructive = true,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Text(stringResource(R.string.profile_change_action), fontWeight = FontWeight.Bold)
                 }
             }
         }

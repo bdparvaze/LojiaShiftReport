@@ -211,7 +211,7 @@ fun SettingsBackupSubSection(
             IconButton(
                 onClick = onNavigateBack,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(Dimens.MinTouchTarget)
                     .clip(CircleShape)
                     .background(PrimaryContainerLight)
                     .testTag("btn_backup_back")
@@ -254,13 +254,12 @@ fun SettingsBackupSubSection(
         // ==========================================
         LojiaSectionHeader(text = stringResource(R.string.backup_section_destination))
 
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(LojiaDimens.CardRadius),
-            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-            border = BorderStroke(1.dp, OutlineLight)
+                .padding(bottom = 16.dp)
+                .cardRise(0)
+                .depthCard()
         ) {
             Column(
                 modifier = Modifier
@@ -301,7 +300,7 @@ fun SettingsBackupSubSection(
                     title = stringResource(R.string.backup_loc_gdrive_title),
                     subtitle = stringResource(R.string.backup_loc_gdrive_subtitle),
                     icon = Icons.Outlined.CloudQueue,
-                    iconTint = Color(0xFF1A73E8),
+                    iconTint = GoogleDriveBlue,
                     isSelected = selectedLocation == BackupLocation.GOOGLE_DRIVE,
                     onClick = {
                         selectedLocation = BackupLocation.GOOGLE_DRIVE
@@ -314,7 +313,7 @@ fun SettingsBackupSubSection(
                     title = stringResource(R.string.backup_loc_onedrive_title),
                     subtitle = stringResource(R.string.backup_loc_onedrive_subtitle),
                     icon = Icons.Outlined.CloudSync,
-                    iconTint = Color(0xFF0078D4),
+                    iconTint = OneDriveBlue,
                     isSelected = selectedLocation == BackupLocation.ONEDRIVE,
                     onClick = {
                         selectedLocation = BackupLocation.ONEDRIVE
@@ -483,13 +482,12 @@ fun SettingsBackupSubSection(
         // ==========================================
         LojiaSectionHeader(text = stringResource(R.string.backup_section_automatic))
 
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(LojiaDimens.CardRadius),
-            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-            border = BorderStroke(1.dp, OutlineLight)
+                .padding(bottom = 16.dp)
+                .cardRise(2)
+                .depthCard()
         ) {
             Column(
                 modifier = Modifier
@@ -562,8 +560,9 @@ fun SettingsBackupSubSection(
                                 } else null,
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = PrimaryContainerLight,
-                                    selectedLabelColor = PrimaryIndigoLight
-                                )
+                                    selectedLabelColor = PrimaryIndigoDark
+                                ),
+                                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                             )
                         }
                     }
@@ -576,13 +575,15 @@ fun SettingsBackupSubSection(
         // ==========================================
         LojiaSectionHeader(text = stringResource(R.string.backup_section_danger_zone))
 
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            shape = RoundedCornerShape(LojiaDimens.CardRadius),
-            colors = CardDefaults.cardColors(containerColor = ErrorRedLight.copy(alpha = 0.05f)),
-            border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.35f))
+                .padding(bottom = 32.dp)
+                .cardRise(3)
+                .depthSemanticCard(
+                    backgroundColor = NegativeBannerSurface,
+                    borderColor = NegativeBannerBorder
+                )
         ) {
             Column(
                 modifier = Modifier
@@ -619,12 +620,21 @@ fun SettingsBackupSubSection(
                     onClick = {
                         showDangerZoneDialog = true
                     },
+                    elevation = null,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ErrorRedLight,
+                        containerColor = Color.Transparent,
                         contentColor = PureWhite
                     ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("btn_danger_clear_all")
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(
+                            enabled = true,
+                            isDestructive = true,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                        .testTag("btn_danger_clear_all")
                 ) {
                     Icon(Icons.Outlined.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -643,12 +653,17 @@ fun SettingsBackupSubSection(
         val backupFiles = remember { backupManager.localProvider.listBackupFiles() }
         val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault()) }
 
-        AlertDialog(
-            onDismissRequest = { showLocalFilesDialog = false },
-            title = {
-                Text(stringResource(R.string.backup_local_archives_title), fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            },
-            text = {
+        LojiaDialog(
+            onDismissRequest = { showLocalFilesDialog = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
+                Text(stringResource(R.string.backup_local_archives_title), fontWeight = FontWeight.Bold, fontSize = 17.sp, color = OnBackgroundLight)
+
                 if (backupFiles.isEmpty()) {
                     Text(stringResource(R.string.backup_local_none_found), fontSize = 13.sp, color = TextSecondaryLight)
                 } else {
@@ -660,11 +675,10 @@ fun SettingsBackupSubSection(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         backupFiles.forEach { file ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, OutlineLight),
-                                color = BackgroundLight,
-                                modifier = Modifier.fillMaxWidth()
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusSm))
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -712,7 +726,8 @@ fun SettingsBackupSubSection(
                                                 showLocalFilesDialog = false
                                                 showRestoreConfirmDialog = true
                                             }
-                                        }
+                                        },
+                                        modifier = Modifier.minimumInteractiveComponentSize()
                                     ) {
                                         Icon(Icons.Outlined.Restore, contentDescription = stringResource(R.string.action_unarchive), tint = PrimaryIndigoLight)
                                     }
@@ -721,23 +736,58 @@ fun SettingsBackupSubSection(
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLocalFilesDialog = false
-                        PdfShareUtils.openFolderInFileManager(context, backupManager.localProvider.getBackupDirectory())
-                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.backup_open_folder_files))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLocalFilesDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
+                    Button(
+                        onClick = {
+                            showLocalFilesDialog = false
+                            PdfShareUtils.openFolderInFileManager(context, backupManager.localProvider.getBackupDirectory())
+                        },
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PureWhite
+                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.backup_open_folder_files),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showLocalFilesDialog = false },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_cancel),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 
     // 2. OneDrive Connect Modal
@@ -745,63 +795,106 @@ fun SettingsBackupSubSection(
         var inputEmail by remember { mutableStateOf("") }
         var isSimulatingToken by remember { mutableStateOf(false) }
 
-        AlertDialog(
-            onDismissRequest = { showOneDriveConnectDialog = false },
-            title = {
+        LojiaDialog(
+            onDismissRequest = { showOneDriveConnectDialog = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color(0xFF0078D4))
-                    Text(stringResource(R.string.backup_connect_onedrive), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = OneDriveBlue)
+                    Text(stringResource(R.string.backup_connect_onedrive), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
                 }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = stringResource(R.string.backup_onedrive_connect_desc),
-                        fontSize = 12.sp,
-                        color = TextSecondaryLight
-                    )
 
-                    OutlinedTextField(
-                        value = inputEmail,
-                        onValueChange = { inputEmail = it },
-                        label = { Text(stringResource(R.string.backup_onedrive_email_label)) },
-                        placeholder = { Text(stringResource(R.string.backup_onedrive_email_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val email = if (inputEmail.isNotBlank()) inputEmail.trim() else "store_admin@outlook.com"
-                        val dummyToken = "ms_token_" + UUID.randomUUID().toString()
-                        backupManager.oneDriveProvider.setConnectedAccount(email, dummyToken)
-                        refreshStatus()
-                        showOneDriveConnectDialog = false
-                        Toast.makeText(context, context.getString(R.string.backup_onedrive_connected_format, email), Toast.LENGTH_SHORT).show()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4))
+                Text(
+                    text = stringResource(R.string.backup_onedrive_connect_desc),
+                    fontSize = 12.sp,
+                    color = TextSecondaryLight
+                )
+
+                LojiaTextField(
+                    value = inputEmail,
+                    onValueChange = { inputEmail = it },
+                    label = { Text(stringResource(R.string.backup_onedrive_email_label)) },
+                    placeholder = { Text(stringResource(R.string.backup_onedrive_email_hint)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.backup_connect_account_btn))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showOneDriveConnectDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
+                    Button(
+                        onClick = {
+                            val email = if (inputEmail.isNotBlank()) inputEmail.trim() else "store_admin@outlook.com"
+                            val dummyToken = "ms_token_" + UUID.randomUUID().toString()
+                            backupManager.oneDriveProvider.setConnectedAccount(email, dummyToken)
+                            refreshStatus()
+                            showOneDriveConnectDialog = false
+                            Toast.makeText(context, context.getString(R.string.backup_onedrive_connected_format, email), Toast.LENGTH_SHORT).show()
+                        },
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PureWhite
+                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.backup_connect_account_btn),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showOneDriveConnectDialog = false },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_cancel),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 
     // 3. Google Drive Backups Picker Dialog
     if (showDriveBackupsPicker) {
-        AlertDialog(
-            onDismissRequest = { showDriveBackupsPicker = false },
-            title = {
-                Text(stringResource(R.string.restore_from_drive_title), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            },
-            text = {
+        LojiaDialog(
+            onDismissRequest = { showDriveBackupsPicker = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
+                Text(stringResource(R.string.restore_from_drive_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
+
                 if (driveBackupsList.isEmpty()) {
                     Text(stringResource(R.string.backup_gdrive_none_found), fontSize = 13.sp, color = TextSecondaryLight)
                 } else {
@@ -813,12 +906,11 @@ fun SettingsBackupSubSection(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         driveBackupsList.forEach { item ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, OutlineLight),
-                                color = BackgroundLight,
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusSm))
                                     .clickable {
                                         showDriveBackupsPicker = false
                                         pendingAdminAuthTitle = context.getString(R.string.restore_from_drive_title)
@@ -866,155 +958,230 @@ fun SettingsBackupSubSection(
                         }
                     }
                 }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showDriveBackupsPicker = false }) {
+
+                OutlinedButton(
+                    onClick = { showDriveBackupsPicker = false },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
                     Text(stringResource(R.string.action_cancel))
                 }
             }
-        )
+        }
     }
 
     // 4. Restore Confirmation Dialog with Preview
     if (showRestoreConfirmDialog) {
         val summary = pendingBackupSummary
-        AlertDialog(
+        LojiaDialog(
             onDismissRequest = {
                 showRestoreConfirmDialog = false
                 pendingRestoreUri = null
                 pendingRestoreFile = null
                 pendingRestoreRequiresPassword = false
-            },
-            icon = {
-                Icon(Icons.Outlined.Restore, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(32.dp))
-            },
-            title = {
-                Text(stringResource(R.string.restore_confirm_title), fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.restore_confirm_message), fontSize = 13.sp, color = TextSecondaryLight)
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.DialogPaddingComfortable),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(Dimens.MinTouchTarget)
+                        .clip(CircleShape)
+                        .background(PrimaryContainerLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Outlined.Restore, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(28.dp))
+                }
 
-                    if (pendingRestoreRequiresPassword) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = PrimaryContainerLight,
-                            border = BorderStroke(1.dp, OutlineLight),
-                            modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = stringResource(R.string.restore_confirm_title),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = OnBackgroundLight,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = stringResource(R.string.restore_confirm_message),
+                    fontSize = 13.sp,
+                    color = TextSecondaryLight,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (pendingRestoreRequiresPassword) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = PrimaryContainerLight,
+                                borderColor = OutlineLight,
+                                shape = RoundedCornerShape(Dimens.RadiusSm)
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Lock,
-                                    contentDescription = null,
-                                    tint = PrimaryIndigoLight,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.backup_pw_encrypted_badge),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = PrimaryIndigoLight
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Lock,
+                                contentDescription = null,
+                                tint = PrimaryIndigoLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.backup_pw_encrypted_badge),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryIndigoDark
+                            )
                         }
-                    } else if (summary != null) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = PrimaryContainerLight,
-                            border = BorderStroke(1.dp, OutlineLight),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(
-                                    text = stringResource(R.string.backup_restore_shifts_count_format, summary.shiftReportsCount),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryIndigoLight
-                                )
-                                Text(
-                                    text = stringResource(R.string.backup_restore_summary_format, summary.totalRecords, summary.exportDate),
-                                    fontSize = 11.sp,
-                                    color = OnSurfaceLight
-                                )
-                            }
+                    }
+                } else if (summary != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = PrimaryContainerLight,
+                                borderColor = OutlineLight,
+                                shape = RoundedCornerShape(Dimens.RadiusSm)
+                            )
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = stringResource(R.string.backup_restore_shifts_count_format, summary.shiftReportsCount),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryIndigoDark
+                            )
+                            Text(
+                                text = stringResource(R.string.backup_restore_summary_format, summary.totalRecords, summary.exportDate),
+                                fontSize = 11.sp,
+                                color = OnSurfaceLight
+                            )
                         }
                     }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val uri = pendingRestoreUri
-                        val file = pendingRestoreFile
-                        val requiresPassword = pendingRestoreRequiresPassword
-                        showRestoreConfirmDialog = false
-                        pendingRestoreUri = null
-                        pendingRestoreFile = null
-                        pendingRestoreRequiresPassword = false
-                        pendingAdminAuthTitle = context.getString(R.string.restore_confirm_title)
-                        pendingAdminAuthAction = {
-                            if (requiresPassword) {
-                                restorePasswordError = null
-                                restorePwTarget = when {
-                                    uri != null -> PendingPasswordRestoreTarget.PickedUri(uri, uri.lastPathSegment)
-                                    file != null -> PendingPasswordRestoreTarget.LocalFile(file)
-                                    else -> null
-                                }
-                            } else if (uri != null) {
-                                reportViewModel.restoreOfflineBackup(
-                                    uri = uri,
-                                    password = null,
-                                    onSuccess = { count ->
-                                        Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
-                                        refreshStatus()
-                                    },
-                                    onFailure = { err ->
-                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = {
+                            val uri = pendingRestoreUri
+                            val file = pendingRestoreFile
+                            val requiresPassword = pendingRestoreRequiresPassword
+                            showRestoreConfirmDialog = false
+                            pendingRestoreUri = null
+                            pendingRestoreFile = null
+                            pendingRestoreRequiresPassword = false
+                            pendingAdminAuthTitle = context.getString(R.string.restore_confirm_title)
+                            pendingAdminAuthAction = {
+                                if (requiresPassword) {
+                                    restorePasswordError = null
+                                    restorePwTarget = when {
+                                        uri != null -> PendingPasswordRestoreTarget.PickedUri(uri, uri.lastPathSegment)
+                                        file != null -> PendingPasswordRestoreTarget.LocalFile(file)
+                                        else -> null
                                     }
-                                )
-                            } else if (file != null) {
-                                coroutineScope.launch {
-                                    val res = OfflineBackupManager.restoreBackupFromFile(
-                                        context = context,
-                                        database = AppDatabase.getInstance(context),
-                                        backupFile = file,
-                                        password = null
+                                } else if (uri != null) {
+                                    reportViewModel.restoreOfflineBackup(
+                                        uri = uri,
+                                        password = null,
+                                        onSuccess = { count ->
+                                            Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
+                                            refreshStatus()
+                                        },
+                                        onFailure = { err ->
+                                            Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                        }
                                     )
-                                    if (res.isSuccess) {
-                                        val count = res.getOrDefault(0)
-                                        Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
-                                        refreshStatus()
-                                    } else {
-                                        val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, res.exceptionOrNull())
-                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                } else if (file != null) {
+                                    coroutineScope.launch {
+                                        val res = OfflineBackupManager.restoreBackupFromFile(
+                                            context = context,
+                                            database = AppDatabase.getInstance(context),
+                                            backupFile = file,
+                                            password = null
+                                        )
+                                        if (res.isSuccess) {
+                                            val count = res.getOrDefault(0)
+                                            Toast.makeText(context, context.getString(R.string.data_restored_success, count), Toast.LENGTH_SHORT).show()
+                                            refreshStatus()
+                                        } else {
+                                            val msg = OfflineBackupManager.resolveRestoreErrorMessage(context, res.exceptionOrNull())
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                             }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight)
-                ) {
-                    Text(stringResource(R.string.btn_restore_now), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showRestoreConfirmDialog = false
-                        pendingRestoreUri = null
-                        pendingRestoreFile = null
-                        pendingRestoreRequiresPassword = false
+                        },
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PureWhite
+                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_restore_now),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                ) {
-                    Text(stringResource(R.string.action_cancel))
+
+                    OutlinedButton(
+                        onClick = {
+                            showRestoreConfirmDialog = false
+                            pendingRestoreUri = null
+                            pendingRestoreFile = null
+                            pendingRestoreRequiresPassword = false
+                        },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_cancel),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 
     // 5. Danger Zone Typed "DELETE" Modal
@@ -1022,84 +1189,131 @@ fun SettingsBackupSubSection(
         var typedConfirmation by remember { mutableStateOf("") }
         val isConfirmed = typedConfirmation.trim().equals("DELETE", ignoreCase = false)
 
-        AlertDialog(
-            onDismissRequest = { showDangerZoneDialog = false },
-            icon = {
-                Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = ErrorRedLight, modifier = Modifier.size(36.dp))
-            },
-            title = {
+        LojiaDialog(
+            onDismissRequest = { showDangerZoneDialog = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.DialogPaddingComfortable),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(Dimens.MinTouchTarget)
+                        .clip(CircleShape)
+                        .background(ErrorContainerLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = ErrorRedLight, modifier = Modifier.size(28.dp))
+                }
+
                 Text(
                     text = stringResource(R.string.backup_delete_dialog_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
+                    color = ErrorRedLight,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = stringResource(R.string.backup_delete_dialog_warning),
+                    fontSize = 13.sp,
+                    color = OnSurfaceLight
+                )
+
+                Text(
+                    text = stringResource(R.string.backup_delete_dialog_instruction),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
                     color = ErrorRedLight
                 )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = stringResource(R.string.backup_delete_dialog_warning),
-                        fontSize = 13.sp,
-                        color = OnSurfaceLight
-                    )
 
-                    Text(
-                        text = stringResource(R.string.backup_delete_dialog_instruction),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ErrorRedLight
-                    )
+                LojiaTextField(
+                    value = typedConfirmation,
+                    onValueChange = { typedConfirmation = it },
+                    placeholder = { Text(stringResource(R.string.backup_delete_keyword)) },
+                    singleLine = true,
+                    isError = typedConfirmation.isNotEmpty() && !isConfirmed,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("input_delete_confirmation")
+                )
 
-                    OutlinedTextField(
-                        value = typedConfirmation,
-                        onValueChange = { typedConfirmation = it },
-                        placeholder = { Text(stringResource(R.string.backup_delete_keyword)) },
-                        singleLine = true,
-                        isError = typedConfirmation.isNotEmpty() && !isConfirmed,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = ErrorRedLight,
-                            errorBorderColor = ErrorRedLight
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = {
+                            showDangerZoneDialog = false
+                            pendingAdminAuthTitle = context.getString(R.string.clear_all_data_title)
+                            pendingAdminAuthAction = {
+                                reportViewModel.clearAllBusinessData(
+                                    onSuccess = {
+                                        Toast.makeText(context, context.getString(R.string.backup_cleared_all_toast), Toast.LENGTH_LONG).show()
+                                        refreshStatus()
+                                    },
+                                    onFailure = { err ->
+                                        Toast.makeText(context, context.getString(R.string.backup_clear_error_format, err), Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+                        },
+                        enabled = isConfirmed,
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(
+                                enabled = isConfirmed,
+                                isDestructive = true,
+                                cornerRadius = Dimens.RadiusMd
+                            )
+                            .testTag("btn_confirm_delete_everything")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_delete_everything),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showDangerZoneDialog = false },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
                         ),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("input_delete_confirmation")
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDangerZoneDialog = false
-                        pendingAdminAuthTitle = context.getString(R.string.clear_all_data_title)
-                        pendingAdminAuthAction = {
-                            reportViewModel.clearAllBusinessData(
-                                onSuccess = {
-                                    Toast.makeText(context, context.getString(R.string.backup_cleared_all_toast), Toast.LENGTH_LONG).show()
-                                    refreshStatus()
-                                },
-                                onFailure = { err ->
-                                    Toast.makeText(context, context.getString(R.string.backup_clear_error_format, err), Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
-                    },
-                    enabled = isConfirmed,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ErrorRedLight,
-                        disabledContainerColor = ErrorRedLight.copy(alpha = 0.3f),
-                        contentColor = PureWhite
-                    ),
-                    modifier = Modifier.testTag("btn_confirm_delete_everything")
-                ) {
-                    Text(stringResource(R.string.btn_delete_everything), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDangerZoneDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_cancel),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 
     if (showSetPasswordFirstDialog) {
@@ -1233,15 +1447,14 @@ private fun BackupLocationOptionCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Surface(
-        shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) PrimaryIndigoLight else OutlineLight
-        ),
-        color = if (isSelected) PrimaryContainerLight.copy(alpha = 0.4f) else BackgroundLight,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = Dimens.MinTouchTarget)
+            .depthCard(
+                accent = isSelected,
+                shape = RoundedCornerShape(Dimens.RadiusMd)
+            )
             .clickable(onClick = onClick)
     ) {
         Row(
@@ -1296,11 +1509,11 @@ private fun LocalBackupStatusCard(
     onRestoreFile: () -> Unit
 ) {
     val context = LocalContext.current
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(LojiaDimens.CardRadius),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(1)
+            .depthCard()
     ) {
         Column(
             modifier = Modifier
@@ -1340,7 +1553,7 @@ private fun LocalBackupStatusCard(
                         text = stringResource(if (lastBackupTime > 0L) R.string.backup_status_protected else R.string.backup_status_no_backup),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (lastBackupTime > 0L) SuccessGreen else WarningOrange,
+                        color = if (lastBackupTime > 0L) SuccessTextDark else WarningText,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -1379,12 +1592,21 @@ private fun LocalBackupStatusCard(
                 Button(
                     onClick = onBackupNow,
                     enabled = !isBackingUp,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
-                    modifier = Modifier.weight(1f)
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = !isBackingUp, cornerRadius = Dimens.RadiusMd)
                 ) {
                     if (isBackingUp) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = OnSurfaceVariantLight, strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(stringResource(R.string.backup_backing_up), fontSize = 12.sp)
                     } else {
@@ -1396,10 +1618,20 @@ private fun LocalBackupStatusCard(
 
                 OutlinedButton(
                     onClick = onViewFiles,
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, PrimaryIndigoLight),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
-                    modifier = Modifier.weight(1f)
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = PrimaryIndigoLight,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                 ) {
                     Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
@@ -1422,11 +1654,11 @@ private fun GoogleDriveStatusCard(
     onDisconnect: () -> Unit
 ) {
     val context = LocalContext.current
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(LojiaDimens.CardRadius),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(1)
+            .depthCard()
     ) {
         Column(
             modifier = Modifier
@@ -1447,10 +1679,10 @@ private fun GoogleDriveStatusCard(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1A73E8).copy(alpha = 0.12f)),
+                            .background(GoogleDriveBlue.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = Color(0xFF1A73E8), modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = GoogleDriveBlue, modifier = Modifier.size(20.dp))
                     }
                     Column {
                         Text(stringResource(R.string.backup_loc_gdrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
@@ -1471,7 +1703,7 @@ private fun GoogleDriveStatusCard(
                         text = stringResource(if (isConnected) R.string.backup_status_connected else R.string.backup_status_disconnected),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isConnected) SuccessGreen else TextSecondaryLight,
+                        color = if (isConnected) SuccessTextDark else TextSecondaryLight,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -1501,9 +1733,16 @@ private fun GoogleDriveStatusCard(
             if (!isConnected) {
                 Button(
                     onClick = onConnect,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8)),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                 ) {
                     Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
@@ -1512,17 +1751,27 @@ private fun GoogleDriveStatusCard(
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
                         onClick = onBackupNow,
                         enabled = !isUploading,
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8)),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = !isUploading, cornerRadius = Dimens.RadiusMd)
                     ) {
                         if (isUploading) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = OnSurfaceVariantLight, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(stringResource(R.string.backup_uploading), fontSize = 12.sp)
                         } else {
@@ -1534,17 +1783,30 @@ private fun GoogleDriveStatusCard(
 
                     OutlinedButton(
                         onClick = onRestore,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0xFF1A73E8)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1A73E8)),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = GoogleDriveBlue
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = GoogleDriveBlue,
+                                cornerRadius = Dimens.RadiusMd
+                            )
                     ) {
                         Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(stringResource(R.string.action_unarchive), fontSize = 12.sp)
                     }
 
-                    IconButton(onClick = onDisconnect) {
+                    IconButton(
+                        onClick = onDisconnect,
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.btn_disconnect_drive), tint = ErrorRedLight)
                     }
                 }
@@ -1565,11 +1827,11 @@ private fun OneDriveStatusCard(
     onDisconnect: () -> Unit
 ) {
     val context = LocalContext.current
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(LojiaDimens.CardRadius),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(1)
+            .depthCard()
     ) {
         Column(
             modifier = Modifier
@@ -1590,10 +1852,10 @@ private fun OneDriveStatusCard(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF0078D4).copy(alpha = 0.12f)),
+                            .background(OneDriveBlue.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = Color(0xFF0078D4), modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = OneDriveBlue, modifier = Modifier.size(20.dp))
                     }
                     Column {
                         Text(stringResource(R.string.backup_loc_onedrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
@@ -1614,7 +1876,7 @@ private fun OneDriveStatusCard(
                         text = stringResource(if (isConnected) R.string.backup_status_connected else R.string.backup_status_disconnected),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isConnected) SuccessGreen else TextSecondaryLight,
+                        color = if (isConnected) SuccessTextDark else TextSecondaryLight,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -1644,9 +1906,16 @@ private fun OneDriveStatusCard(
             if (!isConnected) {
                 Button(
                     onClick = onConnect,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4)),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                 ) {
                     Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
@@ -1655,17 +1924,27 @@ private fun OneDriveStatusCard(
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
                         onClick = onBackupNow,
                         enabled = !isUploading,
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0078D4)),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = !isUploading, cornerRadius = Dimens.RadiusMd)
                     ) {
                         if (isUploading) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = PureWhite, strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = OnSurfaceVariantLight, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(stringResource(R.string.backup_uploading), fontSize = 12.sp)
                         } else {
@@ -1677,17 +1956,30 @@ private fun OneDriveStatusCard(
 
                     OutlinedButton(
                         onClick = onRestore,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0xFF0078D4)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0078D4)),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OneDriveBlue
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = OneDriveBlue,
+                                cornerRadius = Dimens.RadiusMd
+                            )
                     ) {
                         Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(stringResource(R.string.action_unarchive), fontSize = 12.sp)
                     }
 
-                    IconButton(onClick = onDisconnect) {
+                    IconButton(
+                        onClick = onDisconnect,
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.btn_disconnect_drive), tint = ErrorRedLight)
                     }
                 }

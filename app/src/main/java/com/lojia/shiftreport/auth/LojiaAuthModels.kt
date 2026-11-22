@@ -12,37 +12,37 @@ import com.lojia.shiftreport.settings.*
 import androidx.compose.ui.graphics.Color
 
 object LojiaColors {
-    val P800 = Color(0xFF001B3E)
-    val P700 = Color(0xFF284777)
-    val P600 = Color(0xFF415F91)
-    val P500 = Color(0xFF415F91) // Deep Indigo #415F91
-    val P400 = Color(0xFF5D7BAE)
-    val P100 = Color(0xFFD6E3FF)
-    val P50 = Color(0xFFEEF3FF)
+    val P800 = AuthPrimaryDeep
+    val P700 = AuthPrimaryDark
+    val P600 = PrimaryIndigoLight
+    val P500 = PrimaryIndigoLight
+    val P400 = AuthPrimarySoft
+    val P100 = PrimaryContainerLight
+    val P50 = DepthTokens.CardAccentGradientStart
 
-    val G500 = Color(0xFF006C5B) // Subtle Teal/Cyan #006C5B
-    val G200 = Color(0xFF72F8DC)
-    val G100 = Color(0xFFD4F9EE)
+    val G500 = SuccessGreen
+    val G200 = AuthSuccessMint
+    val G100 = SuccessContainer
 
-    val R500 = Color(0xFFBA1A1A) // Standard MD3 Error #BA1A1A
-    val R100 = Color(0xFFFFDAD6)
-    val R200 = Color(0xFFF9DEDC)
+    val R500 = ErrorRedLight
+    val R100 = ErrorContainerLight
+    val R200 = NegativeBannerBorder
 
-    val A400 = Color(0xFF8C5000)
+    val A400 = WarningText
 
-    val N900 = Color(0xFF191C20) // High-contrast Charcoal #191C20
-    val N700 = Color(0xFF2E3135)
-    val N600 = Color(0xFF44474E) // Medium Gray #44474E
-    val N500 = Color(0xFF74777F) // Outline/Hint Gray
-    val N400 = Color(0xFF8E9099)
-    val N300 = Color(0xFFCAC4D0)
-    val N200 = Color(0xFFE2E2E9)
-    val N100 = Color(0xFFF0F0F7)
-    val N50 = Color(0xFFF9F9FF)  // Cool Off-White/Light Gray Background #F9F9FF
-    val White = Color(0xFFFFFFFF) // Pure White Surface #FFFFFF
+    val N900 = OnBackgroundLight
+    val N700 = DarkCharcoal
+    val N600 = OnSurfaceVariantLight
+    val N500 = OnSurfaceVariantLight
+    val N400 = TextHintColor
+    val N300 = OutlineLight
+    val N200 = OutlineVariantLight
+    val N100 = SurfaceVariantLight
+    val N50 = BackgroundLight
+    val White = PureWhite
 
-    val CanvasBg = Color(0xFFF9F9FF)
-    val OkBg = Color(0xFFD4F9EE)
+    val CanvasBg = BackgroundLight
+    val OkBg = SuccessContainer
 }
 
 data class LojiaCountry(

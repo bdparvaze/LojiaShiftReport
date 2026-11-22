@@ -86,12 +86,13 @@ fun LanguageSettingsComponent(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            availableLanguages.forEach { lang ->
+            availableLanguages.forEachIndexed { index, lang ->
                 val isSelected = activeAppLanguage == lang
                 LanguageOptionRow(
                     language = lang,
                     isSelected = isSelected,
                     accentColor = accentColor,
+                    index = index,
                     onClick = {
                         coroutineScope.launch {
                             LanguagePreferences.saveLanguageDataStore(context, lang.code)
@@ -123,23 +124,19 @@ private fun LanguageOptionRow(
     language: AppLanguage,
     isSelected: Boolean,
     accentColor: Color,
+    index: Int = 0,
     onClick: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(LojiaDimens.CardRadius),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) PrimaryContainerLight else SurfaceLight
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) accentColor else OutlineLight
-        ),
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = LojiaDimens.CardSpacing)
-            .defaultMinSize(minHeight = 56.dp)
-            .clip(RoundedCornerShape(LojiaDimens.CardRadius))
+            .cardRise(index)
+            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+            .depthCard(
+                accent = isSelected,
+                shape = RoundedCornerShape(LojiaDimens.CardRadius)
+            )
             .clickable { onClick() }
             .testTag("language_row_${language.code}")
     ) {
@@ -189,7 +186,7 @@ private fun LanguageOptionRow(
                                     text = stringResource(R.string.lang_rtl_badge),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = WarningOrange,
+                                    color = WarningText,
                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                                 )
                             }

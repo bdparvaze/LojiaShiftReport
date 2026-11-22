@@ -207,7 +207,7 @@ fun AuthScreenLoginTab(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Operator Username Field
-        OutlinedTextField(
+        com.lojia.shiftreport.ui.common.LojiaTextField(
             value = username,
             onValueChange = {
                 username = it
@@ -237,7 +237,7 @@ fun AuthScreenLoginTab(
                 )
             },
             singleLine = true,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(Dimens.RadiusMd),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -251,17 +251,6 @@ fun AuthScreenLoginTab(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal
             ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedBorderColor = primaryIndigo,
-                unfocusedBorderColor = borderGray,
-                focusedTextColor = charcoalText,
-                unfocusedTextColor = charcoalText,
-                focusedLabelColor = primaryIndigo,
-                unfocusedLabelColor = mediumGray,
-                cursorColor = primaryIndigo
-            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("etLoginUser")
@@ -270,7 +259,7 @@ fun AuthScreenLoginTab(
         Spacer(modifier = Modifier.height(14.dp))
 
         // Password Field with Eye Toggle
-        OutlinedTextField(
+        com.lojia.shiftreport.ui.common.LojiaTextField(
             value = password,
             onValueChange = {
                 password = it
@@ -302,7 +291,7 @@ fun AuthScreenLoginTab(
             trailingIcon = {
                 IconButton(
                     onClick = { isPasswordVisible = !isPasswordVisible },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(Dimens.MinTouchTarget)
                 ) {
                     Icon(
                         imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
@@ -314,7 +303,7 @@ fun AuthScreenLoginTab(
             },
             singleLine = true,
             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(Dimens.RadiusMd),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
@@ -327,17 +316,6 @@ fun AuthScreenLoginTab(
                 fontFamily = PoppinsFontFamily,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedBorderColor = primaryIndigo,
-                unfocusedBorderColor = borderGray,
-                focusedTextColor = charcoalText,
-                unfocusedTextColor = charcoalText,
-                focusedLabelColor = primaryIndigo,
-                unfocusedLabelColor = mediumGray,
-                cursorColor = primaryIndigo
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -356,6 +334,7 @@ fun AuthScreenLoginTab(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -363,7 +342,6 @@ fun AuthScreenLoginTab(
                         val newState = !rememberMe
                         rememberMe = newState
                         if (!newState) {
-                            // Immediate clearing: If user unchecks, remove remembered username right away
                             coroutineScope.launch {
                                 secureStorageManager.clearRememberedUsername()
                                 preferencesRepository.clearRememberedUsername()
@@ -389,7 +367,7 @@ fun AuthScreenLoginTab(
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = stringResource(R.string.auth_remember_me_selected_cd),
-                            tint = Color.White,
+                            tint = PureWhite,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -408,7 +386,8 @@ fun AuthScreenLoginTab(
 
             TextButton(
                 onClick = onForgotPasswordClick,
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = stringResource(R.string.auth_forgot_password),
@@ -422,17 +401,23 @@ fun AuthScreenLoginTab(
 
         errorMessage?.let { msg ->
             Spacer(modifier = Modifier.height(8.dp))
-            Surface(
-                color = errorRed.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .depthSemanticCard(
+                        backgroundColor = NegativeBannerSurface,
+                        borderColor = NegativeBannerBorder,
+                        shape = RoundedCornerShape(Dimens.RadiusSm)
+                    )
             ) {
                 Text(
                     text = msg,
                     fontFamily = PoppinsFontFamily,
                     fontSize = 12.sp,
                     color = errorRed,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     textAlign = TextAlign.Center
                 )
             }
@@ -440,25 +425,28 @@ fun AuthScreenLoginTab(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Sign In Button
+        // Raised Sign In Button
         Button(
             onClick = { handleSignIn() },
             enabled = !isLoading,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(Dimens.RadiusMd),
+            elevation = null,
             colors = ButtonDefaults.buttonColors(
-                containerColor = primaryIndigo,
-                contentColor = Color.White,
-                disabledContainerColor = primaryIndigo.copy(alpha = 0.5f)
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                contentColor = PureWhite,
+                disabledContentColor = OnSurfaceVariantLight
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .heightIn(min = Dimens.MinTouchTarget)
+                .depthRaisedButton(enabled = !isLoading, cornerRadius = Dimens.RadiusMd)
                 .testTag("btnSignIn")
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
-                    color = Color.White,
+                    color = PureWhite,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -485,16 +473,22 @@ fun AuthScreenLoginTab(
                 fontSize = 13.sp,
                 color = mediumGray
             )
-            Text(
-                text = stringResource(R.string.auth_register_here),
-                fontFamily = PoppinsFontFamily,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = primaryIndigo,
+            Box(
                 modifier = Modifier
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                    .clip(RoundedCornerShape(Dimens.RadiusSm))
                     .clickable { onRegisterClick() }
-                    .padding(vertical = 4.dp)
-            )
+                    .padding(horizontal = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.auth_register_here),
+                    fontFamily = PoppinsFontFamily,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryIndigo
+                )
+            }
         }
     }
 }

@@ -115,17 +115,47 @@ fun SettingsCommonDialogs(
 
     // Admin PIN Verification Dialog
     if (showAdminPinDialog) {
-        AlertDialog(
+        LojiaDialog(
             onDismissRequest = {
                 enteredPin = ""
                 pinError = false
                 onDismissAdminPin()
-            },
-            containerColor = SurfaceLight,
-            icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(stringResource(R.string.admin_authorization_required), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryContainerLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.admin_authorization_required),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceLight
+                    )
+                }
+
+                Column {
                     Text(
                         stringResource(R.string.this_setting_is_protected),
                         fontSize = 13.sp,
@@ -137,7 +167,7 @@ fun SettingsCommonDialogs(
                         Spacer(modifier = Modifier.height(8.dp))
                         LojiaTextField(
                             value = enteredPin,
-                            onValueChange = { 
+                            onValueChange = {
                                 if (it.length <= 6) {
                                     enteredPin = it
                                     pinError = false
@@ -146,54 +176,120 @@ fun SettingsCommonDialogs(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                             visualTransformation = PasswordVisualTransformation(),
                             singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth().testTag("admin_pin_input")
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("admin_pin_input")
                         )
                     }
                     if (pinError) {
-                        Text(stringResource(R.string.incorrect_pin_try_again), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                        Text(
+                            stringResource(R.string.incorrect_pin_try_again),
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
                     }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val expectedPin = userProfile?.pin.orEmpty()
-                        if (isPinUsable(enteredPin) && isPinUsable(expectedPin) &&
-                            SecurityUtils.verifySecret(enteredPin, expectedPin)
-                        ) {
+
+                val confirmAction = @Composable {
+                    Button(
+                        onClick = {
+                            val expectedPin = userProfile?.pin.orEmpty()
+                            if (isPinUsable(enteredPin) && isPinUsable(expectedPin) &&
+                                SecurityUtils.verifySecret(enteredPin, expectedPin)
+                            ) {
+                                enteredPin = ""
+                                pinError = false
+                                onAdminPinVerified()
+                            } else {
+                                pinError = true
+                            }
+                        },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                            .testTag("admin_pin_confirm")
+                    ) {
+                        Text(stringResource(R.string.unlock), fontWeight = FontWeight.Bold)
+                    }
+                }
+                val dismissAction = @Composable {
+                    OutlinedButton(
+                        onClick = {
                             enteredPin = ""
                             pinError = false
-                            onAdminPinVerified()
-                        } else {
-                            pinError = true
-                        }
-                    },
-                    modifier = Modifier.testTag("admin_pin_confirm")
-                ) {
-                    Text(stringResource(R.string.unlock))
+                            onDismissAdminPin()
+                        },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    enteredPin = ""
-                    pinError = false
-                    onDismissAdminPin()
-                }) {
-                    Text(stringResource(R.string.cancel_18))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                    Box(modifier = Modifier.weight(1f)) { confirmAction() }
                 }
             }
-        )
+        }
     }
 
     // Terms & Conditions Dialog
     if (showTermsDialog) {
-        AlertDialog(
-            onDismissRequest = onDismissTerms,
-            containerColor = SurfaceLight,
-            icon = { Icon(Icons.Default.Gavel, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(stringResource(R.string.terms_conditions_1), fontWeight = FontWeight.Bold) },
-            text = {
+        LojiaDialog(onDismissRequest = onDismissTerms) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryContainerLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Gavel,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.terms_conditions_1),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceLight
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -207,23 +303,59 @@ fun SettingsCommonDialogs(
                         lineHeight = 18.sp
                     )
                 }
-            },
-            confirmButton = {
-                Button(onClick = onDismissTerms) {
-                    Text(stringResource(R.string.i_understand))
+                Button(
+                    onClick = onDismissTerms,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.i_understand), fontWeight = FontWeight.Bold)
                 }
             }
-        )
+        }
     }
 
     // Privacy Policy Dialog
     if (showPrivacyDialog) {
-        AlertDialog(
-            onDismissRequest = onDismissPrivacy,
-            containerColor = SurfaceLight,
-            icon = { Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(stringResource(R.string.privacy_policy_2), fontWeight = FontWeight.Bold) },
-            text = {
+        LojiaDialog(onDismissRequest = onDismissPrivacy) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryContainerLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.privacy_policy_2),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceLight
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -237,13 +369,24 @@ fun SettingsCommonDialogs(
                         lineHeight = 18.sp
                     )
                 }
-            },
-            confirmButton = {
-                Button(onClick = onDismissPrivacy) {
-                    Text(stringResource(R.string.close_7))
+                Button(
+                    onClick = onDismissPrivacy,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.close_7), fontWeight = FontWeight.Bold)
                 }
             }
-        )
+        }
     }
 
     // Support Ticket Dialog
@@ -252,14 +395,26 @@ fun SettingsCommonDialogs(
         var details by remember { mutableStateOf("") }
         var ticketSubmitted by remember { mutableStateOf(false) }
 
-        AlertDialog(
-            onDismissRequest = onDismissSupportTicket,
-            containerColor = SurfaceLight,
-            title = { Text(stringResource(R.string.submit_support_ticket), fontWeight = FontWeight.Bold) },
-            text = {
+        LojiaDialog(onDismissRequest = onDismissSupportTicket) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.submit_support_ticket),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
+                )
                 if (ticketSubmitted) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(48.dp))
@@ -268,10 +423,7 @@ fun SettingsCommonDialogs(
                         Text(stringResource(R.string.our_technical_support_team), fontSize = 13.sp, color = TextSecondaryLight)
                     }
                 } else {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()
-                    ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(stringResource(R.string.need_help_with_pos), fontSize = 13.sp, color = TextSecondaryLight)
                         LojiaTextField(
                             value = subject,
@@ -284,37 +436,93 @@ fun SettingsCommonDialogs(
                             value = details,
                             onValueChange = { details = it },
                             label = { Text(stringResource(R.string.describe_the_issue)) },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 100.dp)
                         )
                     }
                 }
-            },
-            confirmButton = {
-                if (ticketSubmitted) {
-                    Button(onClick = onDismissSupportTicket) { Text(stringResource(R.string.done_1)) }
-                } else {
-                    Button(
-                        onClick = {
-                            if (subject.isNotBlank()) {
-                                ticketSubmitted = true
-                                NotificationHelper.sendTestPushNotification(
-                                    context,
-                                    context.getString(R.string.settings_support_ticket_submitted),
-                                    context.getString(R.string.settings_support_ticket_received_format, subject)
-                                )
-                            }
+
+                val confirmAction = @Composable {
+                    if (ticketSubmitted) {
+                        Button(
+                            onClick = onDismissSupportTicket,
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            elevation = null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                contentColor = PureWhite,
+                                disabledContentColor = OnSurfaceVariantLight
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                        ) {
+                            Text(stringResource(R.string.done_1), fontWeight = FontWeight.Bold)
                         }
-                    ) {
-                        Text(stringResource(R.string.submit_ticket_1))
+                    } else {
+                        Button(
+                            onClick = {
+                                if (subject.isNotBlank()) {
+                                    ticketSubmitted = true
+                                    NotificationHelper.sendTestPushNotification(
+                                        context,
+                                        context.getString(R.string.settings_support_ticket_submitted),
+                                        context.getString(R.string.settings_support_ticket_received_format, subject)
+                                    )
+                                }
+                            },
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            elevation = null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                contentColor = PureWhite,
+                                disabledContentColor = OnSurfaceVariantLight
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                        ) {
+                            Text(stringResource(R.string.submit_ticket_1), fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
-            },
-            dismissButton = {
-                if (!ticketSubmitted) {
-                    TextButton(onClick = onDismissSupportTicket) { Text(stringResource(R.string.cancel_18)) }
+                val dismissAction = @Composable {
+                    if (!ticketSubmitted) {
+                        OutlinedButton(
+                            onClick = onDismissSupportTicket,
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            border = null,
+                            elevation = null,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = OnSurfaceVariantLight
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        ) {
+                            Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (!ticketSubmitted) {
+                        Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                    }
+                    Box(modifier = Modifier.weight(1f)) { confirmAction() }
                 }
             }
-        )
+        }
     }
 
     // Thermal Printer Setup & Test Dialog
@@ -364,11 +572,15 @@ fun ChangeQuickPinDialog(
         else -> stringResource(R.string.settings_pin_step3_desc)
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        icon = {
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(Dimens.DialogPaddingComfortable),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -383,8 +595,9 @@ fun ChangeQuickPinDialog(
                     )
                 }
             }
-        },
-        title = {
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = stepTitle,
@@ -400,13 +613,11 @@ fun ChangeQuickPinDialog(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-        },
-        text = {
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .imePadding(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -493,58 +704,94 @@ fun ChangeQuickPinDialog(
                     )
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    when (step) {
-                        1 -> {
-                            if (preferencesRepository.verifyPin(oldPin)) {
-                                step = 2
-                                errorMessage = null
-                                isError = false
-                            } else {
-                                isError = true
-                                errorMessage = context.getString(R.string.incorrect_pin_try_again)
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            val confirmAction = @Composable {
+                Button(
+                    onClick = {
+                        when (step) {
+                            1 -> {
+                                if (preferencesRepository.verifyPin(oldPin)) {
+                                    step = 2
+                                    errorMessage = null
+                                    isError = false
+                                } else {
+                                    isError = true
+                                    errorMessage = context.getString(R.string.incorrect_pin_try_again)
+                                }
+                            }
+                            2 -> {
+                                if (newPin.matches(Regex(AuthPinConstants.PIN_REGEX))) {
+                                    step = 3
+                                    errorMessage = null
+                                    isError = false
+                                } else {
+                                    isError = true
+                                    errorMessage = context.getString(R.string.pin_must_be_4_digits)
+                                }
+                            }
+                            3 -> {
+                                val req = PinChangeRequest(oldPin, newPin, confirmPin)
+                                if (req.isValid()) {
+                                    preferencesRepository.setQuickPin(newPin)
+                                    preferencesRepository.setQuickLoginEnabled(true)
+                                    onPinChanged()
+                                } else {
+                                    isError = true
+                                    errorMessage = context.getString(R.string.settings_pins_do_not_match)
+                                }
                             }
                         }
-                        2 -> {
-                            if (newPin.matches(Regex(AuthPinConstants.PIN_REGEX))) {
-                                step = 3
-                                errorMessage = null
-                                isError = false
-                            } else {
-                                isError = true
-                                errorMessage = context.getString(R.string.pin_must_be_4_digits)
-                            }
-                        }
-                        3 -> {
-                            val req = PinChangeRequest(oldPin, newPin, confirmPin)
-                            if (req.isValid()) {
-                                preferencesRepository.setQuickPin(newPin)
-                                preferencesRepository.setQuickLoginEnabled(true)
-                                onPinChanged()
-                            } else {
-                                isError = true
-                                errorMessage = context.getString(R.string.settings_pins_do_not_match)
-                            }
-                        }
-                    }
-                },
-                modifier = Modifier.testTag("pin_dialog_confirm")
-            ) {
-                Text(if (step == 3) stringResource(R.string.save_pin_btn) else stringResource(R.string.btn_next))
+                    },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("pin_dialog_confirm")
+                ) {
+                    Text(
+                        text = if (step == 3) stringResource(R.string.save_pin_btn) else stringResource(R.string.btn_next),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.testTag("pin_dialog_dismiss")
+            val dismissAction = @Composable {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("pin_dialog_dismiss")
+                ) {
+                    Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.cancel_18))
+                Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                Box(modifier = Modifier.weight(1f)) { confirmAction() }
             }
         }
-    )
+    }
 }
 
 /**
@@ -569,145 +816,175 @@ fun ChangePasswordDialog(
     val hasDigit = newPassword.any { it.isDigit() }
     val hasUpper = newPassword.any { it.isUpperCase() }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        icon = {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Outlined.Lock,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp)
-                    )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
+                Text(
+                    text = stringResource(R.string.change_password_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.change_password_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+
+            if (currentPasswordHash.isNotBlank()) {
+                LojiaPasswordField(
+                    value = currentPassword,
+                    onValueChange = {
+                        currentPassword = it
+                        currentPasswordError = null
+                    },
+                    label = stringResource(R.string.current_password_label),
+                    placeholder = stringResource(R.string.placeholder_enter_current_password),
+                    errorMessage = currentPasswordError,
+                    validationState = if (currentPasswordError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
+                    testTag = "dialog_current_password"
+                )
+            }
+
+            LojiaPasswordField(
+                value = newPassword,
+                onValueChange = {
+                    newPassword = it
+                    newPasswordError = null
+                    if (confirmPassword.isNotEmpty() && it != confirmPassword) {
+                        confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
+                    } else {
+                        confirmPasswordError = null
+                    }
+                },
+                label = stringResource(R.string.new_password_label),
+                placeholder = stringResource(R.string.placeholder_enter_new_password),
+                errorMessage = newPasswordError,
+                validationState = if (newPasswordError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
+                testTag = "dialog_new_password"
             )
-        },
-        text = {
+
+            // Password rules checklist
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .depthInset(shape = RoundedCornerShape(Dimens.RadiusSm))
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (currentPasswordHash.isNotBlank()) {
-                    LojiaPasswordField(
-                        value = currentPassword,
-                        onValueChange = {
-                            currentPassword = it
-                            currentPasswordError = null
-                        },
-                        label = stringResource(R.string.current_password_label),
-                        placeholder = stringResource(R.string.placeholder_enter_current_password),
-                        errorMessage = currentPasswordError,
-                        validationState = if (currentPasswordError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
-                        testTag = "dialog_current_password"
-                    )
-                }
-
-                LojiaPasswordField(
-                    value = newPassword,
-                    onValueChange = {
-                        newPassword = it
-                        newPasswordError = null
-                        if (confirmPassword.isNotEmpty() && it != confirmPassword) {
-                            confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
-                        } else {
-                            confirmPasswordError = null
-                        }
-                    },
-                    label = stringResource(R.string.new_password_label),
-                    placeholder = stringResource(R.string.placeholder_enter_new_password),
-                    errorMessage = newPasswordError,
-                    validationState = if (newPasswordError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
-                    testTag = "dialog_new_password"
-                )
-
-                // Password rules checklist
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_length), isMet = hasMinLength)
-                    PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_digit), isMet = hasDigit)
-                    PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_upper), isMet = hasUpper)
-                }
-
-                LojiaPasswordField(
-                    value = confirmPassword,
-                    onValueChange = {
-                        confirmPassword = it
-                        if (it.isNotEmpty() && it != newPassword) {
-                            confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
-                        } else {
-                            confirmPasswordError = null
-                        }
-                    },
-                    label = stringResource(R.string.confirm_password_label),
-                    placeholder = stringResource(R.string.placeholder_reenter_new_password),
-                    errorMessage = confirmPasswordError,
-                    validationState = if (confirmPasswordError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
-                    testTag = "dialog_confirm_password"
-                )
+                PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_length), isMet = hasMinLength)
+                PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_digit), isMet = hasDigit)
+                PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_upper), isMet = hasUpper)
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    var hasError = false
-                    if (currentPasswordHash.isNotBlank()) {
-                        if (currentPassword.isBlank()) {
-                            currentPasswordError = context.getString(R.string.error_current_password_required)
-                            hasError = true
-                        } else if (!SecurityUtils.verifySecret(currentPassword, currentPasswordHash)) {
-                            currentPasswordError = context.getString(R.string.error_incorrect_current_password)
-                            hasError = true
-                        }
-                    }
-                    if (newPassword.length < 8 || !newPassword.any { it.isDigit() } || !newPassword.any { it.isUpperCase() }) {
-                        newPasswordError = context.getString(R.string.settings_pw_requirements_error)
-                        hasError = true
-                    }
-                    if (newPassword != confirmPassword) {
+
+            LojiaPasswordField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it
+                    if (it.isNotEmpty() && it != newPassword) {
                         confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
-                        hasError = true
-                    }
-                    if (!hasError) {
-                        onPasswordChanged(newPassword)
+                    } else {
+                        confirmPasswordError = null
                     }
                 },
-                modifier = Modifier.testTag("btn_save_password")
-            ) {
-                Text(stringResource(R.string.save_5))
+                label = stringResource(R.string.confirm_password_label),
+                placeholder = stringResource(R.string.placeholder_reenter_new_password),
+                errorMessage = confirmPasswordError,
+                validationState = if (confirmPasswordError != null) FieldValidationState.ERROR else FieldValidationState.DEFAULT,
+                testTag = "dialog_confirm_password"
+            )
+
+            val confirmAction = @Composable {
+                Button(
+                    onClick = {
+                        var hasError = false
+                        if (currentPasswordHash.isNotBlank()) {
+                            if (currentPassword.isBlank()) {
+                                currentPasswordError = context.getString(R.string.error_current_password_required)
+                                hasError = true
+                            } else if (!SecurityUtils.verifySecret(currentPassword, currentPasswordHash)) {
+                                currentPasswordError = context.getString(R.string.error_incorrect_current_password)
+                                hasError = true
+                            }
+                        }
+                        if (newPassword.length < 8 || !newPassword.any { it.isDigit() } || !newPassword.any { it.isUpperCase() }) {
+                            newPasswordError = context.getString(R.string.settings_pw_requirements_error)
+                            hasError = true
+                        }
+                        if (newPassword != confirmPassword) {
+                            confirmPasswordError = context.getString(R.string.doc_passwords_do_not_match)
+                            hasError = true
+                        }
+                        if (!hasError) {
+                            onPasswordChanged(newPassword)
+                        }
+                    },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("btn_save_password")
+                ) {
+                    Text(stringResource(R.string.save_5), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.testTag("btn_cancel_password")
+            val dismissAction = @Composable {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("btn_cancel_password")
+                ) {
+                    Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.cancel_18))
+                Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                Box(modifier = Modifier.weight(1f)) { confirmAction() }
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -747,126 +1024,157 @@ fun ChangeEmailDialog(
 
     val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        icon = {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Outlined.Email,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp)
-                    )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Email,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
-            }
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.settings_change_email_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
                 Text(
-                    text = stringResource(R.string.settings_change_email_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = stringResource(R.string.settings_change_email_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
                 )
-
-                LojiaTextField(
-                    value = newEmail,
-                    onValueChange = {
-                        newEmail = it
-                        emailError = null
-                        if (confirmEmail.isNotBlank() && it.trim() != confirmEmail.trim()) {
-                            confirmError = context.getString(R.string.settings_emails_do_not_match)
-                        } else {
-                            confirmError = null
-                        }
-                    },
-                    label = { Text(stringResource(R.string.new_email_label)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    singleLine = true,
-                    isError = emailError != null,
-                    modifier = Modifier.fillMaxWidth().testTag("dialog_new_email")
-                )
-                if (emailError != null) {
-                    Text(
-                        text = emailError ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                LojiaTextField(
-                    value = confirmEmail,
-                    onValueChange = {
-                        confirmEmail = it
-                        if (it.trim() != newEmail.trim()) {
-                            confirmError = context.getString(R.string.settings_emails_do_not_match)
-                        } else {
-                            confirmError = null
-                        }
-                    },
-                    label = { Text(stringResource(R.string.confirm_email_label)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    singleLine = true,
-                    isError = confirmError != null,
-                    modifier = Modifier.fillMaxWidth().testTag("dialog_confirm_email")
-                )
-                if (confirmError != null) {
-                    Text(
-                        text = confirmError ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val cleanMail = newEmail.trim()
-                    var hasErr = false
-                    if (!cleanMail.matches(emailRegex)) {
-                        emailError = context.getString(R.string.settings_invalid_email_error)
-                        hasErr = true
-                    }
-                    if (confirmEmail.trim() != cleanMail) {
+
+            Text(
+                text = stringResource(R.string.settings_change_email_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            LojiaTextField(
+                value = newEmail,
+                onValueChange = {
+                    newEmail = it
+                    emailError = null
+                    if (confirmEmail.isNotBlank() && it.trim() != confirmEmail.trim()) {
                         confirmError = context.getString(R.string.settings_emails_do_not_match)
-                        hasErr = true
-                    }
-                    if (!hasErr) {
-                        onEmailChanged(cleanMail)
+                    } else {
+                        confirmError = null
                     }
                 },
-                modifier = Modifier.testTag("btn_save_email")
-            ) {
-                Text(stringResource(R.string.save_5))
+                label = { Text(stringResource(R.string.new_email_label)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                singleLine = true,
+                isError = emailError != null,
+                modifier = Modifier.fillMaxWidth().testTag("dialog_new_email")
+            )
+            if (emailError != null) {
+                Text(
+                    text = emailError ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.testTag("btn_cancel_email")
+
+            LojiaTextField(
+                value = confirmEmail,
+                onValueChange = {
+                    confirmEmail = it
+                    if (it.trim() != newEmail.trim()) {
+                        confirmError = context.getString(R.string.settings_emails_do_not_match)
+                    } else {
+                        confirmError = null
+                    }
+                },
+                label = { Text(stringResource(R.string.confirm_email_label)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                singleLine = true,
+                isError = confirmError != null,
+                modifier = Modifier.fillMaxWidth().testTag("dialog_confirm_email")
+            )
+            if (confirmError != null) {
+                Text(
+                    text = confirmError ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            val confirmAction = @Composable {
+                Button(
+                    onClick = {
+                        val cleanMail = newEmail.trim()
+                        var hasErr = false
+                        if (!cleanMail.matches(emailRegex)) {
+                            emailError = context.getString(R.string.settings_invalid_email_error)
+                            hasErr = true
+                        }
+                        if (confirmEmail.trim() != cleanMail) {
+                            confirmError = context.getString(R.string.settings_emails_do_not_match)
+                            hasErr = true
+                        }
+                        if (!hasErr) {
+                            onEmailChanged(cleanMail)
+                        }
+                    },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("btn_save_email")
+                ) {
+                    Text(stringResource(R.string.save_5), fontWeight = FontWeight.Bold)
+                }
+            }
+            val dismissAction = @Composable {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("btn_cancel_email")
+                ) {
+                    Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.cancel_18))
+                Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                Box(modifier = Modifier.weight(1f)) { confirmAction() }
             }
         }
-    )
+    }
 }

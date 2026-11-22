@@ -170,53 +170,110 @@ fun SettingsScreen(
     if (showRoleSwitchDialog) {
         var roleTarget by remember { mutableStateOf(if (isAdmin) "CASHIER" else "ADMIN") }
 
-        AlertDialog(
+        LojiaDialog(
             onDismissRequest = { showRoleSwitchDialog = false },
-            containerColor = SurfaceLight,
-            title = { Text(stringResource(R.string.switch_role), fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.select_target_role_to), fontSize = 13.sp, color = TextSecondaryLight)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = roleTarget == "ADMIN",
-                            onClick = { roleTarget = "ADMIN" },
-                            label = { Text(stringResource(R.string.administrator)) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            selected = roleTarget == "CASHIER",
-                            onClick = { roleTarget = "CASHIER" },
-                            label = { Text(stringResource(R.string.cashier_6)) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showRoleSwitchDialog = false
-                        if (roleTarget == "ADMIN") {
-                            pendingAdminSubtitle = context.getString(R.string.switch_role)
-                            pendingAdminAction = {
-                                reportViewModel.switchUserRole(
-                                    role = "ADMIN",
-                                    authorizedByAdmin = true
-                                )
-                            }
-                        } else {
-                            reportViewModel.switchUserRole(role = roleTarget)
-                        }
-                    }
+            maxWidth = Dimens.DialogSmallMaxWidth
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.switch_role),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
+                )
+                Text(
+                    text = stringResource(R.string.select_target_role_to),
+                    fontSize = 13.sp,
+                    color = TextSecondaryLight
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(stringResource(R.string.apply))
+                    FilterChip(
+                        selected = roleTarget == "ADMIN",
+                        onClick = { roleTarget = "ADMIN" },
+                        label = { Text(stringResource(R.string.administrator)) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                    )
+                    FilterChip(
+                        selected = roleTarget == "CASHIER",
+                        onClick = { roleTarget = "CASHIER" },
+                        label = { Text(stringResource(R.string.cashier_6)) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                    )
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRoleSwitchDialog = false }) { Text(stringResource(R.string.cancel_18)) }
+
+                val confirmAction = @Composable {
+                    Button(
+                        onClick = {
+                            showRoleSwitchDialog = false
+                            if (roleTarget == "ADMIN") {
+                                pendingAdminSubtitle = context.getString(R.string.switch_role)
+                                pendingAdminAction = {
+                                    reportViewModel.switchUserRole(
+                                        role = "ADMIN",
+                                        authorizedByAdmin = true
+                                    )
+                                }
+                            } else {
+                                reportViewModel.switchUserRole(role = roleTarget)
+                            }
+                        },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(stringResource(R.string.apply), fontWeight = FontWeight.Bold)
+                    }
+                }
+                val dismissAction = @Composable {
+                    OutlinedButton(
+                        onClick = { showRoleSwitchDialog = false },
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                    Box(modifier = Modifier.weight(1f)) { confirmAction() }
+                }
             }
-        )
+        }
     }
 
     if (pendingAdminAction != null) {

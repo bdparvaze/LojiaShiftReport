@@ -160,3 +160,42 @@ object ShiftColors {
     val NetCashGreen = PosCashGreen
     val NetMadaBlue = PosCardBlue
 }
+
+// ============ STAGE 26C EXTENDED SEMANTIC, PROVIDER, LOGO & MAP TOKENS ============
+val SuccessTextDark = Color(0xFF065F46)
+
+// Auth Palette Supporting Tones (all text pairings meet WCAG AA >= 4.5:1)
+val AuthPrimaryDeep = Color(0xFF001B3E)
+val AuthPrimaryDark = Color(0xFF284777)
+val AuthPrimarySoft = Color(0xFF5D7BAE)
+val AuthSuccessMint = Color(0xFF72F8DC)
+
+// Cloud Backup Provider Brand Accents
+val GoogleDriveBlue = Color(0xFF1A73E8)
+val OneDriveBlue = Color(0xFF0078D4)
+
+// Business Logo Preset Gradients (White foreground on gradient stops)
+val PresetLogoSuperstoreStart = PrimaryBlueDark
+val PresetLogoSuperstoreEnd = OnBackgroundLight
+val PresetLogoRetailStart = Color(0xFF10B981)
+val PresetLogoRetailEnd = PosCashGreenFill
+val PresetLogoCafeStart = WarningOrange
+val PresetLogoCafeEnd = WarningText
+val PresetLogoRestaurantStart = Color(0xFFF97316)
+val PresetLogoRestaurantEnd = PosDueOrange
+val PresetLogoFashionStart = Color(0xFFEC4899)
+val PresetLogoFashionEnd = Color(0xFFBE185D)
+val PresetLogoPharmacyStart = Color(0xFF06B6D4)
+val PresetLogoPharmacyEnd = Color(0xFF0E7490)
+val PresetLogoTechStart = ChartIndigo
+val PresetLogoTechEnd = Color(0xFF4338CA)
+
+// Interactive Map Canvas Surface & Vector Colors
+val MapLandBg = Color(0xFFF1F3F4)
+val MapWaterBlue = Color(0xFFC4E8FD)
+val MapWaterTint = Color(0xFFD2E3FC)
+val MapParkGreen = Color(0xFFCEEAD6)
+val MapUrbanBlock = Color(0xFFE8EAED)
+val MapHighwayBorder = Color(0xFFF9AB00)
+val MapHighwayFill = Color(0xFFFEEFC3)
+

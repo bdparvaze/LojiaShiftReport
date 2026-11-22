@@ -36,11 +36,13 @@ fun DocumentScannerHeaderCard(
     onGalleryClick: () -> Unit,
     onCameraFallbackClick: () -> Unit
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+    val style = LocalDepthStyle.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(0)
+            .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
     ) {
         Column(
             modifier = Modifier
@@ -55,13 +57,13 @@ fun DocumentScannerHeaderCard(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(PrimaryIndigo.copy(alpha = 0.12f)),
+                        .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.DocumentScanner,
                         contentDescription = null,
-                        tint = PrimaryIndigo,
+                        tint = PrimaryIndigoDark,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -96,11 +98,16 @@ fun DocumentScannerHeaderCard(
             ) {
                 Button(
                     onClick = onScanClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                    shape = RoundedCornerShape(12.dp),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     modifier = Modifier
                         .weight(1f)
-                        .defaultMinSize(minHeight = 44.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                         .testTag("start_scan_button")
                 ) {
                     Icon(
@@ -118,12 +125,21 @@ fun DocumentScannerHeaderCard(
                     )
                 }
 
-                Button(
+                OutlinedButton(
                     onClick = onCameraFallbackClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = OnBackgroundLight),
-                    shape = RoundedCornerShape(12.dp),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     modifier = Modifier
-                        .defaultMinSize(minHeight = 44.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag("camera_scan_button")
                 ) {
                     Icon(
@@ -143,21 +159,31 @@ fun DocumentScannerHeaderCard(
 
                 OutlinedButton(
                     onClick = onGalleryClick,
-                    shape = RoundedCornerShape(12.dp),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     modifier = Modifier
-                        .defaultMinSize(minHeight = 44.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag("import_gallery_button")
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PhotoLibrary,
                         contentDescription = null,
-                        tint = PrimaryIndigo,
+                        tint = PrimaryIndigoDark,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = stringResource(R.string.btn_gallery),
-                        color = PrimaryIndigo,
+                        color = PrimaryIndigoDark,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.5.sp,
                         maxLines = 1,
@@ -217,12 +243,10 @@ fun ScannedDocumentItemCard(
         } else null
     }
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
-        shape = RoundedCornerShape(14.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .depthCard(accent = isSelected, shape = RoundedCornerShape(Dimens.RadiusMd))
             .clickable {
                 if (isSelectionMode) {
                     onToggleSelect()
@@ -302,7 +326,7 @@ fun ScannedDocumentItemCard(
                 Box {
                     IconButton(
                         onClick = { menuExpanded = true },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.MoreVert,
@@ -314,7 +338,7 @@ fun ScannedDocumentItemCard(
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
-                        containerColor = Color.White
+                        containerColor = PureWhite
                     ) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.doc_btn_view_pdf), color = OnSurfaceLight) },
@@ -428,9 +452,15 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
             Spacer(modifier = Modifier.height(4.dp))
             Button(
                 onClick = onScanClick,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.defaultMinSize(minHeight = 42.dp)
+                elevation = null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = PureWhite
+                ),
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier
+                    .heightIn(min = Dimens.MinTouchTarget)
+                    .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.DocumentScanner,

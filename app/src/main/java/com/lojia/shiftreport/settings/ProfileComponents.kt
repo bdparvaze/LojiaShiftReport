@@ -38,9 +38,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppCountry
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 
 
@@ -112,15 +113,15 @@ fun InlineEditableProfileRow(
     testTag: String = "",
     editContent: @Composable () -> Unit
 ) {
-    Card(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
-            .then(if (testTag.isNotBlank()) Modifier.testTag(testTag) else Modifier),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, OutlineLight)
+            .then(if (testTag.isNotBlank()) Modifier.testTag(testTag) else Modifier)
+            .depthCard(
+                accent = isExpanded,
+                shape = RoundedCornerShape(Dimens.RadiusMd)
+            )
     ) {
         Column(
             modifier = Modifier
@@ -131,6 +132,7 @@ fun InlineEditableProfileRow(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                     .clickable { onToggle() },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -211,7 +213,7 @@ fun ProfileDialogTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     testTag: String = ""
 ) {
-    OutlinedTextField(
+    LojiaTextField(
         value = value,
         onValueChange = onValueChange,
         label = {
@@ -237,23 +239,7 @@ fun ProfileDialogTextField(
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp
         ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = OnSurfaceLight,
-            unfocusedTextColor = OnSurfaceLight,
-            focusedContainerColor = PureWhite,
-            unfocusedContainerColor = PureWhite,
-            disabledContainerColor = SurfaceVariantLight,
-            errorContainerColor = ErrorContainer,
-            focusedLabelColor = PrimaryIndigoLight,
-            unfocusedLabelColor = OnSurfaceVariantLight,
-            focusedPlaceholderColor = TextHintColor,
-            unfocusedPlaceholderColor = TextHintColor,
-            focusedBorderColor = PrimaryIndigoLight,
-            unfocusedBorderColor = OutlineLight,
-            cursorColor = PrimaryIndigoLight,
-            errorBorderColor = ErrorRedLight
-        ),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(Dimens.RadiusMd),
         modifier = modifier
             .fillMaxWidth()
             .then(if (testTag.isNotBlank()) Modifier.testTag(testTag) else Modifier)
@@ -316,135 +302,124 @@ fun CountryCodePickerDialog(
         }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("dialog_select_country_code")
+    ) {
+        Column(
             modifier = Modifier
-                .widthIn(max = Dimens.DialogMaxWidth)
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.SpacingLg)
-                .shadow(Dimens.DialogElevation, RoundedCornerShape(Dimens.DialogCornerRadius))
-                .testTag("dialog_select_country_code"),
-            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-            colors = CardDefaults.cardColors(containerColor = PureWhite)
+                .padding(20.dp)
         ) {
-            Column(
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.auth_select_country_code),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceLight,
+                        fontSize = 17.sp
+                    )
+                )
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cd_close),
+                        tint = OnSurfaceVariantLight,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LojiaTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text(stringResource(R.string.search_country), fontSize = 13.5.sp, color = TextHintColor) },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = OnSurfaceVariantLight) },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = OnSurfaceLight,
+                    fontSize = 14.sp
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .testTag("search_country_input")
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 380.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(R.string.auth_select_country_code),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = OnSurfaceLight,
-                            fontSize = 17.sp
-                        )
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.cd_close),
-                            tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
+                items(filteredCountries) { country ->
+                    val isSelected = country == selectedCountry
+                    val flag = countryCodeToFlagEmoji(country.code)
+                    val countryName = stringResource(country.nameRes)
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text(stringResource(R.string.search_country), fontSize = 13.5.sp, color = TextHintColor) },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = OnSurfaceVariantLight) },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                        color = OnSurfaceLight,
-                        fontSize = 14.sp
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = OnSurfaceLight,
-                        unfocusedTextColor = OnSurfaceLight,
-                        focusedContainerColor = BackgroundLight,
-                        unfocusedContainerColor = BackgroundLight,
-                        focusedBorderColor = PrimaryIndigoLight,
-                        unfocusedBorderColor = OutlineLight,
-                        cursorColor = PrimaryIndigoLight
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("search_country_input")
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 380.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(filteredCountries) { country ->
-                        val isSelected = country == selectedCountry
-                        val flag = countryCodeToFlagEmoji(country.code)
-                        val countryName = stringResource(country.nameRes)
-
-                        Surface(
-                            onClick = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                            .depthCard(
+                                accent = isSelected,
+                                shape = RoundedCornerShape(Dimens.RadiusMd)
+                            )
+                            .clickable {
                                 onCountrySelected(country)
                                 onDismiss()
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) PrimaryContainerLight else PureWhite,
-                            modifier = Modifier.fillMaxWidth().testTag("country_option_${country.code}")
+                            }
+                            .testTag("country_option_${country.code}")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(text = flag, fontSize = 22.sp, color = OnSurfaceLight)
-                                    Column {
-                                        Text(
-                                            text = countryName,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight,
-                                            fontSize = 14.sp
-                                        )
-                                        Text(
-                                            text = "$countryName (${country.code})",
-                                            color = OnSurfaceVariantLight,
-                                            fontSize = 12.sp
-                                        )
-                                    }
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (isSelected) PrimaryContainerLight else SurfaceVariantLight
-                                ) {
+                                Text(text = flag, fontSize = 22.sp, color = OnSurfaceLight)
+                                Column {
                                     Text(
-                                        text = country.dialCode,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight,
-                                        fontSize = 13.sp,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        text = countryName,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = "$countryName (${country.code})",
+                                        color = OnSurfaceVariantLight,
+                                        fontSize = 12.sp
                                     )
                                 }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) PrimaryContainerLight else SurfaceVariantLight
+                            ) {
+                                Text(
+                                    text = country.dialCode,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
                             }
                         }
                     }

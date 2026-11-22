@@ -63,7 +63,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.util.PdfReportGenerator
 import kotlinx.coroutines.Dispatchers
@@ -79,13 +78,13 @@ data class PresetLogoItem(
 )
 
 val PRESET_LOGOS = listOf(
-    PresetLogoItem("preset:superstore", "🏪", R.string.preset_superstore, listOf(Color(0xFF1E3A8A), Color(0xFF0F172A))),
-    PresetLogoItem("preset:retail", "🛍️", R.string.preset_retail, listOf(Color(0xFF10B981), Color(0xFF059669))),
-    PresetLogoItem("preset:cafe", "☕", R.string.preset_cafe, listOf(Color(0xFFB45309), Color(0xFF78350F))),
-    PresetLogoItem("preset:restaurant", "🍴", R.string.preset_restaurant, listOf(Color(0xFFF97316), Color(0xFFC2410C))),
-    PresetLogoItem("preset:fashion", "💎", R.string.preset_fashion, listOf(Color(0xFFEC4899), Color(0xFFBE185D))),
-    PresetLogoItem("preset:pharmacy", "⚕️", R.string.preset_pharmacy, listOf(Color(0xFF06B6D4), Color(0xFF0E7490))),
-    PresetLogoItem("preset:tech", "⚡", R.string.preset_tech, listOf(Color(0xFF6366F1), Color(0xFF4338CA)))
+    PresetLogoItem("preset:superstore", "🏪", R.string.preset_superstore, listOf(PresetLogoSuperstoreStart, PresetLogoSuperstoreEnd)),
+    PresetLogoItem("preset:retail", "🛍️", R.string.preset_retail, listOf(PresetLogoRetailStart, PresetLogoRetailEnd)),
+    PresetLogoItem("preset:cafe", "☕", R.string.preset_cafe, listOf(PresetLogoCafeStart, PresetLogoCafeEnd)),
+    PresetLogoItem("preset:restaurant", "🍴", R.string.preset_restaurant, listOf(PresetLogoRestaurantStart, PresetLogoRestaurantEnd)),
+    PresetLogoItem("preset:fashion", "💎", R.string.preset_fashion, listOf(PresetLogoFashionStart, PresetLogoFashionEnd)),
+    PresetLogoItem("preset:pharmacy", "⚕️", R.string.preset_pharmacy, listOf(PresetLogoPharmacyStart, PresetLogoPharmacyEnd)),
+    PresetLogoItem("preset:tech", "⚡", R.string.preset_tech, listOf(PresetLogoTechStart, PresetLogoTechEnd))
 )
 
 @Composable
@@ -158,15 +157,32 @@ fun BusinessLogoPickerCard(
 
     // Change photo options dialog
     if (showOptionSheet) {
-        AlertDialog(
-            onDismissRequest = { showOptionSheet = false },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showOptionSheet = false }) {
-                    Text(stringResource(R.string.close), color = OnSurfaceVariantLight)
+        LojiaDialog(onDismissRequest = { showOptionSheet = false }) {
+            // Keep dismiss action before sheet title in source order per baseline contract
+            val dismissAction = @Composable {
+                OutlinedButton(
+                    onClick = { showOptionSheet = false },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.close), fontWeight = FontWeight.SemiBold)
                 }
-            },
-            title = {
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text(
                     text = stringResource(R.string.cd_change_photo),
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -174,22 +190,21 @@ fun BusinessLogoPickerCard(
                         color = OnSurfaceLight
                     )
                 )
-            },
-            text = {
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     // Camera Option
-                    Surface(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                             .clickable {
                                 showOptionSheet = false
                                 launchCamera()
-                            },
-                        color = SurfaceVariantLight
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -214,10 +229,11 @@ fun BusinessLogoPickerCard(
                     }
 
                     // Gallery Upload
-                    Surface(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                             .clickable {
                                 showOptionSheet = false
                                 try {
@@ -227,8 +243,7 @@ fun BusinessLogoPickerCard(
                                 } catch (e: Exception) {
                                     Toast.makeText(context, e.localizedMessage ?: context.getString(R.string.gallery_error), Toast.LENGTH_SHORT).show()
                                 }
-                            },
-                        color = SurfaceVariantLight
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -253,15 +268,15 @@ fun BusinessLogoPickerCard(
                     }
 
                     // Preset Logos
-                    Surface(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                             .clickable {
                                 showOptionSheet = false
                                 showPresetDialog = true
-                            },
-                        color = SurfaceVariantLight
+                            }
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -287,16 +302,20 @@ fun BusinessLogoPickerCard(
 
                     // Remove Photo (if set)
                     if (businessProfile.logoUri.isNotBlank()) {
-                        Surface(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                                .depthSemanticCard(
+                                    backgroundColor = ErrorContainer,
+                                    borderColor = ErrorRedLight.copy(alpha = 0.35f),
+                                    shape = RoundedCornerShape(Dimens.RadiusMd)
+                                )
                                 .clickable {
                                     showOptionSheet = false
                                     onSaveProfile(businessProfile.copy(logoUri = ""))
                                     Toast.makeText(context, removedMsg, Toast.LENGTH_SHORT).show()
-                                },
-                            color = ErrorContainer
+                                }
                         ) {
                             Row(
                                 modifier = Modifier.padding(14.dp),
@@ -321,10 +340,10 @@ fun BusinessLogoPickerCard(
                         }
                     }
                 }
-            },
-            shape = RoundedCornerShape(20.dp),
-            containerColor = SurfaceLight
-        )
+
+                dismissAction()
+            }
+        }
     }
 
     // Centered Photo Selector (Matching Image 1)
@@ -458,12 +477,10 @@ fun ProfileGroupCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
     ) {
         Column(
             modifier = Modifier
@@ -625,146 +642,131 @@ fun PresetLogoPickerDialog(
 ) {
     val primaryBrand = PrimaryIndigoLight
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
             modifier = Modifier
-                .widthIn(max = Dimens.DialogMaxWidth)
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.SpacingLg),
-            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-            colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.DialogElevation)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(PrimaryContainerLight),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoLibrary,
-                                contentDescription = null,
-                                tint = primaryBrand,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.choose_preset_logo),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = OnSurfaceLight,
-                                fontSize = 17.sp
-                            )
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(32.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryContainerLight),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close),
-                            tint = OnSurfaceVariantLight
+                            imageVector = Icons.Default.PhotoLibrary,
+                            contentDescription = null,
+                            tint = primaryBrand,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
+                    Text(
+                        text = stringResource(R.string.choose_preset_logo),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurfaceLight,
+                            fontSize = 17.sp
+                        )
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 380.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.minimumInteractiveComponentSize()
                 ) {
-                    items(PRESET_LOGOS) { item ->
-                        val isSelected = currentLogoKey == item.key
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(115.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(
-                                    width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) primaryBrand else OutlineLight,
-                                    shape = RoundedCornerShape(14.dp)
-                                )
-                                .clickable { onSelectPreset(item.key) },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) PrimaryContainerLight else SurfaceLight
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.close),
+                        tint = OnSurfaceVariantLight
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 380.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(PRESET_LOGOS) { item ->
+                    val isSelected = currentLogoKey == item.key
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(115.dp)
+                            .depthCard(
+                                accent = isSelected,
+                                shape = RoundedCornerShape(Dimens.RadiusMd)
                             )
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                Column(
+                            .clickable { onSelectPreset(item.key) }
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(10.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                        .size(46.dp)
+                                        .shadow(3.dp, CircleShape)
+                                        .clip(CircleShape)
+                                        .background(Brush.linearGradient(item.bgColors)),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(46.dp)
-                                            .shadow(3.dp, CircleShape)
-                                            .clip(CircleShape)
-                                            .background(Brush.linearGradient(item.bgColors)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = item.iconEmoji,
-                                            fontSize = 22.sp
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = stringResource(item.nameResId),
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) primaryBrand else OnSurfaceLight,
-                                            fontSize = 12.sp
-                                        ),
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        text = item.iconEmoji,
+                                        fontSize = 22.sp
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(item.nameResId),
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) primaryBrand else OnSurfaceLight,
+                                        fontSize = 12.sp
+                                    ),
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
 
-                                if (isSelected) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .padding(6.dp)
-                                            .size(20.dp)
-                                            .clip(CircleShape)
-                                            .background(primaryBrand),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = PureWhite,
-                                            modifier = Modifier.size(13.dp)
-                                        )
-                                    }
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp)
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(primaryBrand),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = PureWhite,
+                                        modifier = Modifier.size(13.dp)
+                                    )
                                 }
                             }
                         }

@@ -67,60 +67,56 @@ fun LojiaHeader(
     headerHeight: Dp? = null,
     onLanguageClick: (() -> Unit)? = null
 ) {
-    Box(
+    val headerShape = RoundedCornerShape(Dimens.RadiusLg)
+    LojiaGradientHeader(
         modifier = modifier
             .fillMaxWidth()
             .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.wrapContentHeight())
-            .background(Color.Transparent)
-            .padding(vertical = 4.dp)
             .testTag("lojiaHeader"),
-        contentAlignment = Alignment.Center
+        shape = headerShape,
+        contentPadding = PaddingValues(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 2.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Modern Fintech Branding Icon Badge
             Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = LojiaColors.P500.copy(alpha = 0.08f),
-                border = BorderStroke(1.dp, LojiaColors.P500.copy(alpha = 0.18f)),
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                color = PureWhite.copy(alpha = 0.16f),
+                border = BorderStroke(Dimens.CardBorderWidth, PureWhite.copy(alpha = 0.28f)),
                 modifier = Modifier.size(46.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Filled.Assessment,
                         contentDescription = stringResource(R.string.cd_lojia_logo),
-                        tint = LojiaColors.P500,
+                        tint = PureWhite,
                         modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
-            // Main Branding Title with prominent headlineMedium typography
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 22.sp
                 ),
-                color = LojiaColors.P500,
+                color = PureWhite,
                 letterSpacing = 0.2.sp
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
 
             Text(
                 text = stringResource(R.string.auth_tagline),
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                fontFamily = PoppinsFontFamily,
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = LojiaColors.N600,
+                color = PureWhite.copy(alpha = 0.90f),
                 letterSpacing = 1.5.sp
             )
         }
@@ -132,18 +128,14 @@ fun LojiaCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val cardShape = RoundedCornerShape(Dimens.RadiusLg)
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(16.dp),
-                spotColor = Color.Black.copy(alpha = 0.05f),
-                ambientColor = Color.Black.copy(alpha = 0.03f)
-            ),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
-        color = Color.White
+            .depthCard(shape = cardShape),
+        shape = cardShape,
+        color = Color.Transparent,
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
@@ -300,27 +292,29 @@ fun LojiaInputField(
             }
         }
 
-        // Dynamic Border and Background matching Material 3
-        val (borderColor, bgColor) = when (validationState) {
-            FieldValidationState.ERROR -> LojiaColors.R500 to LojiaColors.R100
-            FieldValidationState.SUCCESS -> LojiaColors.G500 to LojiaColors.OkBg
-            FieldValidationState.DEFAULT -> if (isFocused) {
-                LojiaColors.P500 to Color.White
-            } else {
-                LojiaColors.N300 to Color.White
-            }
-        }
+        // Depth inset container with focus, error, disabled, and valid semantic feedback
+        val fieldShape = RoundedCornerShape(Dimens.RadiusMd)
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 46.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(bgColor)
-                .border(
-                    width = 1.5.dp,
-                    color = borderColor,
-                    shape = RoundedCornerShape(12.dp)
+                .defaultMinSize(minHeight = Dimens.TextFieldHeightCompact)
+                .depthInset(
+                    enabled = enabled,
+                    isError = validationState == FieldValidationState.ERROR,
+                    isFocused = isFocused,
+                    shape = fieldShape
+                )
+                .then(
+                    if (validationState == FieldValidationState.SUCCESS && enabled) {
+                        Modifier.border(
+                            width = 1.5.dp,
+                            color = SuccessGreen,
+                            shape = fieldShape
+                        )
+                    } else {
+                        Modifier
+                    }
                 )
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             contentAlignment = Alignment.CenterStart
@@ -333,7 +327,12 @@ fun LojiaInputField(
                     Icon(
                         imageVector = leadingIcon,
                         contentDescription = null,
-                        tint = if (isFocused) LojiaColors.P500 else LojiaColors.N400,
+                        tint = when {
+                            validationState == FieldValidationState.ERROR -> ErrorRedLight
+                            validationState == FieldValidationState.SUCCESS -> SuccessGreen
+                            isFocused -> PrimaryIndigoLight
+                            else -> OnSurfaceVariantLight
+                        },
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -416,56 +415,40 @@ fun LojiaGradientButton(
     isLoading: Boolean = false,
     testTag: String = ""
 ) {
-    val gradientBrush = if (enabled) {
-        Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFF4F46E5), // Indigo 600
-                Color(0xFF4338CA)  // Indigo 700
-            )
-        )
-    } else {
-        Brush.horizontalGradient(
-            colors = listOf(
-                Color(0xFF4F46E5).copy(alpha = 0.45f),
-                Color(0xFF4338CA).copy(alpha = 0.45f)
-            )
-        )
-    }
+    val isInteractive = enabled && !isLoading
+    val buttonShape = RoundedCornerShape(Dimens.RadiusMd)
+    val contentTint = if (isInteractive || isLoading) PureWhite else OnSurfaceVariantLight
 
     Surface(
         onClick = onClick,
-        enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(12.dp),
+        enabled = isInteractive,
+        shape = buttonShape,
         color = Color.Transparent,
+        shadowElevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .shadow(
-                elevation = if (enabled) 4.dp else 0.dp,
-                shape = RoundedCornerShape(12.dp),
-                spotColor = Color(0xFF4F46E5).copy(alpha = 0.35f),
-                ambientColor = Color(0xFF4F46E5).copy(alpha = 0.15f)
-            )
+            .heightIn(min = Dimens.MinTouchTarget)
+            .depthRaisedButton(enabled = enabled || isLoading, cornerRadius = Dimens.RadiusMd)
             .testTag(testTag)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(gradientBrush),
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
             contentAlignment = Alignment.Center
         ) {
             if (isLoading) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = PureWhite,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = text,
-                        color = Color.White,
-                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                        color = PureWhite,
+                        fontFamily = PoppinsFontFamily,
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -478,14 +461,14 @@ fun LojiaGradientButton(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = contentTint,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = text,
-                        color = Color.White,
-                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily,
+                        color = contentTint,
+                        fontFamily = PoppinsFontFamily,
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.2.sp
@@ -515,9 +498,9 @@ fun LojiaPasswordStrengthMeter(
     }
 
     val activeColor = when (strengthLevel) {
-        1 -> Color(0xFFEF4444) // Error Red
-        2 -> Color(0xFFF59E0B) // Amber
-        else -> Color(0xFF10B981) // Emerald Green
+        1 -> ErrorRedLight
+        2 -> WarningOrange
+        else -> SuccessGreen
     }
 
     Row(
@@ -598,12 +581,12 @@ fun LojiaPasswordField(
             {
                 IconButton(
                     onClick = { isPasswordVisible = !isPasswordVisible },
-                    modifier = Modifier.size(24.dp).testTag(if (testTag.isNotBlank()) "${testTag}_toggle" else "password_eye_toggle")
+                    modifier = Modifier.size(Dimens.MinTouchTarget).testTag(if (testTag.isNotBlank()) "${testTag}_toggle" else "password_eye_toggle")
                 ) {
                     Icon(
                         imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                         contentDescription = stringResource(if (isPasswordVisible) R.string.cd_hide_password else R.string.cd_show_password),
-                        tint = LojiaColors.N500,
+                        tint = OnSurfaceVariantLight,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -669,126 +652,116 @@ fun LojiaCountryPickerDialog(
         }
     }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-            color = LojiaColors.White,
-            shadowElevation = Dimens.DialogElevation,
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(
             modifier = Modifier
-                .padding(horizontal = Dimens.SpacingLg)
-                .widthIn(max = Dimens.DialogMaxWidth)
                 .fillMaxWidth()
-                .heightIn(max = Dimens.DialogMaxHeight)
                 .wrapContentHeight()
         ) {
-            Column(
+            // Header & Search
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Header & Search
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.auth_select_country_code),
-                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = LojiaColors.N900
-                    )
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close),
-                            tint = LojiaColors.N500
-                        )
-                    }
-                }
-
-                // Search Input
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(LojiaColors.N50)
-                        .border(1.dp, LojiaColors.N200, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = LojiaColors.N400,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            singleLine = true,
-                            textStyle = TextStyle(color = LojiaColors.N900, fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.sp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                HorizontalDivider(
-                    color = LojiaColors.N100,
-                    modifier = Modifier.padding(top = 10.dp)
+                Text(
+                    text = stringResource(R.string.auth_select_country_code),
+                    fontFamily = PoppinsFontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
                 )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(Dimens.MinTouchTarget)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.close),
+                        tint = OnSurfaceVariantLight
+                    )
+                }
+            }
 
-                // List
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 360.dp)
-                ) {
-                    items(filtered, key = { (c, _) -> c.code + c.dial }) { (country, displayName) ->
-                        val isSelected = country.dial == selectedDial
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onSelectCountry(country)
-                                }
-                                .background(if (isSelected) LojiaColors.P100 else Color.Transparent)
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = country.dial,
-                                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = LojiaColors.N900,
-                                modifier = Modifier.width(52.dp)
-                            )
-                            Text(
-                                text = displayName,
-                                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.sp,
-                                color = LojiaColors.N700,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = LojiaColors.P500,
-                                    modifier = Modifier.size(16.dp)
-                                )
+            // Inset Search Input
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .defaultMinSize(minHeight = Dimens.TextFieldHeightCompact)
+                    .depthInset(shape = RoundedCornerShape(Dimens.RadiusMd))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = OnSurfaceVariantLight,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        singleLine = true,
+                        textStyle = TextStyle(color = OnSurfaceLight, fontFamily = PoppinsFontFamily, fontSize = 13.sp),
+                        cursorBrush = SolidColor(PrimaryIndigoLight),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                color = OutlineVariantLight,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+
+            // List
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 360.dp)
+            ) {
+                items(filtered, key = { (c, _) -> c.code + c.dial }) { (country, displayName) ->
+                    val isSelected = country.dial == selectedDial
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                            .clickable {
+                                onSelectCountry(country)
                             }
+                            .background(if (isSelected) PrimaryContainerLight else Color.Transparent)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = country.dial,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurfaceLight,
+                            modifier = Modifier.width(52.dp)
+                        )
+                        Text(
+                            text = displayName,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = 13.sp,
+                            color = OnSurfaceLight,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = PrimaryIndigoLight,
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
-                        HorizontalDivider(color = LojiaColors.N100, thickness = 0.5.dp)
                     }
+                    HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
                 }
             }
         }

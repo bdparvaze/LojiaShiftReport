@@ -203,13 +203,14 @@ fun SettingsReportSection(
 
         // Quick Action Banner: Daily Shift Report Generator (Shown only in root settings overview or shift sub-menu)
         if (isRootMenu || currentMenu == "daily_shift_report") {
-            Surface(
-                color = PrimaryContainerLight,
-                shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, PrimaryIndigoLight),
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .depthCard(
+                        accent = true,
+                        shape = RoundedCornerShape(Dimens.RadiusMd)
+                    )
             ) {
                 Row(
                     modifier = Modifier
@@ -238,9 +239,16 @@ fun SettingsReportSection(
                     }
                     Button(
                         onClick = { onSwitchModule(AppModule.SHIFT_REPORT) },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        elevation = null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
+                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusSm),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusSm)
                     ) {
                         Text(stringResource(R.string.open_2), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
@@ -366,10 +374,18 @@ fun SettingsReportSection(
                     trailing = {
                         Button(
                             onClick = { onSwitchModule(AppModule.SHIFT_REPORT) },
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            elevation = null,
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                contentColor = PureWhite,
+                                disabledContentColor = OnSurfaceVariantLight
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                         ) {
-                            Text(stringResource(R.string.launch_1), fontSize = 12.sp)
+                            Text(stringResource(R.string.launch_1), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     },
                     onClick = { onSwitchModule(AppModule.SHIFT_REPORT) }
@@ -792,41 +808,90 @@ fun SettingsReportSection(
             }
             else -> {
                 var tempVal by remember(fieldName) { mutableStateOf(fieldVal) }
-                AlertDialog(
-                    onDismissRequest = { editFieldDialog = null },
-                    shape = RoundedCornerShape(28.dp),
-                    containerColor = SurfaceLight,
-                    title = { Text(stringResource(R.string.edit_field_title, fieldName), fontWeight = FontWeight.Bold) },
-                    text = {
-                        androidx.compose.foundation.layout.Box(modifier = Modifier.verticalScroll(rememberScrollState()).imePadding()) {
-                            LojiaTextField(
-                                value = tempVal,
-                                onValueChange = { tempVal = it },
-                                label = { Text(fieldName) },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                when (fieldName) {
-                                    "Full name" -> { fullName = tempVal; persistProfile(fName = tempVal) }
-                                    "Username" -> { username = tempVal; persistProfile(uName = tempVal) }
-                                    "Number" -> { phone = tempVal; persistProfile(ph = tempVal) }
-                                    "Address" -> { address = tempVal; persistProfile(addr = tempVal) }
-                                    "Google Account" -> reportViewModel.googleAccount.value = tempVal
-                                }
-                                Toast.makeText(context, context.getString(R.string.field_updated_msg, fieldName), Toast.LENGTH_SHORT).show()
-                                editFieldDialog = null
+                LojiaDialog(
+                    onDismissRequest = { editFieldDialog = null }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .imePadding()
+                            .padding(Dimens.DialogPaddingComfortable),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.edit_field_title, fieldName),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurfaceLight
+                        )
+
+                        LojiaTextField(
+                            value = tempVal,
+                            onValueChange = { tempVal = it },
+                            label = { Text(fieldName) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        val confirmAction = @Composable {
+                            Button(
+                                onClick = {
+                                    when (fieldName) {
+                                        "Full name" -> { fullName = tempVal; persistProfile(fName = tempVal) }
+                                        "Username" -> { username = tempVal; persistProfile(uName = tempVal) }
+                                        "Number" -> { phone = tempVal; persistProfile(ph = tempVal) }
+                                        "Address" -> { address = tempVal; persistProfile(addr = tempVal) }
+                                        "Google Account" -> reportViewModel.googleAccount.value = tempVal
+                                    }
+                                    Toast.makeText(context, context.getString(R.string.field_updated_msg, fieldName), Toast.LENGTH_SHORT).show()
+                                    editFieldDialog = null
+                                },
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
+                                elevation = null,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    contentColor = PureWhite,
+                                    disabledContentColor = OnSurfaceVariantLight
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                            ) {
+                                Text(stringResource(R.string.save_5), fontWeight = FontWeight.Bold)
                             }
-                        ) {
-                            Text(stringResource(R.string.save_5))
                         }
-                    },
-                    dismissButton = { TextButton(onClick = { editFieldDialog = null }) { Text(stringResource(R.string.cancel_18)) } }
-                )
+                        val dismissAction = @Composable {
+                            OutlinedButton(
+                                onClick = { editFieldDialog = null },
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
+                                border = null,
+                                elevation = null,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = OnSurfaceVariantLight
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                            ) {
+                                Text(stringResource(R.string.cancel_18), fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) { dismissAction() }
+                            Box(modifier = Modifier.weight(1f)) { confirmAction() }
+                        }
+                    }
+                }
             }
         }
     }
@@ -861,36 +926,84 @@ fun SettingsReportSection(
 
     // Terms Modal
     if (showTermsModal) {
-        AlertDialog(
-            onDismissRequest = { showTermsModal = false },
-            containerColor = SurfaceLight,
-            title = { Text(stringResource(R.string.terms_of_service), fontWeight = FontWeight.Bold) },
-            text = {
+        LojiaDialog(onDismissRequest = { showTermsModal = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text(
-                    stringResource(R.string.by_using_lojia_shift),
+                    text = stringResource(R.string.terms_of_service),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
+                )
+                Text(
+                    text = stringResource(R.string.by_using_lojia_shift),
                     fontSize = 13.sp,
+                    color = OnSurfaceVariantLight,
                     lineHeight = 18.sp
                 )
-            },
-            confirmButton = { TextButton(onClick = { showTermsModal = false }) { Text(stringResource(R.string.close_7)) } }
-        )
+                Button(
+                    onClick = { showTermsModal = false },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.close_7), fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 
     // Privacy Modal
     if (showPrivacyModal) {
-        AlertDialog(
-            onDismissRequest = { showPrivacyModal = false },
-            containerColor = SurfaceLight,
-            title = { Text(stringResource(R.string.privacy_policy_2), fontWeight = FontWeight.Bold) },
-            text = {
+        LojiaDialog(onDismissRequest = { showPrivacyModal = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text(
-                    stringResource(R.string.your_financial_data_shift),
+                    text = stringResource(R.string.privacy_policy_2),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceLight
+                )
+                Text(
+                    text = stringResource(R.string.your_financial_data_shift),
                     fontSize = 13.sp,
+                    color = OnSurfaceVariantLight,
                     lineHeight = 18.sp
                 )
-            },
-            confirmButton = { TextButton(onClick = { showPrivacyModal = false }) { Text(stringResource(R.string.close_7)) } }
-        )
+                Button(
+                    onClick = { showPrivacyModal = false },
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.close_7), fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 
 

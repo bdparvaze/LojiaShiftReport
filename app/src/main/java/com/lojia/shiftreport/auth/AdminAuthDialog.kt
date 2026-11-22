@@ -50,17 +50,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppDatabase
+import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.SecurityUtils
 import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-
-private val DialogBlue = Color(0xFF2563EB)
-private val DialogGreen = Color(0xFF10B981)
-private val DialogLightGray = Color(0xFFE5E7EB)
-private val DialogBoxEmptyBg = Color(0xFFF9FAFB)
-private val DialogTextBlack = Color(0xFF111827)
 
 @Composable
 fun AdminAuthDialog(
@@ -212,7 +207,7 @@ fun AdminAuthDialog(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .background(Color.Black.copy(alpha = 0.60f))
+                .background(OverlayScrim)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -221,13 +216,14 @@ fun AdminAuthDialog(
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 8.dp,
+                shape = RoundedCornerShape(Dimens.RadiusXl),
+                color = Color.Transparent,
+                shadowElevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
                     .widthIn(max = 420.dp)
                     .wrapContentHeight()
+                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusXl))
                     .verticalScroll(rememberScrollState())
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -247,13 +243,13 @@ fun AdminAuthDialog(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(DialogBlue.copy(alpha = 0.12f)),
+                            .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            tint = DialogBlue,
+                            tint = PrimaryIndigoLight,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -265,7 +261,7 @@ fun AdminAuthDialog(
                         text = title,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DialogTextBlack,
+                        color = OnSurfaceLight,
                         textAlign = TextAlign.Center
                     )
 
@@ -276,17 +272,21 @@ fun AdminAuthDialog(
                         text = subtitle,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = DialogBlue,
+                        color = PrimaryIndigoLight,
                         textAlign = TextAlign.Center
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Info Card
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = DialogBlue.copy(alpha = 0.08f),
-                        modifier = Modifier.fillMaxWidth()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = DepthTokens.CardAccentGradientStart,
+                                borderColor = PrimaryContainerLight,
+                                shape = RoundedCornerShape(Dimens.RadiusMd)
+                            )
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -296,13 +296,13 @@ fun AdminAuthDialog(
                             Icon(
                                 imageVector = Icons.Default.Security,
                                 contentDescription = null,
-                                tint = DialogBlue,
+                                tint = PrimaryIndigoLight,
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
                                 text = stringResource(R.string.auth_info_banner),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF4B5563)
+                                color = OnSurfaceVariantLight
                             )
                         }
                     }
@@ -362,22 +362,23 @@ fun AdminAuthDialog(
                                 repeat(AuthPinConstants.PIN_LENGTH) { index ->
                                     val isFilled = pin.length > index
                                     val isFocused = index == pin.length && lockoutSeconds == 0
-                                    val borderColor = when {
-                                        isSuccess -> DialogGreen
-                                        isError -> Color.Red
-                                        isFilled || isFocused -> DialogBlue
-                                        else -> DialogLightGray
-                                    }
-                                    val borderWidth = if (isSuccess || isError || isFilled || isFocused) 2.dp else 1.5.dp
+                                    val boxShape = RoundedCornerShape(Dimens.RadiusMd)
 
                                     Box(
                                         modifier = Modifier
                                             .size(width = 44.dp, height = 56.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(if (isFilled) Color.White else DialogBoxEmptyBg)
-                                            .border(
-                                                BorderStroke(borderWidth, borderColor),
-                                                RoundedCornerShape(12.dp)
+                                            .depthInset(
+                                                enabled = lockoutSeconds == 0,
+                                                isError = isError && !isSuccess,
+                                                isFocused = isFilled || isFocused,
+                                                shape = boxShape
+                                            )
+                                            .then(
+                                                if (isSuccess) {
+                                                    Modifier.border(2.dp, SuccessGreen, boxShape)
+                                                } else {
+                                                    Modifier
+                                                }
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -386,7 +387,11 @@ fun AdminAuthDialog(
                                                 text = "●",
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = DialogTextBlack
+                                                color = when {
+                                                    isSuccess -> SuccessTextDark
+                                                    isError -> ErrorRedLight
+                                                    else -> OnSurfaceLight
+                                                }
                                             )
                                         }
                                     }
@@ -395,7 +400,7 @@ fun AdminAuthDialog(
                         }
                     } else {
                         // Admin Password Field
-                        OutlinedTextField(
+                        com.lojia.shiftreport.ui.common.LojiaTextField(
                             value = password,
                             onValueChange = {
                                 if (lockoutSeconds == 0 && !isVerifying && !isSuccess) {
@@ -415,7 +420,10 @@ fun AdminAuthDialog(
                                 PasswordVisualTransformation()
                             },
                             trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                IconButton(
+                                    onClick = { passwordVisible = !passwordVisible },
+                                    modifier = Modifier.size(Dimens.MinTouchTarget)
+                                ) {
                                     Icon(
                                         imageVector = if (passwordVisible) {
                                             Icons.Default.VisibilityOff
@@ -443,7 +451,7 @@ fun AdminAuthDialog(
                                     }
                                 }
                             ),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .offset { IntOffset(shakeAnim.value.roundToInt(), 0) }
@@ -458,18 +466,21 @@ fun AdminAuthDialog(
                             stringResource(R.string.auth_enter_admin_pin_hint)
                         },
                         fontSize = 12.sp,
-                        color = if (isError) Color.Red else Color.Gray,
+                        color = if (isError) ErrorRedLight else OnSurfaceVariantLight,
                         modifier = Modifier.padding(top = 8.dp)
                     )
 
                     // Instant Green Success Card
                     if (isSuccess) {
-                        Card(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFD1FAE5)),
-                            shape = RoundedCornerShape(8.dp)
+                                .padding(top = 12.dp)
+                                .depthSemanticCard(
+                                    backgroundColor = SuccessContainer,
+                                    borderColor = AuthSuccessMint,
+                                    shape = RoundedCornerShape(Dimens.RadiusSm)
+                                )
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -478,13 +489,13 @@ fun AdminAuthDialog(
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = null,
-                                    tint = Color(0xFF065F46),
+                                    tint = SuccessTextDark,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = stringResource(R.string.auth_pin_access_granted),
-                                    color = Color(0xFF065F46),
+                                    color = SuccessTextDark,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -499,12 +510,15 @@ fun AdminAuthDialog(
                         errorMessage
                     }
                     if (displayError != null && !isSuccess) {
-                        Card(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                            shape = RoundedCornerShape(8.dp)
+                                .padding(top = 12.dp)
+                                .depthSemanticCard(
+                                    backgroundColor = NegativeBannerSurface,
+                                    borderColor = NegativeBannerBorder,
+                                    shape = RoundedCornerShape(Dimens.RadiusSm)
+                                )
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -513,13 +527,13 @@ fun AdminAuthDialog(
                                 Icon(
                                     imageVector = Icons.Default.Error,
                                     contentDescription = null,
-                                    tint = Color.Red,
+                                    tint = ErrorRedLight,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = displayError,
-                                    color = Color.Red,
+                                    color = ErrorRedLight,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -535,7 +549,8 @@ fun AdminAuthDialog(
                             isPasswordMode = !isPasswordMode
                             errorMessage = null
                             isError = false
-                        }
+                        },
+                        modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget)
                     ) {
                         Text(
                             text = if (isPasswordMode) {
@@ -543,7 +558,7 @@ fun AdminAuthDialog(
                             } else {
                                 stringResource(R.string.auth_use_admin_password_toggle)
                             },
-                            color = DialogBlue,
+                            color = PrimaryIndigoLight,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -554,17 +569,29 @@ fun AdminAuthDialog(
                     // Bottom Action Buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(onClick = onDismissRequest) {
+                        OutlinedButton(
+                            onClick = onDismissRequest,
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            border = null,
+                            elevation = null,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = OnSurfaceVariantLight
+                            ),
+                            modifier = Modifier
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        ) {
                             Text(
                                 text = stringResource(R.string.cancel),
-                                color = Color(0xFF6B7280),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
 
+                        val buttonActive = isSuccess || isError || isVerifying || isConfirmEnabled
                         Button(
                             onClick = {
                                 coroutineScope.launch {
@@ -573,32 +600,39 @@ fun AdminAuthDialog(
                                 }
                             },
                             enabled = isConfirmEnabled,
+                            elevation = null,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = when {
-                                    isSuccess -> DialogGreen
-                                    isError -> Color.Red
-                                    isVerifying || isConfirmEnabled -> DialogBlue
-                                    else -> DialogLightGray
-                                },
-                                contentColor = if (isSuccess || isError || isVerifying || isConfirmEnabled) {
-                                    Color.White
-                                } else {
-                                    Color(0xFF9CA3AF)
-                                },
-                                disabledContainerColor = if (isVerifying) DialogBlue else DialogLightGray,
-                                disabledContentColor = if (isVerifying) Color.White else Color(0xFF9CA3AF)
+                                containerColor = if (isSuccess) SuccessGreen else Color.Transparent,
+                                contentColor = if (buttonActive) PureWhite else OnSurfaceVariantLight,
+                                disabledContainerColor = if (isSuccess) SuccessGreen else Color.Transparent,
+                                disabledContentColor = if (isVerifying || isSuccess) PureWhite else OnSurfaceVariantLight
                             ),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
                             modifier = Modifier
-                                .height(48.dp)
-                                .widthIn(min = 140.dp)
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .then(
+                                    if (isSuccess) {
+                                        Modifier.depthSemanticCard(
+                                            backgroundColor = SuccessGreen,
+                                            borderColor = SuccessTextDark,
+                                            shape = RoundedCornerShape(Dimens.RadiusMd)
+                                        )
+                                    } else {
+                                        Modifier.depthRaisedButton(
+                                            enabled = isConfirmEnabled || isVerifying,
+                                            isDestructive = isError,
+                                            cornerRadius = Dimens.RadiusMd
+                                        )
+                                    }
+                                )
                         ) {
                             when {
                                 isVerifying -> {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(16.dp),
                                         strokeWidth = 2.dp,
-                                        color = Color.White
+                                        color = PureWhite
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(stringResource(R.string.verifying_label), fontWeight = FontWeight.Bold)

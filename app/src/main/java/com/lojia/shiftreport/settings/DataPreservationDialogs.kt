@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,9 +45,7 @@ fun DataPreservationSetupDialog(
     LojiaDialog(
         onDismissRequest = { /* Modal must be chosen by user */ },
         maxWidth = Dimens.DialogSmallMaxWidth,
-        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-        containerColor = SurfaceLight,
-        border = BorderStroke(1.dp, OutlineLight)
+        shape = RoundedCornerShape(Dimens.DialogCornerRadius)
     ) {
         Column(
             modifier = Modifier
@@ -98,14 +97,18 @@ fun DataPreservationSetupDialog(
             ) {
                 Button(
                     onClick = { onChoice(true) },
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    elevation = null,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryIndigoLight,
-                        contentColor = PureWhite
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                         .testTag("btn_keep_data")
                 ) {
                     Row(
@@ -127,14 +130,20 @@ fun DataPreservationSetupDialog(
 
                 OutlinedButton(
                     onClick = { onChoice(false) },
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, ErrorRedLight),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
                         contentColor = ErrorRedLight
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = ErrorRedLight,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag("btn_delete_everything")
                 ) {
                     Row(
@@ -173,9 +182,7 @@ fun DataRecoveryDialog(
     LojiaDialog(
         onDismissRequest = {}, // Non-dismissible
         maxWidth = Dimens.DialogSmallMaxWidth,
-        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-        containerColor = SurfaceLight,
-        border = BorderStroke(1.dp, OutlineLight)
+        shape = RoundedCornerShape(Dimens.DialogCornerRadius)
     ) {
         Column(
             modifier = Modifier
@@ -242,13 +249,15 @@ fun DataRecoveryDialog(
                     }
                     val preview = resolvedPreview
 
-                    Surface(
-                        color = BackgroundLight,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, OutlineLight),
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp)
+                            .depthSemanticCard(
+                                backgroundColor = BackgroundLight,
+                                borderColor = OutlineLight,
+                                shape = RoundedCornerShape(Dimens.RadiusSm)
+                            )
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
@@ -292,14 +301,18 @@ fun DataRecoveryDialog(
                 if (backupFile != null) {
                     Button(
                         onClick = onRestore,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        elevation = null,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryIndigoLight,
-                            contentColor = PureWhite
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(Dimens.ButtonHeightStandard)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                             .testTag("btn_restore_from_backup")
                     ) {
                         Row(
@@ -324,14 +337,20 @@ fun DataRecoveryDialog(
                 if (onBrowseBackups != null) {
                     OutlinedButton(
                         onClick = onBrowseBackups,
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
                         colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
                             contentColor = PrimaryIndigoLight
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(Dimens.ButtonHeightStandard)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = PrimaryIndigoLight,
+                                cornerRadius = Dimens.RadiusMd
+                            )
                             .testTag("btn_browse_backups")
                     ) {
                         Row(
@@ -357,7 +376,7 @@ fun DataRecoveryDialog(
                     onClick = onStartFresh,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(Dimens.ButtonHeightStandard)
+                        .heightIn(min = Dimens.MinTouchTarget)
                         .testTag("btn_start_fresh")
                 ) {
                     Text(

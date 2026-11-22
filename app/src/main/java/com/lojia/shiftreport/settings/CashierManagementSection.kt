@@ -194,12 +194,11 @@ fun CashierManagementSection(
             // =====================================================================
             // 1. KPI STRIP & HEADER
             // =====================================================================
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                border = BorderStroke(1.dp, OutlineVariantLight)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .cardRise(0)
+                    .depthCard(accent = true)
             ) {
                 Column(
                     modifier = Modifier
@@ -220,14 +219,16 @@ fun CashierManagementSection(
 
                         Button(
                             onClick = { showAdminAuthForAdd = true },
+                            elevation = null,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryIndigoLight,
+                                containerColor = Color.Transparent,
                                 contentColor = PureWhite
                             ),
                             shape = RoundedCornerShape(LojiaDimens.InputRadius),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                             modifier = Modifier
-                                .defaultMinSize(minHeight = 40.dp)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthRaisedButton(enabled = true, cornerRadius = LojiaDimens.InputRadius)
                                 .testTag("btnAddCashier")
                         ) {
                             Row(
@@ -287,7 +288,7 @@ fun CashierManagementSection(
             // 2. SEARCH & STATUS FILTERS ROW
             // =====================================================================
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
+                LojiaTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = {
@@ -306,7 +307,10 @@ fun CashierManagementSection(
                     },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
+                            IconButton(
+                                onClick = { searchQuery = "" },
+                                modifier = Modifier.minimumInteractiveComponentSize()
+                            ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Close,
                                     contentDescription = null,
@@ -317,16 +321,7 @@ fun CashierManagementSection(
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryIndigoLight,
-                        unfocusedBorderColor = OutlineLight,
-                        focusedContainerColor = SurfaceLight,
-                        unfocusedContainerColor = SurfaceLight,
-                        focusedTextColor = OnSurfaceLight,
-                        unfocusedTextColor = OnSurfaceLight,
-                        cursorColor = PrimaryIndigoLight
-                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -369,12 +364,11 @@ fun CashierManagementSection(
                 }
             } else if (selectedFilter != CashierStatusFilter.ARCHIVED) {
                 if (filteredActiveCashiers.isEmpty()) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = BorderStroke(1.dp, OutlineVariantLight)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .cardRise(1)
+                            .depthCard()
                     ) {
                         Column(
                             modifier = Modifier
@@ -408,10 +402,11 @@ fun CashierManagementSection(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        filteredActiveCashiers.forEach { cashier ->
+                        filteredActiveCashiers.forEachIndexed { index, cashier ->
                             CashierCard(
                                 cashier = cashier,
                                 isArchived = false,
+                                riseIndex = index + 1,
                                 onEdit = {
                                     cashierPendingAdminAuthForEdit = cashier
                                 },
@@ -432,16 +427,17 @@ fun CashierManagementSection(
             // =====================================================================
             if (filteredArchivedCashiers.isNotEmpty() || selectedFilter == CashierStatusFilter.ARCHIVED) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-                    border = BorderStroke(1.dp, OutlineVariantLight)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .cardRise(2)
+                        .depthCard()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = Dimens.MinTouchTarget)
                                 .clickable { isArchivedSectionExpanded = !isArchivedSectionExpanded }
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -503,10 +499,11 @@ fun CashierManagementSection(
                                         modifier = Modifier.padding(8.dp)
                                     )
                                 } else {
-                                    filteredArchivedCashiers.forEach { archivedCashier ->
+                                    filteredArchivedCashiers.forEachIndexed { index, archivedCashier ->
                                         CashierCard(
                                             cashier = archivedCashier,
                                             isArchived = true,
+                                            riseIndex = index + 1,
                                             onRestore = {
                                                 cashierPendingAdminAuthForRestore = archivedCashier
                                             },
@@ -651,110 +648,146 @@ fun CashierManagementSection(
         )
     }
 
-    // 7. Dialog: "Cannot Delete - Has History" (Material 3 AlertDialog, 28dp radius)
+    // 7. Dialog: "Cannot Delete - Has History" (LojiaDialog soft depth)
     cashierCannotDeleteWithHistory?.let { target ->
-        AlertDialog(
+        LojiaDialog(
             onDismissRequest = { cashierCannotDeleteWithHistory = null },
-            shape = RoundedCornerShape(28.dp),
-            containerColor = SurfaceLight,
-            icon = {
-                Box(
+            content = {
+                Column(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(WarningContainer),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(Dimens.DialogPaddingComfortable),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.History,
-                        contentDescription = null,
-                        tint = WarningOrange,
-                        modifier = Modifier.size(26.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(WarningContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.History,
+                            contentDescription = null,
+                            tint = WarningOrange,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.cashier_cannot_delete_has_history_title),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Center,
+                        color = OnBackgroundLight,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                }
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.cashier_cannot_delete_has_history_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    textAlign = TextAlign.Center,
-                    color = OnBackgroundLight,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.cashier_cannot_delete_has_history_desc),
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    color = OnSurfaceVariantLight,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { executeArchive(target) },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigoLight),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("btnArchiveCashier")
-                ) {
-                    Text(stringResource(R.string.action_archive))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { cashierCannotDeleteWithHistory = null },
-                    modifier = Modifier.testTag("btnCancelArchive")
-                ) {
-                    Text(stringResource(R.string.cancel_18))
+
+                    Text(
+                        text = stringResource(R.string.cashier_cannot_delete_has_history_desc),
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        color = OnSurfaceVariantLight,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { executeArchive(target) },
+                            elevation = null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = PureWhite
+                            ),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                                .testTag("btnArchiveCashier")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.action_archive),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { cashierCannotDeleteWithHistory = null },
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            border = null,
+                            elevation = null,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = OnSurfaceVariantLight
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                                .testTag("btnCancelArchive")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.cancel_18),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             },
             modifier = Modifier.testTag("cannotDeleteHistoryDialog")
         )
     }
 
-    // 8. Dialog: "Delete Permanently?" with "type DELETE confirmation" (Material 3 AlertDialog, 28dp radius)
+    // 8. Dialog: "Delete Permanently?" with "type DELETE confirmation" (LojiaDialog soft depth)
     cashierPermanentDeleteConfirm?.let { target ->
         var deleteConfirmationText by remember { mutableStateOf("") }
         val isConfirmed = deleteConfirmationText.trim().equals("DELETE", ignoreCase = true)
 
-        AlertDialog(
+        LojiaDialog(
             onDismissRequest = { cashierPermanentDeleteConfirm = null },
-            shape = RoundedCornerShape(28.dp),
-            containerColor = SurfaceLight,
-            icon = {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(ErrorContainerLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.DeleteForever,
-                        contentDescription = null,
-                        tint = ErrorRedLight,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.delete_permanently_title),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    textAlign = TextAlign.Center,
-                    color = OnBackgroundLight,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            text = {
+            content = {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(Dimens.DialogPaddingComfortable),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(ErrorContainerLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteForever,
+                            contentDescription = null,
+                            tint = ErrorRedLight,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.delete_permanently_title),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Center,
+                        color = OnBackgroundLight,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     Text(
                         text = stringResource(R.string.delete_permanently_desc),
                         fontSize = 13.sp,
@@ -763,7 +796,8 @@ fun CashierManagementSection(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
+
+                    LojiaTextField(
                         value = deleteConfirmationText,
                         onValueChange = { deleteConfirmationText = it },
                         placeholder = {
@@ -773,41 +807,69 @@ fun CashierManagementSection(
                                 color = TextHintColor
                             )
                         },
+                        isError = deleteConfirmationText.isNotEmpty() && !isConfirmed,
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = ErrorRedLight,
-                            unfocusedBorderColor = OutlineLight,
-                            focusedContainerColor = BackgroundLight,
-                            unfocusedContainerColor = BackgroundLight,
-                            cursorColor = ErrorRedLight
-                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("inputDeleteConfirm")
                     )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { executePermanentDelete(target) },
-                    enabled = isConfirmed,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ErrorRedLight,
-                        disabledContainerColor = ErrorRedLight.copy(alpha = 0.4f)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("btnConfirmPermanentDelete")
-                ) {
-                    Text(stringResource(R.string.delete_1))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { cashierPermanentDeleteConfirm = null },
-                    modifier = Modifier.testTag("btnCancelPermanentDelete")
-                ) {
-                    Text(stringResource(R.string.cancel_18))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { executePermanentDelete(target) },
+                            enabled = isConfirmed,
+                            elevation = null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                contentColor = PureWhite,
+                                disabledContentColor = OnSurfaceVariantLight
+                            ),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthRaisedButton(
+                                    enabled = isConfirmed,
+                                    isDestructive = true,
+                                    cornerRadius = Dimens.RadiusMd
+                                )
+                                .testTag("btnConfirmPermanentDelete")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.delete_1),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { cashierPermanentDeleteConfirm = null },
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            border = null,
+                            elevation = null,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = OnSurfaceVariantLight
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                                .testTag("btnCancelPermanentDelete")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.cancel_18),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             },
             modifier = Modifier.testTag("permanentDeleteDialog")
@@ -822,6 +884,7 @@ fun CashierManagementSection(
 private fun CashierCard(
     cashier: Cashier,
     isArchived: Boolean,
+    riseIndex: Int = 0,
     onEdit: (() -> Unit)? = null,
     onToggleActive: ((Cashier) -> Unit)? = null,
     onRestore: (() -> Unit)? = null,
@@ -832,15 +895,22 @@ private fun CashierCard(
     }
     val isOnShift = remember(cashier) { !isArchived && cashier.active && (cashier.id % 2 == 1) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isArchived) SurfaceVariantLight.copy(alpha = 0.5f) else SurfaceLight
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, OutlineVariantLight)
-    ) {
+    val cardModifier = if (isArchived) {
+        Modifier
+            .fillMaxWidth()
+            .cardRise(riseIndex)
+            .depthSemanticCard(
+                backgroundColor = SurfaceVariantLight.copy(alpha = 0.65f),
+                borderColor = OutlineVariantLight
+            )
+    } else {
+        Modifier
+            .fillMaxWidth()
+            .cardRise(riseIndex)
+            .depthCard()
+    }
+
+    Box(modifier = cardModifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -945,7 +1015,9 @@ private fun CashierCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = { onRestore?.invoke() },
-                        modifier = Modifier.testTag("btnRestoreCashier_${cashier.id}")
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .testTag("btnRestoreCashier_${cashier.id}")
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Restore,
@@ -955,7 +1027,9 @@ private fun CashierCard(
                     }
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier.testTag("btnDeleteArchivedCashier_${cashier.id}")
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .testTag("btnDeleteArchivedCashier_${cashier.id}")
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
@@ -968,7 +1042,9 @@ private fun CashierCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = { onEdit?.invoke() },
-                        modifier = Modifier.testTag("btnEditCashier_${cashier.id}")
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .testTag("btnEditCashier_${cashier.id}")
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
@@ -996,7 +1072,9 @@ private fun CashierCard(
 
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier.testTag("btnDeleteCashier_${cashier.id}")
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .testTag("btnDeleteCashier_${cashier.id}")
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
@@ -1053,10 +1131,13 @@ private fun KpiChip(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = color.copy(alpha = 0.12f),
-        modifier = modifier
+    val accessibleColor = if (color == TextHintColor) OnSurfaceVariantLight else color
+    Box(
+        modifier = modifier.depthSemanticCard(
+            backgroundColor = accessibleColor.copy(alpha = 0.10f),
+            borderColor = accessibleColor.copy(alpha = 0.28f),
+            shape = RoundedCornerShape(Dimens.RadiusSm)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -1067,14 +1148,14 @@ private fun KpiChip(
             Text(
                 text = label,
                 fontSize = 11.sp,
-                color = color,
+                color = accessibleColor,
                 maxLines = 1
             )
             Text(
                 text = value,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = accessibleColor
             )
         }
     }
@@ -1086,34 +1167,32 @@ private fun StatusFilterChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Surface(
-        color = if (selected) PrimaryContainerLight else SurfaceVariantLight,
-        shape = RoundedCornerShape(999.dp),
-        border = BorderStroke(
-            1.dp,
-            if (selected) PrimaryIndigoLight else OutlineLight
-        ),
+    Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .clickable { onClick() }
+            .heightIn(min = Dimens.MinTouchTarget)
+            .depthCard(
+                accent = selected,
+                shape = RoundedCornerShape(999.dp)
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (selected) PrimaryIndigoLight else OnSurfaceVariantLight,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+            color = if (selected) PrimaryIndigoDark else OnSurfaceVariantLight,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
         )
     }
 }
 
 @Composable
 private fun CashierSkeletonCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineVariantLight)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .depthCard()
     ) {
         Row(
             modifier = Modifier

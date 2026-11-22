@@ -18,14 +18,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
+import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
 
@@ -165,7 +168,8 @@ fun QuickPinScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 360.dp),
+                .widthIn(max = 360.dp)
+                .cardRise(0),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -189,7 +193,7 @@ fun QuickPinScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 6-box PIN indicator: always dots (●), no cursor, no visible numbers
+            // 6-box PIN indicator: pressed-in inset wells with dots (●)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
@@ -200,22 +204,15 @@ fun QuickPinScreen(
                 for (index in 0 until AuthPinConstants.PIN_LENGTH) {
                     val isFilled = index < enteredPin.length
                     val isActive = index == enteredPin.length && !isLockedOut
-                    val borderColor = when {
-                        pinError || isLockedOut -> MaterialTheme.colorScheme.error
-                        isActive -> MaterialTheme.colorScheme.primary
-                        isFilled -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                        else -> MaterialTheme.colorScheme.outline
-                    }
 
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .border(
-                                width = 1.dp,
-                                color = borderColor,
-                                shape = RoundedCornerShape(12.dp)
+                            .size(Dimens.MinTouchTarget)
+                            .depthInset(
+                                enabled = !isLockedOut,
+                                isError = pinError || isLockedOut,
+                                isFocused = isActive,
+                                shape = RoundedCornerShape(Dimens.RadiusMd)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -224,7 +221,7 @@ fun QuickPinScreen(
                                 text = "●",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = if (pinError || isLockedOut) ErrorRedLight else OnSurfaceLight,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -253,7 +250,7 @@ fun QuickPinScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 3-column Material 3 Number Pad
+            // 3-column Material 3 Number Pad (always LTR per international keypad standard)
             val padItems = listOf(
                 "1", "2", "3",
                 "4", "5", "6",
@@ -261,88 +258,100 @@ fun QuickPinScreen(
                 "BIOMETRIC", "0", "DELETE"
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                userScrollEnabled = false,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.width(248.dp)
-            ) {
-                items(padItems.size) { idx ->
-                    val item = padItems[idx]
-                    when (item) {
-                        "BIOMETRIC" -> {
-                            Box(
-                                modifier = Modifier.size(72.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (showBiometric) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(72.dp)
-                                            .clip(CircleShape)
-                                            .clickable(
-                                                enabled = !isLockedOut,
-                                                onClick = onTriggerBiometric
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Fingerprint,
-                                            contentDescription = stringResource(R.string.cd_biometric),
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(32.dp)
-                                        )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    userScrollEnabled = false,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.width(248.dp)
+                ) {
+                    items(padItems.size) { idx ->
+                        val item = padItems[idx]
+                        when (item) {
+                            "BIOMETRIC" -> {
+                                Box(
+                                    modifier = Modifier.size(72.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (showBiometric) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(72.dp)
+                                                .depthSecondaryButton(
+                                                    enabled = !isLockedOut,
+                                                    borderColor = PrimaryIndigoLight.copy(alpha = 0.35f),
+                                                    cornerRadius = 36.dp
+                                                )
+                                                .clickable(
+                                                    enabled = !isLockedOut,
+                                                    onClick = onTriggerBiometric
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Fingerprint,
+                                                contentDescription = stringResource(R.string.cd_biometric),
+                                                tint = PrimaryIndigoLight,
+                                                modifier = Modifier.size(32.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
-                        "DELETE" -> {
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .clip(CircleShape)
-                                    .clickable(
-                                        enabled = !isLockedOut && enteredPin.isNotEmpty(),
-                                        onClick = {
-                                            if (enteredPin.isNotEmpty()) {
-                                                enteredPin = enteredPin.dropLast(1)
+                            "DELETE" -> {
+                                val canDelete = !isLockedOut && enteredPin.isNotEmpty()
+                                Box(
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .depthSecondaryButton(
+                                            enabled = canDelete,
+                                            cornerRadius = 36.dp
+                                        )
+                                        .clickable(
+                                            enabled = canDelete,
+                                            onClick = {
+                                                if (enteredPin.isNotEmpty()) {
+                                                    enteredPin = enteredPin.dropLast(1)
+                                                }
                                             }
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                    contentDescription = stringResource(R.string.cd_backspace),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                        contentDescription = stringResource(R.string.cd_backspace),
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
-                        }
-                        else -> {
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .clickable(
-                                        enabled = !isLockedOut,
-                                        onClick = {
-                                            if (enteredPin.length < AuthPinConstants.PIN_LENGTH) {
-                                                enteredPin += item
+                            else -> {
+                                Box(
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .depthSecondaryButton(
+                                            enabled = !isLockedOut,
+                                            cornerRadius = 36.dp
+                                        )
+                                        .clickable(
+                                            enabled = !isLockedOut,
+                                            onClick = {
+                                                if (enteredPin.length < AuthPinConstants.PIN_LENGTH) {
+                                                    enteredPin += item
+                                                }
                                             }
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = item,
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center
-                                )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = item,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isLockedOut) OnSurfaceVariantLight else OnSurfaceLight,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
@@ -353,11 +362,13 @@ fun QuickPinScreen(
 
             TextButton(
                 onClick = onFallbackToLogin,
-                modifier = Modifier.testTag("btn_fallback_to_login")
+                modifier = Modifier
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                    .testTag("btn_fallback_to_login")
             ) {
                 Text(
                     text = stringResource(R.string.quick_pin_use_password),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = PrimaryIndigoLight,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -641,42 +642,84 @@ fun DocumentEditorScreen(
     // Rename Document Dialog
     if (isEditingTitle) {
         var tempTitle by remember { mutableStateOf(documentTitle) }
-        AlertDialog(
+        val style = LocalDepthStyle.current
+        LojiaDialog(
             onDismissRequest = { isEditingTitle = false },
-            title = { Text(stringResource(R.string.doc_rename_title), fontWeight = FontWeight.Bold) },
-            text = {
+            maxWidth = Dimens.DialogSmallMaxWidth
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
+                Text(
+                    text = stringResource(R.string.doc_rename_title),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = OnSurfaceLight
+                )
                 LojiaTextField(
                     value = tempTitle,
                     onValueChange = { tempTitle = it },
-                    label = { Text(stringResource(R.string.doc_title_label)) }
+                    label = { Text(stringResource(R.string.doc_title_label)) },
+                    modifier = Modifier.fillMaxWidth()
                 )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (tempTitle.isNotBlank()) {
-                            documentTitle = tempTitle.trim()
-                        }
-                        isEditingTitle = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ScannerEmerald)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.ok), color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { isEditingTitle = false }) {
-                    Text(stringResource(R.string.cancel))
+                    OutlinedButton(
+                        onClick = { isEditingTitle = false },
+                        border = null,
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PrimaryIndigoDark
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = style.secondaryButtonBorderColor,
+                                cornerRadius = Dimens.RadiusMd
+                            )
+                    ) {
+                        Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                    }
+                    Button(
+                        onClick = {
+                            if (tempTitle.isNotBlank()) {
+                                documentTitle = tempTitle.trim()
+                            }
+                            isEditingTitle = false
+                        },
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PureWhite
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                    ) {
+                        Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
+                    }
                 }
             }
-        )
+        }
     }
 
     // OCR Bottom Sheet
     if (showOcrSheet) {
+        val style = LocalDepthStyle.current
         ModalBottomSheet(
             onDismissRequest = { showOcrSheet = false },
-            containerColor = Color.White
+            containerColor = PureWhite
         ) {
             Column(
                 modifier = Modifier
@@ -699,7 +742,8 @@ fun DocumentEditorScreen(
                         Text(
                             text = stringResource(R.string.cd_ocr_text),
                             fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = OnBackgroundLight
                         )
                     }
 
@@ -710,7 +754,8 @@ fun DocumentEditorScreen(
                                 val clip = ClipData.newPlainText(context.getString(R.string.scan_clipboard_label), ocrExtractedText)
                                 cm.setPrimaryClip(clip)
                                 Toast.makeText(context, context.getString(R.string.doc_toast_text_copied), Toast.LENGTH_SHORT).show()
-                            }
+                            },
+                            modifier = Modifier.minimumInteractiveComponentSize()
                         ) {
                             Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
                         }
@@ -729,7 +774,7 @@ fun DocumentEditorScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = ScannerEmerald)
                             Spacer(modifier = Modifier.height(10.dp))
-                            Text(stringResource(R.string.extracting_text_progress), color = Color.Gray, fontSize = 13.sp)
+                            Text(stringResource(R.string.extracting_text_progress), color = OnSurfaceVariantLight, fontSize = 13.sp)
                         }
                     }
                 } else if (ocrExtractedText.isBlank()) {
@@ -741,7 +786,7 @@ fun DocumentEditorScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.no_readable_text_detected),
-                            color = Color.Gray,
+                            color = OnSurfaceVariantLight,
                             fontSize = 14.sp
                         )
                     }
@@ -750,7 +795,7 @@ fun DocumentEditorScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 280.dp)
-                            .background(SurfaceVariantLight, RoundedCornerShape(10.dp))
+                            .depthInset()
                             .padding(14.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
@@ -776,19 +821,40 @@ fun DocumentEditorScreen(
                                 }
                                 context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_extracted_text_title)))
                             },
-                            modifier = Modifier.weight(1f)
+                            border = null,
+                            elevation = null,
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = PrimaryIndigoDark
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthSecondaryButton(
+                                    borderColor = style.secondaryButtonBorderColor,
+                                    cornerRadius = Dimens.RadiusMd
+                                )
                         ) {
                             Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_share_text))
+                            Text(stringResource(R.string.btn_share_text), fontWeight = FontWeight.SemiBold)
                         }
 
                         Button(
                             onClick = { showOcrSheet = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = ScannerEmerald),
-                            modifier = Modifier.weight(1f)
+                            elevation = null,
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = PureWhite
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                         ) {
-                            Text(stringResource(R.string.done), color = Color.White)
+                            Text(stringResource(R.string.done), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

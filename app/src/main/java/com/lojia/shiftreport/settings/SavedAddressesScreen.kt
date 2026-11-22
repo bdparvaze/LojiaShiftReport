@@ -10,14 +10,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,8 +32,6 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -39,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,6 +53,7 @@ import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,20 +66,25 @@ import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.SavedAddress
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.theme.BackgroundLight
+import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.ErrorRedLight
+import com.lojia.shiftreport.ui.theme.LojiaGradientHeader
 import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
-import com.lojia.shiftreport.ui.theme.OutlineLight
 import com.lojia.shiftreport.ui.theme.OutlineVariantLight
+import com.lojia.shiftreport.ui.theme.PositiveBannerBorder
 import com.lojia.shiftreport.ui.theme.PrimaryIndigoDark
 import com.lojia.shiftreport.ui.theme.PrimaryIndigoLight
-import com.lojia.shiftreport.ui.theme.PureBlack
 import com.lojia.shiftreport.ui.theme.PureWhite
 import com.lojia.shiftreport.ui.theme.SuccessContainer
-import com.lojia.shiftreport.ui.theme.SuccessGreen
+import com.lojia.shiftreport.ui.theme.SuccessTextDark
 import com.lojia.shiftreport.ui.theme.SurfaceLight
 import com.lojia.shiftreport.ui.theme.SurfaceVariantLight
 import com.lojia.shiftreport.ui.theme.TextHintColor
+import com.lojia.shiftreport.ui.theme.cardRise
+import com.lojia.shiftreport.ui.theme.depthCard
+import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthSemanticCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,33 +104,44 @@ fun SavedAddressesScreen(
     Scaffold(
         containerColor = BackgroundLight,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.saved_addresses_title),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PureWhite
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag("btn_saved_addresses_back")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_back),
-                            tint = PureWhite
+            LojiaGradientHeader(
+                shape = RoundedCornerShape(
+                    bottomStart = Dimens.RadiusXl,
+                    bottomEnd = Dimens.RadiusXl
+                ),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.saved_addresses_title),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PureWhite
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryIndigoLight,
-                    titleContentColor = PureWhite,
-                    navigationIconContentColor = PureWhite
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("btn_saved_addresses_back")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.cd_back),
+                                tint = PureWhite
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = PureWhite,
+                        navigationIconContentColor = PureWhite
+                    ),
+                    modifier = Modifier.statusBarsPadding()
                 )
-            )
+            }
         },
         bottomBar = {
             Surface(
@@ -136,14 +156,17 @@ fun SavedAddressesScreen(
                 ) {
                     Button(
                         onClick = onAddNew,
-                        shape = RoundedCornerShape(26.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusPill),
+                        elevation = null,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PureBlack,
+                            containerColor = Color.Transparent,
                             contentColor = PureWhite
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = Dimens.MinTouchTarget)
                             .height(52.dp)
+                            .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusPill)
                             .testTag("btn_add_new_address")
                     ) {
                         Text(
@@ -164,28 +187,33 @@ fun SavedAddressesScreen(
                 .background(BackgroundLight)
         ) {
             // Encrypted Security Banner
-            Surface(
-                color = SuccessContainer,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
+                    .depthSemanticCard(
+                        backgroundColor = SuccessContainer,
+                        borderColor = PositiveBannerBorder
+                    )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
-                        tint = SuccessGreen,
+                        tint = SuccessTextDark,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = stringResource(R.string.all_info_encrypted),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = SuccessGreen
+                        color = SuccessTextDark
                     )
                 }
             }
@@ -241,9 +269,10 @@ fun SavedAddressesScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(addresses, key = { it.id }) { address ->
+                    itemsIndexed(addresses, key = { _, it -> it.id }) { index, address ->
                         AddressCard(
                             address = address,
+                            riseIndex = index,
                             setAsDefault = { id ->
                                 pendingAuthSubtitle = null
                                 pendingAuthAction = {
@@ -285,6 +314,7 @@ fun SavedAddressesScreen(
 @Composable
 private fun AddressCard(
     address: SavedAddress,
+    riseIndex: Int = 0,
     setAsDefault: (String) -> Unit,
     onDelete: (SavedAddress) -> Unit,
     onEdit: (String) -> Unit
@@ -300,14 +330,12 @@ private fun AddressCard(
         ""
     }
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("card_saved_address_${address.id}"),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLight),
-        border = BorderStroke(1.dp, OutlineLight),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .cardRise(riseIndex)
+            .depthCard(accent = address.isDefault)
+            .testTag("card_saved_address_${address.id}")
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -376,8 +404,10 @@ private fun AddressCard(
                         fontWeight = FontWeight.Medium,
                         color = PrimaryIndigoLight,
                         modifier = Modifier
+                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                             .clickable { setAsDefault(address.id) }
-                            .padding(vertical = 4.dp)
+                            .wrapContentHeight(Alignment.CenterVertically)
+                            .padding(horizontal = 4.dp)
                             .testTag("btn_set_default_${address.id}")
                     )
                 }
@@ -387,7 +417,7 @@ private fun AddressCard(
                     IconButton(
                         onClick = { onDelete(address) },
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(Dimens.MinTouchTarget)
                             .testTag("btn_delete_address_${address.id}")
                     ) {
                         Icon(
@@ -400,7 +430,7 @@ private fun AddressCard(
                     IconButton(
                         onClick = { onEdit(address.id) },
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(Dimens.MinTouchTarget)
                             .testTag("btn_edit_address_${address.id}")
                     ) {
                         Icon(

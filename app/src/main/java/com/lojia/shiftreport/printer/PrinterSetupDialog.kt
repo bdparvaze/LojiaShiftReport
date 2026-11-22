@@ -7,9 +7,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.depthCard
 
 /**
  * Dialog wrapper for [PrinterSetupScreen].
@@ -28,13 +31,15 @@ fun PrinterSetupDialog(
             dismissOnClickOutside = false
         )
     ) {
+        val shape = RoundedCornerShape(Dimens.RadiusLg)
         Surface(
             modifier = modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+                .padding(Dimens.SpacingLg)
+                .depthCard(shape = shape),
+            shape = shape,
+            color = Color.Transparent,
+            shadowElevation = 0.dp
         ) {
             PrinterSetupScreen(
                 onClose = onDismiss

@@ -109,22 +109,29 @@ fun ShiftReportPreviewDialog(
     val businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName
     val cleanNotes = PdfReportGenerator.cleanDisplayNotes(report.notes)
 
-    AlertDialog(
+    val style = LocalDepthStyle.current
+
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier
-            .fillMaxWidth(0.88f)
-            .heightIn(max = 560.dp),
-        containerColor = SurfaceLight,
-        title = {
+        maxWidth = Dimens.DialogMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .defaultMinSize(minHeight = Dimens.MinTouchTarget),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.Receipt,
                         contentDescription = null,
@@ -136,10 +143,15 @@ fun ShiftReportPreviewDialog(
                         text = stringResource(R.string.report_preview_title),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceLight
+                        color = OnSurfaceLight,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                IconButton(onClick = onDismiss) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.close),
@@ -148,23 +160,22 @@ fun ShiftReportPreviewDialog(
                     )
                 }
             }
-        },
-        text = {
+
+            HorizontalDivider(color = OutlineVariantLight)
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Company header block (banner style)
-                Surface(
-                    color = PrimaryIndigoLight,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                // Company header block (depth gradient banner)
+                LojiaGradientHeader(
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    contentPadding = PaddingValues(12.dp)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -299,23 +310,27 @@ fun ShiftReportPreviewDialog(
                 Text(
                     text = stringResource(R.string.pdf_computer_generated_footer),
                     fontSize = 9.sp,
-                    color = TextHintColor,
+                    color = OnSurfaceVariantLight,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
-        },
-        confirmButton = {
+
+            HorizontalDivider(color = OutlineVariantLight)
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Warning banner (if printer error)
                 if (printerErrorMessage != null) {
-                    Surface(
-                        color = ErrorContainer,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.35f)),
-                        modifier = Modifier.fillMaxWidth()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = ErrorContainer,
+                                borderColor = ErrorRedLight.copy(alpha = 0.35f),
+                                shape = RoundedCornerShape(Dimens.RadiusSm)
+                            )
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -346,24 +361,34 @@ fun ShiftReportPreviewDialog(
                                         onDismiss()
                                         onOpenPrinterSettings()
                                     },
-                                    border = BorderStroke(1.dp, PrimaryIndigoLight),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                    border = null,
+                                    elevation = null,
+                                    shape = RoundedCornerShape(Dimens.RadiusSm),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = PrimaryIndigoDark
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                     modifier = Modifier
                                         .align(Alignment.End)
-                                        .height(32.dp)
+                                        .heightIn(min = Dimens.MinTouchTarget)
+                                        .depthSecondaryButton(
+                                            borderColor = PrimaryIndigoLight,
+                                            cornerRadius = Dimens.RadiusSm
+                                        )
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = null,
-                                        tint = PrimaryIndigoLight,
+                                        tint = PrimaryIndigoDark,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = stringResource(R.string.open_printer_settings),
                                         fontSize = 11.sp,
-                                        color = PrimaryIndigoLight
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PrimaryIndigoDark
                                     )
                                 }
                             }
@@ -373,12 +398,14 @@ fun ShiftReportPreviewDialog(
 
                 // Success banner (if PDF exported)
                 if (exportSuccessMessage != null) {
-                    Surface(
-                        color = SuccessContainer,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.5f)),
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = SuccessContainer,
+                                borderColor = SuccessGreen.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(Dimens.RadiusSm)
+                            )
                             .clickable {
                                 val reportsDir = com.lojia.shiftreport.util.PdfShareUtils.getAppReportsDirectory(context)
                                 com.lojia.shiftreport.util.PdfShareUtils.openFolderInFileManager(context, reportsDir)
@@ -389,7 +416,7 @@ fun ShiftReportPreviewDialog(
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = null,
-                                    tint = SuccessGreen,
+                                    tint = SuccessTextDark,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -397,21 +424,21 @@ fun ShiftReportPreviewDialog(
                                     text = stringResource(R.string.pdf_exported_success),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = SuccessGreen
+                                    color = SuccessTextDark
                                 )
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = exportSuccessMessage ?: "",
                                 fontSize = 11.sp,
-                                color = OnSurfaceVariantLight
+                                color = OnSurfaceLight
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = stringResource(R.string.tap_to_open_folder),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = SuccessGreen
+                                color = SuccessTextDark
                             )
                         }
                     }
@@ -482,15 +509,19 @@ fun ShiftReportPreviewDialog(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = SuccessGreen,
-                            contentColor = PureWhite
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
                         ),
-                        shape = RoundedCornerShape(10.dp),
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                         enabled = !isPrinting,
                         modifier = Modifier
                             .weight(1f)
-                            .height(44.dp)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = !isPrinting, cornerRadius = Dimens.RadiusMd)
                             .testTag("print_z_report_btn")
                     ) {
                         if (isPrinting) {
@@ -552,15 +583,19 @@ fun ShiftReportPreviewDialog(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryIndigoLight,
-                            contentColor = PureWhite
+                            containerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            contentColor = PureWhite,
+                            disabledContentColor = OnSurfaceVariantLight
                         ),
-                        shape = RoundedCornerShape(10.dp),
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                         enabled = !isExporting,
                         modifier = Modifier
                             .weight(1f)
-                            .height(44.dp)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(enabled = !isExporting, cornerRadius = Dimens.RadiusMd)
                             .testTag("export_pdf_btn")
                     ) {
                         Row(
@@ -610,13 +645,18 @@ fun ShiftReportPreviewDialog(
                                 }
                             }
                         },
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, PrimaryIndigoLight),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = null,
+                        elevation = null,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PrimaryIndigoDark
+                        ),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(44.dp)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(borderColor = style.secondaryButtonBorderColor, cornerRadius = Dimens.RadiusMd)
                             .testTag("share_report_btn")
                     ) {
                         Row(
@@ -626,7 +666,7 @@ fun ShiftReportPreviewDialog(
                             Icon(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = stringResource(R.string.share),
-                                tint = PrimaryIndigoLight,
+                                tint = PrimaryIndigoDark,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -636,16 +676,15 @@ fun ShiftReportPreviewDialog(
                                 softWrap = false,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PrimaryIndigoLight,
+                                color = PrimaryIndigoDark,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
             }
-        },
-        dismissButton = null
-    )
+        }
+    }
 }
 
 @Composable
@@ -857,15 +896,19 @@ fun EmployerAdvanceStatementPreviewDialog(
         }
     }
 
-    AlertDialog(
+    val style = LocalDepthStyle.current
+
+    LojiaDialog(
         onDismissRequest = closeAndCleanup,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier
-            .fillMaxWidth(0.92f)
-            .heightIn(max = 620.dp)
-            .testTag("employer_statement_preview_dialog"),
-        containerColor = SurfaceLight,
-        title = {
+        maxWidth = Dimens.DialogMaxWidth,
+        modifier = Modifier.testTag("employer_statement_preview_dialog")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -905,23 +948,22 @@ fun EmployerAdvanceStatementPreviewDialog(
                     )
                 }
             }
-        },
-        text = {
+
+            HorizontalDivider(color = OutlineVariantLight)
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Surface(
-                    color = PrimaryIndigoLight,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
+                LojiaGradientHeader(
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    contentPadding = PaddingValues(12.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -953,7 +995,7 @@ fun EmployerAdvanceStatementPreviewDialog(
                             Text(
                                 text = "${stringResource(R.string.statement_generated_at_label)}: $generatedText",
                                 fontSize = 10.sp,
-                                color = PureWhite.copy(alpha = 0.82f)
+                                color = PureWhite.copy(alpha = 0.85f)
                             )
                         }
                         logoBitmap?.let { bmp ->
@@ -970,12 +1012,14 @@ fun EmployerAdvanceStatementPreviewDialog(
                 }
 
                 if (statement.employees.isEmpty() && statement.otherBucket == null) {
-                    Surface(
-                        color = BackgroundLight,
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, OutlineLight),
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .depthSemanticCard(
+                                backgroundColor = DepthTokens.InsetFieldBackground,
+                                borderColor = OutlineLight,
+                                shape = RoundedCornerShape(Dimens.RadiusMd)
+                            )
                             .testTag("statement_empty_period_card")
                     ) {
                         Text(
@@ -1114,8 +1158,9 @@ fun EmployerAdvanceStatementPreviewDialog(
                     )
                 }
             }
-        },
-        confirmButton = {
+
+            HorizontalDivider(color = OutlineVariantLight)
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1125,14 +1170,18 @@ fun EmployerAdvanceStatementPreviewDialog(
                     onClick = { pendingAuthAction = StatementActionType.OPEN_PDF },
                     enabled = !isProcessing,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryIndigoLight,
-                        contentColor = PureWhite
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = 48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = !isProcessing, cornerRadius = Dimens.RadiusMd)
                         .testTag("statement_open_pdf_btn")
                 ) {
                     Icon(
@@ -1155,14 +1204,18 @@ fun EmployerAdvanceStatementPreviewDialog(
                     onClick = { pendingAuthAction = StatementActionType.PRINT },
                     enabled = !isProcessing,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SuccessGreen,
-                        contentColor = PureWhite
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = 48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(enabled = !isProcessing, cornerRadius = Dimens.RadiusMd)
                         .testTag("statement_print_btn")
                 ) {
                     Icon(
@@ -1184,19 +1237,28 @@ fun EmployerAdvanceStatementPreviewDialog(
                 OutlinedButton(
                     onClick = { pendingAuthAction = StatementActionType.SHARE },
                     enabled = !isProcessing,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, PrimaryIndigoLight),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryIndigoLight),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = 48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            enabled = !isProcessing,
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
                         .testTag("statement_share_btn")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = stringResource(R.string.statement_cd_share),
-                        tint = PrimaryIndigoLight,
+                        tint = PrimaryIndigoDark,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -1209,9 +1271,8 @@ fun EmployerAdvanceStatementPreviewDialog(
                     )
                 }
             }
-        },
-        dismissButton = null
-    )
+        }
+    }
 
     pendingAuthAction?.let { action ->
         AdminAuthDialog(

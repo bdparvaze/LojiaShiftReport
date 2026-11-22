@@ -28,6 +28,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.depthInset
 
 /**
  * Reusable 6-digit PIN input composable conforming to Material 3 POS and Banking standards.
@@ -126,15 +128,26 @@ fun SixDigitPinInput(
                     label = "pin_box_container"
                 )
 
+                val boxShape = RoundedCornerShape(Dimens.RadiusMd)
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(containerColor)
-                        .border(
-                            width = if (isCurrent) 2.dp else 1.5.dp,
-                            color = borderColor,
-                            shape = RoundedCornerShape(12.dp)
+                        .size(Dimens.MinTouchTarget)
+                        .depthInset(
+                            enabled = true,
+                            isError = isError,
+                            isFocused = isCurrent,
+                            shape = boxShape
+                        )
+                        .then(
+                            if (isFilled && !isError && !isCurrent) {
+                                Modifier.border(
+                                    width = 1.5.dp,
+                                    color = borderColor,
+                                    shape = boxShape
+                                )
+                            } else {
+                                Modifier
+                            }
                         )
                         .testTag("pin_box_$i"),
                     contentAlignment = Alignment.Center

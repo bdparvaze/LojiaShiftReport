@@ -19,6 +19,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 
 @Composable
@@ -28,56 +30,81 @@ fun SaveDocumentTitleDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    val style = LocalDepthStyle.current
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        title = {
+        maxWidth = Dimens.DialogSmallMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Text(
                 text = stringResource(R.string.doc_save_title_dialog),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
-            Column(
+            Text(
+                text = stringResource(R.string.doc_enter_title_desc),
+                fontSize = 13.sp,
+                color = OnSurfaceVariantLight
+            )
+            LojiaTextField(
+                value = title,
+                onValueChange = onTitleChange,
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.doc_title_placeholder)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .testTag("save_title_input")
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.doc_enter_title_desc),
-                    fontSize = 13.sp,
-                    color = TextHintColor
-                )
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = onTitleChange,
-                    singleLine = true,
-                    placeholder = { Text(stringResource(R.string.doc_title_placeholder)) },
+                OutlinedButton(
+                    onClick = onDismiss,
+                    border = null,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("save_title_input")
-                )
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = onConfirm,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                        .testTag("confirm_save_title_btn")
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.testTag("confirm_save_title_btn")
-            ) {
-                Text(stringResource(R.string.save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -86,60 +113,87 @@ fun ScannerFallbackPromptDialog(
     onGalleryPick: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    val style = LocalDepthStyle.current
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        icon = {
+        maxWidth = Dimens.DialogSmallMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPaddingComfortable),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Icon(
                 imageVector = Icons.Outlined.CameraAlt,
                 contentDescription = null,
                 tint = PrimaryIndigo,
                 modifier = Modifier.size(32.dp)
             )
-        },
-        title = {
             Text(
                 text = stringResource(R.string.doc_capture_doc),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
             Text(
                 text = stringResource(R.string.doc_capture_desc),
                 fontSize = 13.5.sp,
                 color = OnSurfaceVariantLight
             )
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onDismiss()
-                    onCameraCapture()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                shape = RoundedCornerShape(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(stringResource(R.string.doc_open_camera))
+                OutlinedButton(
+                    onClick = {
+                        onDismiss()
+                        onGalleryPick()
+                    },
+                    border = null,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Icon(Icons.Outlined.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(stringResource(R.string.doc_from_gallery), fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onCameraCapture()
+                    },
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Icon(Icons.Outlined.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(stringResource(R.string.doc_open_camera), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        dismissButton = {
-            OutlinedButton(
-                onClick = {
-                    onDismiss()
-                    onGalleryPick()
-                },
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Icon(Icons.Outlined.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(stringResource(R.string.doc_from_gallery))
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -149,18 +203,25 @@ fun RenameDocumentDialog(
     onDismiss: () -> Unit
 ) {
     var newTitle by remember { mutableStateOf(currentTitle) }
+    val style = LocalDepthStyle.current
 
-    AlertDialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        title = {
+        maxWidth = Dimens.DialogSmallMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Text(
                 text = stringResource(R.string.doc_rename_title),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
-            OutlinedTextField(
+            LojiaTextField(
                 value = newTitle,
                 onValueChange = { newTitle = it },
                 singleLine = true,
@@ -169,28 +230,52 @@ fun RenameDocumentDialog(
                     .fillMaxWidth()
                     .testTag("rename_title_input")
             )
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (newTitle.isNotBlank()) {
-                        onRename(newTitle.trim())
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                shape = RoundedCornerShape(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.save))
+                OutlinedButton(
+                    onClick = onDismiss,
+                    border = null,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = {
+                        if (newTitle.isNotBlank()) {
+                            onRename(newTitle.trim())
+                        }
+                    },
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -199,47 +284,77 @@ fun DeleteDocumentConfirmDialog(
     onConfirmDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    val style = LocalDepthStyle.current
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        icon = {
+        maxWidth = Dimens.DialogSmallMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPaddingComfortable),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
+                tint = ErrorRedLight,
                 modifier = Modifier.size(32.dp)
             )
-        },
-        title = {
             Text(
                 text = stringResource(R.string.doc_delete_title),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
             Text(
                 text = stringResource(R.string.doc_delete_confirm, documentTitle),
                 fontSize = 13.5.sp,
                 color = OnSurfaceVariantLight
             )
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirmDelete,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.delete))
+                OutlinedButton(
+                    onClick = onDismiss,
+                    border = null,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = onConfirmDelete,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(isDestructive = true, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.delete), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -248,47 +363,77 @@ fun BatchDeleteConfirmDialog(
     onConfirmDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    val style = LocalDepthStyle.current
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        icon = {
+        maxWidth = Dimens.DialogSmallMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPaddingComfortable),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Icon(
                 imageVector = Icons.Outlined.DeleteSweep,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
+                tint = ErrorRedLight,
                 modifier = Modifier.size(32.dp)
             )
-        },
-        title = {
             Text(
                 text = stringResource(R.string.doc_batch_delete_title, count),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
             Text(
                 text = stringResource(R.string.doc_batch_delete_confirm, count),
                 fontSize = 13.5.sp,
                 color = OnSurfaceVariantLight
             )
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirmDelete,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.doc_delete_all_selected))
+                OutlinedButton(
+                    onClick = onDismiss,
+                    border = null,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = onConfirmDelete,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(isDestructive = true, cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.doc_delete_all_selected), fontWeight = FontWeight.Bold)
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -300,16 +445,24 @@ fun OcrTextPreviewDialog(
     onShareWord: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    val style = LocalDepthStyle.current
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        title = {
+        maxWidth = Dimens.DialogMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Text(
                 text = stringResource(R.string.doc_extracted_text_title),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -342,7 +495,7 @@ fun OcrTextPreviewDialog(
                     ) {
                         Text(
                             text = stringResource(R.string.doc_no_text_found),
-                            color = TextHintColor,
+                            color = OnSurfaceVariantLight,
                             fontSize = 13.sp
                         )
                     }
@@ -362,13 +515,47 @@ fun OcrTextPreviewDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (extractedText.isNotBlank()) {
                     OutlinedButton(
+                        onClick = onDismiss,
+                        border = null,
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = OnSurfaceVariantLight
+                        ),
+                        modifier = Modifier
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = style.secondaryButtonBorderColor,
+                                cornerRadius = Dimens.RadiusMd
+                            )
+                    ) {
+                        Text(stringResource(R.string.close))
+                    }
+                    OutlinedButton(
                         onClick = { onCopyText(extractedText) },
-                        shape = RoundedCornerShape(10.dp)
+                        border = null,
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PrimaryIndigoDark
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthSecondaryButton(
+                                borderColor = style.secondaryButtonBorderColor,
+                                cornerRadius = Dimens.RadiusMd
+                            )
                     ) {
                         Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -376,8 +563,16 @@ fun OcrTextPreviewDialog(
                     }
                     Button(
                         onClick = onShareWord,
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                        shape = RoundedCornerShape(10.dp)
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PureWhite
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                     ) {
                         Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -386,24 +581,23 @@ fun OcrTextPreviewDialog(
                 } else {
                     Button(
                         onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                        shape = RoundedCornerShape(10.dp)
+                        elevation = null,
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PureWhite
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                     ) {
-                        Text(stringResource(R.string.close))
+                        Text(stringResource(R.string.close), fontWeight = FontWeight.Bold)
                     }
                 }
             }
-        },
-        dismissButton = {
-            if (extractedText.isNotBlank()) {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -413,88 +607,115 @@ fun PasswordProtectDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val style = LocalDepthStyle.current
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        title = {
+        maxWidth = Dimens.DialogSmallMaxWidth
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(Dimens.DialogPaddingComfortable),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Text(
                 text = stringResource(R.string.doc_protect_pdf_title),
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = OnSurfaceLight
             )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+
+            Text(
+                text = stringResource(R.string.doc_protect_pdf_desc, documentTitle),
+                fontSize = 13.sp,
+                color = OnSurfaceVariantLight
+            )
+
+            LojiaTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    errorMessage = null
+                },
+                label = { Text(stringResource(R.string.password)) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            LojiaTextField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it
+                    errorMessage = null
+                },
+                label = { Text(stringResource(R.string.auth_confirm_pw)) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (errorMessage != null) {
                 Text(
-                    text = stringResource(R.string.doc_protect_pdf_desc, documentTitle),
-                    fontSize = 13.sp,
-                    color = TextHintColor
+                    text = errorMessage ?: "",
+                    color = ErrorRedLight,
+                    fontSize = 12.sp
                 )
+            }
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                        errorMessage = null
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    border = null,
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryIndigoDark
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthSecondaryButton(
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusMd
+                        )
+                ) {
+                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = {
+                        if (password.length < 4) {
+                            errorMessage = context.getString(R.string.doc_password_min_length)
+                        } else if (password != confirmPassword) {
+                            errorMessage = context.getString(R.string.doc_passwords_do_not_match)
+                        } else {
+                            onProtect(password)
+                        }
                     },
-                    label = { Text(stringResource(R.string.password)) },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = confirmPassword,
-                    onValueChange = {
-                        confirmPassword = it
-                        errorMessage = null
-                    },
-                    label = { Text(stringResource(R.string.auth_confirm_pw)) },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp
-                    )
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                ) {
+                    Text(stringResource(R.string.doc_btn_protect_pdf), fontWeight = FontWeight.Bold)
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (password.length < 4) {
-                        errorMessage = context.getString(R.string.doc_password_min_length)
-                    } else if (password != confirmPassword) {
-                        errorMessage = context.getString(R.string.doc_passwords_do_not_match)
-                    } else {
-                        onProtect(password)
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text(stringResource(R.string.doc_btn_protect_pdf))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        containerColor = PureWhite,
-        shape = RoundedCornerShape(16.dp)
-    )
+        }
+    }
 }
