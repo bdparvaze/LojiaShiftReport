@@ -216,14 +216,14 @@ fun AdminAuthDialog(
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(Dimens.RadiusXl),
+                shape = RoundedCornerShape(Dimens.DialogCornerRadius),
                 color = Color.Transparent,
                 shadowElevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
                     .widthIn(max = 420.dp)
                     .wrapContentHeight()
-                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusXl))
+                    .depthCard(shape = RoundedCornerShape(Dimens.DialogCornerRadius), cornerRadius = Dimens.DialogCornerRadius)
                     .verticalScroll(rememberScrollState())
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -371,11 +371,12 @@ fun AdminAuthDialog(
                                                 enabled = lockoutSeconds == 0,
                                                 isError = isError && !isSuccess,
                                                 isFocused = isFilled || isFocused,
-                                                shape = boxShape
+                                                shape = boxShape,
+                                                cornerRadius = Dimens.RadiusMd
                                             )
                                             .then(
                                                 if (isSuccess) {
-                                                    Modifier.border(2.dp, SuccessGreen, boxShape)
+                                                    Modifier.border(Dimens.InsetFocusedBorderWidth, SuccessGreen, boxShape)
                                                 } else {
                                                     Modifier
                                                 }
@@ -579,14 +580,18 @@ fun AdminAuthDialog(
                             elevation = null,
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = OnSurfaceVariantLight
+                                contentColor = PrimaryBlueLight
                             ),
                             modifier = Modifier
-                                .heightIn(min = Dimens.MinTouchTarget)
-                                .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                                .heightIn(min = Dimens.ButtonHeightPrimary)
+                                .depthSecondaryButton(
+                                    cornerRadius = Dimens.RadiusMd,
+                                    minHeight = Dimens.ButtonHeightPrimary
+                                )
                         ) {
                             Text(
                                 text = stringResource(R.string.cancel),
+                                fontSize = DepthTypeTokens.SecondaryButtonTextSize,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -610,19 +615,21 @@ fun AdminAuthDialog(
                             shape = RoundedCornerShape(Dimens.RadiusMd),
                             modifier = Modifier
                                 .weight(1f)
-                                .heightIn(min = Dimens.MinTouchTarget)
+                                .heightIn(min = Dimens.ButtonHeightPrimary)
                                 .then(
                                     if (isSuccess) {
                                         Modifier.depthSemanticCard(
                                             backgroundColor = SuccessGreen,
                                             borderColor = SuccessTextDark,
-                                            shape = RoundedCornerShape(Dimens.RadiusMd)
+                                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                                            cornerRadius = Dimens.RadiusMd
                                         )
                                     } else {
                                         Modifier.depthRaisedButton(
                                             enabled = isConfirmEnabled || isVerifying,
                                             isDestructive = isError,
-                                            cornerRadius = Dimens.RadiusMd
+                                            cornerRadius = Dimens.RadiusMd,
+                                            minHeight = Dimens.ButtonHeightPrimary
                                         )
                                     }
                                 )

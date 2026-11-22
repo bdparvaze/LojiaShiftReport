@@ -132,10 +132,10 @@ fun AuthScreenLoginTab(
         }
     }
 
-    val primaryIndigo = PrimaryIndigoLight
+    val primaryIndigo = PrimaryBlueLight
     val charcoalText = OnSurfaceLight
-    val mediumGray = TextSecondaryLight
-    val hintGray = TextHintColor
+    val mediumGray = OnSurfaceVariantLight
+    val hintGray = DepthTokens.InsetPlaceholderColor
     val borderGray = OutlineLight
     val errorRed = ErrorRedLight
 
@@ -224,7 +224,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = stringResource(R.string.auth_username_or_email),
                     fontFamily = PoppinsFontFamily,
-                    fontSize = 13.5.sp,
+                    fontSize = DepthTypeTokens.InsetPlaceholderSize,
                     color = hintGray
                 )
             },
@@ -232,8 +232,7 @@ fun AuthScreenLoginTab(
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = primaryIndigo
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             },
             singleLine = true,
@@ -256,7 +255,7 @@ fun AuthScreenLoginTab(
                 .testTag("etLoginUser")
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Password Field with Eye Toggle
         com.lojia.shiftreport.ui.common.LojiaTextField(
@@ -276,7 +275,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = stringResource(R.string.auth_password),
                     fontFamily = PoppinsFontFamily,
-                    fontSize = 13.5.sp,
+                    fontSize = DepthTypeTokens.InsetPlaceholderSize,
                     color = hintGray
                 )
             },
@@ -284,8 +283,7 @@ fun AuthScreenLoginTab(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = primaryIndigo
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             },
             trailingIcon = {
@@ -353,13 +351,13 @@ fun AuthScreenLoginTab(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(20.dp)
-                        .clip(RoundedCornerShape(5.dp))
+                        .size(Dimens.RememberCheckboxSize)
+                        .clip(RoundedCornerShape(Dimens.RememberCheckboxRadius))
                         .background(if (rememberMe) primaryIndigo else Color.Transparent)
                         .border(
-                            width = 1.5.dp,
+                            width = Dimens.RememberCheckboxBorderWidth,
                             color = if (rememberMe) primaryIndigo else borderGray,
-                            shape = RoundedCornerShape(5.dp)
+                            shape = RoundedCornerShape(Dimens.RememberCheckboxRadius)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -368,7 +366,7 @@ fun AuthScreenLoginTab(
                             imageVector = Icons.Default.Check,
                             contentDescription = stringResource(R.string.auth_remember_me_selected_cd),
                             tint = PureWhite,
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(12.dp)
                         )
                     }
                 }
@@ -376,7 +374,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = stringResource(R.string.auth_remember_me),
                     fontFamily = PoppinsFontFamily,
-                    fontSize = 12.5.sp,
+                    fontSize = DepthTypeTokens.AuthRowLinkTextSize,
                     fontWeight = FontWeight.Medium,
                     color = mediumGray,
                     maxLines = 1,
@@ -392,7 +390,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = stringResource(R.string.auth_forgot_password),
                     fontFamily = PoppinsFontFamily,
-                    fontSize = 12.5.sp,
+                    fontSize = DepthTypeTokens.AuthRowLinkTextSize,
                     fontWeight = FontWeight.SemiBold,
                     color = primaryIndigo
                 )
@@ -407,7 +405,8 @@ fun AuthScreenLoginTab(
                     .depthSemanticCard(
                         backgroundColor = NegativeBannerSurface,
                         borderColor = NegativeBannerBorder,
-                        shape = RoundedCornerShape(Dimens.RadiusSm)
+                        shape = RoundedCornerShape(Dimens.RadiusSm),
+                        cornerRadius = Dimens.RadiusSm
                     )
             ) {
                 Text(
@@ -423,7 +422,7 @@ fun AuthScreenLoginTab(
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
         // Raised Sign In Button
         Button(
@@ -439,8 +438,12 @@ fun AuthScreenLoginTab(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = Dimens.MinTouchTarget)
-                .depthRaisedButton(enabled = !isLoading, cornerRadius = Dimens.RadiusMd)
+                .heightIn(min = Dimens.ButtonHeightPrimary)
+                .depthRaisedButton(
+                    enabled = !isLoading,
+                    cornerRadius = Dimens.RadiusMd,
+                    minHeight = Dimens.ButtonHeightPrimary
+                )
                 .testTag("btnSignIn")
         ) {
             if (isLoading) {
@@ -453,13 +456,13 @@ fun AuthScreenLoginTab(
                 Text(
                     text = stringResource(R.string.auth_sign_in_btn),
                     fontFamily = PoppinsFontFamily,
-                    fontSize = 15.sp,
+                    fontSize = DepthTypeTokens.PrimaryButtonTextSize,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Register link
         Row(
@@ -470,7 +473,7 @@ fun AuthScreenLoginTab(
             Text(
                 text = stringResource(R.string.auth_no_account) + " ",
                 fontFamily = PoppinsFontFamily,
-                fontSize = 13.sp,
+                fontSize = DepthTypeTokens.AuthFooterTextSize,
                 color = mediumGray
             )
             Box(
@@ -484,7 +487,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = stringResource(R.string.auth_register_here),
                     fontFamily = PoppinsFontFamily,
-                    fontSize = 13.sp,
+                    fontSize = DepthTypeTokens.AuthFooterTextSize,
                     fontWeight = FontWeight.Bold,
                     color = primaryIndigo
                 )

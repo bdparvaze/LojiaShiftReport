@@ -181,11 +181,11 @@ fun LojiaConfirmDialog(
                     elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        contentColor = MaterialTheme.colorScheme.primary
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
                         .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
                         .testTag(dismissTestTag)
                 ) {
@@ -210,7 +210,7 @@ fun LojiaConfirmDialog(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
                         .depthRaisedButton(
                             enabled = true,
                             isDestructive = isDestructive,
@@ -221,7 +221,7 @@ fun LojiaConfirmDialog(
                     Text(
                         text = confirmText,
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -323,11 +323,11 @@ fun LojiaFormDialog(
                     elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        contentColor = MaterialTheme.colorScheme.primary
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
                         .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
                         .testTag(dismissTestTag)
                 ) {
@@ -353,7 +353,7 @@ fun LojiaFormDialog(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
                         .depthRaisedButton(
                             enabled = isConfirmEnabled,
                             isDestructive = isDestructive,
@@ -364,7 +364,7 @@ fun LojiaFormDialog(
                     Text(
                         text = confirmText,
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

@@ -2,13 +2,11 @@ package com.lojia.shiftreport.auth
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Fingerprint
@@ -157,45 +155,50 @@ fun QuickPinScreen(
         preferencesRepository.isBiometricEnabled() &&
         currentMode == QuickPinMode.ENTER_PIN
 
+    val style = LocalDepthStyle.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(style.pageBackground)
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = Dimens.QuickPinSidePadding),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 360.dp)
+                .widthIn(max = Dimens.QuickPinMaxWidth)
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = Dimens.SpacingLg)
                 .cardRise(0),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = titleText,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onBackground,
+                fontFamily = PoppinsFontFamily,
+                fontSize = DepthTypeTokens.QuickPinTitleSize,
+                fontWeight = FontWeight.Bold,
+                color = OnBackgroundLight,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
             Text(
                 text = subtitleText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontFamily = PoppinsFontFamily,
+                fontSize = DepthTypeTokens.QuickPinSubtitleSize,
+                color = OnSurfaceVariantLight,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // 6-box PIN indicator: pressed-in inset wells with dots (●)
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.PinCellGap, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -207,21 +210,28 @@ fun QuickPinScreen(
 
                     Box(
                         modifier = Modifier
-                            .size(Dimens.MinTouchTarget)
+                            .weight(1f)
+                            .aspectRatio(DepthTokens.PIN_CELL_ASPECT_RATIO)
                             .depthInset(
                                 enabled = !isLockedOut,
                                 isError = pinError || isLockedOut,
                                 isFocused = isActive,
-                                shape = RoundedCornerShape(Dimens.RadiusMd)
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
+                                cornerRadius = Dimens.RadiusMd,
+                                gradientColors = if (isFilled) {
+                                    listOf(style.pinCellFilledStart, style.pinCellFilledEnd)
+                                } else {
+                                    null
+                                }
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         if (isFilled) {
                             Text(
                                 text = "●",
-                                fontSize = 24.sp,
+                                fontSize = DepthTypeTokens.QuickPinDotSize,
                                 fontWeight = FontWeight.Bold,
-                                color = if (pinError || isLockedOut) ErrorRedLight else OnSurfaceLight,
+                                color = if (pinError || isLockedOut) ErrorRedLight else OnBackgroundLight,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -231,7 +241,7 @@ fun QuickPinScreen(
 
             // Error / 30s Lockout message
             if (errorMessage != null || isLockedOut) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
                 val displayError = if (isLockedOut) {
                     stringResource(R.string.quick_pin_lockout_countdown_fmt, lockoutSeconds)
                 } else {
@@ -239,7 +249,7 @@ fun QuickPinScreen(
                 }
                 Text(
                     text = displayError,
-                    color = MaterialTheme.colorScheme.error,
+                    color = ErrorRedLight,
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontWeight = FontWeight.Medium
                     ),
@@ -248,109 +258,111 @@ fun QuickPinScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
-            // 3-column Material 3 Number Pad (always LTR per international keypad standard)
-            val padItems = listOf(
-                "1", "2", "3",
-                "4", "5", "6",
-                "7", "8", "9",
-                "BIOMETRIC", "0", "DELETE"
+            // 4 rows x 3 columns raised square keypad (always LTR per international keypad standard)
+            val padRows = listOf(
+                listOf("1", "2", "3"),
+                listOf("4", "5", "6"),
+                listOf("7", "8", "9"),
+                listOf("BIOMETRIC", "0", "DELETE")
             )
 
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    userScrollEnabled = false,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.width(248.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.KeypadColumnGap)
                 ) {
-                    items(padItems.size) { idx ->
-                        val item = padItems[idx]
-                        when (item) {
-                            "BIOMETRIC" -> {
-                                Box(
-                                    modifier = Modifier.size(72.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (showBiometric) {
+                    padRows.forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.KeypadColumnGap)
+                        ) {
+                            rowItems.forEach { item ->
+                                when (item) {
+                                    "BIOMETRIC" -> {
                                         Box(
                                             modifier = Modifier
-                                                .size(72.dp)
-                                                .depthSecondaryButton(
-                                                    enabled = !isLockedOut,
-                                                    borderColor = PrimaryIndigoLight.copy(alpha = 0.35f),
-                                                    cornerRadius = 36.dp
-                                                )
+                                                .weight(1f)
+                                                .height(Dimens.KeypadButtonHeight),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (showBiometric) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(Dimens.KeypadButtonHeight)
+                                                        .depthSecondaryButton(
+                                                            enabled = !isLockedOut,
+                                                            borderColor = PrimaryBlueLight,
+                                                            cornerRadius = Dimens.RadiusKeypad,
+                                                            minHeight = Dimens.KeypadButtonHeight
+                                                        )
+                                                        .clickable(
+                                                            enabled = !isLockedOut,
+                                                            onClick = onTriggerBiometric
+                                                        ),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Fingerprint,
+                                                        contentDescription = stringResource(R.string.cd_biometric),
+                                                        tint = PrimaryBlueLight,
+                                                        modifier = Modifier.size(Dimens.IconLg)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    "DELETE" -> {
+                                        val canDelete = !isLockedOut && enteredPin.isNotEmpty()
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .depthKeypadKey(enabled = canDelete)
                                                 .clickable(
-                                                    enabled = !isLockedOut,
-                                                    onClick = onTriggerBiometric
+                                                    enabled = canDelete,
+                                                    onClick = {
+                                                        if (enteredPin.isNotEmpty()) {
+                                                            enteredPin = enteredPin.dropLast(1)
+                                                        }
+                                                    }
                                                 ),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.Fingerprint,
-                                                contentDescription = stringResource(R.string.cd_biometric),
-                                                tint = PrimaryIndigoLight,
-                                                modifier = Modifier.size(32.dp)
+                                                imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                                contentDescription = stringResource(R.string.cd_backspace),
+                                                tint = OnSurfaceVariantLight,
+                                                modifier = Modifier.size(24.dp)
                                             )
                                         }
                                     }
-                                }
-                            }
-                            "DELETE" -> {
-                                val canDelete = !isLockedOut && enteredPin.isNotEmpty()
-                                Box(
-                                    modifier = Modifier
-                                        .size(72.dp)
-                                        .depthSecondaryButton(
-                                            enabled = canDelete,
-                                            cornerRadius = 36.dp
-                                        )
-                                        .clickable(
-                                            enabled = canDelete,
-                                            onClick = {
-                                                if (enteredPin.isNotEmpty()) {
-                                                    enteredPin = enteredPin.dropLast(1)
-                                                }
-                                            }
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                        contentDescription = stringResource(R.string.cd_backspace),
-                                        tint = OnSurfaceVariantLight,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                            else -> {
-                                Box(
-                                    modifier = Modifier
-                                        .size(72.dp)
-                                        .depthSecondaryButton(
-                                            enabled = !isLockedOut,
-                                            cornerRadius = 36.dp
-                                        )
-                                        .clickable(
-                                            enabled = !isLockedOut,
-                                            onClick = {
-                                                if (enteredPin.length < AuthPinConstants.PIN_LENGTH) {
-                                                    enteredPin += item
-                                                }
-                                            }
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = item,
-                                        fontSize = 22.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isLockedOut) OnSurfaceVariantLight else OnSurfaceLight,
-                                        textAlign = TextAlign.Center
-                                    )
+                                    else -> {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .depthKeypadKey(enabled = !isLockedOut)
+                                                .clickable(
+                                                    enabled = !isLockedOut,
+                                                    onClick = {
+                                                        if (enteredPin.length < AuthPinConstants.PIN_LENGTH) {
+                                                            enteredPin += item
+                                                        }
+                                                    }
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = item,
+                                                fontFamily = PoppinsFontFamily,
+                                                fontSize = DepthTypeTokens.KeypadDigitSize,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (isLockedOut) OnSurfaceVariantLight else OnBackgroundLight,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -358,7 +370,7 @@ fun QuickPinScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
             TextButton(
                 onClick = onFallbackToLogin,
@@ -368,8 +380,9 @@ fun QuickPinScreen(
             ) {
                 Text(
                     text = stringResource(R.string.quick_pin_use_password),
-                    color = PrimaryIndigoLight,
-                    fontSize = 14.sp,
+                    fontFamily = PoppinsFontFamily,
+                    color = PrimaryBlueLight,
+                    fontSize = DepthTypeTokens.QuickPinFallbackTextSize,
                     fontWeight = FontWeight.SemiBold
                 )
             }

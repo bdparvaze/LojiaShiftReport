@@ -67,59 +67,47 @@ fun LojiaHeader(
     headerHeight: Dp? = null,
     onLanguageClick: (() -> Unit)? = null
 ) {
-    val headerShape = RoundedCornerShape(Dimens.RadiusLg)
-    LojiaGradientHeader(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .then(if (headerHeight != null) Modifier.height(headerHeight) else Modifier.wrapContentHeight())
             .testTag("lojiaHeader"),
-        shape = headerShape,
-        contentPadding = PaddingValues(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.depthLogoTile(),
+            contentAlignment = Alignment.Center
         ) {
-            Surface(
-                shape = RoundedCornerShape(Dimens.RadiusMd),
-                color = PureWhite.copy(alpha = 0.16f),
-                border = BorderStroke(Dimens.CardBorderWidth, PureWhite.copy(alpha = 0.28f)),
-                modifier = Modifier.size(46.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Filled.Assessment,
-                        contentDescription = stringResource(R.string.cd_lojia_logo),
-                        tint = PureWhite,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
-
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 22.sp
-                ),
-                color = PureWhite,
-                letterSpacing = 0.2.sp
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
-
-            Text(
-                text = stringResource(R.string.auth_tagline),
-                fontFamily = PoppinsFontFamily,
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = PureWhite.copy(alpha = 0.90f),
-                letterSpacing = 1.5.sp
+            Icon(
+                imageVector = Icons.Filled.Assessment,
+                contentDescription = stringResource(R.string.cd_lojia_logo),
+                tint = PrimaryBlueLight,
+                modifier = Modifier.size(Dimens.LogoTileIconSize)
             )
         }
+
+        Spacer(modifier = Modifier.height(Dimens.SpacingSm))
+
+        Text(
+            text = stringResource(R.string.app_name),
+            fontFamily = PoppinsFontFamily,
+            fontSize = DepthTypeTokens.LogoTitleSize,
+            fontWeight = FontWeight.ExtraBold,
+            color = PrimaryBlueLight,
+            letterSpacing = DepthTypeTokens.LogoTitleLetterSpacing
+        )
+
+        Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
+
+        Text(
+            text = stringResource(R.string.auth_tagline),
+            fontFamily = PoppinsFontFamily,
+            fontSize = DepthTypeTokens.LogoSubtitleSize,
+            fontWeight = FontWeight.SemiBold,
+            color = OnSurfaceVariantLight,
+            letterSpacing = DepthTypeTokens.LogoSubtitleLetterSpacing
+        )
     }
 }
 
@@ -128,17 +116,17 @@ fun LojiaCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val cardShape = RoundedCornerShape(Dimens.RadiusLg)
+    val cardShape = RoundedCornerShape(Dimens.CardCornerRadius)
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .depthCard(shape = cardShape),
+            .depthCard(shape = cardShape, cornerRadius = Dimens.CardCornerRadius),
         shape = cardShape,
         color = Color.Transparent,
         shadowElevation = 0.dp
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+            modifier = Modifier.padding(Dimens.CardPaddingAuth),
             content = content
         )
     }
@@ -241,16 +229,18 @@ fun LojiaInputField(
             ) {
                 Text(
                     text = label,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
+                    fontFamily = PoppinsFontFamily,
+                    fontSize = DepthTypeTokens.RegisterLabelSize,
                     fontWeight = FontWeight.SemiBold,
-                    color = LojiaColors.N600
+                    color = OnSurfaceVariantLight
                 )
                 if (isRequired) {
                     Text(
                         text = " *",
-                        fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
+                        fontFamily = PoppinsFontFamily,
+                        fontSize = DepthTypeTokens.RegisterLabelSize,
                         fontWeight = FontWeight.Bold,
-                        color = if (isValid) LojiaColors.G500 else LojiaColors.R500
+                        color = if (isValid) SuccessGreen else RequiredStarRed
                     )
                 }
                 if (!infoTooltip.isNullOrBlank()) {
@@ -265,9 +255,10 @@ fun LojiaInputField(
                     ) {
                         Text(
                             text = "?",
-                            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 8.5.sp,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = 8.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = LojiaColors.N600
+                            color = OnSurfaceVariantLight
                         )
                     }
                 }
@@ -285,15 +276,16 @@ fun LojiaInputField(
             ) {
                 Text(
                     text = infoTooltip,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 10.sp,
-                    color = Color.White,
+                    fontFamily = PoppinsFontFamily,
+                    fontSize = 10.sp,
+                    color = PureWhite,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
         }
 
         // Depth inset container with focus, error, disabled, and valid semantic feedback
-        val fieldShape = RoundedCornerShape(Dimens.RadiusMd)
+        val fieldShape = RoundedCornerShape(Dimens.RadiusInputRegister)
 
         Box(
             modifier = Modifier
@@ -303,12 +295,15 @@ fun LojiaInputField(
                     enabled = enabled,
                     isError = validationState == FieldValidationState.ERROR,
                     isFocused = isFocused,
-                    shape = fieldShape
+                    shape = fieldShape,
+                    cornerRadius = Dimens.RadiusInputRegister,
+                    borderWidth = Dimens.InsetRegisterBorderWidth,
+                    focusedBorderWidth = Dimens.InsetFocusedBorderWidth
                 )
                 .then(
                     if (validationState == FieldValidationState.SUCCESS && enabled) {
                         Modifier.border(
-                            width = 1.5.dp,
+                            width = Dimens.InsetRegisterBorderWidth,
                             color = SuccessGreen,
                             shape = fieldShape
                         )
@@ -316,7 +311,7 @@ fun LojiaInputField(
                         Modifier
                     }
                 )
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .padding(horizontal = Dimens.RegisterFieldPaddingHorizontal, vertical = Dimens.SpacingXs),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
@@ -330,12 +325,12 @@ fun LojiaInputField(
                         tint = when {
                             validationState == FieldValidationState.ERROR -> ErrorRedLight
                             validationState == FieldValidationState.SUCCESS -> SuccessGreen
-                            isFocused -> PrimaryIndigoLight
-                            else -> OnSurfaceVariantLight
+                            isFocused -> PrimaryBlueLight
+                            else -> DepthTokens.RegisterIconColor
                         },
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(Dimens.IconField)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(Dimens.InsetIconTextGap))
                 }
 
                 Box(
@@ -345,8 +340,9 @@ fun LojiaInputField(
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
-                            color = LojiaColors.N500,
-                            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.5.sp,
+                            color = DepthTokens.RegisterPlaceholderColor,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = DepthTypeTokens.RegisterPlaceholderSize,
                             lineHeight = 18.sp
                         )
                     }
@@ -359,12 +355,13 @@ fun LojiaInputField(
                         keyboardOptions = keyboardOptions,
                         keyboardActions = keyboardActions,
                         textStyle = TextStyle(
-                            color = LojiaColors.N900,
-                            fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.5.sp,
+                            color = OnSurfaceLight,
+                            fontFamily = PoppinsFontFamily,
+                            fontSize = DepthTypeTokens.RegisterPlaceholderSize,
                             lineHeight = 18.sp,
                             fontWeight = FontWeight.Normal
                         ),
-                        cursorBrush = SolidColor(LojiaColors.P500),
+                        cursorBrush = SolidColor(PrimaryBlueLight),
                         modifier = Modifier
                             .fillMaxWidth()
                             .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
@@ -427,8 +424,12 @@ fun LojiaGradientButton(
         shadowElevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = Dimens.MinTouchTarget)
-            .depthRaisedButton(enabled = enabled || isLoading, cornerRadius = Dimens.RadiusMd)
+            .heightIn(min = Dimens.ButtonHeightPrimary)
+            .depthRaisedButton(
+                enabled = enabled || isLoading,
+                cornerRadius = Dimens.RadiusMd,
+                minHeight = Dimens.ButtonHeightPrimary
+            )
             .testTag(testTag)
     ) {
         Box(
@@ -449,31 +450,18 @@ fun LojiaGradientButton(
                         text = text,
                         color = PureWhite,
                         fontFamily = PoppinsFontFamily,
-                        fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = DepthTypeTokens.PrimaryButtonTextSize,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = contentTint,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = text,
-                        color = contentTint,
-                        fontFamily = PoppinsFontFamily,
-                        fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.2.sp
-                    )
-                }
+                Text(
+                    text = text,
+                    color = contentTint,
+                    fontFamily = PoppinsFontFamily,
+                    fontSize = DepthTypeTokens.PrimaryButtonTextSize,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

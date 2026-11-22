@@ -234,7 +234,7 @@ fun LojiaRegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(LocalDepthStyle.current.pageBackground)
             .padding(horizontal = Dimens.SpacingLg)
             .imePadding(),
         contentAlignment = Alignment.Center
@@ -242,9 +242,10 @@ fun LojiaRegisterScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 380.dp)
+                .widthIn(max = Dimens.RegisterScreenMaxWidth)
                 .wrapContentHeight(Alignment.CenterVertically)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(top = Dimens.RegisterHeaderTopPadding, bottom = Dimens.SpacingXxl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -258,7 +259,7 @@ fun LojiaRegisterScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
             // Card 1: Personal Profile
-            LojiaCard(modifier = Modifier.fillMaxWidth().padding(top = 4.dp).cardRise(0)) {
+            LojiaCard(modifier = Modifier.fillMaxWidth().cardRise(0)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -342,31 +343,37 @@ fun LojiaRegisterScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.phone_number),
-                        fontSize = 12.sp,
+                        fontSize = DepthTypeTokens.RegisterLabelSize,
                         fontWeight = FontWeight.SemiBold,
-                        color = LojiaColors.N600,
-                        modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
+                        color = OnSurfaceVariantLight,
+                        modifier = Modifier.padding(bottom = 5.dp, start = 2.dp)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        val dialShape = RoundedCornerShape(Dimens.RadiusInputRegister)
                         Box(
                             modifier = Modifier
                                 .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                                 .widthIn(min = 78.dp)
-                                .depthInset(shape = RoundedCornerShape(Dimens.RadiusMd))
+                                .depthInset(
+                                    shape = dialShape,
+                                    cornerRadius = Dimens.RadiusInputRegister,
+                                    borderWidth = Dimens.InsetRegisterBorderWidth,
+                                    focusedBorderWidth = Dimens.InsetFocusedBorderWidth
+                                )
                                 .clickable { showCountryPicker = true }
                                 .testTag("ccBtn"),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
-                                modifier = Modifier.padding(start = 10.dp, end = 8.dp),
+                                modifier = Modifier.padding(horizontal = Dimens.RegisterFieldPaddingHorizontal),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = selectedCountry.dial,
-                                    fontSize = 13.5.sp,
+                                    fontSize = DepthTypeTokens.RegisterPlaceholderSize,
                                     fontWeight = FontWeight.SemiBold,
                                     color = OnSurfaceLight
                                 )
@@ -374,7 +381,7 @@ fun LojiaRegisterScreen(
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowDown,
                                     contentDescription = null,
-                                    tint = OnSurfaceVariantLight,
+                                    tint = DepthTokens.RegisterIconColor,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -477,22 +484,23 @@ fun LojiaRegisterScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
+                        modifier = Modifier.padding(bottom = 5.dp, start = 2.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.auth_sec_question),
-                            fontSize = 12.sp,
+                            fontSize = DepthTypeTokens.RegisterLabelSize,
                             fontWeight = FontWeight.SemiBold,
-                            color = LojiaColors.N600
+                            color = OnSurfaceVariantLight
                         )
                         Text(
                             text = " *",
-                            fontSize = 12.sp,
+                            fontSize = DepthTypeTokens.RegisterLabelSize,
                             fontWeight = FontWeight.Bold,
-                            color = if (rSq.isNotEmpty()) LojiaColors.G500 else LojiaColors.R500
+                            color = if (rSq.isNotEmpty()) SuccessGreen else RequiredStarRed
                         )
                     }
 
+                    val questionShape = RoundedCornerShape(Dimens.RadiusInputRegister)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -501,13 +509,16 @@ fun LojiaRegisterScreen(
                                 enabled = true,
                                 isError = vSq == FieldValidationState.ERROR,
                                 isFocused = showQuestionMenu,
-                                shape = RoundedCornerShape(Dimens.RadiusMd)
+                                shape = questionShape,
+                                cornerRadius = Dimens.RadiusInputRegister,
+                                borderWidth = Dimens.InsetRegisterBorderWidth,
+                                focusedBorderWidth = Dimens.InsetFocusedBorderWidth
                             )
                             .clickable {
                                 focusManager.clearFocus()
                                 showQuestionMenu = true
                             }
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                            .padding(horizontal = Dimens.RegisterFieldPaddingHorizontal, vertical = Dimens.SpacingXs),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Row(
@@ -517,21 +528,21 @@ fun LojiaRegisterScreen(
                             Icon(
                                 imageVector = Icons.Outlined.HelpOutline,
                                 contentDescription = null,
-                                tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(16.dp)
+                                tint = DepthTokens.RegisterIconColor,
+                                modifier = Modifier.size(Dimens.IconField)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(Dimens.InsetIconTextGap))
                             Text(
                                 text = if (rSq.isBlank()) stringResource(R.string.auth_choose_question) else rSq,
-                                fontSize = 13.sp,
-                                color = if (rSq.isBlank()) OnSurfaceVariantLight else OnSurfaceLight,
+                                fontSize = DepthTypeTokens.RegisterPlaceholderSize,
+                                color = if (rSq.isBlank()) DepthTokens.RegisterPlaceholderColor else OnSurfaceLight,
                                 modifier = Modifier.weight(1f),
                                 maxLines = 1
                             )
                             Icon(
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null,
-                                tint = OnSurfaceVariantLight,
+                                tint = DepthTokens.RegisterIconColor,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -675,14 +686,14 @@ fun LojiaRegisterScreen(
             ) {
                 Text(
                     text = stringResource(R.string.auth_already_account) + " ",
-                    fontSize = 12.sp,
+                    fontSize = DepthTypeTokens.AuthFooterTextSize,
                     color = OnSurfaceVariantLight
                 )
                 Text(
                     text = stringResource(R.string.auth_sign_in_link),
-                    fontSize = 12.sp,
+                    fontSize = DepthTypeTokens.AuthFooterTextSize,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryIndigoLight,
+                    color = PrimaryBlueLight,
                     modifier = Modifier
                         .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                         .clip(RoundedCornerShape(Dimens.RadiusSm))
@@ -693,7 +704,7 @@ fun LojiaRegisterScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingHuge))
         }
     }
 }
@@ -748,7 +759,7 @@ fun LojiaRegisterSuccessScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(LocalDepthStyle.current.pageBackground)
             .padding(horizontal = Dimens.SpacingLg)
             .testTag("pgSuccess"),
         contentAlignment = Alignment.Center
@@ -756,7 +767,7 @@ fun LojiaRegisterSuccessScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 380.dp)
+                .widthIn(max = Dimens.RegisterScreenMaxWidth)
                 .wrapContentHeight(Alignment.CenterVertically)
                 .padding(vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

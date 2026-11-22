@@ -6,12 +6,18 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 
 /**
  * Central color, gradient, shadow, and alpha tokens for Lojia's soft-depth visual system.
  * All depth values live exclusively in `ui/theme/` so screens inherit updates from one source.
  */
 object DepthTokens {
+
+    // ============ PAGE BACKGROUND ============
+    /** Soft blue-tinted canvas background behind auth, register, Quick PIN, and lock screens (#F4F7FD). */
+    val PageBackground: Color = BackgroundLight
 
     // ============ BRAND GRADIENTS (HEADER & PRIMARY BUTTONS) ============
     /** Top gradient stop for full-width headers, reusing existing PrimaryBlueLight. */
@@ -20,18 +26,18 @@ object DepthTokens {
     /** Bottom gradient stop for full-width headers, reusing existing PrimaryBlueDark. */
     val BrandHeaderGradientEnd: Color = PrimaryBlueDark
 
-    /** Top gradient stop for raised primary action buttons (high-contrast royal blue). */
-    val BrandButtonGradientStart: Color = Color(0xFF2563EB)
+    /** Top gradient stop for raised primary action buttons (#3B6BF0). */
+    val BrandButtonGradientStart: Color = Color(0xFF3B6BF0)
 
-    /** Bottom gradient stop for raised primary action buttons (deep anchor blue). */
-    val BrandButtonGradientEnd: Color = Color(0xFF1E40AF)
+    /** Bottom gradient stop for raised primary action buttons (#1D4FD8). */
+    val BrandButtonGradientEnd: Color = PrimaryBlueLight
 
     // ============ SURFACE & CARD GRADIENTS ============
-    /** Top gradient stop for standard depth cards (crisp white surface). */
+    /** Top gradient stop for standard depth cards (crisp white surface #FFFFFF). */
     val CardGradientStart: Color = SurfaceLight
 
-    /** Bottom gradient stop for standard depth cards (very light cool blue tint). */
-    val CardGradientEnd: Color = Color(0xFFF3F7FF)
+    /** Bottom gradient stop for standard depth cards (#F9FAFF). */
+    val CardGradientEnd: Color = Color(0xFFF9FAFF)
 
     /** Top gradient stop for highlighted/accent depth cards (soft ice blue). */
     val CardAccentGradientStart: Color = Color(0xFFEFF6FF)
@@ -40,33 +46,36 @@ object DepthTokens {
     val CardAccentGradientEnd: Color = PrimaryContainerLight
 
     // ============ RAISED CARD SHADOW & BORDER TOKENS ============
-    /** Base color used for raised-card ambient and spot shadows. */
-    val RaisedCardShadowColor: Color = PrimaryBlueDark
+    /** Close ambient shadow tint rgba(16, 24, 40, ...) beneath raised cards. */
+    val CardShadowCloseColor: Color = ShadowSlateColor
 
-    /** Border color for standard raised depth cards. */
-    val RaisedCardBorderColor: Color = OutlineVariantLight
+    /** Far directional brand shadow tint rgba(29, 79, 216, ...) beneath raised cards. */
+    val RaisedCardShadowColor: Color = PrimaryBlueLight
+
+    /** 1dp crisp perimeter border color for raised cards (#E5E9F5). */
+    val RaisedCardBorderColor: Color = DepthCardBorder
 
     /** Border color for highlighted accent depth cards. */
     val RaisedCardAccentBorderColor: Color = PrimaryLight
 
-    /** Ambient shadow alpha for raised cards to give soft vertical lift. */
-    const val RAISED_CARD_AMBIENT_ALPHA: Float = 0.08f
+    /** Close ambient shadow alpha rgba(16, 24, 40, 0.06). */
+    const val RAISED_CARD_AMBIENT_ALPHA: Float = 0.06f
 
-    /** Directional spot shadow alpha for raised cards. */
-    const val RAISED_CARD_SPOT_ALPHA: Float = 0.14f
+    /** Far directional shadow alpha rgba(29, 79, 216, 0.12). */
+    const val RAISED_CARD_SPOT_ALPHA: Float = 0.12f
 
-    /** Hairline border alpha for standard raised cards. */
-    const val RAISED_CARD_BORDER_ALPHA: Float = 0.90f
+    /** Hairline border alpha for standard raised cards (solid 1.0f). */
+    const val RAISED_CARD_BORDER_ALPHA: Float = 1.0f
 
     /** Accent card border alpha for highlighted KPI and summary cards. */
     const val RAISED_CARD_ACCENT_BORDER_ALPHA: Float = 0.35f
 
-    /** Subtle top inner-highlight alpha along the upper edge of raised cards. */
-    const val RAISED_CARD_TOP_SHEEN_ALPHA: Float = 0.85f
+    /** Top 1dp white inner highlight alpha along the upper edge of raised cards. */
+    const val RAISED_CARD_TOP_SHEEN_ALPHA: Float = 1.0f
 
     // ============ RAISED BUTTON SHADOW & LIP TOKENS ============
-    /** Lower 3D "lip" color anchored beneath enabled primary depth buttons. */
-    val RaisedButtonLipColor: Color = Color(0xFF162D70)
+    /** Lower 3D "lip" color anchored beneath enabled primary depth buttons (#153AA8). */
+    val RaisedButtonLipColor: Color = Color(0xFF153AA8)
 
     /** Top gradient stop for disabled depth buttons. */
     val RaisedButtonDisabledStart: Color = SurfaceVariantLight
@@ -77,8 +86,8 @@ object DepthTokens {
     /** Lower lip color anchored beneath disabled depth buttons. */
     val RaisedButtonLipDisabledColor: Color = OutlineLight
 
-    /** Elevation shadow tint beneath enabled raised buttons. */
-    val RaisedButtonShadowColor: Color = PrimaryBlueDark
+    /** Elevation shadow tint beneath enabled raised buttons (#1D4FD8). */
+    val RaisedButtonShadowColor: Color = PrimaryBlueLight
 
     /** Opacity applied to the lower lip on enabled raised buttons. */
     const val RAISED_BUTTON_LIP_ALPHA: Float = 1.0f
@@ -86,24 +95,27 @@ object DepthTokens {
     /** Opacity applied to the lower lip on disabled raised buttons. */
     const val RAISED_BUTTON_LIP_DISABLED_ALPHA: Float = 0.70f
 
-    /** Drop-shadow opacity beneath enabled raised buttons. */
-    const val RAISED_BUTTON_SHADOW_ALPHA: Float = 0.24f
+    /** Drop-shadow opacity rgba(29, 79, 216, 0.30) beneath enabled raised buttons. */
+    const val RAISED_BUTTON_SHADOW_ALPHA: Float = 0.30f
+
+    /** Inner 1dp top white highlight alpha on enabled primary buttons. */
+    const val RAISED_BUTTON_TOP_HIGHLIGHT_ALPHA: Float = 0.30f
 
     // ============ SECONDARY & DESTRUCTIVE BUTTON TOKENS ============
-    /** Top gradient stop for raised secondary/outlined buttons. */
+    /** Top gradient stop for raised secondary/outlined buttons (#FFFFFF). */
     val SecondaryButtonGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for raised secondary/outlined buttons. */
-    val SecondaryButtonGradientEnd: Color = BackgroundLight
+    /** Bottom gradient stop for raised secondary/outlined buttons (#F1F5FF). */
+    val SecondaryButtonGradientEnd: Color = Color(0xFFF1F5FF)
 
-    /** Lower lip color beneath enabled secondary buttons. */
-    val SecondaryButtonLipColor: Color = OutlineLight
+    /** Lower lip color beneath enabled secondary buttons (#C5D5FB). */
+    val SecondaryButtonLipColor: Color = Color(0xFFC5D5FB)
 
-    /** Perimeter border color for secondary raised buttons. */
-    val SecondaryButtonBorderColor: Color = OutlineLight
+    /** Perimeter border color for secondary raised buttons (#1D4FD8). */
+    val SecondaryButtonBorderColor: Color = PrimaryBlueLight
 
-    /** Soft shadow tint beneath enabled secondary buttons. */
-    val SecondaryButtonShadowColor: Color = PrimaryBlueDark
+    /** Soft shadow tint beneath enabled secondary buttons (#1D4FD8). */
+    val SecondaryButtonShadowColor: Color = PrimaryBlueLight
 
     /** Top gradient stop for disabled secondary buttons. */
     val SecondaryButtonDisabledStart: Color = SurfaceVariantLight
@@ -112,10 +124,10 @@ object DepthTokens {
     val SecondaryButtonDisabledEnd: Color = BackgroundLight
 
     /** Shadow opacity beneath enabled secondary buttons. */
-    const val SECONDARY_BUTTON_SHADOW_ALPHA: Float = 0.10f
+    const val SECONDARY_BUTTON_SHADOW_ALPHA: Float = 0.12f
 
     /** Lip opacity beneath enabled secondary buttons. */
-    const val SECONDARY_BUTTON_LIP_ALPHA: Float = 0.90f
+    const val SECONDARY_BUTTON_LIP_ALPHA: Float = 1.0f
 
     /** Lip opacity beneath disabled secondary buttons. */
     const val SECONDARY_BUTTON_LIP_DISABLED_ALPHA: Float = 0.50f
@@ -133,11 +145,14 @@ object DepthTokens {
     val DestructiveButtonShadowColor: Color = ErrorRedLight
 
     // ============ INSET FIELD TOKENS (PRESSED-IN SURFACES) ============
-    /** Recessed fill background for inset text fields and input wells. */
-    val InsetFieldBackground: Color = Color(0xFFF3F6FB)
+    /** Top gradient stop for standard inset text fields (#FFFFFF). */
+    val InsetFieldGradientStart: Color = PureWhite
 
-    /** Recessed fill background when an inset text field holds focus. */
-    val InsetFieldFocusedBackground: Color = Color(0xFFF6F9FF)
+    /** Bottom gradient stop for standard inset text fields and empty PIN cells (#F7F9FD). */
+    val InsetFieldBackground: Color = Color(0xFFF7F9FD)
+
+    /** Recessed bottom gradient stop when an inset text field holds focus (#F4F7FD). */
+    val InsetFieldFocusedBackground: Color = PageBackground
 
     /** Recessed fill background when an inset text field is in error state. */
     val InsetFieldErrorBackground: Color = NegativeBannerSurface
@@ -145,13 +160,13 @@ object DepthTokens {
     /** Recessed fill background when an inset text field is disabled. */
     val InsetFieldDisabledBackground: Color = SurfaceVariantLight
 
-    /** Inner shadow color cast along the upper edge of inset input wells. */
-    val InsetFieldShadowColor: Color = OnBackgroundLight
+    /** Inner top shadow tint rgba(16, 24, 40, ...) cast inside inset input wells. */
+    val InsetFieldShadowColor: Color = ShadowSlateColor
 
-    /** Perimeter stroke color for inset input wells. */
+    /** Perimeter stroke color for unfocused inset input wells (#CBD5E1). */
     val InsetFieldBorderColor: Color = OutlineLight
 
-    /** Perimeter stroke color when an inset input well holds focus. */
+    /** Perimeter stroke color when an inset input well holds focus (#1D4FD8). */
     val InsetFieldFocusedBorderColor: Color = PrimaryBlueLight
 
     /** Perimeter stroke color when an inset input well is in error state. */
@@ -160,20 +175,75 @@ object DepthTokens {
     /** Perimeter stroke color when an inset input well is disabled. */
     val InsetFieldDisabledBorderColor: Color = OutlineVariantLight
 
-    /** Crisp lower-edge highlight color reinforcing the recessed bevel. */
+    /** Crisp 1dp lower-edge white bevel highlight color on inset wells (#FFFFFF). */
     val InsetFieldHighlightColor: Color = PureWhite
 
-    /** Inner top-edge shadow alpha creating pressed-in depth inside input fields. */
-    const val INSET_FIELD_TOP_SHADOW_ALPHA: Float = 0.09f
+    /** Standard inset icon color (#475467). */
+    val InsetIconColor: Color = OnSurfaceVariantLight
 
-    /** Subtle side shadow alpha inside inset input fields. */
+    /** Standard inset placeholder color (#64748B). */
+    val InsetPlaceholderColor: Color = TextHintColor
+
+    /** Register compact field icon color (#94A3B8). */
+    val RegisterIconColor: Color = TextDisabledColor
+
+    /** Register compact field placeholder color (#94A3B8). */
+    val RegisterPlaceholderColor: Color = TextDisabledColor
+
+    /** Inner top-edge shadow alpha rgba(16, 24, 40, 0.07) creating pressed-in depth. */
+    const val INSET_FIELD_TOP_SHADOW_ALPHA: Float = 0.07f
+
+    /** Subtle side/edge shadow alpha inside inset input fields. */
     const val INSET_FIELD_SIDE_SHADOW_ALPHA: Float = 0.04f
 
     /** Border opacity for inset input wells. */
-    const val INSET_FIELD_BORDER_ALPHA: Float = 0.85f
+    const val INSET_FIELD_BORDER_ALPHA: Float = 1.0f
 
-    /** Bottom edge bevel highlight opacity for inset input wells. */
-    const val INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA: Float = 0.80f
+    /** Bottom 1dp white bevel highlight opacity for inset input wells. */
+    const val INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA: Float = 1.0f
+
+    // ============ LOGO TILE, PIN CELLS & KEYPAD TOKENS ============
+    /** Top-left stop for the 145-degree diagonal app logo tile gradient (#FFFFFF). */
+    val LogoTileGradientStart: Color = PureWhite
+
+    /** Bottom-right stop for the 145-degree diagonal app logo tile gradient (#DCE6FF). */
+    val LogoTileGradientEnd: Color = Color(0xFFDCE6FF)
+
+    /** Drop shadow color beneath the 48dp app logo tile (#1D4FD8 @ 0.25f). */
+    val LogoTileShadowColor: Color = PrimaryBlueLight
+
+    /** Drop shadow opacity beneath the 48dp app logo tile. */
+    const val LOGO_TILE_SHADOW_ALPHA: Float = 0.25f
+
+    /** Inner bottom bevel edge opacity on the app logo tile rgba(16, 24, 40, 0.07). */
+    const val LOGO_TILE_BOTTOM_EDGE_ALPHA: Float = 0.07f
+
+    /** Top gradient stop for filled Quick PIN cells (#FFFFFF). */
+    val PinCellFilledGradientStart: Color = PureWhite
+
+    /** Bottom gradient stop for filled Quick PIN cells (#F1F5FF). */
+    val PinCellFilledGradientEnd: Color = Color(0xFFF1F5FF)
+
+    /** Aspect ratio multiplier defining Quick PIN cell height = width * 1.15f. */
+    const val PIN_CELL_HEIGHT_MULTIPLIER: Float = 1.15f
+
+    /** Width-to-height ratio (width / height = 1 / 1.15) for Compose Modifier.aspectRatio. */
+    const val PIN_CELL_ASPECT_RATIO: Float = 1f / PIN_CELL_HEIGHT_MULTIPLIER
+
+    /** Top gradient stop for Quick PIN square keypad keys (#FFFFFF). */
+    val KeypadButtonGradientStart: Color = PureWhite
+
+    /** Bottom gradient stop for Quick PIN square keypad keys (#F1F4FB). */
+    val KeypadButtonGradientEnd: Color = Color(0xFFF1F4FB)
+
+    /** Lower 4dp lip color beneath Quick PIN keypad keys (#D5DCEB). */
+    val KeypadButtonLipColor: Color = Color(0xFFD5DCEB)
+
+    /** Drop shadow tint beneath Quick PIN keypad keys (#101828 @ 0.10f). */
+    val KeypadButtonShadowColor: Color = ShadowSlateColor
+
+    /** Drop shadow opacity rgba(16, 24, 40, 0.10) beneath Quick PIN keypad keys. */
+    const val KEYPAD_BUTTON_SHADOW_ALPHA: Float = 0.10f
 
     // ============ TAB BAR TOKENS ============
     /** Top gradient stop for raised tab bar containers. */
@@ -209,7 +279,7 @@ object DepthTokens {
 }
 
 /**
- * Motion duration, stagger, and cap constants for Lojia's depth transitions.
+ * Motion duration, stagger, press scale, and cap constants for Lojia's depth transitions.
  */
 object DepthMotionTokens {
     /** Duration (ms) for a single one-shot card-rise entrance animation. */
@@ -224,8 +294,37 @@ object DepthMotionTokens {
     /** Tactile press compression duration (ms) for raised buttons. */
     const val PRESS_DURATION_MS: Int = 90
 
+    /** Tactile scale factor when a primary raised button is pressed (0.98f). */
+    const val BUTTON_PRESSED_SCALE: Float = 0.98f
+
     /** Full cycle period (ms) for a LIVE status indicator pulse. */
     const val LIVE_PULSE_PERIOD_MS: Int = 1400
+}
+
+/**
+ * Exact type scale constants matching the approved Stage 26D design boards.
+ */
+object DepthTypeTokens {
+    val LogoTitleSize: TextUnit = 22.sp
+    val LogoTitleLetterSpacing: TextUnit = 0.2.sp
+    val LogoSubtitleSize: TextUnit = 10.5.sp
+    val LogoSubtitleLetterSpacing: TextUnit = 1.5.sp
+
+    val InsetPlaceholderSize: TextUnit = 13.5.sp
+    val RegisterPlaceholderSize: TextUnit = 13.sp
+    val RegisterLabelSize: TextUnit = 12.sp
+
+    val PrimaryButtonTextSize: TextUnit = 15.sp
+    val SecondaryButtonTextSize: TextUnit = 14.sp
+    val AuthRowLinkTextSize: TextUnit = 12.5.sp
+    val AuthFooterTextSize: TextUnit = 13.sp
+
+    val QuickPinTitleSize: TextUnit = 22.sp
+    val QuickPinSubtitleSize: TextUnit = 13.5.sp
+    val QuickPinDotSize: TextUnit = 22.sp
+    val KeypadDigitSize: TextUnit = 28.sp
+    val KeypadDeleteTextSize: TextUnit = 16.sp
+    val QuickPinFallbackTextSize: TextUnit = 14.sp
 }
 
 /**
@@ -266,6 +365,7 @@ val LojiaShapes = Shapes(
  */
 @Immutable
 data class DepthStyle(
+    val pageBackground: Color = DepthTokens.PageBackground,
     val headerGradientStart: Color = DepthTokens.BrandHeaderGradientStart,
     val headerGradientEnd: Color = DepthTokens.BrandHeaderGradientEnd,
     val headerSheenAlpha: Float = DepthTokens.HEADER_SHEEN_ALPHA,
@@ -279,13 +379,19 @@ data class DepthStyle(
     val buttonLipDisabledAlpha: Float = DepthTokens.RAISED_BUTTON_LIP_DISABLED_ALPHA,
     val buttonShadowColor: Color = DepthTokens.RaisedButtonShadowColor,
     val buttonShadowAlpha: Float = DepthTokens.RAISED_BUTTON_SHADOW_ALPHA,
+    val buttonTopHighlightAlpha: Float = DepthTokens.RAISED_BUTTON_TOP_HIGHLIGHT_ALPHA,
     val buttonElevation: Dp = Dimens.RaisedButtonElevation,
+    val buttonShadowOffsetY: Dp = Dimens.ButtonShadowOffsetY,
+    val buttonShadowBlur: Dp = Dimens.ButtonShadowBlur,
     val buttonLipHeight: Dp = Dimens.ButtonLipHeight,
     val buttonCornerRadius: Dp = Dimens.RadiusMd,
+    val buttonPressedTranslationY: Dp = Dimens.ButtonPressedTranslationY,
+    val buttonPressedScale: Float = DepthMotionTokens.BUTTON_PRESSED_SCALE,
     val secondaryButtonGradientStart: Color = DepthTokens.SecondaryButtonGradientStart,
     val secondaryButtonGradientEnd: Color = DepthTokens.SecondaryButtonGradientEnd,
     val secondaryButtonLipColor: Color = DepthTokens.SecondaryButtonLipColor,
     val secondaryButtonBorderColor: Color = DepthTokens.SecondaryButtonBorderColor,
+    val secondaryButtonBorderWidth: Dp = Dimens.SecondaryButtonBorderWidth,
     val secondaryButtonShadowColor: Color = DepthTokens.SecondaryButtonShadowColor,
     val secondaryButtonDisabledStart: Color = DepthTokens.SecondaryButtonDisabledStart,
     val secondaryButtonDisabledEnd: Color = DepthTokens.SecondaryButtonDisabledEnd,
@@ -302,9 +408,14 @@ data class DepthStyle(
     val cardGradientEnd: Color = DepthTokens.CardGradientEnd,
     val cardAccentGradientStart: Color = DepthTokens.CardAccentGradientStart,
     val cardAccentGradientEnd: Color = DepthTokens.CardAccentGradientEnd,
+    val cardShadowCloseColor: Color = DepthTokens.CardShadowCloseColor,
     val cardShadowColor: Color = DepthTokens.RaisedCardShadowColor,
     val cardAmbientShadowAlpha: Float = DepthTokens.RAISED_CARD_AMBIENT_ALPHA,
     val cardSpotShadowAlpha: Float = DepthTokens.RAISED_CARD_SPOT_ALPHA,
+    val cardShadowCloseOffsetY: Dp = Dimens.CardShadowCloseOffsetY,
+    val cardShadowCloseBlur: Dp = Dimens.CardShadowCloseBlur,
+    val cardShadowFarOffsetY: Dp = Dimens.CardShadowFarOffsetY,
+    val cardShadowFarBlur: Dp = Dimens.CardShadowFarBlur,
     val cardBorderColor: Color = DepthTokens.RaisedCardBorderColor,
     val cardBorderAlpha: Float = DepthTokens.RAISED_CARD_BORDER_ALPHA,
     val cardAccentBorderColor: Color = DepthTokens.RaisedCardAccentBorderColor,
@@ -313,7 +424,8 @@ data class DepthStyle(
     val cardBorderWidth: Dp = Dimens.CardBorderWidth,
     val cardElevation: Dp = Dimens.CardElevation,
     val cardAccentElevation: Dp = Dimens.CardAccentElevation,
-    val cardCornerRadius: Dp = Dimens.RadiusLg,
+    val cardCornerRadius: Dp = Dimens.CardCornerRadius,
+    val insetGradientStart: Color = DepthTokens.InsetFieldGradientStart,
     val insetBackground: Color = DepthTokens.InsetFieldBackground,
     val insetFocusedBackground: Color = DepthTokens.InsetFieldFocusedBackground,
     val insetErrorBackground: Color = DepthTokens.InsetFieldErrorBackground,
@@ -329,8 +441,27 @@ data class DepthStyle(
     val insetBottomHighlightColor: Color = DepthTokens.InsetFieldHighlightColor,
     val insetBottomHighlightAlpha: Float = DepthTokens.INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA,
     val insetBorderWidth: Dp = Dimens.InsetBorderWidth,
+    val insetFocusedBorderWidth: Dp = Dimens.InsetFocusedBorderWidth,
+    val insetShadowOffsetY: Dp = Dimens.InsetShadowOffsetY,
+    val insetShadowBlur: Dp = Dimens.InsetShadowBlur,
     val insetShadowHeight: Dp = Dimens.InsetShadowHeight,
     val insetCornerRadius: Dp = Dimens.RadiusMd,
+    val pinCellFilledStart: Color = DepthTokens.PinCellFilledGradientStart,
+    val pinCellFilledEnd: Color = DepthTokens.PinCellFilledGradientEnd,
+    val keypadGradientStart: Color = DepthTokens.KeypadButtonGradientStart,
+    val keypadGradientEnd: Color = DepthTokens.KeypadButtonGradientEnd,
+    val keypadLipColor: Color = DepthTokens.KeypadButtonLipColor,
+    val keypadShadowColor: Color = DepthTokens.KeypadButtonShadowColor,
+    val keypadShadowAlpha: Float = DepthTokens.KEYPAD_BUTTON_SHADOW_ALPHA,
+    val keypadHeight: Dp = Dimens.KeypadButtonHeight,
+    val keypadCornerRadius: Dp = Dimens.RadiusKeypad,
+    val keypadShadowOffsetY: Dp = Dimens.KeypadShadowOffsetY,
+    val keypadShadowBlur: Dp = Dimens.KeypadShadowBlur,
+    val logoTileGradientStart: Color = DepthTokens.LogoTileGradientStart,
+    val logoTileGradientEnd: Color = DepthTokens.LogoTileGradientEnd,
+    val logoTileShadowColor: Color = DepthTokens.LogoTileShadowColor,
+    val logoTileShadowAlpha: Float = DepthTokens.LOGO_TILE_SHADOW_ALPHA,
+    val logoTileBottomEdgeAlpha: Float = DepthTokens.LOGO_TILE_BOTTOM_EDGE_ALPHA,
     val tabBarGradientStart: Color = DepthTokens.TabBarGradientStart,
     val tabBarGradientEnd: Color = DepthTokens.TabBarGradientEnd,
     val tabIndicatorGradientStart: Color = DepthTokens.TabIndicatorGradientStart,
@@ -350,3 +481,4 @@ data class DepthStyle(
 )
 
 val LocalDepthStyle = staticCompositionLocalOf { DepthStyle() }
+

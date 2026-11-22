@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 // =========================================================================
 
 // ============ PRIMARY (Brand Blue) ============
-val PrimaryBlueLight = Color(0xFF1D4ED8)
+val PrimaryBlueLight = Color(0xFF1D4FD8)
 val PrimaryBlueDark = Color(0xFF1E3A8A)
 val PrimaryLight = Color(0xFF3B82F6)
 val PrimaryContainerLight = Color(0xFFDBEAFE)
@@ -53,7 +53,7 @@ val InfoContainer = Color(0xFFE0F2FE)
 val OnInfoLight = Color(0xFFFFFFFF)
 
 // ============ BACKGROUND / SURFACE ============
-val BackgroundLight = Color(0xFFF8FAFC)
+val BackgroundLight = Color(0xFFF4F7FD)
 val SurfaceLight = Color(0xFFFFFFFF)
 val SurfaceVariantLight = Color(0xFFF1F5F9)
 val SurfaceElevatedLight = Color(0xFFFFFFFF)
@@ -64,7 +64,7 @@ val OverlayScrim = Color(0x80000000)
 // ============ TEXT ============
 val OnBackgroundLight = Color(0xFF0F172A)
 val OnSurfaceLight = Color(0xFF0F172A)
-val OnSurfaceVariantLight = Color(0xFF475569)
+val OnSurfaceVariantLight = Color(0xFF475467)
 val TextHintColor = Color(0xFF64748B)
 val TextDisabledColor = Color(0xFF94A3B8)
 val TextOnDark = Color(0xFFFFFFFF)
@@ -199,3 +199,12 @@ val MapUrbanBlock = Color(0xFFE8EAED)
 val MapHighwayBorder = Color(0xFFF9AB00)
 val MapHighwayFill = Color(0xFFFEEFC3)
 
+// ============ STAGE 26D DESIGN BOARD PARITY TOKENS ============
+/** Required field asterisk red matching Stage 26D board specification. */
+val RequiredStarRed = NegativeBannerText // 0xFFB42318
+
+/** Crisp hairline border tint for raised cards matching #E5E9F5. */
+val DepthCardBorder = Color(0xFFE5E9F5)
+
+/** Deep slate shadow tint rgba(16, 24, 40, ...) used for card, inset, and keypad shadows. */
+val ShadowSlateColor = Color(0xFF101828)

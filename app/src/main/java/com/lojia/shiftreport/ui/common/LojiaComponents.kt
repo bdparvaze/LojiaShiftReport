@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.ui.theme.DepthTypeTokens
 import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
@@ -46,9 +47,9 @@ object LojiaDimens {
     val CardSpacing         = 8.dp
     val CardPadding         = 16.dp
     val IconTextGap         = 16.dp
-    val CardRadius          = 12.dp
-    val ButtonRadius        = 12.dp
-    val InputRadius         = 10.dp
+    val CardRadius          = Dimens.CardCornerRadius
+    val ButtonRadius        = Dimens.RadiusMd
+    val InputRadius         = Dimens.RadiusInputRegister
     val ChipRadius          = 999.dp
     val DrawerHeaderRadius  = 24.dp
     val DrawerItemHeight    = 52.dp
@@ -57,7 +58,7 @@ object LojiaDimens {
     val AvatarSmall         = 48.dp
     val AvatarLarge         = 96.dp
     val FabSize             = 56.dp
-    val MinTouchTarget      = 48.dp
+    val MinTouchTarget      = Dimens.MinTouchTarget
 }
 
 // ---- Section header ----
@@ -150,7 +151,7 @@ fun LojiaPrimaryButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = Dimens.MinTouchTarget)
+            .heightIn(min = Dimens.ButtonHeightPrimary)
             .depthRaisedButton(enabled = enabled, cornerRadius = LojiaDimens.ButtonRadius),
         enabled = enabled,
         shape = buttonShape,
@@ -164,8 +165,8 @@ fun LojiaPrimaryButton(
     ) {
         Text(
             text,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+            fontSize = DepthTypeTokens.PrimaryButtonTextSize,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
@@ -181,7 +182,7 @@ fun LojiaOutlinedButton(
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
-            .heightIn(min = Dimens.MinTouchTarget)
+            .heightIn(min = Dimens.ButtonHeightPrimary)
             .depthSecondaryButton(
                 enabled = true,
                 borderColor = PrimaryIndigoLight,
@@ -198,8 +199,8 @@ fun LojiaOutlinedButton(
     ) {
         Text(
             text,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+            fontSize = DepthTypeTokens.SecondaryButtonTextSize,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

@@ -5,12 +5,14 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -37,20 +39,20 @@ fun lojiaDefaultTextFieldColors(): TextFieldColors = TextFieldDefaults.colors(
     disabledContainerColor = Color.Transparent,
     errorContainerColor = Color.Transparent,
     focusedLabelColor = PrimaryIndigoLight,
-    unfocusedLabelColor = OnSurfaceVariantLight,
+    unfocusedLabelColor = DepthTokens.InsetIconColor,
     disabledLabelColor = TextHintColor,
     errorLabelColor = ErrorRedLight,
-    focusedPlaceholderColor = TextHintColor,
-    unfocusedPlaceholderColor = TextHintColor,
+    focusedPlaceholderColor = DepthTokens.InsetPlaceholderColor,
+    unfocusedPlaceholderColor = DepthTokens.InsetPlaceholderColor,
     disabledPlaceholderColor = TextDisabledColor,
     focusedIndicatorColor = Color.Transparent,
     unfocusedIndicatorColor = Color.Transparent,
     disabledIndicatorColor = Color.Transparent,
     errorIndicatorColor = Color.Transparent,
     focusedLeadingIconColor = PrimaryIndigoLight,
-    unfocusedLeadingIconColor = OnSurfaceVariantLight,
+    unfocusedLeadingIconColor = DepthTokens.InsetIconColor,
     focusedTrailingIconColor = PrimaryIndigoLight,
-    unfocusedTrailingIconColor = OnSurfaceVariantLight,
+    unfocusedTrailingIconColor = DepthTokens.InsetIconColor,
     cursorColor = PrimaryIndigoLight
 )
 
@@ -92,10 +94,31 @@ fun LojiaTextField(
         }
     )
 
+    val styledPlaceholder: (@Composable () -> Unit)? = placeholder?.let { ph ->
+        {
+            ProvideTextStyle(
+                value = LocalTextStyle.current.copy(
+                    fontSize = DepthTypeTokens.InsetPlaceholderSize,
+                    color = DepthTokens.InsetPlaceholderColor
+                )
+            ) {
+                ph()
+            }
+        }
+    }
+
+    val paddedLeadingIcon: (@Composable () -> Unit)? = leadingIcon?.let { icon ->
+        {
+            Box(modifier = Modifier.padding(start = Dimens.SpacingXxs, end = Dimens.SpacingXs)) {
+                icon()
+            }
+        }
+    }
+
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.defaultMinSize(minHeight = 56.dp),
+        modifier = modifier.defaultMinSize(minHeight = Dimens.TextFieldHeightStandard),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = effectiveTextStyle,
@@ -117,15 +140,15 @@ fun LojiaTextField(
                 interactionSource = interactionSource,
                 isError = isError,
                 label = label,
-                placeholder = placeholder,
-                leadingIcon = leadingIcon,
+                placeholder = styledPlaceholder,
+                leadingIcon = paddedLeadingIcon,
                 trailingIcon = trailingIcon,
                 suffix = suffix,
                 supportingText = supportingText,
                 shape = shape,
                 colors = colors,
                 contentPadding = if (label == null) {
-                    PaddingValues(horizontal = 14.dp, vertical = 12.dp)
+                    PaddingValues(horizontal = Dimens.InsetFieldPaddingHorizontal, vertical = Dimens.SpacingMd)
                 } else {
                     TextFieldDefaults.contentPaddingWithLabel()
                 },

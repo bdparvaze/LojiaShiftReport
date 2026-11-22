@@ -412,7 +412,7 @@ fun BiometricLockScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(LocalDepthStyle.current.pageBackground)
             .statusBarsPadding()
             .navigationBarsPadding()
             .testTag("lojiaAuthRoot")
@@ -459,15 +459,15 @@ fun BiometricLockScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(BackgroundLight)
-                        .padding(horizontal = 32.dp)
+                        .background(LocalDepthStyle.current.pageBackground)
+                        .padding(horizontal = Dimens.AuthScreenSidePadding)
                         .imePadding(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .widthIn(max = 360.dp)
+                            .widthIn(max = Dimens.AuthCardMaxWidth)
                             .wrapContentHeight(Alignment.CenterVertically)
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -480,7 +480,6 @@ fun BiometricLockScreen(
                         LojiaCard(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp)
                                 .cardRise(0)
                         ) {
                             LojiaPasswordLoginContent(
@@ -598,10 +597,10 @@ private fun LojiaPasswordLoginContent(
     onRegisterClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    val primaryIndigo = PrimaryIndigoLight
+    val primaryIndigo = PrimaryBlueLight
     val charcoalText = OnSurfaceLight
-    val mediumGray = TextSecondaryLight
-    val hintGray = TextHintColor
+    val mediumGray = OnSurfaceVariantLight
+    val hintGray = DepthTokens.InsetPlaceholderColor
     val borderGray = OutlineLight
     val errorRed = ErrorRedLight
 
@@ -612,14 +611,14 @@ private fun LojiaPasswordLoginContent(
             Text(
                 text = stringResource(R.string.auth_username_or_email),
                 fontFamily = PoppinsFontFamily,
-                fontSize = 13.sp
+                fontSize = DepthTypeTokens.AuthFooterTextSize
             )
         },
         placeholder = {
             Text(
                 text = stringResource(R.string.auth_username_or_email),
                 fontFamily = PoppinsFontFamily,
-                fontSize = 13.5.sp,
+                fontSize = DepthTypeTokens.InsetPlaceholderSize,
                 color = hintGray
             )
         },
@@ -627,7 +626,7 @@ private fun LojiaPasswordLoginContent(
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(Dimens.IconField)
             )
         },
         singleLine = true,
@@ -659,14 +658,14 @@ private fun LojiaPasswordLoginContent(
             Text(
                 text = stringResource(R.string.password),
                 fontFamily = PoppinsFontFamily,
-                fontSize = 13.sp
+                fontSize = DepthTypeTokens.AuthFooterTextSize
             )
         },
         placeholder = {
             Text(
                 text = stringResource(R.string.password),
                 fontFamily = PoppinsFontFamily,
-                fontSize = 13.5.sp,
+                fontSize = DepthTypeTokens.InsetPlaceholderSize,
                 color = hintGray
             )
         },
@@ -674,7 +673,7 @@ private fun LojiaPasswordLoginContent(
             Icon(
                 imageVector = Icons.Outlined.Lock,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(Dimens.IconField)
             )
         },
         trailingIcon = {
@@ -685,7 +684,7 @@ private fun LojiaPasswordLoginContent(
                 Icon(
                     imageVector = if (loginPassVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = stringResource(R.string.password),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             }
         },
@@ -730,13 +729,13 @@ private fun LojiaPasswordLoginContent(
         ) {
             Box(
                 modifier = Modifier
-                    .size(18.dp)
-                    .clip(RoundedCornerShape(5.dp))
+                    .size(Dimens.RememberCheckboxSize)
+                    .clip(RoundedCornerShape(Dimens.RememberCheckboxRadius))
                     .background(if (rememberMe) primaryIndigo else Color.Transparent)
                     .border(
-                        width = 1.5.dp,
+                        width = Dimens.RememberCheckboxBorderWidth,
                         color = if (rememberMe) primaryIndigo else borderGray,
-                        shape = RoundedCornerShape(5.dp)
+                        shape = RoundedCornerShape(Dimens.RememberCheckboxRadius)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -753,7 +752,7 @@ private fun LojiaPasswordLoginContent(
             Text(
                 text = stringResource(R.string.auth_remember_me),
                 fontFamily = PoppinsFontFamily,
-                fontSize = 12.5.sp,
+                fontSize = DepthTypeTokens.AuthRowLinkTextSize,
                 fontWeight = FontWeight.Medium,
                 color = mediumGray,
                 maxLines = 1,
@@ -764,7 +763,7 @@ private fun LojiaPasswordLoginContent(
         Text(
             text = stringResource(R.string.auth_forgot_password),
             fontFamily = PoppinsFontFamily,
-            fontSize = 12.5.sp,
+            fontSize = DepthTypeTokens.AuthRowLinkTextSize,
             fontWeight = FontWeight.SemiBold,
             color = primaryIndigo,
             maxLines = 1,
@@ -779,7 +778,7 @@ private fun LojiaPasswordLoginContent(
         )
     }
 
-    Spacer(modifier = Modifier.height(14.dp))
+    Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
     if (!loginErrorMessage.isNullOrBlank()) {
         Box(
@@ -789,7 +788,8 @@ private fun LojiaPasswordLoginContent(
                 .depthSemanticCard(
                     backgroundColor = NegativeBannerSurface,
                     borderColor = NegativeBannerBorder,
-                    shape = RoundedCornerShape(Dimens.RadiusSm)
+                    shape = RoundedCornerShape(Dimens.RadiusSm),
+                    cornerRadius = Dimens.RadiusSm
                 )
         ) {
             Text(
@@ -821,7 +821,7 @@ private fun LojiaPasswordLoginContent(
         Text(
             text = stringResource(R.string.auth_no_account) + " ",
             fontFamily = PoppinsFontFamily,
-            fontSize = 13.sp,
+            fontSize = DepthTypeTokens.AuthFooterTextSize,
             color = mediumGray,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -829,7 +829,7 @@ private fun LojiaPasswordLoginContent(
         Text(
             text = stringResource(R.string.auth_register_here),
             fontFamily = PoppinsFontFamily,
-            fontSize = 13.sp,
+            fontSize = DepthTypeTokens.AuthFooterTextSize,
             fontWeight = FontWeight.Bold,
             color = primaryIndigo,
             maxLines = 1,
@@ -1016,10 +1016,18 @@ fun LojiaPasswordRecoveryDialog(
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = Dimens.MinTouchTarget)
-                                .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                                .heightIn(min = Dimens.ButtonHeightPrimary)
+                                .depthRaisedButton(
+                                    enabled = true,
+                                    cornerRadius = Dimens.RadiusMd,
+                                    minHeight = Dimens.ButtonHeightPrimary
+                                )
                         ) {
-                            Text(stringResource(R.string.auth_verify_btn), fontWeight = FontWeight.Bold)
+                            Text(
+                                stringResource(R.string.auth_verify_btn),
+                                fontSize = DepthTypeTokens.PrimaryButtonTextSize,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     } else {
                         Button(
@@ -1035,10 +1043,18 @@ fun LojiaPasswordRecoveryDialog(
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = Dimens.MinTouchTarget)
-                                .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
+                                .heightIn(min = Dimens.ButtonHeightPrimary)
+                                .depthRaisedButton(
+                                    enabled = true,
+                                    cornerRadius = Dimens.RadiusMd,
+                                    minHeight = Dimens.ButtonHeightPrimary
+                                )
                         ) {
-                            Text(stringResource(R.string.auth_complete_login_btn), fontWeight = FontWeight.Bold)
+                            Text(
+                                stringResource(R.string.auth_complete_login_btn),
+                                fontSize = DepthTypeTokens.PrimaryButtonTextSize,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }
@@ -1052,14 +1068,21 @@ fun LojiaPasswordRecoveryDialog(
                     elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color.Transparent,
-                        contentColor = OnSurfaceVariantLight
+                        contentColor = PrimaryBlueLight
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = Dimens.MinTouchTarget)
-                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
+                        .depthSecondaryButton(
+                            cornerRadius = Dimens.RadiusMd,
+                            minHeight = Dimens.ButtonHeightPrimary
+                        )
                 ) {
-                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(R.string.cancel),
+                        fontSize = DepthTypeTokens.SecondaryButtonTextSize,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
 
