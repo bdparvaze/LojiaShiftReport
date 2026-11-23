@@ -69,21 +69,22 @@ fun PosReconciliationSummary(
     val isActualCountInvalid = actualCountClass is MoneyInput.Invalid
     val variance = actualCountVal?.let { MoneyFormat.calculateVarianceMinor(it, expectedCash) }
 
+    val depthStyle = LocalDepthStyle.current
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
     ) {
         // ==========================================
         // CARD 1: SALES SUMMARY (Payment Methods & Adjustments)
         // ==========================================
         Card(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(0.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(0)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Brass))
             Column(Modifier.padding(14.dp)) {
@@ -201,13 +202,13 @@ fun PosReconciliationSummary(
         // CARD 2: CASH DRAWER RECONCILIATION
         // ==========================================
         Card(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(0.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(1)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.NetCashGreen))
             Column(Modifier.padding(14.dp)) {
@@ -318,13 +319,13 @@ fun PosReconciliationSummary(
         // CARD 3: ACTUAL COUNT & VARIANCE
         // ==========================================
         Card(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(0.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(2)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Primary))
             Column(Modifier.padding(14.dp)) {
@@ -451,13 +452,13 @@ fun PosReconciliationSummary(
         // CARD 4: SECONDARY & OPERATIONAL TRACKING
         // ==========================================
         Card(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(0.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(3)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Purple))
             Column(Modifier.padding(14.dp)) {
@@ -514,13 +515,24 @@ fun PosReconciliationSummary(
                 }
 
                 // Optional Notes Input
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Dimens.SpacingSm))
                 FieldLabel(stringResource(R.string.closing_notes))
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Dimens.SpacingXs))
                 LojiaTextField(
                     value = notes,
                     onValueChange = onNotesChange,
+                    textStyle = LocalTextStyle.current.copy(
+                        fontSize = DepthTypeTokens.ReportFieldTextSize,
+                        fontWeight = FontWeight.Medium,
+                        color = depthStyle.reportFieldTextColor
+                    ),
                     placeholder = { Text(stringResource(R.string.closing_notes)) },
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    minHeight = Dimens.TextFieldHeightReport,
+                    borderColorOverride = depthStyle.reportFieldBorderColor,
+                    topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                    placeholderColor = depthStyle.reportFieldPlaceholderColor,
+                    placeholderFontSize = DepthTypeTokens.ReportFieldTextSize,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

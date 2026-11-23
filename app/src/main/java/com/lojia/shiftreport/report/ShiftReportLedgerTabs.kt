@@ -193,23 +193,29 @@ fun DueLedgerTab(
         else receiptMap.filter { it.receiptNo.contains(searchQuery, ignoreCase = true) }
     }
     val count = filteredReceipts.size
+    val depthStyle = LocalDepthStyle.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(16.dp)
+            .background(depthStyle.reportPageBackground)
+            .padding(Dimens.SpacingLg)
             .verticalScroll(rememberScrollState())
     ) {
         // Section 1 — Search Bar
         LojiaTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = DepthTypeTokens.ReportFieldTextSize,
+                fontWeight = FontWeight.Medium,
+                color = depthStyle.reportFieldTextColor
+            ),
             placeholder = {
                 Text(
                     text = stringResource(R.string.search_receipt_number),
-                    fontSize = 13.sp,
-                    color = TextHintColor
+                    fontSize = DepthTypeTokens.ReportFieldTextSize,
+                    color = depthStyle.reportFieldPlaceholderColor
                 )
             },
             leadingIcon = {
@@ -217,7 +223,7 @@ fun DueLedgerTab(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = null,
                     tint = OnSurfaceVariantLight,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             },
             trailingIcon = {
@@ -227,23 +233,28 @@ fun DueLedgerTab(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.btn_clear),
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
                     }
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = Dimens.MinTouchTarget),
-            shape = RoundedCornerShape(10.dp),
+                .heightIn(min = Dimens.TextFieldHeightReport),
+            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+            minHeight = Dimens.TextFieldHeightReport,
+            borderColorOverride = depthStyle.reportFieldBorderColor,
+            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+            placeholderColor = depthStyle.reportFieldPlaceholderColor,
+            placeholderFontSize = DepthTypeTokens.ReportFieldTextSize,
             singleLine = true
         )
 
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(Dimens.SpacingMd))
 
         // Section 2 — KPI Row (2 cards, side by side)
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap),
             modifier = Modifier.fillMaxWidth()
         ) {
             // Card 1 — Total Issued Due
@@ -251,49 +262,51 @@ fun DueLedgerTab(
                 modifier = Modifier
                     .weight(1f)
                     .cardRise(0)
-                    .depthSemanticCard(
-                        backgroundColor = ErrorContainer,
-                        borderColor = ErrorRedLight.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(12.dp)
+                    .depthGradientCard(
+                        gradientColors = listOf(KpiDueCardStart, KpiDueCardEnd),
+                        borderColor = KpiDueCardBorder,
+                        cornerRadius = Dimens.RadiusKpiCard
                     ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
+                        .padding(Dimens.InsetFieldPaddingHorizontal),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(ErrorRedLight.copy(alpha = 0.15f)),
+                            .size(Dimens.KpiIconTileSize)
+                            .depthRaisedTile(
+                                gradientColors = listOf(PureWhite, ErrorContainerLight),
+                                cornerRadius = Dimens.RadiusSectionIconTile
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.ReceiptLong,
                             contentDescription = null,
                             tint = ErrorRedLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconField)
                         )
                     }
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(Dimens.ReportGridGap))
                     Column {
                         Text(
                             text = stringResource(R.string.total_issued_due),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextHintColor,
+                            fontSize = DepthTypeTokens.LogoSubtitleSize,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextSlate700,
                             letterSpacing = 0.4.sp,
                             maxLines = 1
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = MoneyFormat.formatMinor(totalIssuedDue, currency),
-                            fontSize = 16.sp,
+                            fontSize = DepthTypeTokens.SectionTitleSize,
                             fontWeight = FontWeight.Bold,
                             color = ErrorRedLight,
                             maxLines = 1
@@ -307,51 +320,53 @@ fun DueLedgerTab(
                 modifier = Modifier
                     .weight(1f)
                     .cardRise(1)
-                    .depthSemanticCard(
-                        backgroundColor = SuccessContainer,
-                        borderColor = SuccessGreen.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(12.dp)
+                    .depthGradientCard(
+                        gradientColors = listOf(KpiCollectedCardStart, KpiCollectedCardEnd),
+                        borderColor = KpiCollectedCardBorder,
+                        cornerRadius = Dimens.RadiusKpiCard
                     ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
+                        .padding(Dimens.InsetFieldPaddingHorizontal),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(SuccessGreen.copy(alpha = 0.15f)),
+                            .size(Dimens.KpiIconTileSize)
+                            .depthRaisedTile(
+                                gradientColors = listOf(PureWhite, BadgeGreenBg),
+                                cornerRadius = Dimens.RadiusSectionIconTile
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CheckCircle,
                             contentDescription = null,
-                            tint = SuccessGreen,
-                            modifier = Modifier.size(20.dp)
+                            tint = BadgeGreenText,
+                            modifier = Modifier.size(Dimens.IconField)
                         )
                     }
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(Dimens.ReportGridGap))
                     Column {
                         Text(
                             text = stringResource(R.string.total_collected),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextHintColor,
+                            fontSize = DepthTypeTokens.LogoSubtitleSize,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextSlate700,
                             letterSpacing = 0.4.sp,
                             maxLines = 1
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = MoneyFormat.formatMinor(totalCollectedDue, currency),
-                            fontSize = 16.sp,
+                            fontSize = DepthTypeTokens.SectionTitleSize,
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen,
+                            color = BadgeGreenText,
                             maxLines = 1
                         )
                     }
@@ -363,21 +378,21 @@ fun DueLedgerTab(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp)
+                .padding(top = Dimens.SpacingMd)
                 .cardRise(2)
-                .depthSemanticCard(
-                    backgroundColor = WarningContainer,
-                    borderColor = WarningOrange.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(12.dp)
+                .depthGradientCard(
+                    gradientColors = listOf(SectionAmberGradientStart, SectionAmberGradientEnd),
+                    borderColor = SectionAmberBorder,
+                    cornerRadius = Dimens.RadiusKpiCard
                 ),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp)
+                    .padding(Dimens.InsetFieldPaddingHorizontal)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -385,51 +400,53 @@ fun DueLedgerTab(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(WarningOrange.copy(alpha = 0.15f)),
+                            .size(Dimens.KpiIconTileSize)
+                            .depthRaisedTile(
+                                gradientColors = listOf(PureWhite, BadgeAmberBg),
+                                cornerRadius = Dimens.RadiusSectionIconTile
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.HourglassEmpty,
                             contentDescription = null,
-                            tint = WarningOrange,
-                            modifier = Modifier.size(20.dp)
+                            tint = BadgeAmberAccent,
+                            modifier = Modifier.size(Dimens.IconField)
                         )
                     }
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(Dimens.SpacingMd))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.net_outstanding_due),
-                            fontSize = 12.sp,
+                            fontSize = DepthTypeTokens.RegisterLabelSize,
                             fontWeight = FontWeight.Bold,
-                            color = WarningOrange,
+                            color = BadgeAmberTextDark,
                             letterSpacing = 0.3.sp,
                             maxLines = 1
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = stringResource(R.string.deduct_auto_hint),
-                            fontSize = 10.sp,
-                            color = OnSurfaceVariantLight,
+                            fontSize = DepthTypeTokens.LogoSubtitleSize,
+                            color = BadgeAmberTextDark,
                             maxLines = 2
                         )
                     }
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(Dimens.SpacingSm))
                     // Value — never wraps
                     Text(
                         text = MoneyFormat.formatMinor(netOutstandingDue, currency),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = WarningOrange,
+                        color = BadgeAmberAccent,
                         maxLines = 1,
                         softWrap = false
                     )
                 }
                 if (extraCollectedDue > 0L) {
-                    Spacer(Modifier.height(10.dp))
-                    HorizontalDivider(thickness = 0.5.dp, color = WarningOrange.copy(alpha = 0.25f))
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Dimens.ReportGridGap))
+                    HorizontalDivider(thickness = 0.5.dp, color = SectionAmberBorder)
+                    Spacer(Modifier.height(Dimens.SpacingSm))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -437,16 +454,16 @@ fun DueLedgerTab(
                     ) {
                         Text(
                             text = stringResource(R.string.due_extra_collected_label),
-                            fontSize = 12.sp,
+                            fontSize = DepthTypeTokens.RegisterLabelSize,
                             fontWeight = FontWeight.SemiBold,
-                            color = SuccessGreen,
+                            color = BadgeGreenText,
                             maxLines = 1
                         )
                         Text(
                             text = MoneyFormat.formatMinor(extraCollectedDue, currency),
-                            fontSize = 14.sp,
+                            fontSize = DepthTypeTokens.SecondaryButtonTextSize,
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen,
+                            color = BadgeGreenText,
                             maxLines = 1,
                             softWrap = false
                         )
@@ -459,28 +476,27 @@ fun DueLedgerTab(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 10.dp),
+                .padding(top = Dimens.SpacingXl, bottom = Dimens.ReportGridGap),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 3.dp, height = 14.dp)
-                    .background(PrimaryIndigoLight, RoundedCornerShape(2.dp))
+                    .size(width = Dimens.LedgerSectionAccentWidth, height = Dimens.LedgerSectionAccentHeight)
+                    .background(PrimaryBlueLight, RoundedCornerShape(Dimens.SpacingXxs))
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(Dimens.SpacingSm))
             Text(
                 text = stringResource(R.string.ledger_receipt_breakdown_title),
-                fontSize = 13.sp,
+                fontSize = DepthTypeTokens.ReportFieldTextSize,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryIndigoDark,
-                letterSpacing = 0.3.sp
+                color = TextPrimaryReport
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(Dimens.SpacingXs))
             Text(
                 text = "($count)",
-                fontSize = 12.sp,
+                fontSize = DepthTypeTokens.ReportFieldLabelSize,
                 fontWeight = FontWeight.Medium,
-                color = TextHintColor
+                color = OnSurfaceVariantLight
             )
             Spacer(Modifier.weight(1f))
         }
@@ -490,7 +506,7 @@ fun DueLedgerTab(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 40.dp, horizontal = 24.dp),
+                    .padding(vertical = 40.dp, horizontal = Dimens.SpacingXxl),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
@@ -503,21 +519,21 @@ fun DueLedgerTab(
                     Icon(
                         imageVector = Icons.Outlined.ReceiptLong,
                         contentDescription = null,
-                        tint = TextHintColor,
+                        tint = OnSurfaceVariantLight,
                         modifier = Modifier.size(40.dp)
                     )
                 }
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(Dimens.SpacingXl))
                 Text(
                     text = stringResource(R.string.empty_due_title),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = OnSurfaceLight
+                    fontSize = DepthTypeTokens.ReportFieldTextSize,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimaryReport
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(Dimens.SpacingXs))
                 Text(
                     text = stringResource(R.string.empty_due_hint),
-                    fontSize = 12.sp,
+                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
                     color = OnSurfaceVariantLight,
                     textAlign = TextAlign.Center,
                     lineHeight = 18.sp
@@ -529,33 +545,36 @@ fun DueLedgerTab(
                     ?: collectionsList.firstOrNull { it.receiptNo == item.receiptNo }
                 val (statusText, statusBg, statusFg) = when {
                     item.initialDueMinor > 0L && item.totalCollectedMinor >= item.initialDueMinor ->
-                        Triple(stringResource(R.string.paid_in_full), SuccessContainer, SuccessGreen)
+                        Triple(stringResource(R.string.paid_in_full), BadgeGreenBg, BadgeGreenText)
                     item.totalCollectedMinor > 0L && item.remainingDueMinor > 0L ->
-                        Triple(stringResource(R.string.partially_paid), WarningContainer, WarningOrange)
+                        Triple(stringResource(R.string.partially_paid), BadgeAmberBg, BadgeAmberAccent)
                     else ->
-                        Triple(stringResource(R.string.unpaid_due), ErrorContainer, ErrorRedLight)
+                        Triple(stringResource(R.string.unpaid_due), ErrorContainerLight, ErrorRedLight)
                 }
 
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 10.dp)
+                        .padding(bottom = Dimens.ReportGridGap)
                         .cardRise(idx + 3)
-                        .depthCard(shape = RoundedCornerShape(12.dp)),
-                    shape = RoundedCornerShape(12.dp),
+                        .depthCard(
+                            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
+                            cornerRadius = Dimens.RadiusKpiCard
+                        ),
+                    shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(Dimens.InsetFieldPaddingHorizontal)) {
                         // Header row: receipt # + status chip
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Outlined.Receipt,
                                 contentDescription = null,
-                                tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(16.dp)
+                                tint = PrimaryBlueLight,
+                                modifier = Modifier.size(Dimens.IconXs + Dimens.SpacingXxs)
                             )
-                            Spacer(Modifier.width(6.dp))
+                            Spacer(Modifier.width(Dimens.SpacingXs))
                             val normReceipt = normalizeReceiptNumber(item.receiptNo)
                             if (normReceipt.isNotEmpty()) {
                                 val receiptLabel = if (isUnspecifiedReceipt(normReceipt)) {
@@ -565,9 +584,9 @@ fun DueLedgerTab(
                                 }
                                 Text(
                                     text = receiptLabel,
-                                    fontSize = 14.sp,
+                                    fontSize = DepthTypeTokens.SecondaryButtonTextSize,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = OnSurfaceLight,
+                                    color = TextPrimaryReport,
                                     maxLines = 1
                                 )
                             }
@@ -575,58 +594,58 @@ fun DueLedgerTab(
 
                             // Status chip
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusFull),
                                 color = statusBg
                             ) {
                                 Text(
                                     text = statusText,
-                                    fontSize = 10.sp,
+                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
                                     fontWeight = FontWeight.Bold,
                                     color = statusFg,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    modifier = Modifier.padding(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXs)
                                 )
                             }
                         }
 
                         if (matchedEntry != null) {
-                            Spacer(Modifier.height(6.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
                             // Cashier + Date (small, secondary)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Outlined.Person,
                                     contentDescription = null,
-                                    tint = TextHintColor,
-                                    modifier = Modifier.size(11.dp)
+                                    tint = OnSurfaceVariantLight,
+                                    modifier = Modifier.size(Dimens.SpacingMd)
                                 )
-                                Spacer(Modifier.width(3.dp))
+                                Spacer(Modifier.width(Dimens.SpacingXxs))
                                 Text(
                                     text = matchedEntry.cashierName.replace("(", "").replace(")", ""),
-                                    fontSize = 11.sp,
-                                    color = TextHintColor,
+                                    fontSize = DepthTypeTokens.RegisterLabelSize,
+                                    color = OnSurfaceVariantLight,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f, fill = false)
                                 )
-                                Spacer(Modifier.width(8.dp))
+                                Spacer(Modifier.width(Dimens.SpacingSm))
                                 Text(
                                     text = "•",
-                                    fontSize = 11.sp,
-                                    color = TextHintColor
+                                    fontSize = DepthTypeTokens.RegisterLabelSize,
+                                    color = OnSurfaceVariantLight
                                 )
-                                Spacer(Modifier.width(8.dp))
+                                Spacer(Modifier.width(Dimens.SpacingSm))
                                 Text(
                                     text = dateFormat.format(Date(matchedEntry.dateInMillis)),
-                                    fontSize = 11.sp,
-                                    color = TextHintColor,
+                                    fontSize = DepthTypeTokens.RegisterLabelSize,
+                                    color = OnSurfaceVariantLight,
                                     maxLines = 1
                                 )
                             }
                         }
 
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
                         // Divider
-                        HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
-                        Spacer(Modifier.height(10.dp))
+                        HorizontalDivider(thickness = 0.5.dp, color = DepthCardBorder)
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
 
                         // 3-column amount breakdown
                         Row(modifier = Modifier.fillMaxWidth()) {
@@ -634,15 +653,14 @@ fun DueLedgerTab(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.issued_due),
-                                    fontSize = 10.sp,
+                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
                                     fontWeight = FontWeight.Medium,
-                                    color = TextHintColor,
-                                    letterSpacing = 0.3.sp
+                                    color = OnSurfaceVariantLight
                                 )
-                                Spacer(Modifier.height(3.dp))
+                                Spacer(Modifier.height(Dimens.SpacingXxs))
                                 Text(
                                     text = MoneyFormat.formatMinor(item.initialDueMinor, currency),
-                                    fontSize = 13.sp,
+                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                     fontWeight = FontWeight.Bold,
                                     color = ErrorRedLight,
                                     maxLines = 1
@@ -656,17 +674,16 @@ fun DueLedgerTab(
                             ) {
                                 Text(
                                     text = stringResource(R.string.collected_minus),
-                                    fontSize = 10.sp,
+                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
                                     fontWeight = FontWeight.Medium,
-                                    color = TextHintColor,
-                                    letterSpacing = 0.3.sp
+                                    color = OnSurfaceVariantLight
                                 )
-                                Spacer(Modifier.height(3.dp))
+                                Spacer(Modifier.height(Dimens.SpacingXxs))
                                 Text(
                                     text = MoneyFormat.formatMinor(item.totalCollectedMinor, currency),
-                                    fontSize = 13.sp,
+                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                     fontWeight = FontWeight.Bold,
-                                    color = SuccessGreen,
+                                    color = BadgeGreenText,
                                     maxLines = 1
                                 )
                             }
@@ -678,17 +695,16 @@ fun DueLedgerTab(
                             ) {
                                 Text(
                                     text = stringResource(R.string.net_remaining),
-                                    fontSize = 10.sp,
+                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
                                     fontWeight = FontWeight.Medium,
-                                    color = TextHintColor,
-                                    letterSpacing = 0.3.sp
+                                    color = OnSurfaceVariantLight
                                 )
-                                Spacer(Modifier.height(3.dp))
+                                Spacer(Modifier.height(Dimens.SpacingXxs))
                                 Text(
                                     text = MoneyFormat.formatMinor(item.remainingDueMinor, currency),
-                                    fontSize = 13.sp,
+                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                     fontWeight = FontWeight.Bold,
-                                    color = PrimaryIndigoDark,
+                                    color = TextPrimaryReport,
                                     maxLines = 1
                                 )
                             }
@@ -928,86 +944,107 @@ private fun AdvanceStatementPeriodDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceLight,
+        containerColor = PureWhite,
         title = {
             Text(
                 text = stringResource(R.string.statement_select_period_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceLight
+                color = TextPrimaryReport
             )
         },
         text = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .selectableGroup(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
-                options.forEach { (option, label) ->
-                    val isSelected = selectedOption == option
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .selectable(
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthInset(
+                            shape = RoundedCornerShape(Dimens.RadiusSegmentTrack),
+                            cornerRadius = Dimens.RadiusSegmentTrack,
+                            gradientColors = listOf(SegmentTrackBg, SegmentTrackBg),
+                            borderColorOverride = DepthCardBorder,
+                            topShadowAlphaOverride = DepthTokens.SEGMENT_TRACK_INSET_ALPHA
+                        )
+                        .padding(Dimens.SpacingXs)
+                        .selectableGroup(),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
+                ) {
+                    options.forEach { (option, label) ->
+                        val isSelected = selectedOption == option
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = Dimens.SegmentThumbHeight.coerceAtLeast(Dimens.MinTouchTarget))
+                                .then(
+                                    if (isSelected) {
+                                        Modifier.depthSegmentActiveThumb(cornerRadius = Dimens.RadiusSegmentThumb)
+                                    } else {
+                                        Modifier.clip(RoundedCornerShape(Dimens.RadiusSegmentThumb))
+                                    }
+                                )
+                                .selectable(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedOption = option
+                                        errorMessage = null
+                                    },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
+                        ) {
+                            RadioButton(
                                 selected = isSelected,
-                                onClick = {
-                                    selectedOption = option
-                                    errorMessage = null
-                                },
-                                role = Role.RadioButton
+                                onClick = null,
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = PureWhite,
+                                    unselectedColor = TextSlate700
+                                )
                             )
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = null,
-                            colors = RadioButtonDefaults.colors(selectedColor = PrimaryIndigoLight)
-                        )
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = OnSurfaceLight
-                        )
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                color = if (isSelected) PureWhite else TextSlate700
+                            )
+                        }
                     }
                 }
 
                 if (selectedOption == AdvanceStatementPeriodOption.CUSTOM_RANGE) {
-                    Spacer(modifier = Modifier.height(6.dp))
                     OutlinedButton(
                         onClick = { showDateRangePicker = true },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusReportInput),
                         border = null,
                         elevation = null,
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = Color.Transparent,
-                            contentColor = PrimaryIndigoLight
+                            contentColor = PrimaryBlueLight
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = Dimens.MinTouchTarget)
                             .depthSecondaryButton(
-                                borderColor = PrimaryIndigoLight,
-                                cornerRadius = 10.dp
+                                borderColor = PrimaryBlueLight,
+                                cornerRadius = Dimens.RadiusReportInput
                             )
                             .testTag("statement_pick_range_button")
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CalendarMonth,
                             contentDescription = null,
-                            tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(18.dp)
+                            tint = PrimaryBlueLight,
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(
                             text = customRangeText ?: stringResource(R.string.statement_pick_date_range),
                             style = MaterialTheme.typography.labelLarge,
-                            color = PrimaryIndigoLight,
+                            color = PrimaryBlueLight,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1017,7 +1054,7 @@ private fun AdvanceStatementPeriodDialog(
                             text = stringResource(R.string.statement_custom_range_prompt),
                             style = MaterialTheme.typography.bodySmall,
                             color = OnSurfaceVariantLight,
-                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                            modifier = Modifier.padding(top = Dimens.SpacingXs, start = Dimens.SpacingXs)
                         )
                     }
                 }
@@ -1029,7 +1066,7 @@ private fun AdvanceStatementPeriodDialog(
                         color = ErrorRedLight,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
-                            .padding(top = 6.dp)
+                            .padding(top = Dimens.SpacingXs)
                             .testTag("statement_period_error_text")
                     )
                 }
@@ -1081,10 +1118,13 @@ private fun AdvanceStatementPeriodDialog(
                     contentColor = PureWhite,
                     disabledContentColor = OnSurfaceVariantLight
                 ),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(Dimens.RadiusReportInput),
                 modifier = Modifier
-                    .heightIn(min = 48.dp)
-                    .depthRaisedButton(cornerRadius = 10.dp)
+                    .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                    .depthRaisedButton(
+                        cornerRadius = Dimens.RadiusReportInput,
+                        minHeight = Dimens.ButtonHeightReportPrimary
+                    )
                     .testTag("statement_confirm_period_btn")
             ) {
                 Text(
@@ -1096,7 +1136,7 @@ private fun AdvanceStatementPeriodDialog(
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
-                modifier = Modifier.heightIn(min = 48.dp)
+                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
             ) {
                 Text(
                     text = stringResource(R.string.cancel),
@@ -1180,12 +1220,13 @@ private fun EmployerAdvanceSummaryAndProfilesView(
     onSelectEmployee: (String) -> Unit,
     onSelectOther: () -> Unit
 ) {
+    val depthStyle = LocalDepthStyle.current
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(depthStyle.reportPageBackground),
+        contentPadding = PaddingValues(Dimens.SpacingLg),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
     ) {
         item {
             Row(
@@ -1197,42 +1238,42 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                     text = stringResource(R.string.ledger_employer_advances_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = OnSurfaceLight,
+                    color = TextPrimaryReport,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                 OutlinedButton(
                     onClick = onOpenStatement,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                     border = null,
                     elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color.Transparent,
-                        contentColor = PrimaryIndigoLight
+                        contentColor = PrimaryBlueLight
                     ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                     modifier = Modifier
-                        .heightIn(min = 48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
                         .depthSecondaryButton(
-                            borderColor = PrimaryIndigoLight,
-                            cornerRadius = 10.dp
+                            borderColor = PrimaryBlueLight,
+                            cornerRadius = Dimens.RadiusReportInput
                         )
                         .testTag("employer_statement_button")
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Description,
                         contentDescription = stringResource(R.string.statement_cd_button),
-                        tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(18.dp)
+                        tint = PrimaryBlueLight,
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.advance_statement_btn),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = PrimaryIndigoLight,
+                        color = PrimaryBlueLight,
                         maxLines = 1
                     )
                 }
@@ -1244,17 +1285,21 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .cardRise(0)
-                    .depthCard(accent = true, shape = RoundedCornerShape(16.dp))
+                    .depthCard(
+                        accent = true,
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                        cornerRadius = Dimens.CardCornerRadius
+                    )
                     .testTag("employer_period_summary_card"),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(Dimens.ReportCardInnerPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1262,25 +1307,25 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = PrimaryContainerLight
+                            shape = RoundedCornerShape(Dimens.RadiusFull),
+                            color = BadgeBlueBg
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier.padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.CalendarMonth,
                                     contentDescription = null,
-                                    tint = PrimaryIndigoDark,
-                                    modifier = Modifier.size(16.dp)
+                                    tint = BadgeBlueText,
+                                    modifier = Modifier.size(Dimens.IconXs + Dimens.SpacingXxs)
                                 )
                                 Text(
                                     text = periodLabel,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = PrimaryIndigoDark,
+                                    color = BadgeBlueText,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -1295,7 +1340,7 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                         )
                     }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXxs)) {
                         Text(
                             text = stringResource(R.string.ledger_total_advances),
                             style = MaterialTheme.typography.labelMedium,
@@ -1303,9 +1348,9 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                         )
                         Text(
                             text = MoneyFormat.formatMinor(report.totalAdvancesMinor, currency, locale),
-                            style = MaterialTheme.typography.headlineSmall,
+                            fontSize = DepthTypeTokens.HeroAmountSize,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryIndigoDark,
+                            color = TextPrimaryReport,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1313,23 +1358,23 @@ private fun EmployerAdvanceSummaryAndProfilesView(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
                     ) {
                         EmployerModeBreakdownTile(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Outlined.Payments,
                             label = stringResource(R.string.cash),
                             amountText = MoneyFormat.formatMinor(report.cashTotalMinor, currency, locale),
-                            containerColor = SuccessContainer,
-                            accentColor = SuccessGreen
+                            containerColor = CashWellBg,
+                            accentColor = BadgeBlueText
                         )
                         EmployerModeBreakdownTile(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Outlined.AccountBalance,
                             label = stringResource(R.string.bank),
                             amountText = MoneyFormat.formatMinor(report.bankTotalMinor, currency, locale),
-                            containerColor = InfoContainer,
-                            accentColor = InfoBlue
+                            containerColor = BankWellBg,
+                            accentColor = BankWellText
                         )
                     }
                 }
@@ -1340,20 +1385,20 @@ private fun EmployerAdvanceSummaryAndProfilesView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(width = 3.dp, height = 16.dp)
-                        .background(PrimaryIndigoLight, RoundedCornerShape(2.dp))
+                        .size(width = Dimens.LedgerSectionAccentWidth, height = Dimens.LedgerSectionAccentHeight)
+                        .background(PrimaryBlueLight, RoundedCornerShape(Dimens.SpacingXxs))
                 )
                 Text(
                     text = stringResource(R.string.advance_period_profiles_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryIndigoDark,
+                    color = TextPrimaryReport,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -1365,17 +1410,20 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .cardRise(1)
-                        .depthCard(shape = RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
+                        .depthCard(
+                            shape = RoundedCornerShape(Dimens.RadiusKpiCard),
+                            cornerRadius = Dimens.RadiusKpiCard
+                        ),
+                    shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 36.dp, horizontal = 24.dp),
+                            .padding(vertical = 36.dp, horizontal = Dimens.SpacingXxl),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         Box(
                             modifier = Modifier
@@ -1387,16 +1435,16 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                             Icon(
                                 imageVector = Icons.Outlined.AccountBalanceWallet,
                                 contentDescription = null,
-                                tint = TextHintColor,
+                                tint = OnSurfaceVariantLight,
                                 modifier = Modifier.size(34.dp)
                             )
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXs))
                         Text(
                             text = stringResource(R.string.empty_advance_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = OnSurfaceLight,
+                            color = TextPrimaryReport,
                             textAlign = TextAlign.Center
                         )
                         Text(
@@ -1443,29 +1491,34 @@ private fun EmployerModeBreakdownTile(
     containerColor: Color,
     accentColor: Color
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        color = containerColor.copy(alpha = 0.55f),
-        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.25f))
+    val style = LocalDepthStyle.current
+    Box(
+        modifier = modifier
+            .depthInset(
+                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                cornerRadius = Dimens.RadiusReportInput,
+                gradientColors = listOf(containerColor, containerColor),
+                borderColorOverride = accentColor.copy(alpha = 0.25f),
+                topShadowAlphaOverride = style.reportFieldInsetAlpha
+            )
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(horizontal = Dimens.SpacingMd, vertical = Dimens.ReportGridGap),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = accentColor,
-                    modifier = Modifier.size(15.dp)
+                    modifier = Modifier.size(Dimens.IconXs)
                 )
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelMedium,
+                    fontSize = DepthTypeTokens.RegisterLabelSize,
                     fontWeight = FontWeight.SemiBold,
                     color = accentColor,
                     maxLines = 1,
@@ -1474,9 +1527,9 @@ private fun EmployerModeBreakdownTile(
             }
             Text(
                 text = amountText,
-                style = MaterialTheme.typography.titleSmall,
+                fontSize = DepthTypeTokens.ReportFieldTextSize,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceLight,
+                color = TextPrimaryReport,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1497,28 +1550,31 @@ private fun EmployerEmployeeProfileCard(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .depthCard(shape = RoundedCornerShape(14.dp))
+            .depthCard(
+                shape = RoundedCornerShape(Dimens.RadiusKpiCard),
+                cornerRadius = Dimens.RadiusKpiCard
+            )
             .testTag("employer_profile_card_${profile.employeeId}"),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Dimens.RadiusKpiCard),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(Dimens.InsetFieldPaddingHorizontal),
+            verticalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(Dimens.AvatarBadgeSize)
                         .clip(CircleShape)
-                        .background(PrimaryContainerLight),
+                        .background(BadgeBlueBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -1526,7 +1582,7 @@ private fun EmployerEmployeeProfileCard(
                             ?: stringResource(R.string.ledger_staff_initial_fallback),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryIndigoDark
+                        color = BadgeBlueText
                     )
                 }
 
@@ -1535,7 +1591,7 @@ private fun EmployerEmployeeProfileCard(
                         text = displayName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceLight,
+                        color = TextPrimaryReport,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1554,12 +1610,12 @@ private fun EmployerEmployeeProfileCard(
                 )
             }
 
-            HorizontalDivider(color = OutlineVariantLight)
+            HorizontalDivider(color = DepthCardBorder)
 
             EmployerFigureRow(
                 label = stringResource(R.string.advance_monthly_salary_label),
                 value = MoneyFormat.formatMinor(profile.monthlySalaryMinor, currency, locale),
-                valueColor = OnSurfaceLight
+                valueColor = TextPrimaryReport
             )
             EmployerFigureRow(
                 label = stringResource(R.string.advance_taken_label),
@@ -1567,7 +1623,7 @@ private fun EmployerEmployeeProfileCard(
                     R.string.advance_minus_amount_fmt,
                     MoneyFormat.formatMinor(profile.advancesTotalMinor, currency, locale)
                 ),
-                valueColor = WarningOrange
+                valueColor = BadgeAmberAccent
             )
 
             EmployerBalanceStatusPill(
@@ -1592,26 +1648,29 @@ private fun EmployerOtherBucketCard(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .depthCard(shape = RoundedCornerShape(14.dp))
+            .depthCard(
+                shape = RoundedCornerShape(Dimens.RadiusKpiCard),
+                cornerRadius = Dimens.RadiusKpiCard
+            )
             .testTag("employer_profile_other_card"),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Dimens.RadiusKpiCard),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(Dimens.InsetFieldPaddingHorizontal),
+            verticalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(Dimens.AvatarBadgeSize)
                         .clip(CircleShape)
                         .background(SurfaceVariantLight),
                     contentAlignment = Alignment.Center
@@ -1620,7 +1679,7 @@ private fun EmployerOtherBucketCard(
                         imageVector = Icons.Outlined.Group,
                         contentDescription = null,
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconField)
                     )
                 }
 
@@ -1629,7 +1688,7 @@ private fun EmployerOtherBucketCard(
                         text = stringResource(R.string.advance_other_bucket_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceLight,
+                        color = TextPrimaryReport,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1649,7 +1708,7 @@ private fun EmployerOtherBucketCard(
                 )
             }
 
-            HorizontalDivider(color = OutlineVariantLight)
+            HorizontalDivider(color = DepthCardBorder)
 
             EmployerFigureRow(
                 label = stringResource(R.string.advance_taken_label),
@@ -1657,7 +1716,7 @@ private fun EmployerOtherBucketCard(
                     R.string.advance_minus_amount_fmt,
                     MoneyFormat.formatMinor(bucket.advancesTotalMinor, currency, locale)
                 ),
-                valueColor = WarningOrange
+                valueColor = BadgeAmberAccent
             )
             Text(
                 text = stringResource(R.string.advance_entries_count_fmt, bucket.advanceCount),
@@ -1676,7 +1735,7 @@ private fun EmployerFigureRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -1705,8 +1764,8 @@ private fun EmployerBalanceStatusPill(
     locale: Locale
 ) {
     val isExcess = excessMinor > 0L
-    val containerColor = if (isExcess) ErrorContainerLight else SuccessContainer
-    val contentColor = if (isExcess) ErrorRedLight else SuccessGreen
+    val containerColor = if (isExcess) ErrorContainerLight else BadgeGreenBg
+    val contentColor = if (isExcess) ErrorRedLight else BadgeGreenText
     val statusIcon = if (isExcess) Icons.Outlined.WarningAmber else Icons.Outlined.CheckCircle
     val statusText = if (isExcess) {
         stringResource(
@@ -1722,19 +1781,19 @@ private fun EmployerBalanceStatusPill(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(Dimens.RadiusMd),
         color = containerColor
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             Icon(
                 imageVector = statusIcon,
                 contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(Dimens.IconSm)
             )
             Text(
                 text = statusText,
@@ -1759,13 +1818,14 @@ private fun EmployerEmployeeHistoryView(
     onBack: () -> Unit
 ) {
     val displayName = profile.employeeName.ifBlank { stringResource(R.string.staff_label) }
+    val depthStyle = LocalDepthStyle.current
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .background(depthStyle.reportPageBackground),
+        contentPadding = PaddingValues(Dimens.SpacingLg),
+        verticalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
     ) {
         item {
             EmployerHistoryBackRow(onBack = onBack)
@@ -1776,17 +1836,21 @@ private fun EmployerEmployeeHistoryView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .cardRise(0)
-                    .depthCard(accent = true, shape = RoundedCornerShape(16.dp))
+                    .depthCard(
+                        accent = true,
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                        cornerRadius = Dimens.CardCornerRadius
+                    )
                     .testTag("employer_history_header_card"),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(Dimens.ReportCardInnerPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1798,7 +1862,7 @@ private fun EmployerEmployeeHistoryView(
                                 text = displayName,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = OnSurfaceLight,
+                                color = TextPrimaryReport,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -1809,26 +1873,26 @@ private fun EmployerEmployeeHistoryView(
                             )
                         }
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = PrimaryContainerLight
+                            shape = RoundedCornerShape(Dimens.RadiusFull),
+                            color = BadgeBlueBg
                         ) {
                             Text(
                                 text = periodLabel,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PrimaryIndigoDark,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = BadgeBlueText,
+                                modifier = Modifier.padding(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXs),
                                 maxLines = 1
                             )
                         }
                     }
 
-                    HorizontalDivider(color = OutlineVariantLight)
+                    HorizontalDivider(color = DepthCardBorder)
 
                     EmployerFigureRow(
                         label = stringResource(R.string.advance_monthly_salary_label),
                         value = MoneyFormat.formatMinor(profile.monthlySalaryMinor, currency, locale),
-                        valueColor = OnSurfaceLight
+                        valueColor = TextPrimaryReport
                     )
                     EmployerFigureRow(
                         label = stringResource(R.string.advance_taken_label),
@@ -1836,7 +1900,7 @@ private fun EmployerEmployeeHistoryView(
                             R.string.advance_minus_amount_fmt,
                             MoneyFormat.formatMinor(profile.advancesTotalMinor, currency, locale)
                         ),
-                        valueColor = WarningOrange
+                        valueColor = BadgeAmberAccent
                     )
 
                     EmployerBalanceStatusPill(
@@ -1876,12 +1940,13 @@ private fun EmployerOtherHistoryView(
     dateFormatter: DateTimeFormatter,
     onBack: () -> Unit
 ) {
+    val depthStyle = LocalDepthStyle.current
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .background(depthStyle.reportPageBackground),
+        contentPadding = PaddingValues(Dimens.SpacingLg),
+        verticalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
     ) {
         item {
             EmployerHistoryBackRow(onBack = onBack)
@@ -1892,17 +1957,21 @@ private fun EmployerOtherHistoryView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .cardRise(0)
-                    .depthCard(accent = true, shape = RoundedCornerShape(16.dp))
+                    .depthCard(
+                        accent = true,
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                        cornerRadius = Dimens.CardCornerRadius
+                    )
                     .testTag("employer_other_history_header_card"),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(Dimens.ReportCardInnerPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1914,7 +1983,7 @@ private fun EmployerOtherHistoryView(
                                 text = stringResource(R.string.advance_other_bucket_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = OnSurfaceLight
+                                color = TextPrimaryReport
                             )
                             Text(
                                 text = stringResource(R.string.advance_other_bucket_subtitle),
@@ -1923,21 +1992,21 @@ private fun EmployerOtherHistoryView(
                             )
                         }
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = PrimaryContainerLight
+                            shape = RoundedCornerShape(Dimens.RadiusFull),
+                            color = BadgeBlueBg
                         ) {
                             Text(
                                 text = periodLabel,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PrimaryIndigoDark,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = BadgeBlueText,
+                                modifier = Modifier.padding(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXs),
                                 maxLines = 1
                             )
                         }
                     }
 
-                    HorizontalDivider(color = OutlineVariantLight)
+                    HorizontalDivider(color = DepthCardBorder)
 
                     EmployerFigureRow(
                         label = stringResource(R.string.advance_taken_label),
@@ -1945,28 +2014,28 @@ private fun EmployerOtherHistoryView(
                             R.string.advance_minus_amount_fmt,
                             MoneyFormat.formatMinor(bucket.advancesTotalMinor, currency, locale)
                         ),
-                        valueColor = WarningOrange
+                        valueColor = BadgeAmberAccent
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
                     ) {
                         EmployerModeBreakdownTile(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Outlined.Payments,
                             label = stringResource(R.string.cash),
                             amountText = MoneyFormat.formatMinor(bucket.cashTotalMinor, currency, locale),
-                            containerColor = SuccessContainer,
-                            accentColor = SuccessGreen
+                            containerColor = CashWellBg,
+                            accentColor = BadgeBlueText
                         )
                         EmployerModeBreakdownTile(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Outlined.AccountBalance,
                             label = stringResource(R.string.bank),
                             amountText = MoneyFormat.formatMinor(bucket.bankTotalMinor, currency, locale),
-                            containerColor = InfoContainer,
-                            accentColor = InfoBlue
+                            containerColor = BankWellBg,
+                            accentColor = BankWellText
                         )
                     }
                 }
@@ -2005,14 +2074,14 @@ private fun EmployerHistoryBackRow(onBack: () -> Unit) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.advance_cd_back_to_profiles),
-                tint = PrimaryIndigoDark
+                tint = PrimaryBlueLight
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(Dimens.SpacingXs))
             Text(
                 text = stringResource(R.string.back),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = PrimaryIndigoDark
+                color = PrimaryBlueLight
             )
         }
     }
@@ -2029,8 +2098,8 @@ private fun EmployerAdvanceHistoryRowCard(
     modifier: Modifier = Modifier
 ) {
     val isCash = isCashAdvanceMode(entry.paymentMode)
-    val modeColor = if (isCash) SuccessGreen else InfoBlue
-    val modeContainer = if (isCash) SuccessContainer else InfoContainer
+    val modeColor = if (isCash) BadgeBlueText else BankWellText
+    val modeContainer = if (isCash) CashWellBg else BankWellBg
     val modeIcon = if (isCash) Icons.Outlined.Payments else Icons.Outlined.AccountBalance
     val modeLabel = if (isCash) stringResource(R.string.cash) else stringResource(R.string.bank)
     val formattedDate = remember(entry.dateInMillis, zone, dateFormatter) {
@@ -2040,44 +2109,47 @@ private fun EmployerAdvanceHistoryRowCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .depthCard(shape = RoundedCornerShape(12.dp))
+            .depthCard(
+                shape = RoundedCornerShape(Dimens.RadiusLg),
+                cornerRadius = Dimens.RadiusLg
+            )
             .testTag("employer_history_row_${entry.serialNumber}"),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.RadiusLg),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(Dimens.SpacingMd),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(Dimens.SerialBadgeSize)
                     .clip(CircleShape)
-                    .background(PrimaryContainerLight),
+                    .background(BadgeBlueBg),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stringResource(R.string.advance_serial_fmt, entry.serialNumber),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryIndigoDark
+                    color = BadgeBlueText
                 )
             }
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
             ) {
                 if (showStaffName) {
                     Text(
                         text = entry.staffName.ifBlank { stringResource(R.string.staff_label) },
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceLight,
+                        color = TextPrimaryReport,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -2086,24 +2158,24 @@ private fun EmployerAdvanceHistoryRowCard(
                     text = formattedDate,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = OnSurfaceLight,
+                    color = TextPrimaryReport,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusFull),
                     color = modeContainer
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                     ) {
                         Icon(
                             imageVector = modeIcon,
                             contentDescription = null,
                             tint = modeColor,
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(Dimens.IconXs)
                         )
                         Text(
                             text = modeLabel,
@@ -2119,7 +2191,7 @@ private fun EmployerAdvanceHistoryRowCard(
                 text = MoneyFormat.formatMinor(entry.amountMinor, currency, locale),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryIndigoDark,
+                color = TextPrimaryReport,
                 maxLines = 1
             )
         }

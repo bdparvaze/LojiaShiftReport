@@ -83,7 +83,12 @@ fun LojiaTextField(
     shape: Shape = RoundedCornerShape(Dimens.RadiusMd),
     colors: TextFieldColors = lojiaDefaultTextFieldColors(),
     supportingText: @Composable (() -> Unit)? = null,
-    suffix: @Composable (() -> Unit)? = null
+    suffix: @Composable (() -> Unit)? = null,
+    minHeight: androidx.compose.ui.unit.Dp = Dimens.TextFieldHeightStandard,
+    borderColorOverride: Color? = null,
+    topShadowAlphaOverride: Float? = null,
+    placeholderColor: Color = DepthTokens.InsetPlaceholderColor,
+    placeholderFontSize: androidx.compose.ui.unit.TextUnit = DepthTypeTokens.InsetPlaceholderSize
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val effectiveTextStyle = textStyle.copy(
@@ -98,8 +103,8 @@ fun LojiaTextField(
         {
             ProvideTextStyle(
                 value = LocalTextStyle.current.copy(
-                    fontSize = DepthTypeTokens.InsetPlaceholderSize,
-                    color = DepthTokens.InsetPlaceholderColor
+                    fontSize = placeholderFontSize,
+                    color = placeholderColor
                 )
             ) {
                 ph()
@@ -118,7 +123,7 @@ fun LojiaTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.defaultMinSize(minHeight = Dimens.TextFieldHeightStandard),
+        modifier = modifier.defaultMinSize(minHeight = minHeight),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = effectiveTextStyle,
@@ -158,7 +163,9 @@ fun LojiaTextField(
                             enabled = enabled,
                             isError = isError,
                             isFocused = isFocused,
-                            shape = shape
+                            shape = shape,
+                            borderColorOverride = if (enabled && !isError && !isFocused) borderColorOverride else null,
+                            topShadowAlphaOverride = topShadowAlphaOverride
                         )
                     )
                 }

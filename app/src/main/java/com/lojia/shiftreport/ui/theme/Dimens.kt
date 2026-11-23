@@ -30,11 +30,21 @@ object Dimens {
     /** Radius for register compact inset fields (10.dp). */
     val RadiusInputRegister: Dp = 10.dp
     val RadiusMd: Dp = 12.dp
+    /** Radius for report inputs, section accordions, statement tiles, and Quick PIN keys (14.dp). */
+    val RadiusReportInput: Dp = 14.dp
+    /** Radius for segmented period selector track (15.dp). */
+    val RadiusSegmentTrack: Dp = 15.dp
+    /** Radius for active segmented selector thumb (11.dp). */
+    val RadiusSegmentThumb: Dp = 11.dp
     /** Radius for Quick PIN square keypad keys (14.dp). */
     val RadiusKeypad: Dp = 14.dp
     /** Radius for app logo tile (15.dp). */
     val RadiusLogoTile: Dp = 15.dp
     val RadiusLg: Dp = 16.dp
+    /** Radius for KPI and ledger breakdown cards (18.dp). */
+    val RadiusKpiCard: Dp = 18.dp
+    /** Radius for icon tiles inside section banners (10.dp). */
+    val RadiusSectionIconTile: Dp = 10.dp
     val RadiusXl: Dp = 20.dp
     /** Radius for raised auth and surface cards (22.dp). */
     val CardCornerRadius: Dp = 22.dp
@@ -49,10 +59,14 @@ object Dimens {
     val ButtonHeightComfortable: Dp = 48.dp
     /** Primary and secondary depth button height (50.dp). */
     val ButtonHeightPrimary: Dp = 50.dp
+    /** Report / Statement primary CTA height (52.dp). */
+    val ButtonHeightReportPrimary: Dp = 52.dp
     val MinTouchTarget: Dp = 48.dp
 
     /** Minimum height for compact register inset fields (46.dp). */
     val TextFieldHeightCompact: Dp = 46.dp
+    /** Standard report entry / search inset field height (52.dp). */
+    val TextFieldHeightReport: Dp = 52.dp
     /** Standard inset field height for LojiaTextField (56.dp). */
     val TextFieldHeightStandard: Dp = 56.dp
 
@@ -117,14 +131,72 @@ object Dimens {
     /** Horizontal gap between leading icon and text in inset fields (12.dp). */
     val InsetIconTextGap: Dp = 12.dp
 
-    val CardRiseTranslationY: Dp = 14.dp
+    val CardRiseTranslationY: Dp = 16.dp
     val LiveDotSize: Dp = 8.dp
     val SecondaryButtonElevation: Dp = 4.dp
     val SecondaryButtonLipHeight: Dp = 4.dp
     /** Border width for secondary depth buttons (1.5.dp). */
     val SecondaryButtonBorderWidth: Dp = 1.5.dp
-    val TabBarMinHeight: Dp = 48.dp
+    val TopBarHeight: Dp = 64.dp
+    val HeaderShadowOffsetY: Dp = 4.dp
+    val HeaderShadowBlur: Dp = 14.dp
+    val TabBarMinHeight: Dp = 56.dp
+    val TabBarShadowOffsetY: Dp = 3.dp
+    val TabBarShadowBlur: Dp = 8.dp
+    val TabIndicatorHeight: Dp = 3.dp
+    val TabIndicatorGlowOffsetY: Dp = (-2).dp
+    val TabIndicatorGlowBlur: Dp = 8.dp
     val TopAccentStripHeight: Dp = 4.dp
+
+    // =========================================================================
+    // REPORT & LEDGER STAGE 26F-1 PARITY TOKENS
+    // =========================================================================
+    val SectionHeaderHeight: Dp = 52.dp
+    val SectionIconTileSize: Dp = 32.dp
+    val KpiIconTileSize: Dp = 38.dp
+    val SectionTileShadowOffsetY: Dp = 2.dp
+    val SectionTileShadowBlur: Dp = 5.dp
+    val SectionPillShadowOffsetY: Dp = 3.dp
+    val SectionPillShadowBlur: Dp = 8.dp
+    val SegmentTrackHeight: Dp = 52.dp
+    val SegmentThumbHeight: Dp = 44.dp
+    val SegmentActiveShadowOffsetY: Dp = 3.dp
+    val SegmentActiveShadowBlur: Dp = 8.dp
+    val ReportGridGap: Dp = 10.dp
+    val ReportCardInnerPadding: Dp = 16.dp
+    val LedgerSectionAccentWidth: Dp = 3.dp
+    val LedgerSectionAccentHeight: Dp = 16.dp
+    val AvatarBadgeSize: Dp = 42.dp
+    val SerialBadgeSize: Dp = 36.dp
+
+    // =========================================================================
+    // PAID OUT, SETTINGS & EMPLOYEES STAGE 26F-2 PARITY TOKENS
+    // =========================================================================
+    /** Icon tile size for Paid Out KPI & entry rows (40.dp). */
+    val PaidOutIconTileSize: Dp = 40.dp
+    /** Icon tile size for Settings hub & sub-screen rows (42.dp). */
+    val SettingsIconTileSize: Dp = 42.dp
+    /** Avatar tile size for Employee list rows (44.dp). */
+    val EmployeeAvatarTileSize: Dp = 44.dp
+    /** Corner radius for 40dp/42dp SH1 gradient icon tiles (13.dp). */
+    val RadiusSettingsIconTile: Dp = 13.dp
+    /** Corner radius for 44dp SH1 gradient employee avatar tiles (14.dp). */
+    val RadiusEmployeeAvatarTile: Dp = 14.dp
+    /** Corner radius for 36dp secondary edit icon tiles (10.dp). */
+    val RadiusActionIconTile: Dp = 10.dp
+    /** Outer drop shadow Y-offset and blur for SH1 raised icon tiles (4.dp / 8.dp). */
+    val IconTileShadowOffsetY: Dp = 4.dp
+    val IconTileShadowBlur: Dp = 8.dp
+    /** Inner bottom bevel thickness for SH1 raised icon tiles (2.dp). */
+    val IconTileBottomBevelHeight: Dp = 2.dp
+    /** Hairline row divider thickness inside grouped cards (1.dp). */
+    val RowDividerWidth: Dp = 1.dp
+    /** Horizontal gap between SH1 icon tile and row label column (12.dp). */
+    val SettingsIconTitleGap: Dp = 12.dp
+    /** Vertical row padding inside grouped list cards (12.dp). */
+    val ListRowPaddingVertical: Dp = 12.dp
+    /** Bottom sheet top corner radius (20.dp). */
+    val BottomSheetCornerRadius: Dp = 20.dp
 
     // =========================================================================
     // AUTH & QUICK PIN PARITY TOKENS

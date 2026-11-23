@@ -158,6 +158,7 @@ fun AddEntryDialog(
                         }
                     }
                     ModalType.ITEM -> {
+                        val depthStyle = LocalDepthStyle.current
                         // 1. Item / Description * (Required, max 100 chars)
                         LojiaTextField(
                             value = name,
@@ -165,18 +166,21 @@ fun AddEntryDialog(
                             label = {
                                 Text(
                                     text = stringResource(R.string.item_description_required_fmt, stringResource(R.string.item_description)),
-                                    fontSize = 13.sp,
+                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                     color = OnSurfaceVariantLight
                                 )
                             },
                             placeholder = {
                                 Text(
                                     text = stringResource(R.string.add_entry_item_desc_hint),
-                                    fontSize = 13.sp,
-                                    color = TextHintColor
+                                    fontSize = DepthTypeTokens.RegisterPlaceholderSize,
+                                    color = depthStyle.reportFieldPlaceholderColor
                                 )
                             },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("paid_out_item_name_input")
@@ -208,20 +212,23 @@ fun AddEntryDialog(
                             label = {
                                 Text(
                                     text = stringResource(R.string.add_entry_total_amount_req_fmt, currentCurrency),
-                                    fontSize = 13.sp,
+                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                     color = OnSurfaceVariantLight
                                 )
                             },
                             placeholder = {
                                 Text(
                                     text = MoneyFormat.zeroPlaceholder(digits),
-                                    fontSize = 13.sp,
-                                    color = TextHintColor
+                                    fontSize = DepthTypeTokens.RegisterPlaceholderSize,
+                                    color = depthStyle.reportFieldPlaceholderColor
                                 )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             isError = isAmountInvalid,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("paid_out_total_amount_input")
@@ -296,19 +303,22 @@ fun AddEntryDialog(
                                 label = {
                                     Text(
                                         text = stringResource(R.string.add_entry_quantity_optional),
-                                        fontSize = 13.sp,
+                                        fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                         color = OnSurfaceVariantLight
                                     )
                                 },
                                 placeholder = {
                                     Text(
                                         text = stringResource(R.string.add_entry_quantity_hint),
-                                        fontSize = 13.sp,
-                                        color = TextHintColor
+                                        fontSize = DepthTypeTokens.RegisterPlaceholderSize,
+                                        color = depthStyle.reportFieldPlaceholderColor
                                     )
                                 },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                                minHeight = Dimens.TextFieldHeightReport,
+                                borderColorOverride = depthStyle.reportFieldBorderColor,
+                                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("paid_out_quantity_input")
@@ -339,20 +349,23 @@ fun AddEntryDialog(
                                 label = {
                                     Text(
                                         text = stringResource(R.string.add_entry_unit_price_optional),
-                                        fontSize = 13.sp,
+                                        fontSize = DepthTypeTokens.ReportFieldLabelSize,
                                         color = OnSurfaceVariantLight
                                     )
                                 },
                                 placeholder = {
                                     Text(
                                         text = stringResource(R.string.add_entry_auto_filled_hint),
-                                        fontSize = 13.sp,
-                                        color = TextHintColor
+                                        fontSize = DepthTypeTokens.RegisterPlaceholderSize,
+                                        color = depthStyle.reportFieldPlaceholderColor
                                     )
                                 },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 isError = isUnitPriceInvalid,
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                                minHeight = Dimens.TextFieldHeightReport,
+                                borderColorOverride = depthStyle.reportFieldBorderColor,
+                                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("paid_out_unit_price_input")
@@ -399,7 +412,7 @@ fun AddEntryDialog(
                         keyboardController?.hide()
                         onDismiss()
                     },
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                     border = null,
                     elevation = null,
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -408,13 +421,16 @@ fun AddEntryDialog(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
-                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                        .depthSecondaryButton(
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
                 ) {
                     Text(
                         text = stringResource(R.string.cancel),
                         color = OnSurfaceVariantLight,
-                        fontSize = 14.sp,
+                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -424,7 +440,7 @@ fun AddEntryDialog(
                 Button(
                     enabled = confirmEnabled,
                     elevation = null,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
@@ -433,10 +449,11 @@ fun AddEntryDialog(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
                         .depthRaisedButton(
                             enabled = confirmEnabled,
-                            cornerRadius = Dimens.RadiusMd
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
                         ),
                     onClick = {
                         val amount = when (amountClass) {

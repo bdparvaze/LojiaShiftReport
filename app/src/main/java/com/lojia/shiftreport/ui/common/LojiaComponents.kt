@@ -1,10 +1,12 @@
 package com.lojia.shiftreport.ui.common
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -27,31 +29,33 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lojia.shiftreport.ui.theme.BadgeBlueBg
 import com.lojia.shiftreport.ui.theme.DepthTypeTokens
 import com.lojia.shiftreport.ui.theme.Dimens
-import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
+import com.lojia.shiftreport.ui.theme.PrimaryBlueLight
 import com.lojia.shiftreport.ui.theme.PrimaryIndigoLight
 import com.lojia.shiftreport.ui.theme.PureWhite
-import com.lojia.shiftreport.ui.theme.TextHintColor
+import com.lojia.shiftreport.ui.theme.TextPrimaryReport
 import com.lojia.shiftreport.ui.theme.depthCard
 import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthRaisedIconTile
 import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 
 // ---- LojiaDimens (as an object) ----
 object LojiaDimens {
-    val ScreenPadding       = 16.dp
-    val ScreenTopPadding    = 16.dp
-    val ScreenBottomPadding = 32.dp
-    val SectionSpacing      = 24.dp
-    val CardSpacing         = 8.dp
-    val CardPadding         = 16.dp
-    val IconTextGap         = 16.dp
+    val ScreenPadding       = Dimens.SpacingLg
+    val ScreenTopPadding    = Dimens.SpacingLg
+    val ScreenBottomPadding = Dimens.SpacingHuge
+    val SectionSpacing      = Dimens.SpacingXxl
+    val CardSpacing         = Dimens.SpacingSm
+    val CardPadding         = Dimens.ReportCardInnerPadding
+    val IconTextGap         = Dimens.SettingsIconTitleGap
     val CardRadius          = Dimens.CardCornerRadius
     val ButtonRadius        = Dimens.RadiusMd
     val InputRadius         = Dimens.RadiusInputRegister
-    val ChipRadius          = 999.dp
-    val DrawerHeaderRadius  = 24.dp
+    val ChipRadius          = Dimens.RadiusFull
+    val DrawerHeaderRadius  = Dimens.RadiusPill
     val DrawerItemHeight    = 52.dp
     val DrawerHeaderHeight  = 180.dp
     val IconSize            = 24.dp
@@ -68,11 +72,11 @@ fun LojiaSectionHeader(text: String, modifier: Modifier = Modifier) {
         text = text.uppercase(),
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 24.dp, bottom = 8.dp),
-        fontSize = 12.sp,
+            .padding(top = Dimens.SpacingLg, bottom = Dimens.SpacingSm),
+        fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
         fontWeight = FontWeight.Bold,
-        letterSpacing = 0.15.sp,
-        color = TextHintColor
+        letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+        color = OnSurfaceVariantLight
     )
 }
 
@@ -87,18 +91,19 @@ fun LojiaSettingsCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)
-            .depthCard(shape = cardShape)
+            .padding(bottom = Dimens.ReportGridGap)
+            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+            .depthCard(shape = cardShape, cornerRadius = LojiaDimens.CardRadius)
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
         shape = cardShape,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone),
         border = null
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Dimens.ReportCardInnerPadding),
             verticalAlignment = Alignment.CenterVertically,
             content = content
         )
@@ -111,27 +116,43 @@ fun LojiaSettingRow(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
+    tileColors: List<Color> = listOf(PureWhite, BadgeBlueBg),
+    iconTint: Color = PrimaryBlueLight,
     trailing: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
     LojiaSettingsCard(onClick = onClick) {
-        Icon(
-            icon,
-            contentDescription = title,
-            tint = OnSurfaceVariantLight,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(Modifier.width(16.dp))
+        Box(
+            modifier = Modifier
+                .size(Dimens.SettingsIconTileSize)
+                .depthRaisedIconTile(
+                    gradientColors = tileColors,
+                    cornerRadius = Dimens.RadiusSettingsIconTile
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = iconTint,
+                modifier = Modifier.size(Dimens.IconField)
+            )
+        }
+        Spacer(Modifier.width(Dimens.SettingsIconTitleGap))
         Column(Modifier.weight(1f)) {
             Text(
                 title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = OnSurfaceLight
+                fontSize = DepthTypeTokens.ListRowTitleSize,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimaryReport
             )
             if (subtitle != null) {
-                Spacer(Modifier.height(2.dp))
-                Text(subtitle, fontSize = 13.sp, color = OnSurfaceVariantLight)
+                Spacer(Modifier.height(Dimens.SpacingXxs))
+                Text(
+                    subtitle,
+                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                    color = OnSurfaceVariantLight
+                )
             }
         }
         if (trailing != null) trailing()

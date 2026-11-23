@@ -349,6 +349,13 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                 }
                             }
 
+                            val depthStyle = LocalDepthStyle.current
+                            val screenCanvasBackground = when (navState) {
+                                is AppNavState.ShiftReportState.Reports,
+                                is AppNavState.ShiftReportState.SettingsDetail -> depthStyle.reportPageBackground
+                                else -> MaterialTheme.colorScheme.background
+                            }
+
                             ModalNavigationDrawer(
                                 drawerState = drawerState,
                                 gesturesEnabled = drawerState.isOpen || drawerState.isAnimationRunning || topMenuState.isOpen,
@@ -407,8 +414,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
                                             LojiaGradientHeader(
                                                 shape = RectangleShape,
-                                                contentPadding = PaddingValues(0.dp),
-                                                modifier = Modifier.shadow(Dimens.CardElevation)
+                                                contentPadding = PaddingValues(0.dp)
                                             ) {
                                                 Column(
                                                     modifier = Modifier
@@ -419,8 +425,8 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                     Row(
                                                         modifier = Modifier
                                                             .fillMaxWidth()
-                                                            .defaultMinSize(minHeight = 56.dp)
-                                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                                            .defaultMinSize(minHeight = Dimens.TopBarHeight)
+                                                            .padding(horizontal = Dimens.SpacingSm),
                                                         verticalAlignment = Alignment.CenterVertically,
                                                         horizontalArrangement = Arrangement.SpaceBetween
                                                     ) {
@@ -439,12 +445,12 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                                     tint = PureWhite
                                                                 )
                                                             }
-                                                            Spacer(modifier = Modifier.width(4.dp))
+                                                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                                             Text(
                                                                 text = screenTitle,
                                                                 color = PureWhite,
-                                                                fontWeight = FontWeight.Bold,
-                                                                style = MaterialTheme.typography.headlineSmall,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                fontSize = DepthTypeTokens.TopBarTitleSize,
                                                                 maxLines = 1,
                                                                 modifier = Modifier.weight(1f, fill = false)
                                                             )
@@ -455,13 +461,13 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                         }
                                     },
                                     contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                                    containerColor = MaterialTheme.colorScheme.background
+                                    containerColor = screenCanvasBackground
                                 ) { innerPadding ->
                                     Box(
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .padding(innerPadding)
-                                            .background(MaterialTheme.colorScheme.background)
+                                            .background(screenCanvasBackground)
                                     ) {
                                         AppNavigationHost(
                                             navState = navState,

@@ -99,38 +99,40 @@ fun EmployeeManagementSection(
         }
     }
 
+    val depthStyle = LocalDepthStyle.current
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(BackgroundLight)
+            .background(depthStyle.reportPageBackground)
     ) {
         // 1. HEADER - Top Section
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
+                .depthCard(cornerRadius = Dimens.CardCornerRadius)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(Dimens.ReportCardInnerPadding),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                Column(modifier = Modifier.weight(1f).padding(end = Dimens.SpacingMd)) {
                     Text(
                         text = stringResource(R.string.nav_employee),
-                        fontSize = 22.sp,
+                        fontSize = DepthTypeTokens.TopBarTitleSize,
                         fontWeight = FontWeight.Bold,
-                        color = OnBackgroundLight,
+                        color = TextPrimaryReport,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                     Text(
                         text = stringResource(R.string.employees_count_format, employees.size, activeCount),
-                        fontSize = 14.sp,
+                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
                         color = OnSurfaceVariantLight
                     )
                 }
@@ -144,18 +146,21 @@ fun EmployeeManagementSection(
                         disabledContentColor = OnSurfaceVariantLight
                     ),
                     elevation = null,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    modifier = Modifier.depthRaisedButton(
+                        cornerRadius = Dimens.RadiusReportInput,
+                        minHeight = Dimens.ButtonHeightPrimary
+                    )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.empty_employee_add_button),
-                        fontSize = 14.sp,
+                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
                     )
@@ -163,18 +168,19 @@ fun EmployeeManagementSection(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Dimens.ReportGridGap))
 
         // 2. STATS CARDS - 3 Cards Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Dimens.SpacingLg),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
         ) {
             EmployeeStatCard(
                 icon = Icons.Default.People,
                 iconTint = PrimaryBlueLight,
+                tileColors = listOf(PureWhite, BadgeBlueBg),
                 count = employees.size.toString(),
                 label = stringResource(R.string.total),
                 index = 0,
@@ -182,7 +188,8 @@ fun EmployeeManagementSection(
             )
             EmployeeStatCard(
                 icon = Icons.Default.CheckCircle,
-                iconTint = SuccessGreen,
+                iconTint = BadgeGreenText,
+                tileColors = listOf(PureWhite, BadgeGreenBg),
                 count = activeCount.toString(),
                 label = stringResource(R.string.active),
                 index = 1,
@@ -190,7 +197,8 @@ fun EmployeeManagementSection(
             )
             EmployeeStatCard(
                 icon = Icons.Default.Block,
-                iconTint = WarningOrange,
+                iconTint = BadgeAmberAccent,
+                tileColors = listOf(PureWhite, BadgeAmberBg),
                 count = inactiveCount.toString(),
                 label = stringResource(R.string.inactive),
                 index = 2,
@@ -198,7 +206,7 @@ fun EmployeeManagementSection(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
         // 3. SEARCH BAR
         LojiaTextField(
@@ -207,62 +215,78 @@ fun EmployeeManagementSection(
             placeholder = {
                 Text(
                     text = stringResource(R.string.employee_search_hint),
-                    color = OnSurfaceVariantLight,
-                    fontSize = 14.sp
+                    color = depthStyle.reportFieldPlaceholderColor,
+                    fontSize = DepthTypeTokens.InsetPlaceholderSize
                 )
             },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    tint = OnSurfaceVariantLight
+                    tint = OnSurfaceVariantLight,
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             },
+            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+            minHeight = Dimens.TextFieldHeightReport,
+            borderColorOverride = depthStyle.reportFieldBorderColor,
+            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+            placeholderColor = depthStyle.reportFieldPlaceholderColor,
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = Dimens.SpacingLg)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
         // 4. EMPLOYEE LIST OR 5. EMPTY STATE
         if (filteredEmployees.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
+                    .depthCard(cornerRadius = Dimens.CardCornerRadius)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(48.dp),
+                        .padding(Dimens.SpacingHuge),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.People,
-                        contentDescription = null,
-                        tint = TextDisabledColor,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(Dimens.EmployeeAvatarTileSize + Dimens.SpacingLg)
+                            .depthRaisedIconTile(
+                                gradientColors = listOf(PureWhite, BadgeBlueBg),
+                                cornerRadius = Dimens.RadiusEmployeeAvatarTile
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.People,
+                            contentDescription = null,
+                            tint = PrimaryBlueLight,
+                            modifier = Modifier.size(Dimens.IconLg)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(Dimens.SpacingLg))
                     Text(
                         text = if (employees.isEmpty()) stringResource(R.string.empty_employee_title) else stringResource(R.string.empty_employee_no_match),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OnBackgroundLight,
+                        fontSize = DepthTypeTokens.EmptyStateTitleSize,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimaryReport,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                     Text(
                         text = stringResource(R.string.empty_employee_hint),
-                        fontSize = 14.sp,
+                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
                         color = OnSurfaceVariantLight,
                         textAlign = TextAlign.Center
                     )
                     if (employees.isEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
                         Button(
                             onClick = { showAdminAuthForAdd = true },
                             elevation = null,
@@ -272,18 +296,21 @@ fun EmployeeManagementSection(
                                 contentColor = PureWhite,
                                 disabledContentColor = OnSurfaceVariantLight
                             ),
-                            shape = RoundedCornerShape(Dimens.RadiusMd),
-                            modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusMd)
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            modifier = Modifier.depthRaisedButton(
+                                cornerRadius = Dimens.RadiusReportInput,
+                                minHeight = Dimens.ButtonHeightReportPrimary
+                            )
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconSm)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.empty_employee_add_button),
-                                fontSize = 14.sp,
+                                fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -294,9 +321,9 @@ fun EmployeeManagementSection(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = Dimens.SpacingLg)
+                    .padding(bottom = Dimens.SpacingXxl),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 filteredEmployees.forEachIndexed { index, emp ->
                     key(emp.id) {
@@ -399,6 +426,7 @@ fun EmployeeManagementSection(
 private fun EmployeeStatCard(
     icon: ImageVector,
     iconTint: Color,
+    tileColors: List<Color>,
     count: String,
     label: String,
     index: Int = 0,
@@ -406,33 +434,43 @@ private fun EmployeeStatCard(
 ) {
     Box(
         modifier = modifier
-            .height(80.dp)
+            .defaultMinSize(minHeight = 80.dp)
             .cardRise(index)
-            .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
+            .depthCard(cornerRadius = Dimens.CardCornerRadius)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxWidth()
+                .padding(Dimens.SpacingMd),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(Dimens.SectionIconTileSize)
+                    .depthRaisedIconTile(
+                        gradientColors = tileColors,
+                        cornerRadius = Dimens.RadiusSectionIconTile
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(Dimens.IconSm)
+                )
+            }
             Column {
                 Text(
                     text = count,
-                    fontSize = 18.sp,
+                    fontSize = DepthTypeTokens.StatCountSize,
                     fontWeight = FontWeight.Bold,
-                    color = OnBackgroundLight
+                    color = TextPrimaryReport
                 )
                 Text(
                     text = label,
-                    fontSize = 12.sp,
+                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
                     color = OnSurfaceVariantLight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -455,25 +493,27 @@ private fun EmployeeItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .cardRise(index)
-            .depthCard(shape = RoundedCornerShape(Dimens.RadiusLg))
+            .depthCard(cornerRadius = Dimens.CardCornerRadius)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Dimens.ReportCardInnerPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Full 48dp Circle Avatar
+            // Left: 44dp SH1 Gradient Avatar Tile
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryContainerLight),
+                    .size(Dimens.EmployeeAvatarTileSize)
+                    .depthRaisedIconTile(
+                        gradientColors = listOf(PureWhite, BadgeBlueBg),
+                        cornerRadius = Dimens.RadiusEmployeeAvatarTile
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initial,
-                    fontSize = 18.sp,
+                    fontSize = DepthTypeTokens.StatCountSize,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlueLight
                 )
@@ -483,33 +523,33 @@ private fun EmployeeItemCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 12.dp, end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(start = Dimens.SettingsIconTitleGap, end = Dimens.SpacingSm),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = employee.name,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OnBackgroundLight,
+                        fontSize = DepthTypeTokens.ListRowTitleSize,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimaryReport,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(Dimens.RadiusFull))
                             .background(
-                                if (employee.isActive) SuccessContainer else SurfaceVariantLight
+                                if (employee.isActive) CashWellBg else SurfaceVariantLight
                             )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .padding(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXxs)
                     ) {
                         Text(
                             text = if (employee.isActive) stringResource(R.string.active) else stringResource(R.string.inactive),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (employee.isActive) SuccessTextDark else OnSurfaceVariantLight
+                            fontSize = DepthTypeTokens.ChipLabelSize,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (employee.isActive) BadgeBlueText else OnSurfaceVariantLight
                         )
                     }
                 }
@@ -519,24 +559,24 @@ private fun EmployeeItemCard(
                         R.string.employee_salary_per_month_format,
                         com.lojia.shiftreport.util.MoneyFormat.formatMinor(employee.monthlySalaryMinor, activeCurrency)
                     ),
-                    fontSize = 14.sp,
+                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
                     color = OnSurfaceVariantLight
                 )
 
                 if (!employee.phone.isNullOrBlank()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = null,
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(Dimens.IconXs)
                         )
                         Text(
                             text = employee.phone,
-                            fontSize = 13.sp,
+                            fontSize = DepthTypeTokens.ListRowSubtitleSize,
                             color = OnSurfaceVariantLight
                         )
                     }
@@ -550,16 +590,18 @@ private fun EmployeeItemCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(DepthTokens.CardAccentGradientStart),
+                        .size(Dimens.SerialBadgeSize)
+                        .depthRaisedIconTile(
+                            gradientColors = listOf(PureWhite, CashWellBg),
+                            cornerRadius = Dimens.RadiusActionIconTile
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = stringResource(R.string.employee_edit_label),
                         tint = PrimaryBlueLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
                 }
             }
@@ -601,6 +643,8 @@ private fun AddEditEmployeeDialog(
     val isSalaryZero = salaryClass is MoneyInput.Valid && !isValidMonthlySalary(salaryClass.minor)
     val canSave = name.isNotBlank() && !isDuplicateName && salaryMinor != null && salaryMinor > 0L
 
+    val depthStyle = LocalDepthStyle.current
+
     LojiaDialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -609,13 +653,13 @@ private fun AddEditEmployeeDialog(
                 .navigationBarsPadding()
                 .imePadding()
                 .padding(Dimens.DialogPaddingComfortable),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(
                 text = if (existing != null) stringResource(R.string.employee_edit_label) else stringResource(R.string.employee_add_new_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OnSurfaceLight
+                color = TextPrimaryReport
             )
 
             LojiaTextField(
@@ -627,6 +671,10 @@ private fun AddEditEmployeeDialog(
                 supportingText = if (isDuplicateName) {
                     { Text(stringResource(R.string.employee_name_exists_error)) }
                 } else null,
+                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                minHeight = Dimens.TextFieldHeightReport,
+                borderColorOverride = depthStyle.reportFieldBorderColor,
+                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -650,6 +698,10 @@ private fun AddEditEmployeeDialog(
                     keyboardType = if (activeDigits == 0) KeyboardType.Number else KeyboardType.Decimal
                 ),
                 suffix = { Text(activeCurrency) },
+                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                minHeight = Dimens.TextFieldHeightReport,
+                borderColorOverride = depthStyle.reportFieldBorderColor,
+                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -659,6 +711,10 @@ private fun AddEditEmployeeDialog(
                 onValueChange = { phone = it },
                 label = { Text(stringResource(R.string.phone_optional_label)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                minHeight = Dimens.TextFieldHeightReport,
+                borderColorOverride = depthStyle.reportFieldBorderColor,
+                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -672,7 +728,8 @@ private fun AddEditEmployeeDialog(
                     Text(
                         text = stringResource(R.string.active_status_label),
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = TextPrimaryReport
                     )
                     Switch(
                         checked = isActive,
@@ -697,12 +754,20 @@ private fun AddEditEmployeeDialog(
                         contentColor = PureWhite,
                         disabledContentColor = OnSurfaceVariantLight
                     ),
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .depthRaisedButton(enabled = canSave, cornerRadius = Dimens.RadiusMd)
+                        .depthRaisedButton(
+                            enabled = canSave,
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
                 ) {
-                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.save),
+                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
             val dismissAction = @Composable {
@@ -714,19 +779,26 @@ private fun AddEditEmployeeDialog(
                         containerColor = Color.Transparent,
                         contentColor = OnSurfaceVariantLight
                     ),
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
+                        .depthSecondaryButton(
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
                 ) {
-                    Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(R.string.cancel),
+                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

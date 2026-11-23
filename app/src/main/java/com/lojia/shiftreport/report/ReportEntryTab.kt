@@ -204,9 +204,10 @@ fun ReportEntryTab(
     }
 
     val scrollState = rememberScrollState()
+    val depthStyle = LocalDepthStyle.current
 
     Scaffold(
-        containerColor = BackgroundLight,
+        containerColor = depthStyle.reportPageBackground,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             StickySummaryBar(
@@ -219,7 +220,7 @@ fun ReportEntryTab(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundLight)
+                .background(depthStyle.reportPageBackground)
                 .padding(padding),
             contentAlignment = Alignment.TopCenter
         ) {
@@ -230,23 +231,26 @@ fun ReportEntryTab(
                     .verticalScroll(scrollState)
                     .imePadding()
                     .navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingLg)
                     .testTag("shift_report_dashboard"),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
             // ---- Header card ----
             Card(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .cardRise(0)
-                    .depthCard(shape = RoundedCornerShape(14.dp))
+                    .depthCard(
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                        cornerRadius = Dimens.CardCornerRadius
+                    )
             ) {
                 Column(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(horizontal = 14.dp, vertical = 14.dp)) {
+                    Column(Modifier.padding(Dimens.ReportCardInnerPadding)) {
                         val selectCashierText = stringResource(R.string.select_cashier)
                         val dayShiftText = stringResource(R.string.shift_day)
                         LabeledDropdown(
@@ -256,15 +260,15 @@ fun ReportEntryTab(
                             onSelected = { formActions.onCashierChange(if (it == selectCashierText) "" else it) }
                         )
                         if (cashierOptions.isEmpty()) {
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.no_cashiers_dropdown_hint),
-                                fontSize = 11.sp,
-                                color = ShiftColors.TextMuted
+                                fontSize = DepthTypeTokens.RegisterLabelSize,
+                                color = OnSurfaceVariantLight
                             )
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)) {
                             Box(Modifier.weight(1f)) {
                                 LabeledDropdown(
                                     label = stringResource(R.string.shift),
@@ -279,10 +283,15 @@ fun ReportEntryTab(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
-                                            .depthInset(shape = RoundedCornerShape(Dimens.RadiusSm))
+                                            .defaultMinSize(minHeight = Dimens.TextFieldHeightReport)
+                                            .depthInset(
+                                                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                                                cornerRadius = Dimens.RadiusReportInput,
+                                                borderColorOverride = depthStyle.reportFieldBorderColor,
+                                                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha
+                                            )
                                             .clickable { showDatePicker = true }
-                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                            .padding(horizontal = Dimens.InsetFieldPaddingHorizontal, vertical = Dimens.SpacingSm),
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         Row(
@@ -292,19 +301,19 @@ fun ReportEntryTab(
                                         ) {
                                             Text(
                                                 text = dateLabel,
-                                                fontSize = 13.sp,
+                                                fontSize = DepthTypeTokens.ReportFieldTextSize,
                                                 fontWeight = FontWeight.Medium,
-                                                color = ShiftColors.Charcoal,
+                                                color = depthStyle.reportFieldTextColor,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f, fill = false)
                                             )
-                                            Spacer(Modifier.width(4.dp))
+                                            Spacer(Modifier.width(Dimens.SpacingXs))
                                             Icon(
                                                 imageVector = Icons.Default.DateRange,
                                                 contentDescription = stringResource(R.string.select_date),
                                                 tint = ShiftColors.Primary,
-                                                modifier = Modifier.size(17.dp)
+                                                modifier = Modifier.size(Dimens.IconSm)
                                             )
                                         }
                                     }
@@ -314,7 +323,7 @@ fun ReportEntryTab(
 
                         // ---- Starting Cash & Payment Methods ----
                         SectionHeader("💰", stringResource(R.string.sales_summary), ShiftColors.BrassLight, ShiftColors.Brass, ShiftColors.Brass)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)) {
                             NumberField(
                                 stringResource(R.string.starting_cash),
                                 startingCashInput,
@@ -330,8 +339,8 @@ fun ReportEntryTab(
                                 errorText = if (cashClass is MoneyInput.Invalid) invalidAmountError else null
                             )
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)) {
                             NumberField(
                                 stringResource(R.string.mada_bank),
                                 madaPayments,
@@ -347,8 +356,8 @@ fun ReportEntryTab(
                                 errorText = if (digitalWalletClass is MoneyInput.Invalid) invalidAmountError else null
                             )
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)) {
                             NumberField(
                                 stringResource(R.string.total_discounts_label),
                                 totalDiscountsInput,
@@ -367,7 +376,7 @@ fun ReportEntryTab(
 
                         // ---- Operational Expenses ----
                         SectionHeader("🧾", stringResource(R.string.operational_expenses), ShiftColors.DangerLight, ShiftColors.Danger, ShiftColors.Danger)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)) {
                             Box(Modifier.weight(1f)) {
                                 val personText = stringResource(R.string.person)
                                 LabeledDropdown(
@@ -392,7 +401,7 @@ fun ReportEntryTab(
 
                         // ---- Mu'assel ----
                         SectionHeader("📦", stringResource(R.string.sale_of_muassel), ShiftColors.PurpleLight, ShiftColors.Purple, ShiftColors.Purple)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)) {
                             NumberField(stringResource(R.string.muassel), muassel, formActions.onMuasselChange, Modifier.weight(1f), isInteger = true)
                             NumberField(stringResource(R.string.outdoor_muassel), outdoorMuassel, formActions.onOutdoorMuasselChange, Modifier.weight(1f), isInteger = true)
                         }
@@ -473,14 +482,12 @@ fun ReportEntryTab(
                         var advancePaymentType by remember { mutableStateOf("Cash") }
                         var showAdminAuthForAdvance by remember { mutableStateOf(false) }
 
-                        Text(
-                            text = "👤 " + stringResource(R.string.employer_advance),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = ShiftColors.Purple,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp, bottom = 4.dp)
+                        SectionHeader(
+                            icon = "👤",
+                            title = stringResource(R.string.employer_advance),
+                            bg = ShiftColors.PurpleLight,
+                            borderColor = ShiftColors.Purple,
+                            accent = ShiftColors.Purple
                         )
 
                         EmployerAdvanceSection(
@@ -618,7 +625,7 @@ fun ReportEntryTab(
 
                         // ---- Action buttons ----
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -632,28 +639,29 @@ fun ReportEntryTab(
                                     contentColor = PureWhite,
                                     disabledContentColor = OnSurfaceVariantLight
                                 ),
-                                shape = RoundedCornerShape(Dimens.RadiusMd),
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                                contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingMd),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .heightIn(min = Dimens.ButtonHeightReportPrimary)
                                     .depthRaisedButton(
                                         enabled = hasEnteredData,
                                         isDestructive = true,
-                                        cornerRadius = Dimens.RadiusMd
+                                        cornerRadius = Dimens.RadiusReportInput,
+                                        minHeight = Dimens.ButtonHeightReportPrimary
                                     )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Text("🧹", fontSize = 13.sp)
-                                    Spacer(Modifier.width(4.dp))
+                                    Text("🧹", fontSize = DepthTypeTokens.SecondaryButtonTextSize)
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.clean_data),
                                         color = if (hasEnteredData) PureWhite else OnSurfaceVariantLight,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = DepthTypeTokens.SecondaryButtonTextSize,
                                         maxLines = 1,
                                         softWrap = false,
                                         overflow = TextOverflow.Ellipsis
@@ -729,28 +737,29 @@ fun ReportEntryTab(
                                     contentColor = PureWhite,
                                     disabledContentColor = OnSurfaceVariantLight
                                 ),
-                                shape = RoundedCornerShape(Dimens.RadiusMd),
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                                contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingMd),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = Dimens.MinTouchTarget)
+                                    .heightIn(min = Dimens.ButtonHeightReportPrimary)
                                     .depthRaisedButton(
                                         enabled = canSave,
                                         isDestructive = false,
-                                        cornerRadius = Dimens.RadiusMd
+                                        cornerRadius = Dimens.RadiusReportInput,
+                                        minHeight = Dimens.ButtonHeightReportPrimary
                                     )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Text("💾", fontSize = 13.sp)
-                                    Spacer(Modifier.width(4.dp))
+                                    Text("💾", fontSize = DepthTypeTokens.SecondaryButtonTextSize)
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.save_report),
                                         color = if (canSave) PureWhite else OnSurfaceVariantLight,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = DepthTypeTokens.SecondaryButtonTextSize,
                                         maxLines = 1,
                                         softWrap = false,
                                         overflow = TextOverflow.Ellipsis
@@ -875,10 +884,11 @@ fun EmployerAdvanceSection(
     onNavigateToSettings: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val depthStyle = LocalDepthStyle.current
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
     ) {
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -889,6 +899,11 @@ fun EmployerAdvanceSection(
                 value = selectedEmployee?.name ?: stringResource(R.string.report_select_employee),
                 onValueChange = {},
                 readOnly = true,
+                textStyle = LocalTextStyle.current.copy(
+                    fontSize = DepthTypeTokens.ReportFieldTextSize,
+                    fontWeight = FontWeight.Medium,
+                    color = depthStyle.reportFieldTextColor
+                ),
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
@@ -901,12 +916,18 @@ fun EmployerAdvanceSection(
                 label = { Text(stringResource(R.string.nav_employee)) },
                 placeholder = { Text(stringResource(R.string.select_from_employees_format, employees.size)) },
                 singleLine = true,
-                shape = RoundedCornerShape(Dimens.RadiusMd)
+                shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                minHeight = Dimens.TextFieldHeightReport,
+                borderColorOverride = depthStyle.reportFieldBorderColor,
+                topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                placeholderColor = depthStyle.reportFieldPlaceholderColor,
+                placeholderFontSize = DepthTypeTokens.ReportFieldTextSize
             )
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = PureWhite
             ) {
                 if (employees.isEmpty()) {
                     DropdownMenuItem(
@@ -928,7 +949,8 @@ fun EmployerAdvanceSection(
                                 Column {
                                     Text(
                                         text = employee.name,
-                                        fontWeight = FontWeight.SemiBold
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = depthStyle.reportFieldTextColor
                                     )
                                     Text(
                                         text = stringResource(
@@ -938,7 +960,7 @@ fun EmployerAdvanceSection(
                                             MoneyFormat.formatMinor(summary.balanceMinor, currency)
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = OnSurfaceVariantLight
                                     )
                                 }
                             },
@@ -961,6 +983,11 @@ fun EmployerAdvanceSection(
             label = { Text(stringResource(R.string.advance_amount_label)) },
             enabled = selectedEmployee != null,
             isError = isAdvanceAmountInvalid,
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = DepthTypeTokens.ReportFieldTextSize,
+                fontWeight = FontWeight.Medium,
+                color = depthStyle.reportFieldTextColor
+            ),
             supportingText = if (isAdvanceAmountInvalid) {
                 { Text(stringResource(R.string.valid_amount_error), color = ErrorRedLight) }
             } else null,
@@ -969,12 +996,17 @@ fun EmployerAdvanceSection(
             ),
             suffix = { Text(currency) },
             singleLine = true,
-            shape = RoundedCornerShape(Dimens.RadiusMd),
+            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+            minHeight = Dimens.TextFieldHeightReport,
+            borderColorOverride = depthStyle.reportFieldBorderColor,
+            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+            placeholderColor = depthStyle.reportFieldPlaceholderColor,
+            placeholderFontSize = DepthTypeTokens.ReportFieldTextSize,
             modifier = Modifier.fillMaxWidth()
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             FilterChip(
@@ -1001,7 +1033,7 @@ fun EmployerAdvanceSection(
         Button(
             onClick = onAddAdvance,
             enabled = addAdvanceEnabled,
-            shape = RoundedCornerShape(Dimens.RadiusMd),
+            shape = RoundedCornerShape(Dimens.RadiusReportInput),
             elevation = null,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
@@ -1011,10 +1043,11 @@ fun EmployerAdvanceSection(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = Dimens.MinTouchTarget)
+                .heightIn(min = Dimens.ButtonHeightReportPrimary)
                 .depthRaisedButton(
                     enabled = addAdvanceEnabled,
-                    cornerRadius = Dimens.RadiusMd
+                    cornerRadius = Dimens.RadiusReportInput,
+                    minHeight = Dimens.ButtonHeightReportPrimary
                 )
         ) {
             Text(

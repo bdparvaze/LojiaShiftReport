@@ -1,5 +1,6 @@
 package com.lojia.shiftreport.ui.theme
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Immutable
@@ -19,12 +20,15 @@ object DepthTokens {
     /** Soft blue-tinted canvas background behind auth, register, Quick PIN, and lock screens (#F4F7FD). */
     val PageBackground: Color = BackgroundLight
 
-    // ============ BRAND GRADIENTS (HEADER & PRIMARY BUTTONS) ============
-    /** Top gradient stop for full-width headers, reusing existing PrimaryBlueLight. */
-    val BrandHeaderGradientStart: Color = PrimaryBlueLight
+    /** Report Entry, Due History, and Employer Advances canvas background (#EEF2FB). */
+    val ReportPageBackground: Color = ReportCanvasBackground
 
-    /** Bottom gradient stop for full-width headers, reusing existing PrimaryBlueDark. */
-    val BrandHeaderGradientEnd: Color = PrimaryBlueDark
+    // ============ BRAND GRADIENTS (HEADER & PRIMARY BUTTONS) ============
+    /** Diagonal 135-deg start gradient stop for full-width headers (#2B5DE8, GR6). */
+    val BrandHeaderGradientStart: Color = BrandHeaderDiagonalStart
+
+    /** Diagonal 135-deg end gradient stop for full-width headers (#1238A8, GR6). */
+    val BrandHeaderGradientEnd: Color = BrandHeaderDiagonalEnd
 
     /** Top gradient stop for raised primary action buttons (#3B6BF0). */
     val BrandButtonGradientStart: Color = Color(0xFF3B6BF0)
@@ -246,24 +250,87 @@ object DepthTokens {
     const val KEYPAD_BUTTON_SHADOW_ALPHA: Float = 0.10f
 
     // ============ TAB BAR TOKENS ============
-    /** Top gradient stop for raised tab bar containers. */
+    /** Top gradient stop for raised tab bar containers (#FFFFFF). */
     val TabBarGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for raised tab bar containers. */
-    val TabBarGradientEnd: Color = Color(0xFFF8FAFF)
+    /** Bottom gradient stop for raised tab bar containers (#FFFFFF). */
+    val TabBarGradientEnd: Color = PureWhite
 
-    /** Start stop for active tab indicator pill gradient. */
-    val TabIndicatorGradientStart: Color = PrimaryLight
+    /** Start stop for active tab indicator pill gradient (#3B6BF0, GR3). */
+    val TabIndicatorGradientStart: Color = BrandButtonGradientStart
 
-    /** End stop for active tab indicator pill gradient. */
-    val TabIndicatorGradientEnd: Color = PrimaryBlueLight
+    /** End stop for active tab indicator pill gradient (#1D4FD8, GR3). */
+    val TabIndicatorGradientEnd: Color = BrandButtonGradientEnd
+
+    // ============ REPORT & LEDGER PARITY SHADOW/COLOR TOKENS (STAGE 26F-1) ============
+    /** Top header drop shadow tint (#1238A8, SH7). */
+    val HeaderShadowColor: Color = BrandHeaderDiagonalEnd
+    const val HEADER_SHADOW_ALPHA: Float = 0.35f
+
+    /** Tab bar drop shadow tint (#101828, SH8). */
+    val TabBarShadowColor: Color = ShadowSlateColor
+    const val TAB_BAR_SHADOW_ALPHA: Float = 0.08f
+
+    /** Active tab indicator upward glow tint (#1D4FD8, SH9). */
+    val TabIndicatorGlowColor: Color = PrimaryBlueLight
+    const val TAB_INDICATOR_GLOW_ALPHA: Float = 0.35f
+
+    /** Unfocused 1dp border color on Report Entry & search fields (#C9D3E8). */
+    val ReportFieldBorderColor: Color = ReportInputBorder
+
+    /** Primary ink on Report Entry & Ledger screens (#101828). */
+    val ReportFieldTextColor: Color = TextPrimaryReport
+
+    /** Slate 700 label color on Report Entry & Ledger screens (#344054). */
+    val ReportFieldLabelColor: Color = TextSlate700
+
+    /** Report placeholder ink (#667085). */
+    val ReportFieldPlaceholderColor: Color = TextPlaceholderReport
+
+    /** Inner top shadow alpha for report fields & Cash/Bank breakdown wells (SH4/SH20). */
+    const val INSET_REPORT_TOP_SHADOW_ALPHA: Float = 0.06f
+
+    /** Drop shadow alpha for section accordion headers (SH16). */
+    const val SECTION_PILL_SHADOW_ALPHA: Float = 0.10f
+
+    /** Drop shadow alpha for 32dp section icon tiles (SH17). */
+    const val SECTION_ICON_SHADOW_ALPHA: Float = 0.15f
+
+    /** Inner top highlight alpha for section accordion headers. */
+    const val SECTION_PILL_HIGHLIGHT_ALPHA: Float = 0.80f
+
+    /** Inner top shadow alpha for segmented period track (SH18). */
+    const val SEGMENT_TRACK_INSET_ALPHA: Float = 0.10f
+
+    /** Drop shadow alpha for active segmented thumb (SH19). */
+    const val SEGMENT_ACTIVE_SHADOW_ALPHA: Float = 0.35f
+
+    // ============ PAID OUT, SETTINGS & EMPLOYEES PARITY TOKENS (STAGE 26F-2) ============
+    /** Hairline row divider gray (#EAECF0) inside grouped list & settings cards. */
+    val ListDividerColor: Color = ListDividerGray
+
+    /** Secondary recessed form well fill (#F4F6FB) and perimeter border (#D0D5DD). */
+    val FormWellBackground: Color = FormWellFill
+    val FormWellStrokeColor: Color = FormWellBorder
+
+    /** Outer drop shadow alpha beneath SH1 145-deg raised icon tiles rgba(16, 24, 40, 0.14). */
+    const val ICON_TILE_SHADOW_ALPHA: Float = 0.14f
+
+    /** Inner top 1dp specular white highlight alpha on SH1 raised icon tiles (0.90). */
+    const val ICON_TILE_TOP_HIGHLIGHT_ALPHA: Float = 0.90f
+
+    /** Inner bottom 2dp bevel shadow alpha on SH1 raised icon tiles rgba(16, 24, 40, 0.07). */
+    const val ICON_TILE_BOTTOM_BEVEL_ALPHA: Float = 0.07f
+
+    /** Inner top shadow alpha for secondary SH10 inset wells (0.08). */
+    const val INSET_WELL_TOP_SHADOW_ALPHA: Float = 0.08f
 
     // ============ HEADER & LIVE PULSE TOKENS ============
     /** Specular sheen highlight alpha along the top of brand gradient headers. */
     const val HEADER_SHEEN_ALPHA: Float = 0.14f
 
     /** Active dot color for LIVE status indicators. */
-    val LiveDotColor: Color = SuccessGreen
+    val LiveDotColor: Color = LiveDotGlowGreen
 
     /** Starting halo alpha when a LIVE pulse expands outward. */
     const val LIVE_HALO_START_ALPHA: Float = 0.45f
@@ -283,16 +350,19 @@ object DepthTokens {
  */
 object DepthMotionTokens {
     /** Duration (ms) for a single one-shot card-rise entrance animation. */
-    const val CARD_RISE_DURATION_MS: Int = 260
+    const val CARD_RISE_DURATION_MS: Int = 550
 
     /** Incremental stagger delay (ms) per list card index. */
-    const val CARD_RISE_STAGGER_STEP_MS: Int = 40
+    const val CARD_RISE_STAGGER_STEP_MS: Int = 100
 
     /** Maximum total stagger delay (ms) so long lists never stall before appearing. */
-    const val CARD_RISE_MAX_DELAY_MS: Int = 280
+    const val CARD_RISE_MAX_DELAY_MS: Int = 600
+
+    /** Easing curve (0.2, 0.8, 0.2, 1) for card-rise animations. */
+    val CardRiseEasing: CubicBezierEasing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
 
     /** Tactile press compression duration (ms) for raised buttons. */
-    const val PRESS_DURATION_MS: Int = 90
+    const val PRESS_DURATION_MS: Int = 150
 
     /** Tactile scale factor when a primary raised button is pressed (0.98f). */
     const val BUTTON_PRESSED_SCALE: Float = 0.98f
@@ -302,7 +372,7 @@ object DepthMotionTokens {
 }
 
 /**
- * Exact type scale constants matching the approved Stage 26D design boards.
+ * Exact type scale constants matching the approved Stage 26D & Stage 26F-1 design boards.
  */
 object DepthTypeTokens {
     val LogoTitleSize: TextUnit = 22.sp
@@ -325,6 +395,24 @@ object DepthTypeTokens {
     val KeypadDigitSize: TextUnit = 28.sp
     val KeypadDeleteTextSize: TextUnit = 16.sp
     val QuickPinFallbackTextSize: TextUnit = 14.sp
+
+    val TopBarTitleSize: TextUnit = 20.sp
+    val TabLabelSize: TextUnit = 15.sp
+    val ReportFieldLabelSize: TextUnit = 13.sp
+    val ReportFieldTextSize: TextUnit = 16.sp
+    val SectionTitleSize: TextUnit = 16.sp
+    val HeroAmountSize: TextUnit = 24.sp
+
+    val SettingsSectionHeaderSize: TextUnit = 12.sp
+    val SettingsSectionHeaderTracking: TextUnit = 0.48.sp
+    val ListRowTitleSize: TextUnit = 14.sp
+    val ListRowSubtitleSize: TextUnit = 12.sp
+    val CardSectionHeadingSize: TextUnit = 15.sp
+    val PrimaryCtaSmallSize: TextUnit = 14.sp
+    val ChipLabelSize: TextUnit = 12.sp
+    val SegmentedChipTextSize: TextUnit = 13.sp
+    val StatCountSize: TextUnit = 18.sp
+    val EmptyStateTitleSize: TextUnit = 16.sp
 }
 
 /**
@@ -366,8 +454,12 @@ val LojiaShapes = Shapes(
 @Immutable
 data class DepthStyle(
     val pageBackground: Color = DepthTokens.PageBackground,
+    val reportPageBackground: Color = DepthTokens.ReportPageBackground,
+    val listDividerColor: Color = DepthTokens.ListDividerColor,
     val headerGradientStart: Color = DepthTokens.BrandHeaderGradientStart,
     val headerGradientEnd: Color = DepthTokens.BrandHeaderGradientEnd,
+    val headerShadowColor: Color = DepthTokens.HeaderShadowColor,
+    val headerShadowAlpha: Float = DepthTokens.HEADER_SHADOW_ALPHA,
     val headerSheenAlpha: Float = DepthTokens.HEADER_SHEEN_ALPHA,
     val buttonGradientStart: Color = DepthTokens.BrandButtonGradientStart,
     val buttonGradientEnd: Color = DepthTokens.BrandButtonGradientEnd,
@@ -446,6 +538,11 @@ data class DepthStyle(
     val insetShadowBlur: Dp = Dimens.InsetShadowBlur,
     val insetShadowHeight: Dp = Dimens.InsetShadowHeight,
     val insetCornerRadius: Dp = Dimens.RadiusMd,
+    val reportFieldBorderColor: Color = DepthTokens.ReportFieldBorderColor,
+    val reportFieldTextColor: Color = DepthTokens.ReportFieldTextColor,
+    val reportFieldLabelColor: Color = DepthTokens.ReportFieldLabelColor,
+    val reportFieldPlaceholderColor: Color = DepthTokens.ReportFieldPlaceholderColor,
+    val reportFieldInsetAlpha: Float = DepthTokens.INSET_REPORT_TOP_SHADOW_ALPHA,
     val pinCellFilledStart: Color = DepthTokens.PinCellFilledGradientStart,
     val pinCellFilledEnd: Color = DepthTokens.PinCellFilledGradientEnd,
     val keypadGradientStart: Color = DepthTokens.KeypadButtonGradientStart,
@@ -464,8 +561,12 @@ data class DepthStyle(
     val logoTileBottomEdgeAlpha: Float = DepthTokens.LOGO_TILE_BOTTOM_EDGE_ALPHA,
     val tabBarGradientStart: Color = DepthTokens.TabBarGradientStart,
     val tabBarGradientEnd: Color = DepthTokens.TabBarGradientEnd,
+    val tabBarShadowColor: Color = DepthTokens.TabBarShadowColor,
+    val tabBarShadowAlpha: Float = DepthTokens.TAB_BAR_SHADOW_ALPHA,
     val tabIndicatorGradientStart: Color = DepthTokens.TabIndicatorGradientStart,
     val tabIndicatorGradientEnd: Color = DepthTokens.TabIndicatorGradientEnd,
+    val tabIndicatorGlowColor: Color = DepthTokens.TabIndicatorGlowColor,
+    val tabIndicatorGlowAlpha: Float = DepthTokens.TAB_INDICATOR_GLOW_ALPHA,
     val cardRiseDurationMs: Int = DepthMotionTokens.CARD_RISE_DURATION_MS,
     val cardRiseStaggerStepMs: Int = DepthMotionTokens.CARD_RISE_STAGGER_STEP_MS,
     val cardRiseMaxDelayMs: Int = DepthMotionTokens.CARD_RISE_MAX_DELAY_MS,

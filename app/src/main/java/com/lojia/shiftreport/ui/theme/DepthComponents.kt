@@ -289,11 +289,13 @@ fun Modifier.depthInset(
     borderWidth: Dp? = null,
     focusedBorderWidth: Dp? = null,
     gradientColors: List<Color>? = null,
-    borderColorOverride: Color? = null
+    borderColorOverride: Color? = null,
+    topShadowAlphaOverride: Float? = null
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val resolvedRadius = cornerRadius ?: style.insetCornerRadius
     val resolvedShape = shape ?: RoundedCornerShape(resolvedRadius)
+    val resolvedTopShadowAlpha = topShadowAlphaOverride ?: style.insetTopShadowAlpha
     val resolvedGradient = when {
         !enabled -> listOf(style.insetDisabledBackground, style.insetDisabledBackground)
         isError -> listOf(style.insetErrorBackground, style.insetErrorBackground)
@@ -328,7 +330,7 @@ fun Modifier.depthInset(
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        style.insetShadowColor.copy(alpha = style.insetTopShadowAlpha),
+                        style.insetShadowColor.copy(alpha = resolvedTopShadowAlpha),
                         Color.Transparent
                     ),
                     startY = 0f,
@@ -704,6 +706,8 @@ fun Modifier.depthLogoTile(): Modifier = composed {
 fun LojiaGradientHeader(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(bottomStart = Dimens.RadiusXl, bottomEnd = Dimens.RadiusXl),
+    cornerRadiusForShadow: Dp = 0.dp,
+    showDropShadow: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = Dimens.SpacingLg,
         vertical = Dimens.SpacingLg
@@ -714,13 +718,31 @@ fun LojiaGradientHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(style.headerGradientStart, style.headerGradientEnd)
-                )
+            .then(
+                if (showDropShadow) {
+                    Modifier.drawBehind {
+                        drawSoftDropShadow(
+                            color = style.headerShadowColor.copy(alpha = style.headerShadowAlpha),
+                            offsetY = Dimens.HeaderShadowOffsetY,
+                            blurRadius = Dimens.HeaderShadowBlur,
+                            cornerRadius = cornerRadiusForShadow
+                        )
+                    }
+                } else {
+                    Modifier
+                }
             )
+            .clip(shape)
             .drawBehind {
+                // 135-deg linear gradient matching board GR6 (#2B5DE8 -> #1238A8)
+                drawRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(style.headerGradientStart, style.headerGradientEnd),
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height)
+                    ),
+                    size = size
+                )
                 val sheenHeight = size.height * 0.45f
                 drawRect(
                     brush = Brush.verticalGradient(
@@ -775,7 +797,7 @@ fun Modifier.cardRise(index: Int): Modifier = composed {
             targetValue = 1f,
             animationSpec = tween(
                 durationMillis = style.cardRiseDurationMs,
-                easing = FastOutSlowInEasing
+                easing = DepthMotionTokens.CardRiseEasing
             )
         )
     }
@@ -847,3 +869,250 @@ fun LojiaLiveDot(modifier: Modifier = Modifier) {
             .background(color = style.liveDotColor, shape = CircleShape)
     )
 }
+
+/**
+ * Tab bar container shadow matching board SH8 (0 3dp 8dp rgba(16,24,40,0.08)).
+ */
+fun Modifier.depthTabBarShadow(): Modifier = composed {
+    val style = LocalDepthStyle.current
+    this.drawBehind {
+        drawSoftDropShadow(
+            color = style.tabBarShadowColor.copy(alpha = style.tabBarShadowAlpha),
+            offsetY = Dimens.TabBarShadowOffsetY,
+            blurRadius = Dimens.TabBarShadowBlur,
+            cornerRadius = 0.dp
+        )
+    }
+}
+
+/**
+ * Active tab bottom pill glow matching board SH9 (0 -2dp 8dp rgba(29,79,216,0.35)).
+ */
+fun Modifier.depthTabIndicatorGlow(cornerRadius: Dp = Dimens.TabIndicatorHeight): Modifier = composed {
+    val style = LocalDepthStyle.current
+    this.drawBehind {
+        drawSoftDropShadow(
+            color = style.tabIndicatorGlowColor.copy(alpha = style.tabIndicatorGlowAlpha),
+            offsetY = Dimens.TabIndicatorGlowOffsetY,
+            blurRadius = Dimens.TabIndicatorGlowBlur,
+            cornerRadius = cornerRadius
+        )
+    }
+}
+
+/**
+ * Raised tinted gradient card for Due History / Ledger KPI & summary cards (SH2 + gradient + 1dp border).
+ */
+fun Modifier.depthGradientCard(
+    gradientColors: List<Color>,
+    borderColor: Color,
+    cornerRadius: Dp = Dimens.RadiusKpiCard
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = style.cardShadowCloseColor.copy(alpha = style.cardAmbientShadowAlpha),
+                offsetY = style.cardShadowCloseOffsetY,
+                blurRadius = style.cardShadowCloseBlur,
+                cornerRadius = cornerRadius
+            )
+            drawSoftDropShadow(
+                color = style.cardShadowColor.copy(alpha = style.cardSpotShadowAlpha),
+                offsetY = style.cardShadowFarOffsetY,
+                blurRadius = style.cardShadowFarBlur,
+                cornerRadius = cornerRadius
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(colors = gradientColors)
+            )
+            val borderPx = style.cardBorderWidth.toPx()
+            val sheenY = borderPx + borderPx * 0.5f
+            val insetX = cornerRadius.toPx().coerceAtMost(size.width * 0.25f) * 0.25f + borderPx
+            drawLine(
+                color = PureWhite.copy(alpha = style.cardTopSheenAlpha),
+                start = Offset(insetX, sheenY),
+                end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
+                strokeWidth = borderPx
+            )
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = borderPx,
+                color = borderColor
+            )
+        }
+}
+
+/**
+ * Accordion / section header banner matching board SH16 + gradient + 1dp border + top white highlight.
+ */
+fun Modifier.depthSectionBanner(
+    gradientColors: List<Color>,
+    borderColor: Color,
+    cornerRadius: Dp = Dimens.RadiusReportInput
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = style.cardShadowCloseColor.copy(alpha = DepthTokens.SECTION_PILL_SHADOW_ALPHA),
+                offsetY = Dimens.SectionPillShadowOffsetY,
+                blurRadius = Dimens.SectionPillShadowBlur,
+                cornerRadius = cornerRadius
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(colors = gradientColors)
+            )
+            val borderPx = style.cardBorderWidth.toPx()
+            val sheenY = borderPx + borderPx * 0.5f
+            val insetX = borderPx
+            drawLine(
+                color = PureWhite.copy(alpha = DepthTokens.SECTION_PILL_HIGHLIGHT_ALPHA),
+                start = Offset(insetX, sheenY),
+                end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
+                strokeWidth = borderPx
+            )
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = borderPx,
+                color = borderColor
+            )
+        }
+}
+
+/**
+ * Small raised 32dp / 38dp icon tile inside section headers & KPI cards matching board SH17.
+ */
+fun Modifier.depthRaisedTile(
+    gradientColors: List<Color>,
+    cornerRadius: Dp = Dimens.RadiusSectionIconTile
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = style.cardShadowCloseColor.copy(alpha = DepthTokens.SECTION_ICON_SHADOW_ALPHA),
+                offsetY = Dimens.SectionTileShadowOffsetY,
+                blurRadius = Dimens.SectionTileShadowBlur,
+                cornerRadius = cornerRadius
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(colors = gradientColors)
+            )
+            val highlightPx = 1.dp.toPx()
+            drawLine(
+                color = PureWhite,
+                start = Offset(0f, highlightPx * 0.5f),
+                end = Offset(size.width, highlightPx * 0.5f),
+                strokeWidth = highlightPx
+            )
+        }
+}
+
+/**
+ * Active thumb for segmented period selector matching board GR3 + SH19 (0 3dp 8dp #1D4FD8@0.35).
+ */
+fun Modifier.depthSegmentActiveThumb(
+    cornerRadius: Dp = Dimens.RadiusSegmentThumb
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = style.buttonShadowColor.copy(alpha = DepthTokens.SEGMENT_ACTIVE_SHADOW_ALPHA),
+                offsetY = Dimens.SegmentActiveShadowOffsetY,
+                blurRadius = Dimens.SegmentActiveShadowBlur,
+                cornerRadius = cornerRadius
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(
+                    colors = listOf(style.buttonGradientStart, style.buttonGradientEnd)
+                )
+            )
+            val highlightPx = 1.dp.toPx()
+            drawLine(
+                color = PureWhite.copy(alpha = style.buttonTopHighlightAlpha),
+                start = Offset(0f, highlightPx * 0.5f),
+                end = Offset(size.width, highlightPx * 0.5f),
+                strokeWidth = highlightPx
+            )
+        }
+}
+
+/**
+ * Raised 145-degree diagonal gradient icon tile matching board SH1:
+ * 0 4dp 8dp rgba(16, 24, 40, 0.14) drop shadow, 145-deg diagonal gradient fill,
+ * 1dp inner top white highlight (0.90), and 2dp inner bottom bevel edge (0.07).
+ */
+fun Modifier.depthRaisedIconTile(
+    gradientColors: List<Color>,
+    cornerRadius: Dp = Dimens.RadiusSettingsIconTile
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = style.cardShadowCloseColor.copy(alpha = DepthTokens.ICON_TILE_SHADOW_ALPHA),
+                offsetY = Dimens.IconTileShadowOffsetY,
+                blurRadius = Dimens.IconTileShadowBlur,
+                cornerRadius = cornerRadius
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            // 145-degree CSS linear gradient vector
+            val dx = size.width * 0.287f
+            val dy = size.height * 0.410f
+            val cx = size.width * 0.5f
+            val cy = size.height * 0.5f
+            drawRect(
+                brush = Brush.linearGradient(
+                    colors = gradientColors,
+                    start = Offset(cx - dx, cy - dy),
+                    end = Offset(cx + dx, cy + dy)
+                ),
+                size = size
+            )
+            val topPx = 1.dp.toPx()
+            drawLine(
+                color = PureWhite.copy(alpha = DepthTokens.ICON_TILE_TOP_HIGHLIGHT_ALPHA),
+                start = Offset(0f, topPx * 0.5f),
+                end = Offset(size.width, topPx * 0.5f),
+                strokeWidth = topPx
+            )
+            val bevelPx = Dimens.IconTileBottomBevelHeight.toPx()
+            drawLine(
+                color = style.cardShadowCloseColor.copy(alpha = DepthTokens.ICON_TILE_BOTTOM_BEVEL_ALPHA),
+                start = Offset(0f, size.height - bevelPx * 0.5f),
+                end = Offset(size.width, size.height - bevelPx * 0.5f),
+                strokeWidth = bevelPx
+            )
+        }
+}
+
+

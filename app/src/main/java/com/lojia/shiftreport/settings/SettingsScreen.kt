@@ -122,11 +122,12 @@ fun SettingsScreen(
 
     val selectedReportMenu by reportViewModel.selectedReportSettingsMenu.collectAsState()
     val isPrinterSection = com.lojia.shiftreport.printer.PrinterNavigationConfig.isPrinterSection(selectedReportMenu)
+    val depthStyle = LocalDepthStyle.current
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(depthStyle.reportPageBackground)
     ) {
         if (isPrinterSection) {
             Box(modifier = Modifier.fillMaxSize()) {

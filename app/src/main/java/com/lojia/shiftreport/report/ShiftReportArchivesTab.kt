@@ -514,22 +514,32 @@ fun StickySummaryBar(
             .fillMaxWidth()
             .shadow(elevation = Dimens.CardElevation)
             .background(PureWhite)
-            .border(width = 1.dp, color = ShiftColors.Border)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .border(width = Dimens.CardBorderWidth, color = DepthCardBorder)
+            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.ReportGridGap),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(stringResource(R.string.cash_in_drawer), fontSize = 11.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-            Text(MoneyFormat.formatMinor(expectedCash, currency), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = ShiftColors.NetCashGreen)
+            Text(
+                stringResource(R.string.cash_in_drawer),
+                fontSize = DepthTypeTokens.RegisterLabelSize,
+                color = OnSurfaceVariantLight,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                MoneyFormat.formatMinor(expectedCash, currency),
+                fontSize = DepthTypeTokens.ReportFieldTextSize,
+                fontWeight = FontWeight.ExtraBold,
+                color = PosCashGreen
+            )
         }
         if (variance != null) {
             val isOver = variance > 0L
             val isBalanced = variance == 0L
             val textColor = when {
-                isBalanced -> PosCashGreen
-                isOver -> PosCashGreen
-                else -> PosExpenseRed
+                isBalanced -> BadgeGreenText
+                isOver -> BadgeGreenText
+                else -> ErrorRedLight
             }
             val label = when {
                 isBalanced -> stringResource(R.string.balanced)
@@ -538,12 +548,12 @@ fun StickySummaryBar(
             }
             Surface(
                 color = when {
-                    isBalanced -> SuccessContainer
-                    isOver -> SuccessContainer
+                    isBalanced -> BadgeGreenBg
+                    isOver -> BadgeGreenBg
                     else -> ErrorContainerLight
                 },
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, textColor.copy(alpha = 0.3f))
+                shape = RoundedCornerShape(Dimens.RadiusFull),
+                border = BorderStroke(Dimens.CardBorderWidth, textColor.copy(alpha = 0.25f))
             ) {
                 Text(
                     text = stringResource(
@@ -552,10 +562,10 @@ fun StickySummaryBar(
                         if (variance > 0L) "+" else "",
                         MoneyFormat.formatMinor(variance, currency)
                     ),
-                    fontSize = 11.5.sp,
+                    fontSize = DepthTypeTokens.RegisterLabelSize,
                     fontWeight = FontWeight.Bold,
                     color = textColor,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXs)
                 )
             }
         }

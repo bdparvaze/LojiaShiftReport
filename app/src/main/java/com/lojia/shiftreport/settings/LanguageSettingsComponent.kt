@@ -149,20 +149,34 @@ private fun LanguageOptionRow(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(LojiaDimens.IconTextGap),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SettingsIconTitleGap),
                 modifier = Modifier.weight(1f, fill = false)
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Language,
-                    contentDescription = null,
-                    tint = if (isSelected) accentColor else OnSurfaceVariantLight,
-                    modifier = Modifier.size(LojiaDimens.IconSize)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(Dimens.SettingsIconTileSize)
+                        .depthRaisedIconTile(
+                            gradientColors = if (isSelected) {
+                                listOf(PureWhite, BadgeBlueBg)
+                            } else {
+                                listOf(PureWhite, CashWellBg)
+                            },
+                            cornerRadius = Dimens.RadiusSettingsIconTile
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Language,
+                        contentDescription = null,
+                        tint = if (isSelected) PrimaryBlueLight else OnSurfaceVariantLight,
+                        modifier = Modifier.size(Dimens.IconField)
+                    )
+                }
 
                 Column(modifier = Modifier.weight(1f, fill = false)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         val nativeName = when (language) {
                             AppLanguage.ENGLISH -> stringResource(R.string.lang_native_en)
@@ -171,31 +185,31 @@ private fun LanguageOptionRow(
                         }
                         Text(
                             text = nativeName,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 15.sp,
-                            color = if (isSelected) OnPrimaryContainerLight else OnSurfaceLight,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            color = if (isSelected) BadgeBlueText else TextPrimaryReport,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         if (language.isRtl) {
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = WarningContainer
+                                shape = RoundedCornerShape(Dimens.RadiusFull),
+                                color = BadgeAmberBg
                             ) {
                                 Text(
                                     text = stringResource(R.string.lang_rtl_badge),
-                                    fontSize = 10.sp,
+                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
                                     fontWeight = FontWeight.Bold,
-                                    color = WarningText,
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                    color = BadgeAmberTextDark,
+                                    modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXxs)
                                 )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                     Text(
                         text = "${stringResource(language.titleRes)} (${language.code.uppercase()})",
-                        fontSize = 13.sp,
+                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
                         color = OnSurfaceVariantLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -208,7 +222,7 @@ private fun LanguageOptionRow(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = stringResource(R.string.cd_active_language_datastore),
                     tint = accentColor,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(Dimens.IconMd)
                 )
             }
         }
@@ -246,26 +260,36 @@ fun LanguageToggleSettingsCard(
     LojiaSettingsCard(
         modifier = modifier.testTag("compact_language_toggle_card")
     ) {
-        Icon(
-            imageVector = Icons.Default.Language,
-            contentDescription = null,
-            tint = OnSurfaceVariantLight,
-            modifier = Modifier.size(LojiaDimens.IconSize)
-        )
+        Box(
+            modifier = Modifier
+                .size(Dimens.SettingsIconTileSize)
+                .depthRaisedIconTile(
+                    gradientColors = listOf(PureWhite, BadgeBlueBg),
+                    cornerRadius = Dimens.RadiusSettingsIconTile
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Language,
+                contentDescription = null,
+                tint = PrimaryBlueLight,
+                modifier = Modifier.size(Dimens.IconField)
+            )
+        }
 
-        Spacer(modifier = Modifier.width(LojiaDimens.IconTextGap))
+        Spacer(modifier = Modifier.width(Dimens.SettingsIconTitleGap))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.lang_display_language),
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
-                color = OnSurfaceLight
+                fontWeight = FontWeight.SemiBold,
+                fontSize = DepthTypeTokens.ListRowTitleSize,
+                color = TextPrimaryReport
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
             Text(
                 text = stringResource(R.string.lang_datastore_value_fmt, stringResource(currentLang.titleRes)),
-                fontSize = 13.sp,
+                fontSize = DepthTypeTokens.ListRowSubtitleSize,
                 color = OnSurfaceVariantLight
             )
         }

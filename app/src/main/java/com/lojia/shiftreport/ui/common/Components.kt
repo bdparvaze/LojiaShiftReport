@@ -1099,55 +1099,59 @@ fun LoyverseMenuItemRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String? = null,
+    tileColors: List<Color> = listOf(PureWhite, BadgeBlueBg),
+    iconTint: Color = PrimaryBlueLight,
     trailing: (@Composable () -> Unit)? = null,
     onClick: () -> Unit = {}
 ) {
     Surface(
         onClick = onClick,
-        color = PureWhite,
+        color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 56.dp)
+            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(
+                    horizontal = Dimens.ReportCardInnerPadding,
+                    vertical = Dimens.ListRowPaddingVertical
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(SurfaceVariantLight, CircleShape),
+                    .size(Dimens.SettingsIconTileSize)
+                    .depthRaisedIconTile(
+                        gradientColors = tileColors,
+                        cornerRadius = Dimens.RadiusSettingsIconTile
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = OnSurfaceVariantLight,
-                    modifier = Modifier.size(20.dp)
+                    tint = iconTint,
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Dimens.SettingsIconTitleGap))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp
-                    ),
-                    color = OnBackgroundLight,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = DepthTypeTokens.ListRowTitleSize,
+                    color = TextPrimaryReport,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 if (!subtitle.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                     Text(
                         text = subtitle,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 12.sp
-                        ),
-                        color = TextHintColor,
+                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                        color = OnSurfaceVariantLight,
                         maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
@@ -1159,8 +1163,8 @@ fun LoyverseMenuItemRow(
                 Icon(
                     imageVector = Icons.Filled.ChevronRight,
                     contentDescription = null,
-                    tint = TextHintColor,
-                    modifier = Modifier.size(20.dp)
+                    tint = OnSurfaceVariantLight,
+                    modifier = Modifier.size(Dimens.IconField)
                 )
             }
         }

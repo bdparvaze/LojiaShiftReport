@@ -959,8 +959,9 @@ fun EmployerAdvanceStatementPreviewDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 LojiaGradientHeader(
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    contentPadding = PaddingValues(12.dp)
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
+                    cornerRadiusForShadow = Dimens.RadiusLg,
+                    contentPadding = PaddingValues(Dimens.SpacingMd)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1163,7 +1164,7 @@ fun EmployerAdvanceStatementPreviewDialog(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
@@ -1176,32 +1177,74 @@ fun EmployerAdvanceStatementPreviewDialog(
                         disabledContentColor = OnSurfaceVariantLight
                     ),
                     elevation = null,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
-                        .depthRaisedButton(enabled = !isProcessing, cornerRadius = Dimens.RadiusMd)
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                        .depthRaisedButton(
+                            enabled = !isProcessing,
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
                         .testTag("statement_open_pdf_btn")
                 ) {
                     Icon(
                         imageVector = Icons.Default.PictureAsPdf,
                         contentDescription = stringResource(R.string.statement_cd_open_pdf),
                         tint = PureWhite,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconXs + Dimens.SpacingXxs)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.statement_open_pdf_btn),
                         maxLines = 1,
-                        fontSize = 12.sp,
+                        fontSize = DepthTypeTokens.RegisterLabelSize,
+                        fontWeight = FontWeight.SemiBold,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { pendingAuthAction = StatementActionType.PRINT },
+                    enabled = !isProcessing,
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = style.secondaryButtonBorderColor
+                    ),
+                    contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                        .depthSecondaryButton(
+                            enabled = !isProcessing,
+                            borderColor = style.secondaryButtonBorderColor,
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
+                        .testTag("statement_print_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Print,
+                        contentDescription = stringResource(R.string.statement_cd_print),
+                        tint = style.secondaryButtonBorderColor,
+                        modifier = Modifier.size(Dimens.IconXs + Dimens.SpacingXxs)
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                    Text(
+                        text = stringResource(R.string.print_btn),
+                        maxLines = 1,
+                        fontSize = DepthTypeTokens.RegisterLabelSize,
                         fontWeight = FontWeight.SemiBold,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
                 Button(
-                    onClick = { pendingAuthAction = StatementActionType.PRINT },
+                    onClick = { pendingAuthAction = StatementActionType.SHARE },
                     enabled = !isProcessing,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
@@ -1210,62 +1253,29 @@ fun EmployerAdvanceStatementPreviewDialog(
                         disabledContentColor = OnSurfaceVariantLight
                     ),
                     elevation = null,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
-                        .depthRaisedButton(enabled = !isProcessing, cornerRadius = Dimens.RadiusMd)
-                        .testTag("statement_print_btn")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Print,
-                        contentDescription = stringResource(R.string.statement_cd_print),
-                        tint = PureWhite,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.print_btn),
-                        maxLines = 1,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = { pendingAuthAction = StatementActionType.SHARE },
-                    enabled = !isProcessing,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    border = null,
-                    elevation = null,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = PrimaryIndigoDark
-                    ),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = Dimens.MinTouchTarget)
-                        .depthSecondaryButton(
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                        .depthRaisedButton(
                             enabled = !isProcessing,
-                            borderColor = style.secondaryButtonBorderColor,
-                            cornerRadius = Dimens.RadiusMd
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
                         )
                         .testTag("statement_share_btn")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = stringResource(R.string.statement_cd_share),
-                        tint = PrimaryIndigoDark,
-                        modifier = Modifier.size(16.dp)
+                        tint = PureWhite,
+                        modifier = Modifier.size(Dimens.IconXs + Dimens.SpacingXxs)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.share),
                         maxLines = 1,
-                        fontSize = 12.sp,
+                        fontSize = DepthTypeTokens.RegisterLabelSize,
                         fontWeight = FontWeight.SemiBold,
                         overflow = TextOverflow.Ellipsis
                     )

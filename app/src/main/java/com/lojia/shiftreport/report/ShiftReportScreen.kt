@@ -493,12 +493,12 @@ fun ShiftReportScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(depthStyle.reportPageBackground)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundLight)
+                .background(depthStyle.reportPageBackground)
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = {
                         focusManager.clearFocus()
@@ -507,11 +507,10 @@ fun ShiftReportScreenContent(
                 }
         ) {
         // ---- SCROLLABLE OPTIONS TAB ROW ----
-        Surface(
-            color = Color.Transparent,
-            shadowElevation = Dimens.SecondaryButtonElevation,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .depthTabBarShadow()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(depthStyle.tabBarGradientStart, depthStyle.tabBarGradientEnd)
@@ -521,15 +520,16 @@ fun ShiftReportScreenContent(
             ScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
                 containerColor = Color.Transparent,
-                contentColor = PrimaryIndigoDark,
-                edgePadding = 8.dp,
+                contentColor = PrimaryBlueLight,
+                edgePadding = Dimens.SpacingSm,
                 modifier = Modifier.heightIn(min = Dimens.TabBarMinHeight),
                 indicator = { tabPositions ->
                     if (pagerState.currentPage < tabPositions.size) {
                         Box(
                             Modifier
                                 .tabIndicatorOffset(tabPositions[pagerState.currentPage])
-                                .height(3.dp)
+                                .height(Dimens.TabIndicatorHeight)
+                                .depthTabIndicatorGlow(cornerRadius = Dimens.TabIndicatorHeight)
                                 .background(
                                     brush = Brush.horizontalGradient(
                                         colors = listOf(
@@ -537,12 +537,15 @@ fun ShiftReportScreenContent(
                                             depthStyle.tabIndicatorGradientEnd
                                         )
                                     ),
-                                    shape = RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)
+                                    shape = RoundedCornerShape(
+                                        topStart = Dimens.TabIndicatorHeight,
+                                        topEnd = Dimens.TabIndicatorHeight
+                                    )
                                 )
                         )
                     }
                 },
-                divider = { HorizontalDivider(color = OutlineLight) }
+                divider = { HorizontalDivider(color = DepthCardBorder) }
             ) {
                 tabTitles.forEachIndexed { index, title ->
                     val isSelected = pagerState.currentPage == index
@@ -561,15 +564,15 @@ fun ShiftReportScreenContent(
                                 Icon(
                                     imageVector = tabIcons[index],
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight
+                                    modifier = Modifier.size(Dimens.IconXs + Dimens.SpacingXxs),
+                                    tint = if (isSelected) PrimaryBlueLight else OnSurfaceVariantLight
                                 )
-                                Spacer(Modifier.width(5.dp))
+                                Spacer(Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = title,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight,
+                                    fontSize = DepthTypeTokens.TabLabelSize,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                    color = if (isSelected) PrimaryBlueLight else OnSurfaceVariantLight,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )

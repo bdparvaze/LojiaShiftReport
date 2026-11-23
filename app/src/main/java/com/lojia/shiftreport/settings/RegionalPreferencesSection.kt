@@ -166,10 +166,12 @@ fun RegionalPreferencesCard(
     val countryFlag = countryCodeToFlagEmoji(currentCountry.code)
     val langInfo = getLanguageDisplayInfo(currentLanguage)
 
+    val depthStyle = LocalDepthStyle.current
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
+            .depthCard(cornerRadius = Dimens.CardCornerRadius)
             .testTag("regional_preferences_card")
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -178,28 +180,42 @@ fun RegionalPreferencesCard(
                 icon = Icons.Outlined.Public,
                 label = stringResource(R.string.regional_country_label),
                 valueText = "$countryFlag  ${stringResource(currentCountry.nameRes)}",
+                tileColors = listOf(PureWhite, BadgeGreenBg),
+                iconTint = BadgeGreenText,
                 onClick = { onOpenRegionalMenu(1) },
                 testTag = "regional_row_country_currency"
             )
 
-            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+            HorizontalDivider(
+                color = depthStyle.listDividerColor,
+                thickness = Dimens.RowDividerWidth,
+                modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+            )
 
             // Row 2: Language
             SimpleRegionalSelectorRow(
                 icon = Icons.Outlined.Translate,
                 label = stringResource(R.string.nav_language),
                 valueText = "${langInfo.flag}  ${stringResource(langInfo.nativeLabelRes)}",
+                tileColors = listOf(PureWhite, BadgeBlueBg),
+                iconTint = PrimaryBlueLight,
                 onClick = { onOpenRegionalMenu(0) },
                 testTag = "regional_row_language"
             )
 
-            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+            HorizontalDivider(
+                color = depthStyle.listDividerColor,
+                thickness = Dimens.RowDividerWidth,
+                modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+            )
 
             // Row 3: Currency
             SimpleRegionalSelectorRow(
                 icon = Icons.Outlined.Payments,
                 label = stringResource(R.string.regional_currency_label),
                 valueText = "${activeCurrency.code} (${activeCurrency.symbol})",
+                tileColors = listOf(PureWhite, BadgeAmberBg),
+                iconTint = BadgeAmberAccent,
                 onClick = { onOpenRegionalMenu(2) },
                 testTag = "regional_row_currency"
             )
@@ -294,10 +310,12 @@ fun RegionalPreferencesDetailView(
         )
     }
 
+    val depthStyle = LocalDepthStyle.current
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(BackgroundLight)
+            .background(depthStyle.reportPageBackground)
             .testTag("regional_preferences_detail_view"),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -305,13 +323,13 @@ fun RegionalPreferencesDetailView(
             modifier = Modifier
                 .widthIn(max = 600.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingLg),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
+                    .depthCard(cornerRadius = Dimens.CardCornerRadius)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Row 1: Country selector (disabled when financial data exists)
@@ -319,30 +337,44 @@ fun RegionalPreferencesDetailView(
                         icon = Icons.Outlined.Public,
                         label = stringResource(R.string.regional_country_label),
                         valueText = "$countryFlag  ${stringResource(currentCountry.nameRes)}",
+                        tileColors = listOf(PureWhite, BadgeGreenBg),
+                        iconTint = BadgeGreenText,
                         enabled = !isCurrencyLocked,
                         onClick = { if (!isCurrencyLocked) activeSheet = RegionalSheetType.COUNTRY },
                         testTag = "row_select_country"
                     )
 
-                    HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+                    HorizontalDivider(
+                        color = depthStyle.listDividerColor,
+                        thickness = Dimens.RowDividerWidth,
+                        modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                    )
 
                     // Row 2: Language selector (always unlocked)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Translate,
                         label = stringResource(R.string.nav_language),
                         valueText = "${langInfo.flag}  ${stringResource(langInfo.nativeLabelRes)}",
+                        tileColors = listOf(PureWhite, BadgeBlueBg),
+                        iconTint = PrimaryBlueLight,
                         enabled = true,
                         onClick = { activeSheet = RegionalSheetType.LANGUAGE },
                         testTag = "row_select_language"
                     )
 
-                    HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+                    HorizontalDivider(
+                        color = depthStyle.listDividerColor,
+                        thickness = Dimens.RowDividerWidth,
+                        modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                    )
 
                     // Row 3: Currency selector (disabled when financial data exists)
                     SimpleRegionalSelectorRow(
                         icon = Icons.Outlined.Payments,
                         label = stringResource(R.string.regional_currency_label),
                         valueText = "${activeCurrency.symbol}  ${activeCurrency.code} — ${activeCurrency.fullName}",
+                        tileColors = listOf(PureWhite, BadgeAmberBg),
+                        iconTint = BadgeAmberAccent,
                         enabled = !isCurrencyLocked,
                         onClick = { if (!isCurrencyLocked) activeSheet = RegionalSheetType.CURRENCY },
                         testTag = "row_select_currency"
@@ -356,26 +388,28 @@ fun RegionalPreferencesDetailView(
                         .fillMaxWidth()
                         .depthSemanticCard(
                             backgroundColor = WarningContainer,
-                            borderColor = WarningOrange.copy(alpha = 0.35f),
-                            shape = RoundedCornerShape(Dimens.RadiusMd)
+                            borderColor = SectionAmberBorder,
+                            cornerRadius = Dimens.RadiusReportInput
                         )
                         .testTag("currency_locked_banner")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        modifier = Modifier.padding(
+                            horizontal = Dimens.InsetFieldPaddingHorizontal,
+                            vertical = Dimens.ListRowPaddingVertical
+                        ),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.ReportGridGap)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Lock,
                             contentDescription = null,
                             tint = WarningText,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
                         Text(
                             text = stringResource(R.string.currency_locked_message),
-                            fontSize = 12.5.sp,
-                            lineHeight = 17.sp,
+                            fontSize = DepthTypeTokens.ListRowSubtitleSize,
                             color = WarningText
                         )
                     }
@@ -450,8 +484,8 @@ fun RegionalPreferencesDetailView(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.search_country_hint),
-                            fontSize = 14.sp,
-                            color = TextHintColor
+                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            color = depthStyle.reportFieldPlaceholderColor
                         )
                     },
                     leadingIcon = {
@@ -459,7 +493,7 @@ fun RegionalPreferencesDetailView(
                             imageVector = Icons.Outlined.Search,
                             contentDescription = null,
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconField)
                         )
                     },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
@@ -472,15 +506,19 @@ fun RegionalPreferencesDetailView(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = stringResource(R.string.cd_clear),
                                     tint = OnSurfaceVariantLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(Dimens.IconSm)
                                 )
                             }
                         }
                     } else null,
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    minHeight = Dimens.TextFieldHeightReport,
+                    borderColorOverride = depthStyle.reportFieldBorderColor,
+                    topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = Dimens.SpacingMd)
                         .testTag("input_search_country_currency")
                 )
 
@@ -713,8 +751,8 @@ fun RegionalPreferencesDetailView(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.regional_search_currency_hint),
-                            fontSize = 14.sp,
-                            color = TextHintColor
+                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            color = depthStyle.reportFieldPlaceholderColor
                         )
                     },
                     leadingIcon = {
@@ -722,7 +760,7 @@ fun RegionalPreferencesDetailView(
                             imageVector = Icons.Outlined.Search,
                             contentDescription = null,
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconField)
                         )
                     },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
@@ -735,15 +773,19 @@ fun RegionalPreferencesDetailView(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = stringResource(R.string.cd_clear),
                                     tint = OnSurfaceVariantLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(Dimens.IconSm)
                                 )
                             }
                         }
                     } else null,
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    minHeight = Dimens.TextFieldHeightReport,
+                    borderColorOverride = depthStyle.reportFieldBorderColor,
+                    topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = Dimens.SpacingMd)
                         .testTag("input_search_currency")
                 )
 
@@ -842,45 +884,60 @@ private fun SimpleRegionalSelectorRow(
     valueText: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    tileColors: List<Color> = listOf(PureWhite, BadgeBlueBg),
+    iconTint: Color = PrimaryBlueLight,
     enabled: Boolean = true,
     testTag: String = ""
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 60.dp)
+            .defaultMinSize(minHeight = Dimens.MinTouchTarget)
             .clickable(enabled = enabled) { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .padding(
+                horizontal = Dimens.ReportCardInnerPadding,
+                vertical = Dimens.ListRowPaddingVertical
+            )
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SettingsIconTitleGap),
             modifier = Modifier.weight(1f)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = if (enabled) OnSurfaceVariantLight else TextDisabledColor,
-                modifier = Modifier.size(20.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(Dimens.SettingsIconTileSize)
+                    .depthRaisedIconTile(
+                        gradientColors = tileColors,
+                        cornerRadius = Dimens.RadiusSettingsIconTile
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = if (enabled) iconTint else TextDisabledColor,
+                    modifier = Modifier.size(Dimens.IconField)
+                )
+            }
             Text(
                 text = label,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (enabled) OnSurfaceLight else TextDisabledColor
+                fontSize = DepthTypeTokens.ListRowTitleSize,
+                fontWeight = FontWeight.SemiBold,
+                color = if (enabled) TextPrimaryReport else TextDisabledColor
             )
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             Text(
                 text = valueText,
-                fontSize = 14.sp,
+                fontSize = DepthTypeTokens.ListRowSubtitleSize,
                 fontWeight = FontWeight.Medium,
                 color = if (enabled) OnSurfaceVariantLight else TextDisabledColor,
                 maxLines = 1,
@@ -889,8 +946,8 @@ private fun SimpleRegionalSelectorRow(
             Icon(
                 imageVector = if (enabled) Icons.Outlined.ChevronRight else Icons.Outlined.Lock,
                 contentDescription = null,
-                tint = TextHintColor,
-                modifier = Modifier.size(18.dp)
+                tint = OnSurfaceVariantLight,
+                modifier = Modifier.size(Dimens.IconSm)
             )
         }
     }

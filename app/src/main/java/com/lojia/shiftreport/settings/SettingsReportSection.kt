@@ -194,11 +194,12 @@ fun SettingsReportSection(
     }
 
     val isRootMenu = currentMenu == "root" || currentMenu == "all" || currentMenu == "overview"
+    val depthStyle = LocalDepthStyle.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SurfaceLight)
+            .background(depthStyle.reportPageBackground)
     ) {
 
         // Quick Action Banner: Daily Shift Report Generator (Shown only in root settings overview or shift sub-menu)
@@ -206,35 +207,53 @@ fun SettingsReportSection(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
+                    .cardRise(0)
                     .depthCard(
                         accent = true,
-                        shape = RoundedCornerShape(Dimens.RadiusMd)
+                        cornerRadius = Dimens.CardCornerRadius
                     )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .padding(Dimens.ReportCardInnerPadding),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SettingsIconTitleGap),
                         modifier = Modifier.weight(1f)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
-                                .background(PrimaryIndigoLight, RoundedCornerShape(8.dp)),
+                                .size(Dimens.SettingsIconTileSize)
+                                .depthRaisedIconTile(
+                                    gradientColors = listOf(PureWhite, BadgeBlueBg),
+                                    cornerRadius = Dimens.RadiusSettingsIconTile
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Outlined.Assessment, contentDescription = null, tint = PureWhite, modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Outlined.Assessment,
+                                contentDescription = null,
+                                tint = PrimaryBlueLight,
+                                modifier = Modifier.size(Dimens.IconField)
+                            )
                         }
                         Column {
-                            Text(stringResource(R.string.daily_shift_report), fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = OnSurfaceLight)
-                            Text(stringResource(R.string.audit_drawer_cash_create), fontSize = 11.5.sp, color = OnSurfaceVariantLight)
+                            Text(
+                                stringResource(R.string.daily_shift_report),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                color = TextPrimaryReport
+                            )
+                            Text(
+                                stringResource(R.string.audit_drawer_cash_create),
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                color = OnSurfaceVariantLight
+                            )
                         }
                     }
                     Button(
@@ -246,16 +265,24 @@ fun SettingsReportSection(
                             contentColor = PureWhite,
                             disabledContentColor = OnSurfaceVariantLight
                         ),
-                        shape = RoundedCornerShape(Dimens.RadiusSm),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusSm)
+                        shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                        contentPadding = PaddingValues(
+                            horizontal = Dimens.ReportCardInnerPadding,
+                            vertical = Dimens.SpacingXs
+                        ),
+                        modifier = Modifier.depthRaisedButton(
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightCompact
+                        )
                     ) {
-                        Text(stringResource(R.string.open_2), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.open_2),
+                            fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
-
-            HorizontalDivider(color = OutlineVariantLight)
         }
 
         when (currentMenu) {
@@ -264,69 +291,143 @@ fun SettingsReportSection(
             // =================================================================
             "root", "all", "overview" -> {
                 Text(
-                    text = stringResource(R.string.staff_admin_section),
-                    fontSize = 11.sp,
+                    text = stringResource(R.string.staff_admin_section).uppercase(),
+                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                     fontWeight = FontWeight.Bold,
-                    color = TextHintColor,
-                    modifier = Modifier.padding(start = 20.dp, top = 6.dp, bottom = 4.dp)
+                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                    color = OnSurfaceVariantLight,
+                    modifier = Modifier.padding(
+                        start = Dimens.SpacingXl,
+                        end = Dimens.SpacingXl,
+                        top = Dimens.SpacingSm,
+                        bottom = Dimens.SpacingSm
+                    )
                 )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Person,
-                    title = stringResource(R.string.profile),
-                    subtitle = stringResource(R.string.profile_subtitle),
-                    onClick = { onNavigateToSection("profile") }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.SpacingLg)
+                        .cardRise(1)
+                        .depthCard(cornerRadius = Dimens.CardCornerRadius)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.Person,
+                            title = stringResource(R.string.profile),
+                            subtitle = stringResource(R.string.profile_subtitle),
+                            tileColors = listOf(PureWhite, BadgeBlueBg),
+                            iconTint = PrimaryBlueLight,
+                            onClick = { onNavigateToSection("profile") }
+                        )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.People,
-                    title = stringResource(R.string.cashiers),
-                    subtitle = stringResource(R.string.cashiers_subtitle),
-                    onClick = { onNavigateToSection("cashiers") }
-                )
+                        HorizontalDivider(
+                            thickness = Dimens.RowDividerWidth,
+                            color = depthStyle.listDividerColor,
+                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                        )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Badge,
-                    title = stringResource(R.string.nav_employee),
-                    subtitle = stringResource(R.string.settings_employees_subtitle),
-                    onClick = { onNavigateToSection("employees") }
-                )
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.People,
+                            title = stringResource(R.string.cashiers),
+                            subtitle = stringResource(R.string.cashiers_subtitle),
+                            tileColors = listOf(PureWhite, SectionPurpleGradientEnd),
+                            iconTint = OnTertiaryContainerLight,
+                            onClick = { onNavigateToSection("cashiers") }
+                        )
+
+                        HorizontalDivider(
+                            thickness = Dimens.RowDividerWidth,
+                            color = depthStyle.listDividerColor,
+                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                        )
+
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.Badge,
+                            title = stringResource(R.string.nav_employee),
+                            subtitle = stringResource(R.string.settings_employees_subtitle),
+                            tileColors = listOf(PureWhite, BadgeGreenBg),
+                            iconTint = BadgeGreenText,
+                            onClick = { onNavigateToSection("employees") }
+                        )
+                    }
+                }
 
                 Text(
-                    text = stringResource(R.string.security_data_section),
-                    fontSize = 11.sp,
+                    text = stringResource(R.string.security_data_section).uppercase(),
+                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                     fontWeight = FontWeight.Bold,
-                    color = TextHintColor,
-                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
+                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                    color = OnSurfaceVariantLight,
+                    modifier = Modifier.padding(
+                        start = Dimens.SpacingXl,
+                        end = Dimens.SpacingXl,
+                        top = Dimens.SpacingLg,
+                        bottom = Dimens.SpacingSm
+                    )
                 )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Shield,
-                    title = stringResource(R.string.security),
-                    subtitle = stringResource(R.string.security_subtitle),
-                    onClick = { onNavigateToSection("security") }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.SpacingLg)
+                        .cardRise(2)
+                        .depthCard(cornerRadius = Dimens.CardCornerRadius)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.Shield,
+                            title = stringResource(R.string.security),
+                            subtitle = stringResource(R.string.security_subtitle),
+                            tileColors = listOf(PureWhite, SectionRoseGradientEnd),
+                            iconTint = ErrorRedLight,
+                            onClick = { onNavigateToSection("security") }
+                        )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.CloudUpload,
-                    title = stringResource(R.string.backup),
-                    subtitle = stringResource(R.string.backup_subtitle),
-                    onClick = { onNavigateToSection("backup") }
-                )
+                        HorizontalDivider(
+                            thickness = Dimens.RowDividerWidth,
+                            color = depthStyle.listDividerColor,
+                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                        )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Print,
-                    title = stringResource(R.string.settings_thermal_printer_title),
-                    subtitle = stringResource(R.string.settings_thermal_printer_subtitle),
-                    onClick = onConfigurePrinterClick
-                )
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.CloudUpload,
+                            title = stringResource(R.string.backup),
+                            subtitle = stringResource(R.string.backup_subtitle),
+                            tileColors = listOf(PureWhite, SectionPurpleGradientEnd),
+                            iconTint = OnTertiaryContainerLight,
+                            onClick = { onNavigateToSection("backup") }
+                        )
+
+                        HorizontalDivider(
+                            thickness = Dimens.RowDividerWidth,
+                            color = depthStyle.listDividerColor,
+                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                        )
+
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.Print,
+                            title = stringResource(R.string.settings_thermal_printer_title),
+                            subtitle = stringResource(R.string.settings_thermal_printer_subtitle),
+                            tileColors = listOf(PureWhite, TileTealEnd),
+                            iconTint = SecondaryTealLight,
+                            onClick = onConfigurePrinterClick
+                        )
+                    }
+                }
 
                 Text(
-                    text = stringResource(R.string.regional_interface_section),
-                    fontSize = 11.sp,
+                    text = stringResource(R.string.regional_interface_section).uppercase(),
+                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                     fontWeight = FontWeight.Bold,
-                    color = TextHintColor,
-                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
+                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                    color = OnSurfaceVariantLight,
+                    modifier = Modifier.padding(
+                        start = Dimens.SpacingXl,
+                        end = Dimens.SpacingXl,
+                        top = Dimens.SpacingLg,
+                        bottom = Dimens.SpacingSm
+                    )
                 )
 
                 RegionalPreferencesCard(
@@ -337,65 +438,123 @@ fun SettingsReportSection(
                         langCountryTab = tabIndex
                         onNavigateToSection("regional")
                     },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    modifier = Modifier
+                        .padding(horizontal = Dimens.SpacingLg)
+                        .cardRise(3)
                 )
 
                 Text(
-                    text = stringResource(R.string.system_support_section),
-                    fontSize = 11.sp,
+                    text = stringResource(R.string.system_support_section).uppercase(),
+                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                     fontWeight = FontWeight.Bold,
-                    color = TextHintColor,
-                    modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp)
+                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                    color = OnSurfaceVariantLight,
+                    modifier = Modifier.padding(
+                        start = Dimens.SpacingXl,
+                        end = Dimens.SpacingXl,
+                        top = Dimens.SpacingLg,
+                        bottom = Dimens.SpacingSm
+                    )
                 )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Info,
-                    title = stringResource(R.string.about),
-                    subtitle = stringResource(R.string.about_subtitle),
-                    onClick = { onNavigateToSection("about") }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.SpacingLg)
+                        .cardRise(4)
+                        .depthCard(cornerRadius = Dimens.CardCornerRadius)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.Info,
+                            title = stringResource(R.string.about),
+                            subtitle = stringResource(R.string.about_subtitle),
+                            tileColors = listOf(PureWhite, BadgeBlueBg),
+                            iconTint = PrimaryBlueLight,
+                            onClick = { onNavigateToSection("about") }
+                        )
 
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.HeadsetMic,
-                    title = stringResource(R.string.nav_support),
-                    subtitle = stringResource(R.string.support_subtitle),
-                    onClick = { onNavigateToSection("support") }
-                )
+                        HorizontalDivider(
+                            thickness = Dimens.RowDividerWidth,
+                            color = depthStyle.listDividerColor,
+                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                        )
+
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.HeadsetMic,
+                            title = stringResource(R.string.nav_support),
+                            subtitle = stringResource(R.string.support_subtitle),
+                            tileColors = listOf(PureWhite, SectionRoseGradientEnd),
+                            iconTint = ErrorRedLight,
+                            onClick = { onNavigateToSection("support") }
+                        )
+                    }
+                }
             }
 
             // =================================================================
             // 0. DAILY SHIFT REPORT GENERATOR
             // =================================================================
             "daily_shift_report", "shift_report", "shift" -> {
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.Assessment,
-                    title = stringResource(R.string.daily_shift_report),
-                    subtitle = stringResource(R.string.desc_create_shift_handover),
-                    trailing = {
-                        Button(
-                            onClick = { onSwitchModule(AppModule.SHIFT_REPORT) },
-                            elevation = null,
-                            shape = RoundedCornerShape(Dimens.RadiusMd),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                contentColor = PureWhite,
-                                disabledContentColor = OnSurfaceVariantLight
-                            ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            modifier = Modifier.depthRaisedButton(cornerRadius = Dimens.RadiusMd)
-                        ) {
-                            Text(stringResource(R.string.launch_1), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    },
-                    onClick = { onSwitchModule(AppModule.SHIFT_REPORT) }
-                )
-                LoyverseMenuItemRow(
-                    icon = Icons.Outlined.PictureAsPdf,
-                    title = stringResource(R.string.title_shift_reports_pdf_archives),
-                    subtitle = stringResource(R.string.desc_search_shift_reports),
-                    onClick = { onSwitchModule(AppModule.SHIFT_REPORT) }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.SpacingLg)
+                        .depthCard(cornerRadius = Dimens.CardCornerRadius)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.Assessment,
+                            title = stringResource(R.string.daily_shift_report),
+                            subtitle = stringResource(R.string.desc_create_shift_handover),
+                            tileColors = listOf(PureWhite, BadgeBlueBg),
+                            iconTint = PrimaryBlueLight,
+                            trailing = {
+                                Button(
+                                    onClick = { onSwitchModule(AppModule.SHIFT_REPORT) },
+                                    elevation = null,
+                                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        contentColor = PureWhite,
+                                        disabledContentColor = OnSurfaceVariantLight
+                                    ),
+                                    contentPadding = PaddingValues(
+                                        horizontal = Dimens.ReportCardInnerPadding,
+                                        vertical = Dimens.SpacingXs
+                                    ),
+                                    modifier = Modifier.depthRaisedButton(
+                                        cornerRadius = Dimens.RadiusReportInput,
+                                        minHeight = Dimens.ButtonHeightCompact
+                                    )
+                                ) {
+                                    Text(
+                                        stringResource(R.string.launch_1),
+                                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            },
+                            onClick = { onSwitchModule(AppModule.SHIFT_REPORT) }
+                        )
+
+                        HorizontalDivider(
+                            thickness = Dimens.RowDividerWidth,
+                            color = depthStyle.listDividerColor,
+                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                        )
+
+                        LoyverseMenuItemRow(
+                            icon = Icons.Outlined.PictureAsPdf,
+                            title = stringResource(R.string.title_shift_reports_pdf_archives),
+                            subtitle = stringResource(R.string.desc_search_shift_reports),
+                            tileColors = listOf(PureWhite, BadgeAmberBg),
+                            iconTint = BadgeAmberAccent,
+                            onClick = { onSwitchModule(AppModule.SHIFT_REPORT) }
+                        )
+                    }
+                }
             }
             // =================================================================
             // EMPLOYEE / CASHIER MANAGEMENT
@@ -429,30 +588,40 @@ fun SettingsReportSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingLg)
                 ) {
                     LojiaSectionHeader(stringResource(R.string.settings_section_pin_biometric))
 
                     // Card 1 — Quick Login
                     LojiaSettingsCard {
-                        Icon(
-                            imageVector = Icons.Outlined.Pin,
-                            contentDescription = stringResource(R.string.cd_quick_login_pin),
-                            tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(Dimens.SettingsIconTileSize)
+                                .depthRaisedIconTile(
+                                    gradientColors = listOf(PureWhite, BadgeBlueBg),
+                                    cornerRadius = Dimens.RadiusSettingsIconTile
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Pin,
+                                contentDescription = stringResource(R.string.cd_quick_login_pin),
+                                tint = PrimaryBlueLight,
+                                modifier = Modifier.size(Dimens.IconField)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(Dimens.SettingsIconTitleGap))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.cd_quick_login_pin),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurfaceLight
+                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimaryReport
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = stringResource(R.string.settings_unlock_pos_pin_desc),
-                                fontSize = 13.sp,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
                                 color = OnSurfaceVariantLight
                             )
                         }
@@ -496,32 +665,42 @@ fun SettingsReportSection(
                             pendingSecurityAuthAction = { showQuickPinDialog = true }
                         }
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Key,
-                            contentDescription = stringResource(R.string.cd_change_pin),
-                            tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(Dimens.SettingsIconTileSize)
+                                .depthRaisedIconTile(
+                                    gradientColors = listOf(PureWhite, BadgeAmberBg),
+                                    cornerRadius = Dimens.RadiusSettingsIconTile
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Key,
+                                contentDescription = stringResource(R.string.cd_change_pin),
+                                tint = BadgeAmberAccent,
+                                modifier = Modifier.size(Dimens.IconField)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(Dimens.SettingsIconTitleGap))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.cd_change_pin),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurfaceLight
+                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimaryReport
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = stringResource(R.string.settings_tap_update_pin_desc),
-                                fontSize = 13.sp,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
                                 color = OnSurfaceVariantLight
                             )
                         }
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
-                            tint = TextHintColor,
-                            modifier = Modifier.size(20.dp)
+                            tint = OnSurfaceVariantLight,
+                            modifier = Modifier.size(Dimens.IconField)
                         )
                     }
 
@@ -529,24 +708,34 @@ fun SettingsReportSection(
 
                     // Card 3 — Biometric
                     LojiaSettingsCard {
-                        Icon(
-                            imageVector = Icons.Outlined.Fingerprint,
-                            contentDescription = stringResource(R.string.cd_biometric_icon),
-                            tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(Dimens.SettingsIconTileSize)
+                                .depthRaisedIconTile(
+                                    gradientColors = listOf(PureWhite, BadgeGreenBg),
+                                    cornerRadius = Dimens.RadiusSettingsIconTile
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Fingerprint,
+                                contentDescription = stringResource(R.string.cd_biometric_icon),
+                                tint = BadgeGreenText,
+                                modifier = Modifier.size(Dimens.IconField)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(Dimens.SettingsIconTitleGap))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.biometric_login),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurfaceLight
+                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimaryReport
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = stringResource(R.string.settings_fingerprint_face_id),
-                                fontSize = 13.sp,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
                                 color = OnSurfaceVariantLight
                             )
                         }
@@ -667,6 +856,8 @@ fun SettingsReportSection(
                         icon = Icons.Outlined.Info,
                         title = stringResource(R.string.title_lojia_pos_shift_system),
                         subtitle = stringResource(R.string.desc_app_version_production),
+                        tileColors = listOf(PureWhite, BadgeBlueBg),
+                        iconTint = PrimaryBlueLight,
                         onClick = {}
                     )
 
@@ -674,6 +865,8 @@ fun SettingsReportSection(
                         icon = Icons.Outlined.Verified,
                         title = stringResource(R.string.title_system_architecture),
                         subtitle = stringResource(R.string.desc_system_architecture),
+                        tileColors = listOf(PureWhite, BadgeGreenBg),
+                        iconTint = BadgeGreenText,
                         onClick = {}
                     )
 
@@ -683,12 +876,14 @@ fun SettingsReportSection(
                         icon = Icons.Outlined.Description,
                         title = stringResource(R.string.terms_conditions),
                         subtitle = stringResource(R.string.desc_review_eula_terms),
+                        tileColors = listOf(PureWhite, SectionPurpleGradientEnd),
+                        iconTint = OnTertiaryContainerLight,
                         trailing = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = TextHintColor,
-                                modifier = Modifier.size(20.dp)
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         onClick = { showTermsModal = true }
@@ -698,12 +893,14 @@ fun SettingsReportSection(
                         icon = Icons.Outlined.PrivacyTip,
                         title = stringResource(R.string.privacy_policy),
                         subtitle = stringResource(R.string.desc_gdpr_cloud_security),
+                        tileColors = listOf(PureWhite, SectionRoseGradientEnd),
+                        iconTint = ErrorRedLight,
                         trailing = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = TextHintColor,
-                                modifier = Modifier.size(20.dp)
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         onClick = { showPrivacyModal = true }
@@ -726,12 +923,14 @@ fun SettingsReportSection(
                         icon = Icons.Outlined.HeadsetMic,
                         title = stringResource(R.string.title_24_7_helpline),
                         subtitle = "+880 1700-000000",
+                        tileColors = listOf(PureWhite, BadgeBlueBg),
+                        iconTint = PrimaryBlueLight,
                         trailing = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = TextHintColor,
-                                modifier = Modifier.size(20.dp)
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         onClick = {
@@ -746,12 +945,14 @@ fun SettingsReportSection(
                         icon = Icons.Outlined.Chat,
                         title = stringResource(R.string.title_whatsapp_support),
                         subtitle = stringResource(R.string.desc_whatsapp_support),
+                        tileColors = listOf(PureWhite, BadgeGreenBg),
+                        iconTint = BadgeGreenText,
                         trailing = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = TextHintColor,
-                                modifier = Modifier.size(20.dp)
+                                tint = OnSurfaceVariantLight,
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         onClick = {

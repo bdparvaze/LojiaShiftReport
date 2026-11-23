@@ -3,6 +3,8 @@ package com.lojia.shiftreport.report
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +22,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,17 +46,35 @@ fun SectionHeader(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val pillShape = RoundedCornerShape(Dimens.RadiusSm)
+    val pillShape = RoundedCornerShape(Dimens.RadiusReportInput)
+    val (bannerColors, bannerBorder, tileColors) = when (borderColor) {
+        ShiftColors.Brass -> Triple(
+            listOf(SectionAmberGradientStart, SectionAmberGradientEnd),
+            SectionAmberBorder,
+            listOf(PureWhite, BadgeAmberBg)
+        )
+        ShiftColors.Danger -> Triple(
+            listOf(SectionRoseGradientStart, SectionRoseGradientEnd),
+            SectionRoseBorder,
+            listOf(PureWhite, ErrorContainerLight)
+        )
+        else -> Triple(
+            listOf(SectionPurpleGradientStart, SectionPurpleGradientEnd),
+            SectionPurpleBorder,
+            listOf(PureWhite, TertiaryContainerLight)
+        )
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 6.dp)
-            .depthSemanticCard(
-                backgroundColor = bg,
-                borderColor = borderColor.copy(alpha = 0.4f),
-                shape = pillShape
+            .padding(top = Dimens.SpacingMd, bottom = Dimens.SpacingXs)
+            .defaultMinSize(minHeight = Dimens.SectionHeaderHeight)
+            .depthSectionBanner(
+                gradientColors = bannerColors,
+                borderColor = bannerBorder,
+                cornerRadius = Dimens.RadiusReportInput
             )
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -61,13 +82,23 @@ fun SectionHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            Text(icon, fontSize = 12.sp)
-            Spacer(Modifier.width(6.dp))
+            Box(
+                modifier = Modifier
+                    .size(Dimens.SectionIconTileSize)
+                    .depthRaisedTile(
+                        gradientColors = tileColors,
+                        cornerRadius = Dimens.RadiusSectionIconTile
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(icon, fontSize = DepthTypeTokens.SectionTitleSize)
+            }
+            Spacer(Modifier.width(Dimens.ReportGridGap))
             Text(
                 title,
-                color = ShiftColors.Charcoal,
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.5.sp,
+                color = TextPrimaryReport,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = DepthTypeTokens.SectionTitleSize,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -86,7 +117,7 @@ fun SectionHeader(
                     containerColor = Color.Transparent,
                     contentColor = accent
                 ),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXs),
                 modifier = Modifier
                     .heightIn(min = Dimens.MinTouchTarget)
                     .depthSecondaryButton(
@@ -94,9 +125,14 @@ fun SectionHeader(
                         cornerRadius = Dimens.RadiusMd
                     )
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.add), fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(Dimens.IconXs))
+                Spacer(Modifier.width(Dimens.SpacingXs))
+                Text(
+                    stringResource(R.string.add),
+                    fontSize = DepthTypeTokens.SecondaryButtonTextSize,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
             }
         }
     }
@@ -107,36 +143,36 @@ fun SectionHeader(
  * ---------------------------------------------------------------------- */
 @Composable
 fun EntryRow(left: String, right: String, onRemove: () -> Unit) {
-    val rowShape = RoundedCornerShape(Dimens.RadiusSm)
+    val rowShape = RoundedCornerShape(Dimens.RadiusReportInput)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 5.dp)
-            .depthCard(shape = rowShape)
-            .padding(start = 10.dp, end = 2.dp, top = 2.dp, bottom = 2.dp),
+            .padding(bottom = Dimens.SpacingXs)
+            .depthCard(shape = rowShape, cornerRadius = Dimens.RadiusReportInput)
+            .padding(start = Dimens.SpacingMd, end = Dimens.SpacingXxs, top = Dimens.SpacingXxs, bottom = Dimens.SpacingXxs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(left, fontSize = 12.5.sp, color = ShiftColors.Text, modifier = Modifier.weight(1f))
-        Text(right, fontSize = 12.5.sp, color = ShiftColors.Text, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.width(4.dp))
+        Text(left, fontSize = DepthTypeTokens.ReportFieldLabelSize, color = TextPrimaryReport, modifier = Modifier.weight(1f))
+        Text(right, fontSize = DepthTypeTokens.ReportFieldLabelSize, color = TextPrimaryReport, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.width(Dimens.SpacingXs))
         IconButton(
             onClick = onRemove,
             modifier = Modifier.minimumInteractiveComponentSize()
         ) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                    .size(Dimens.IconLg)
+                    .clip(RoundedCornerShape(Dimens.RadiusSm))
                     .background(ShiftColors.DangerLight)
-                    .border(1.dp, ErrorContainerLight, RoundedCornerShape(6.dp)),
+                    .border(Dimens.CardBorderWidth, ErrorContainerLight, RoundedCornerShape(Dimens.RadiusSm)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Filled.Close,
                     contentDescription = stringResource(R.string.remove),
                     tint = ShiftColors.Danger,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(Dimens.IconXs)
                 )
             }
         }
@@ -148,12 +184,13 @@ fun EntryRow(left: String, right: String, onRemove: () -> Unit) {
  * ---------------------------------------------------------------------- */
 @Composable
 fun FieldLabel(text: String) {
+    val style = LocalDepthStyle.current
     Text(
         text = text,
-        fontSize = 11.sp,
+        fontSize = DepthTypeTokens.ReportFieldLabelSize,
         fontWeight = FontWeight.SemiBold,
-        color = ShiftColors.TextMuted,
-        modifier = Modifier.padding(bottom = 3.dp),
+        color = style.reportFieldLabelColor,
+        modifier = Modifier.padding(bottom = Dimens.SpacingXs),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
     )
@@ -211,20 +248,24 @@ fun NumberField(
     )
     val displayMessage = if (showCommaHint) stringResource(R.string.amount_comma_hint) else errorText
     val hasError = displayMessage != null
-    val insetShape = RoundedCornerShape(Dimens.RadiusSm)
+    val style = LocalDepthStyle.current
+    val insetShape = RoundedCornerShape(Dimens.RadiusReportInput)
     Column(modifier) {
         FieldLabel(label)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = Dimens.TextFieldHeightCompact)
+                .defaultMinSize(minHeight = Dimens.TextFieldHeightReport)
                 .depthInset(
                     enabled = enabled,
                     isError = hasError,
                     isFocused = isFocused,
-                    shape = insetShape
+                    shape = insetShape,
+                    cornerRadius = Dimens.RadiusReportInput,
+                    borderColorOverride = if (enabled && !hasError && !isFocused) style.reportFieldBorderColor else null,
+                    topShadowAlphaOverride = style.reportFieldInsetAlpha
                 )
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = Dimens.InsetFieldPaddingHorizontal, vertical = Dimens.SpacingSm),
             contentAlignment = Alignment.CenterStart
         ) {
             BasicTextField(
@@ -262,10 +303,10 @@ fun NumberField(
                 enabled = enabled,
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
+                    fontSize = DepthTypeTokens.ReportFieldTextSize,
+                    lineHeight = DepthTypeTokens.LogoTitleSize,
                     fontWeight = FontWeight.Medium,
-                    color = if (enabled) ShiftColors.Charcoal else TextDisabledColor
+                    color = if (enabled) style.reportFieldTextColor else TextDisabledColor
                 ),
                 cursorBrush = SolidColor(if (hasError) ErrorRedLight else ShiftColors.Primary),
                 keyboardOptions = KeyboardOptions(keyboardType = if (isInteger) KeyboardType.Number else KeyboardType.Decimal),
@@ -280,9 +321,10 @@ fun NumberField(
                         if (value.isEmpty()) {
                             Text(
                                 text = if (isInteger) "0" else com.lojia.shiftreport.util.MoneyFormat.zeroPlaceholder(),
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp,
-                                color = TextHintColor
+                                fontSize = DepthTypeTokens.ReportFieldTextSize,
+                                lineHeight = DepthTypeTokens.LogoTitleSize,
+                                fontWeight = FontWeight.Normal,
+                                color = style.reportFieldPlaceholderColor
                             )
                         }
                         innerTextField()
@@ -291,13 +333,13 @@ fun NumberField(
             )
         }
         if (displayMessage != null) {
-            Spacer(Modifier.height(3.dp))
+            Spacer(Modifier.height(Dimens.SpacingXxs))
             Text(
                 text = displayMessage,
                 color = ErrorRedLight,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
-                modifier = Modifier.padding(start = 2.dp)
+                fontSize = DepthTypeTokens.RegisterLabelSize,
+                lineHeight = DepthTypeTokens.SectionTitleSize,
+                modifier = Modifier.padding(start = Dimens.SpacingXxs)
             )
         }
     }
@@ -312,7 +354,8 @@ fun LabeledDropdown(
     onSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val insetShape = RoundedCornerShape(Dimens.RadiusSm)
+    val style = LocalDepthStyle.current
+    val insetShape = RoundedCornerShape(Dimens.RadiusReportInput)
     Column {
         FieldLabel(label)
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
@@ -320,9 +363,15 @@ fun LabeledDropdown(
                 modifier = Modifier
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = Dimens.MinTouchTarget)
-                    .depthInset(isFocused = expanded, shape = insetShape)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .defaultMinSize(minHeight = Dimens.TextFieldHeightReport)
+                    .depthInset(
+                        isFocused = expanded,
+                        shape = insetShape,
+                        cornerRadius = Dimens.RadiusReportInput,
+                        borderColorOverride = if (!expanded) style.reportFieldBorderColor else null,
+                        topShadowAlphaOverride = style.reportFieldInsetAlpha
+                    )
+                    .padding(horizontal = Dimens.InsetFieldPaddingHorizontal, vertical = Dimens.SpacingSm),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(
@@ -332,9 +381,9 @@ fun LabeledDropdown(
                 ) {
                     Text(
                         text = selected,
-                        fontSize = 13.sp,
+                        fontSize = DepthTypeTokens.ReportFieldTextSize,
                         fontWeight = FontWeight.Medium,
-                        color = ShiftColors.Charcoal,
+                        color = style.reportFieldTextColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -347,7 +396,7 @@ fun LabeledDropdown(
                 onDismissRequest = { expanded = false },
                 containerColor = PureWhite,
                 shape = RoundedCornerShape(Dimens.RadiusMd),
-                border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariantLight)
+                border = androidx.compose.foundation.BorderStroke(Dimens.CardBorderWidth, DepthCardBorder)
             ) {
                 options.forEach { opt ->
                     val isSelected = opt == selected
@@ -355,9 +404,9 @@ fun LabeledDropdown(
                         text = {
                             Text(
                                 text = opt,
-                                fontSize = 13.5.sp,
+                                fontSize = DepthTypeTokens.InsetPlaceholderSize,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) ShiftColors.Primary else OnBackgroundLight
+                                color = if (isSelected) ShiftColors.Primary else style.reportFieldTextColor
                             )
                         },
                         onClick = {
@@ -365,14 +414,14 @@ fun LabeledDropdown(
                             expanded = false
                         },
                         colors = MenuDefaults.itemColors(
-                            textColor = OnBackgroundLight,
-                            leadingIconColor = OnBackgroundLight,
-                            trailingIconColor = OnBackgroundLight
+                            textColor = style.reportFieldTextColor,
+                            leadingIconColor = style.reportFieldTextColor,
+                            trailingIconColor = style.reportFieldTextColor
                         ),
                         modifier = Modifier.background(
-                            if (isSelected) PrimaryContainerLight else PureWhite
+                            if (isSelected) BadgeBlueBg else PureWhite
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm)
                     )
                 }
             }
@@ -382,37 +431,65 @@ fun LabeledDropdown(
 
 @Composable
 fun PayTypeSelector(selected: PayType, onChange: (PayType) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
+    ) {
         Text(
-            stringResource(R.string.type),
-            fontSize = 12.sp,
-            color = ShiftColors.TextMuted,
-            modifier = Modifier.padding(end = 12.dp)
+            text = stringResource(R.string.type),
+            fontSize = DepthTypeTokens.ReportFieldLabelSize,
+            fontWeight = FontWeight.Medium,
+            color = TextSlate700
         )
-        FilterChip(
-            selected = selected == PayType.CASH,
-            onClick = { onChange(PayType.CASH) },
-            label = { Text(stringResource(R.string.cash)) },
-            elevation = FilterChipDefaults.filterChipElevation(elevation = Dimens.SecondaryButtonElevation),
-            colors = FilterChipDefaults.filterChipColors(
-                containerColor = LocalDepthStyle.current.cardGradientStart,
-                selectedContainerColor = PrimaryContainerLight,
-                selectedLabelColor = PrimaryIndigoDark
-            ),
-            modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
-        )
-        Spacer(Modifier.width(8.dp))
-        FilterChip(
-            selected = selected == PayType.BANK,
-            onClick = { onChange(PayType.BANK) },
-            label = { Text(stringResource(R.string.bank)) },
-            elevation = FilterChipDefaults.filterChipElevation(elevation = Dimens.SecondaryButtonElevation),
-            colors = FilterChipDefaults.filterChipColors(
-                containerColor = LocalDepthStyle.current.cardGradientStart,
-                selectedContainerColor = PrimaryContainerLight,
-                selectedLabelColor = PrimaryIndigoDark
-            ),
-            modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.SegmentTrackHeight)
+                .depthInset(
+                    cornerRadius = Dimens.RadiusSegmentTrack,
+                    gradientColors = listOf(SegmentTrackBg, SegmentTrackBg),
+                    borderColorOverride = DepthCardBorder,
+                    topShadowAlphaOverride = DepthTokens.SEGMENT_TRACK_INSET_ALPHA
+                )
+                .padding(Dimens.SpacingXs)
+                .selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            listOf(
+                PayType.CASH to stringResource(R.string.cash),
+                PayType.BANK to stringResource(R.string.bank)
+            ).forEach { (type, label) ->
+                val isSelected = selected == type
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.SegmentThumbHeight)
+                        .clip(RoundedCornerShape(Dimens.RadiusSegmentThumb))
+                        .then(
+                            if (isSelected) {
+                                Modifier.depthSegmentActiveThumb(cornerRadius = Dimens.RadiusSegmentThumb)
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .selectable(
+                            selected = isSelected,
+                            onClick = { onChange(type) },
+                            role = Role.RadioButton
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = DepthTypeTokens.SegmentedChipTextSize,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isSelected) PureWhite else TextSlate700,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
     }
 }

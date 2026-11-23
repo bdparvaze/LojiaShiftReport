@@ -208,3 +208,90 @@ val DepthCardBorder = Color(0xFFE5E9F5)
 
 /** Deep slate shadow tint rgba(16, 24, 40, ...) used for card, inset, and keypad shadows. */
 val ShadowSlateColor = Color(0xFF101828)
+
+// ============ STAGE 26F-1 DESIGN BOARD PARITY TOKENS ============
+/** Screen canvas background behind Report Entry, Due History, and Employer Advances (#EEF2FB). */
+val ReportCanvasBackground = Color(0xFFEEF2FB)
+
+/** High-emphasis report ink matching board #101828. */
+val TextPrimaryReport = Color(0xFF101828)
+
+/** Slate 700 label & inactive segment ink matching board #344054. */
+val TextSlate700 = Color(0xFF344054)
+
+/** Report numeric placeholder ink matching board #667085. */
+val TextPlaceholderReport = Color(0xFF667085)
+
+/** 1dp perimeter border for report inset fields matching board #C9D3E8. */
+val ReportInputBorder = Color(0xFFC9D3E8)
+
+/** 135-deg top brand header gradient start stop (#2B5DE8, GR6). */
+val BrandHeaderDiagonalStart = Color(0xFF2B5DE8)
+
+/** 135-deg top brand header gradient end stop (#1238A8, GR6). */
+val BrandHeaderDiagonalEnd = Color(0xFF1238A8)
+
+/** Soft blue pill background (#E0EAFF) for period chips and light action pills. */
+val BadgeBlueBg = Color(0xFFE0EAFF)
+
+/** Deep brand blue ink (#1D3FA8) paired with BadgeBlueBg and CashWellBg. */
+val BadgeBlueText = Color(0xFF1D3FA8)
+
+/** Recessed Cash breakdown well fill (#EEF3FF). */
+val CashWellBg = Color(0xFFEEF3FF)
+
+/** Recessed Bank breakdown well fill (#E6F7F5). */
+val BankWellBg = Color(0xFFE6F7F5)
+
+/** Bank breakdown well ink (#0B6E63) meeting WCAG AA on BankWellBg. */
+val BankWellText = Color(0xFF0B6E63)
+
+/** Settled/positive pill fill (#D1FADF) and ink (#05603A). */
+val BadgeGreenBg = Color(0xFFD1FADF)
+val BadgeGreenText = Color(0xFF05603A)
+
+/** Partial/warning pill fill (#FEF0C7) and dark amber inks (#7A2E0E / #B54708). */
+val BadgeAmberBg = Color(0xFFFEF0C7)
+val BadgeAmberTextDark = Color(0xFF7A2E0E)
+val BadgeAmberAccent = Color(0xFFB54708)
+
+/** Segmented control recessed track fill (#E9EDF6). */
+val SegmentTrackBg = Color(0xFFE9EDF6)
+
+/** Report section accordion banner stops (GR13 amber, rose, purple). */
+val SectionAmberGradientStart = Color(0xFFFFF6D8)
+val SectionAmberGradientEnd = Color(0xFFFEF0C7)
+val SectionAmberBorder = Color(0xFFF2D77E)
+
+val SectionRoseGradientStart = Color(0xFFFFEDEC)
+val SectionRoseGradientEnd = Color(0xFFFEE4E2)
+val SectionRoseBorder = Color(0xFFF1A7A7)
+
+val SectionPurpleGradientStart = Color(0xFFF3F0FF)
+val SectionPurpleGradientEnd = Color(0xFFEDE9FE)
+val SectionPurpleBorder = Color(0xFFB9A8F0)
+
+/** Due History KPI gradient card stops (GR11 red-tinted, GR10 green-tinted). */
+val KpiDueCardStart = Color(0xFFFFFFFF)
+val KpiDueCardEnd = Color(0xFFFEF3F2)
+val KpiDueCardBorder = Color(0xFFF6C7C3)
+
+val KpiCollectedCardStart = Color(0xFFFFFFFF)
+val KpiCollectedCardEnd = Color(0xFFECFDF3)
+val KpiCollectedCardBorder = Color(0xFFA6E9C5)
+
+/** Live pulse halo emerald tint (#12B76A, SH15). */
+val LiveDotGlowGreen = Color(0xFF12B76A)
+
+// ============ STAGE 26F-2 DESIGN BOARD PARITY TOKENS ============
+/** Hairline row divider gray (#EAECF0) inside grouped Paid Out, Settings, and Ledger cards. */
+val ListDividerGray = Color(0xFFEAECF0)
+
+/** Soft teal bottom-right tile gradient stop (#E0F2F1) for Printer icon tiles (SH1). */
+val TileTealEnd = Color(0xFFE0F2F1)
+
+/** Secondary recessed form well fill (#F4F6FB) and perimeter border (#D0D5DD). */
+val FormWellFill = Color(0xFFF4F6FB)
+val FormWellBorder = Color(0xFFD0D5DD)
+
+
