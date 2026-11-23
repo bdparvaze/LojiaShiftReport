@@ -359,34 +359,48 @@ fun LojiaRegisterScreen(
                         val dialShape = RoundedCornerShape(Dimens.RadiusInputRegister)
                         Box(
                             modifier = Modifier
-                                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
-                                .widthIn(min = 78.dp)
-                                .depthInset(
-                                    shape = dialShape,
+                                .defaultMinSize(
+                                    minWidth = Dimens.DialButtonWidth,
+                                    minHeight = Dimens.DialButtonHeight
+                                )
+                                .depthSecondaryButton(
+                                    enabled = true,
+                                    borderColor = DepthTokens.DialButtonBorderColor,
                                     cornerRadius = Dimens.RadiusInputRegister,
-                                    borderWidth = Dimens.InsetRegisterBorderWidth,
-                                    focusedBorderWidth = Dimens.InsetFocusedBorderWidth
+                                    borderWidth = Dimens.CardBorderWidth,
+                                    lipHeight = Dimens.DialButtonLipHeight,
+                                    lipColor = DepthTokens.DialButtonLipColor,
+                                    gradientColors = listOf(
+                                        DepthTokens.DialButtonGradientStart,
+                                        DepthTokens.DialButtonGradientEnd
+                                    ),
+                                    shadowAlpha = 0f,
+                                    minHeight = Dimens.DialButtonHeight,
+                                    enforceMinTouchTarget = false
                                 )
                                 .clickable { showCountryPicker = true }
                                 .testTag("ccBtn"),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = Dimens.RegisterFieldPaddingHorizontal),
+                                modifier = Modifier.padding(
+                                    start = Dimens.DialButtonPaddingStart,
+                                    end = Dimens.DialButtonPaddingEnd
+                                ),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = selectedCountry.dial,
-                                    fontSize = DepthTypeTokens.RegisterPlaceholderSize,
+                                    fontSize = DepthTypeTokens.DialButtonTextSize,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = OnSurfaceLight
+                                    color = DepthTokens.DialButtonTextColor
                                 )
-                                Spacer(modifier = Modifier.width(5.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowDown,
                                     contentDescription = null,
                                     tint = DepthTokens.RegisterIconColor,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(Dimens.SpacingLg)
                                 )
                             }
                         }
@@ -614,23 +628,23 @@ fun LojiaRegisterScreen(
                     }
                 }
 
-                val termsShape = RoundedCornerShape(Dimens.RadiusMd)
+                val termsShape = RoundedCornerShape(Dimens.RadiusInputRegister)
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 13.dp)
+                        .padding(top = Dimens.SpacingMd)
                         .defaultMinSize(minHeight = Dimens.MinTouchTarget)
-                        .depthCard(shape = termsShape)
+                        .depthNoteBox(cornerRadius = Dimens.RadiusInputRegister)
                         .clickable { agreeTerms = !agreeTerms }
                         .testTag("cbTerms"),
                     shape = termsShape,
                     color = Color.Transparent,
-                    shadowElevation = 0.dp
+                    shadowElevation = Dimens.SpacingNone
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(Dimens.RegisterNotePadding),
                         verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(9.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         Checkbox(
                             checked = agreeTerms,

@@ -59,6 +59,7 @@ import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.Employee
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.common.EmployerAdvanceStatementPreviewDialog
+import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
@@ -942,20 +943,30 @@ private fun AdvanceStatementPeriodDialog(
         AdvanceStatementPeriodOption.CUSTOM_RANGE to stringResource(R.string.statement_period_custom_range)
     )
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = PureWhite,
-        title = {
+    LojiaDialog(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.statement_select_period_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimaryReport
+                color = TextPrimaryReport,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = Dimens.DialogPaddingComfortable,
+                        top = Dimens.DialogPaddingComfortable,
+                        end = Dimens.DialogPaddingComfortable,
+                        bottom = Dimens.SpacingSm
+                    )
             )
-        },
-        text = {
+            HorizontalDivider(color = ListDividerGray, thickness = Dimens.RowDividerWidth)
+
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.DialogPaddingComfortable),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Column(
@@ -1071,80 +1082,109 @@ private fun AdvanceStatementPeriodDialog(
                     )
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val now = System.currentTimeMillis()
-                    when (selectedOption) {
-                        AdvanceStatementPeriodOption.THIS_MONTH -> {
-                            val range = com.lojia.shiftreport.util.currentMonthRange(now, zone)
-                            val lbl = formatEmployerAdvancePeriodLabel(now, locale, zone)
-                            onConfirm(range, lbl)
-                        }
-                        AdvanceStatementPeriodOption.LAST_MONTH -> {
-                            val range = previousMonthRange(now, zone)
-                            val lbl = formatEmployerAdvancePeriodLabel(range.first, locale, zone)
-                            onConfirm(range, lbl)
-                        }
-                        AdvanceStatementPeriodOption.ALL_TIME -> {
-                            onConfirm(null, context.getString(R.string.statement_period_all_time))
-                        }
-                        AdvanceStatementPeriodOption.CUSTOM_RANGE -> {
-                            val start = customStartDate
-                            val end = customEndDate
-                            val range = if (start != null && end != null) {
-                                customDayRange(start, end, zone)
-                            } else {
-                                null
-                            }
-                            if (range == null || start == null || end == null) {
-                                errorMessage = context.getString(R.string.statement_invalid_date_range_error)
-                            } else {
-                                val lbl = context.getString(
-                                    R.string.statement_date_range_fmt,
-                                    start.format(dateFormatter),
-                                    end.format(dateFormatter)
-                                )
+
+            HorizontalDivider(color = ListDividerGray, thickness = Dimens.RowDividerWidth)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.DialogPaddingComfortable),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                        .depthSecondaryButton(
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = OnSurfaceVariantLight,
+                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        val now = System.currentTimeMillis()
+                        when (selectedOption) {
+                            AdvanceStatementPeriodOption.THIS_MONTH -> {
+                                val range = com.lojia.shiftreport.util.currentMonthRange(now, zone)
+                                val lbl = formatEmployerAdvancePeriodLabel(now, locale, zone)
                                 onConfirm(range, lbl)
                             }
+                            AdvanceStatementPeriodOption.LAST_MONTH -> {
+                                val range = previousMonthRange(now, zone)
+                                val lbl = formatEmployerAdvancePeriodLabel(range.first, locale, zone)
+                                onConfirm(range, lbl)
+                            }
+                            AdvanceStatementPeriodOption.ALL_TIME -> {
+                                onConfirm(null, context.getString(R.string.statement_period_all_time))
+                            }
+                            AdvanceStatementPeriodOption.CUSTOM_RANGE -> {
+                                val start = customStartDate
+                                val end = customEndDate
+                                val range = if (start != null && end != null) {
+                                    customDayRange(start, end, zone)
+                                } else {
+                                    null
+                                }
+                                if (range == null || start == null || end == null) {
+                                    errorMessage = context.getString(R.string.statement_invalid_date_range_error)
+                                } else {
+                                    val lbl = context.getString(
+                                        R.string.statement_date_range_fmt,
+                                        start.format(dateFormatter),
+                                        end.format(dateFormatter)
+                                    )
+                                    onConfirm(range, lbl)
+                                }
+                            }
                         }
-                    }
-                },
-                elevation = null,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    contentColor = PureWhite,
-                    disabledContentColor = OnSurfaceVariantLight
-                ),
-                shape = RoundedCornerShape(Dimens.RadiusReportInput),
-                modifier = Modifier
-                    .heightIn(min = Dimens.ButtonHeightReportPrimary)
-                    .depthRaisedButton(
-                        cornerRadius = Dimens.RadiusReportInput,
-                        minHeight = Dimens.ButtonHeightReportPrimary
+                    },
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        contentColor = PureWhite,
+                        disabledContentColor = OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.ButtonHeightReportPrimary)
+                        .depthRaisedButton(
+                            cornerRadius = Dimens.RadiusReportInput,
+                            minHeight = Dimens.ButtonHeightReportPrimary
+                        )
+                        .testTag("statement_confirm_period_btn")
+                ) {
+                    Text(
+                        text = stringResource(R.string.statement_generate_preview_btn),
+                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    .testTag("statement_confirm_period_btn")
-            ) {
-                Text(
-                    text = stringResource(R.string.statement_generate_preview_btn),
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
-            ) {
-                Text(
-                    text = stringResource(R.string.cancel),
-                    color = OnSurfaceVariantLight
-                )
+                }
             }
         }
-    )
+    }
 
     if (showDateRangePicker) {
         val rangePickerState = rememberDateRangePickerState()

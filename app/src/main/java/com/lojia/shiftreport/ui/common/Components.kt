@@ -680,10 +680,10 @@ fun SecurityPinModal(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = 380.dp,
-        shape = RoundedCornerShape(Dimens.RadiusXl),
+        maxWidth = Dimens.QuickPinMaxWidth,
+        shape = RoundedCornerShape(Dimens.DialogCornerRadius),
         containerColor = PureWhite,
-        border = BorderStroke(1.dp, OutlineVariantLight)
+        border = null
     ) {
         Box(
             modifier = Modifier

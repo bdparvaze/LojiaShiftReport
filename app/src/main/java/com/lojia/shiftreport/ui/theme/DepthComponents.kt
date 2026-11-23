@@ -290,14 +290,20 @@ fun Modifier.depthInset(
     focusedBorderWidth: Dp? = null,
     gradientColors: List<Color>? = null,
     borderColorOverride: Color? = null,
-    topShadowAlphaOverride: Float? = null
+    topShadowAlphaOverride: Float? = null,
+    disabledBackgroundOverride: Color? = null,
+    insetShadowOffsetYOverride: Dp? = null,
+    insetShadowBlurOverride: Dp? = null
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val resolvedRadius = cornerRadius ?: style.insetCornerRadius
     val resolvedShape = shape ?: RoundedCornerShape(resolvedRadius)
     val resolvedTopShadowAlpha = topShadowAlphaOverride ?: style.insetTopShadowAlpha
+    val resolvedDisabledBg = disabledBackgroundOverride ?: style.insetDisabledBackground
+    val resolvedShadowOffsetY = insetShadowOffsetYOverride ?: style.insetShadowOffsetY
+    val resolvedShadowBlur = insetShadowBlurOverride ?: style.insetShadowBlur
     val resolvedGradient = when {
-        !enabled -> listOf(style.insetDisabledBackground, style.insetDisabledBackground)
+        !enabled -> listOf(resolvedDisabledBg, resolvedDisabledBg)
         isError -> listOf(style.insetErrorBackground, style.insetErrorBackground)
         gradientColors != null -> gradientColors
         isFocused -> listOf(style.insetGradientStart, style.insetFocusedBackground)
@@ -325,7 +331,7 @@ fun Modifier.depthInset(
             )
 
             // 2) Top inner shadow (inset 0 2dp 4dp rgba(16,24,40,0.07))
-            val shadowHeightPx = (style.insetShadowOffsetY + style.insetShadowBlur).toPx()
+            val shadowHeightPx = (resolvedShadowOffsetY + resolvedShadowBlur).toPx()
                 .coerceAtMost(size.height * 0.45f)
             drawRect(
                 brush = Brush.verticalGradient(
@@ -477,7 +483,8 @@ fun Modifier.depthSecondaryButton(
     shadowAlpha: Float? = null,
     shadowOffsetY: Dp? = null,
     shadowBlur: Dp? = null,
-    minHeight: Dp = Dimens.ButtonHeightPrimary
+    minHeight: Dp = Dimens.ButtonHeightPrimary,
+    enforceMinTouchTarget: Boolean = true
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val resolvedCorner = cornerRadius ?: style.buttonCornerRadius
@@ -505,10 +512,13 @@ fun Modifier.depthSecondaryButton(
         label = "secondary_btn_press"
     )
 
+    val resolvedMinWidth = if (enforceMinTouchTarget) Dimens.MinTouchTarget else Dp.Unspecified
+    val resolvedMinHeight = if (enforceMinTouchTarget) minHeight.coerceAtLeast(Dimens.MinTouchTarget) else minHeight
+
     this
         .defaultMinSize(
-            minWidth = Dimens.MinTouchTarget,
-            minHeight = minHeight.coerceAtLeast(Dimens.MinTouchTarget)
+            minWidth = resolvedMinWidth,
+            minHeight = resolvedMinHeight
         )
         .trackButtonPress(enabled = enabled) { isPressed = it }
         .graphicsLayer {
@@ -1115,4 +1125,87 @@ fun Modifier.depthRaisedIconTile(
         }
 }
 
+/**
+ * Recessed note/privacy block matching Register screen Gap 2 spec:
+ * #F1F5FB fill, 1dp #E2E8F0 border, 10dp radius, inset 0/1dp blur 2dp rgba(16,24,40,0.12).
+ */
+fun Modifier.depthNoteBox(
+    cornerRadius: Dp = Dimens.RadiusInputRegister,
+    fillColor: Color = DepthTokens.RegisterNoteBackground,
+    borderColor: Color = DepthTokens.RegisterNoteBorderColor
+): Modifier = composed {
+    val style = LocalDepthStyle.current
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(outline = outline, color = fillColor)
+
+            val shadowHeightPx = (Dimens.RegisterNoteShadowOffsetY + Dimens.RegisterNoteShadowBlur).toPx()
+                .coerceAtMost(size.height * 0.45f)
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        style.insetShadowColor.copy(alpha = DepthTokens.REGISTER_NOTE_SHADOW_ALPHA),
+                        Color.Transparent
+                    ),
+                    startY = 0f,
+                    endY = shadowHeightPx
+                ),
+                size = Size(size.width, shadowHeightPx)
+            )
+
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = Dimens.CardBorderWidth.toPx(),
+                color = borderColor
+            )
+        }
+}
+
+/**
+ * Password recovery tinted info block matching Gap 3 spec:
+ * #EEF3FF fill, 1dp #D0DDFF border, 10dp radius, inner top 1dp #FFFFFF highlight.
+ */
+fun Modifier.depthInfoBlock(
+    cornerRadius: Dp = Dimens.RadiusInputRegister,
+    fillColor: Color = DepthTokens.RecoveryInfoBackground,
+    borderColor: Color = DepthTokens.RecoveryInfoBorderColor
+): Modifier = composed {
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(outline = outline, color = fillColor)
+
+            val borderPx = Dimens.CardBorderWidth.toPx()
+            val highlightY = borderPx + borderPx * 0.5f
+            drawLine(
+                color = PureWhite,
+                start = Offset(borderPx, highlightY),
+                end = Offset((size.width - borderPx).coerceAtLeast(borderPx), highlightY),
+                strokeWidth = borderPx
+            )
+
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = borderPx,
+                color = borderColor
+            )
+        }
+}
+
+/**
+ * 46x46dp diagonal 145-deg icon tile for password recovery spec tokens:
+ * #FFFFFF to #D0DDFF, radius 15dp, drop shadow 0/4dp blur 8dp rgba(16,24,40,0.14),
+ * inset 0/1dp #FFFFFF + inset 0/-2dp rgba(16,24,40,0.07).
+ */
+fun Modifier.depthRecoveryTile(): Modifier = this
+    .size(Dimens.RecoveryTileSize)
+    .depthRaisedIconTile(
+        gradientColors = listOf(DepthTokens.RecoveryTileGradientStart, DepthTokens.RecoveryTileGradientEnd),
+        cornerRadius = Dimens.RadiusRecoveryTile
+    )
 

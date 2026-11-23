@@ -88,12 +88,17 @@ fun LojiaTextField(
     borderColorOverride: Color? = null,
     topShadowAlphaOverride: Float? = null,
     placeholderColor: Color = DepthTokens.InsetPlaceholderColor,
-    placeholderFontSize: androidx.compose.ui.unit.TextUnit = DepthTypeTokens.InsetPlaceholderSize
+    placeholderFontSize: androidx.compose.ui.unit.TextUnit = DepthTypeTokens.InsetPlaceholderSize,
+    disabledBackgroundOverride: Color? = null,
+    disabledBorderColorOverride: Color? = null,
+    insetShadowOffsetYOverride: androidx.compose.ui.unit.Dp? = null,
+    insetShadowBlurOverride: androidx.compose.ui.unit.Dp? = null,
+    disabledTextColor: Color = OnSurfaceVariantLight
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val effectiveTextStyle = textStyle.copy(
         color = when {
-            !enabled -> OnSurfaceVariantLight
+            !enabled -> disabledTextColor
             isError -> ErrorRedLight
             else -> textStyle.color
         }
@@ -158,14 +163,22 @@ fun LojiaTextField(
                     TextFieldDefaults.contentPaddingWithLabel()
                 },
                 container = {
+                    val resolvedBorderOverride = when {
+                        !enabled && !isError && disabledBorderColorOverride != null -> disabledBorderColorOverride
+                        enabled && !isError && !isFocused -> borderColorOverride
+                        else -> null
+                    }
                     Box(
                         modifier = Modifier.depthInset(
                             enabled = enabled,
                             isError = isError,
                             isFocused = isFocused,
                             shape = shape,
-                            borderColorOverride = if (enabled && !isError && !isFocused) borderColorOverride else null,
-                            topShadowAlphaOverride = topShadowAlphaOverride
+                            borderColorOverride = resolvedBorderOverride,
+                            topShadowAlphaOverride = topShadowAlphaOverride,
+                            disabledBackgroundOverride = disabledBackgroundOverride,
+                            insetShadowOffsetYOverride = insetShadowOffsetYOverride,
+                            insetShadowBlurOverride = insetShadowBlurOverride
                         )
                     )
                 }

@@ -441,7 +441,10 @@ fun RegionalPreferencesDetailView(
             onDismissRequest = { activeSheet = null },
             sheetState = sheetState,
             containerColor = SurfaceLight,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            shape = RoundedCornerShape(
+                topStart = Dimens.BottomSheetCornerRadius,
+                topEnd = Dimens.BottomSheetCornerRadius
+            )
         ) {
             Column(
                 modifier = Modifier
@@ -597,7 +600,10 @@ fun RegionalPreferencesDetailView(
             onDismissRequest = { activeSheet = null },
             sheetState = sheetState,
             containerColor = SurfaceLight,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            shape = RoundedCornerShape(
+                topStart = Dimens.BottomSheetCornerRadius,
+                topEnd = Dimens.BottomSheetCornerRadius
+            )
         ) {
             Column(
                 modifier = Modifier
@@ -708,7 +714,10 @@ fun RegionalPreferencesDetailView(
             onDismissRequest = { activeSheet = null },
             sheetState = sheetState,
             containerColor = SurfaceLight,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            shape = RoundedCornerShape(
+                topStart = Dimens.BottomSheetCornerRadius,
+                topEnd = Dimens.BottomSheetCornerRadius
+            )
         ) {
             Column(
                 modifier = Modifier

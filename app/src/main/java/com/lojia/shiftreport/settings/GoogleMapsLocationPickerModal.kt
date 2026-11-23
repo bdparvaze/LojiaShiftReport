@@ -387,11 +387,12 @@ fun GoogleMapsLocationPickerModal(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 8.dp, horizontal = 6.dp)
+                .padding(vertical = Dimens.SpacingSm, horizontal = Dimens.SpacingXs)
                 .testTag("googleMapsLocationPickerModal"),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(Dimens.DialogCornerRadius),
             color = BackgroundLight,
-            shadowElevation = 16.dp
+            border = BorderStroke(Dimens.CardBorderWidth, DepthCardBorder),
+            shadowElevation = Dimens.CardAccentElevation
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
 

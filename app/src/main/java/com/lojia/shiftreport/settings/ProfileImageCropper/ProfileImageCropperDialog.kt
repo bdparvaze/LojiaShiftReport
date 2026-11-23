@@ -68,7 +68,10 @@ fun ProfileImageCropperDialog(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        shape = RoundedCornerShape(
+            topStart = Dimens.BottomSheetCornerRadius,
+            topEnd = Dimens.BottomSheetCornerRadius
+        ),
         containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {

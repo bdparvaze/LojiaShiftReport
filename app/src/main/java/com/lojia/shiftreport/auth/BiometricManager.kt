@@ -891,18 +891,14 @@ fun LojiaPasswordRecoveryDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .depthSemanticCard(
-                            backgroundColor = DepthTokens.CardAccentGradientStart,
-                            borderColor = PrimaryContainerLight,
-                            shape = RoundedCornerShape(Dimens.RadiusSm)
-                        )
+                        .depthInfoBlock(cornerRadius = Dimens.RadiusInputRegister)
                 ) {
                     Text(
                         text = stringResource(R.string.auth_recovery_unavailable),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = OnSurfaceLight,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier.padding(Dimens.RecoveryInfoPadding)
                     )
                 }
             } else {
@@ -915,13 +911,9 @@ fun LojiaPasswordRecoveryDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .depthSemanticCard(
-                            backgroundColor = DepthTokens.CardAccentGradientStart,
-                            borderColor = PrimaryContainerLight,
-                            shape = RoundedCornerShape(Dimens.RadiusSm)
-                        )
+                        .depthInfoBlock(cornerRadius = Dimens.RadiusInputRegister)
                 ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
+                    Column(modifier = Modifier.padding(Dimens.RecoveryInfoPadding)) {
                         Text(
                             text = stringResource(R.string.auth_question_label),
                             fontSize = 11.sp,

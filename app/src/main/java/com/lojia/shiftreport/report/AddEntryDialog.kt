@@ -106,8 +106,9 @@ fun AddEntryDialog(
                         bottom = Dimens.SpacingSm
                     )
             )
-            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+            HorizontalDivider(color = ListDividerGray, thickness = Dimens.RowDividerWidth)
 
+            val depthStyle = LocalDepthStyle.current
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -118,47 +119,146 @@ fun AddEntryDialog(
             ) {
                 when (type) {
                     ModalType.CREDIT -> {
-                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(
+                            value = receipt,
+                            onValueChange = { receipt = it },
+                            label = { Text(stringResource(R.string.receipt_number)) },
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        LojiaTextField(
+                            value = amountText,
+                            onValueChange = { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null },
+                            label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) },
+                            isError = isAmountInvalid,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         if (isAmountInvalid) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
+                            Text(
+                                text = invalidAmountError,
+                                color = ErrorRedLight,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
+                            )
                         }
                     }
                     ModalType.OLD_DUE -> {
-                        LojiaTextField(receipt, { receipt = it }, label = { Text(stringResource(R.string.receipt_number)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(
+                            value = receipt,
+                            onValueChange = { receipt = it },
+                            label = { Text(stringResource(R.string.receipt_number)) },
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        LojiaTextField(
+                            value = amountText,
+                            onValueChange = { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null },
+                            label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) },
+                            isError = isAmountInvalid,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         if (isAmountInvalid) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
+                            Text(
+                                text = invalidAmountError,
+                                color = ErrorRedLight,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
+                            )
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
                         PayTypeSelector(payType) { payType = it }
                     }
                     ModalType.STAFF -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text(stringResource(R.string.name_description)) },
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        LojiaTextField(
+                            value = amountText,
+                            onValueChange = { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null },
+                            label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) },
+                            isError = isAmountInvalid,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         if (isAmountInvalid) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
+                            Text(
+                                text = invalidAmountError,
+                                color = ErrorRedLight,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
+                            )
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
                         PayTypeSelector(payType) { payType = it }
                     }
                     ModalType.WALKOUT -> {
-                        LojiaTextField(name, { name = it }, label = { Text(stringResource(R.string.name_description)) }, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(10.dp))
-                        LojiaTextField(amountText, { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null }, label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) }, isError = isAmountInvalid, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
+                        LojiaTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text(stringResource(R.string.name_description)) },
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(Dimens.ReportGridGap))
+                        LojiaTextField(
+                            value = amountText,
+                            onValueChange = { amountText = it.replace('\u060C', ',').filter { c -> c.isDigit() || c == '.' || c == ',' || c == '\u066B' || c == '\u066C' }; error = null },
+                            label = { Text(stringResource(R.string.amount_with_currency, currentCurrency)) },
+                            isError = isAmountInvalid,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                            minHeight = Dimens.TextFieldHeightReport,
+                            borderColorOverride = depthStyle.reportFieldBorderColor,
+                            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                         if (isAmountInvalid) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(invalidAmountError, color = ErrorRedLight, fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
+                            Text(
+                                text = invalidAmountError,
+                                color = ErrorRedLight,
+                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
+                            )
                         }
                     }
                     ModalType.ITEM -> {
-                        val depthStyle = LocalDepthStyle.current
                         // 1. Item / Description * (Required, max 100 chars)
                         LojiaTextField(
                             value = name,

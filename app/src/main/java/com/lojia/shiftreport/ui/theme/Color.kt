@@ -294,4 +294,16 @@ val TileTealEnd = Color(0xFFE0F2F1)
 val FormWellFill = Color(0xFFF4F6FB)
 val FormWellBorder = Color(0xFFD0D5DD)
 
+// ============ STAGE 26G SPEC GAP PARITY TOKENS ============
+/** Register dial-code button text ink (#334155). */
+val DialCodeTextColor = Color(0xFF334155)
+
+/** Register info/privacy note block background fill (#F1F5FB). */
+val RegisterNoteFill = Color(0xFFF1F5FB)
+
+/** Password recovery info block border & 46dp tile bottom-right stop (#D0DDFF). */
+val RecoveryInfoBorder = Color(0xFFD0DDFF)
+
+/** Report Entry read-only/disabled numeric field background fill (#EEF1F7). */
+val ReportReadOnlyFill = Color(0xFFEEF1F7)
 

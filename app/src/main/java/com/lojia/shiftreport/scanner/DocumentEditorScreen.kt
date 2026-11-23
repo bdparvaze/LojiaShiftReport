@@ -719,7 +719,11 @@ fun DocumentEditorScreen(
         val style = LocalDepthStyle.current
         ModalBottomSheet(
             onDismissRequest = { showOcrSheet = false },
-            containerColor = PureWhite
+            containerColor = PureWhite,
+            shape = RoundedCornerShape(
+                topStart = Dimens.BottomSheetCornerRadius,
+                topEnd = Dimens.BottomSheetCornerRadius
+            )
         ) {
             Column(
                 modifier = Modifier

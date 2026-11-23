@@ -262,8 +262,13 @@ fun NumberField(
                     isFocused = isFocused,
                     shape = insetShape,
                     cornerRadius = Dimens.RadiusReportInput,
-                    borderColorOverride = if (enabled && !hasError && !isFocused) style.reportFieldBorderColor else null,
-                    topShadowAlphaOverride = style.reportFieldInsetAlpha
+                    borderColorOverride = if (!hasError && !isFocused) {
+                        if (enabled) style.reportFieldBorderColor else DepthTokens.ReportReadOnlyBorderColor
+                    } else null,
+                    topShadowAlphaOverride = if (enabled) style.reportFieldInsetAlpha else DepthTokens.REPORT_READ_ONLY_INSET_ALPHA,
+                    disabledBackgroundOverride = if (!enabled) DepthTokens.ReportReadOnlyBackground else null,
+                    insetShadowOffsetYOverride = if (!enabled) Dimens.ReportReadOnlyShadowOffsetY else null,
+                    insetShadowBlurOverride = if (!enabled) Dimens.ReportReadOnlyShadowBlur else null
                 )
                 .padding(horizontal = Dimens.InsetFieldPaddingHorizontal, vertical = Dimens.SpacingSm),
             contentAlignment = Alignment.CenterStart
@@ -305,8 +310,8 @@ fun NumberField(
                 textStyle = TextStyle(
                     fontSize = DepthTypeTokens.ReportFieldTextSize,
                     lineHeight = DepthTypeTokens.LogoTitleSize,
-                    fontWeight = FontWeight.Medium,
-                    color = if (enabled) style.reportFieldTextColor else TextDisabledColor
+                    fontWeight = if (enabled) FontWeight.Medium else FontWeight.Normal,
+                    color = if (enabled) style.reportFieldTextColor else DepthTokens.ReportReadOnlyTextColor
                 ),
                 cursorBrush = SolidColor(if (hasError) ErrorRedLight else ShiftColors.Primary),
                 keyboardOptions = KeyboardOptions(keyboardType = if (isInteger) KeyboardType.Number else KeyboardType.Decimal),
@@ -324,7 +329,7 @@ fun NumberField(
                                 fontSize = DepthTypeTokens.ReportFieldTextSize,
                                 lineHeight = DepthTypeTokens.LogoTitleSize,
                                 fontWeight = FontWeight.Normal,
-                                color = style.reportFieldPlaceholderColor
+                                color = if (enabled) style.reportFieldPlaceholderColor else DepthTokens.ReportReadOnlyTextColor
                             )
                         }
                         innerTextField()

@@ -195,54 +195,11 @@ fun PaidOutShoppingLedgerTab(
 
         // Section 3 & 4 — Entries or Empty State
         if (list.isEmpty()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .cardRise(1)
-                    .depthCard(cornerRadius = Dimens.CardCornerRadius),
-                shape = RoundedCornerShape(Dimens.CardCornerRadius),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = Dimens.SpacingHuge, horizontal = Dimens.SpacingXxl),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(Dimens.PaidOutIconTileSize + Dimens.SpacingLg)
-                            .depthRaisedIconTile(
-                                gradientColors = listOf(PureWhite, BadgeBlueBg),
-                                cornerRadius = Dimens.RadiusEmployeeAvatarTile
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ShoppingBag,
-                            contentDescription = null,
-                            tint = PrimaryBlueLight,
-                            modifier = Modifier.size(Dimens.IconLg)
-                        )
-                    }
-                    Spacer(Modifier.height(Dimens.SpacingLg))
-                    Text(
-                        text = stringResource(R.string.paid_out_empty_title),
-                        fontSize = DepthTypeTokens.EmptyStateTitleSize,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimaryReport
-                    )
-                    Spacer(Modifier.height(Dimens.SpacingXs))
-                    Text(
-                        text = stringResource(R.string.paid_out_empty_desc),
-                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
-                        color = OnSurfaceVariantLight,
-                        textAlign = TextAlign.Center,
-                        maxLines = 3
-                    )
-                }
-            }
+            LedgerEmptyStateCard(
+                icon = Icons.Outlined.ShoppingBag,
+                title = stringResource(R.string.paid_out_empty_title),
+                description = stringResource(R.string.paid_out_empty_desc)
+            )
         } else {
             Card(
                 modifier = Modifier
@@ -274,23 +231,7 @@ fun PaidOutShoppingLedgerTab(
                                 .padding(vertical = Dimens.ListRowPaddingVertical),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Left — SH1 raised item icon tile
-                            Box(
-                                modifier = Modifier
-                                    .size(Dimens.PaidOutIconTileSize)
-                                    .depthRaisedIconTile(
-                                        gradientColors = listOf(PureWhite, SectionRoseGradientEnd),
-                                        cornerRadius = Dimens.RadiusSettingsIconTile
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.LocalMall,
-                                    contentDescription = null,
-                                    tint = ErrorRedLight,
-                                    modifier = Modifier.size(Dimens.IconField)
-                                )
-                            }
+                            LedgerRoseIconTile(icon = Icons.Outlined.LocalMall)
                             Spacer(Modifier.width(Dimens.SettingsIconTitleGap))
 
                             // Middle — item details
@@ -375,6 +316,182 @@ fun PaidOutShoppingLedgerTab(
     }
 }
 
+@Composable
+private fun LedgerRoseIconTile(
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Box(
+        modifier = Modifier
+            .size(Dimens.PaidOutIconTileSize)
+            .depthRaisedIconTile(
+                gradientColors = listOf(PureWhite, SectionRoseGradientEnd),
+                cornerRadius = Dimens.RadiusSettingsIconTile
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = ErrorRedLight,
+            modifier = Modifier.size(Dimens.IconField)
+        )
+    }
+}
+
+@Composable
+private fun LedgerKpiSummaryCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    formattedAmount: String,
+    badgeText: String
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(0)
+            .depthCard(cornerRadius = Dimens.CardCornerRadius),
+        shape = RoundedCornerShape(Dimens.CardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.ReportCardInnerPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            LedgerRoseIconTile(icon = icon)
+            Spacer(Modifier.width(Dimens.SettingsIconTitleGap))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnSurfaceVariantLight,
+                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking
+                )
+                Spacer(Modifier.height(Dimens.SpacingXxs))
+                Text(
+                    text = formattedAmount,
+                    fontSize = DepthTypeTokens.TopBarTitleSize,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimaryReport
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(Dimens.RadiusFull),
+                color = BadgeBlueBg
+            ) {
+                Text(
+                    text = badgeText,
+                    fontSize = DepthTypeTokens.ChipLabelSize,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BadgeBlueText,
+                    modifier = Modifier.padding(
+                        horizontal = Dimens.ReportGridGap,
+                        vertical = Dimens.SpacingXs
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LedgerSectionHeaderRow(
+    title: String,
+    count: Int
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Dimens.SpacingXl, bottom = Dimens.ReportGridGap),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(
+                    width = Dimens.LedgerSectionAccentWidth,
+                    height = Dimens.LedgerSectionAccentHeight
+                )
+                .background(PrimaryBlueLight, RoundedCornerShape(Dimens.SpacingXxs))
+        )
+        Spacer(Modifier.width(Dimens.SpacingSm))
+        Text(
+            text = title,
+            fontSize = DepthTypeTokens.CardSectionHeadingSize,
+            fontWeight = FontWeight.SemiBold,
+            color = TextPrimaryReport
+        )
+        Spacer(Modifier.width(Dimens.SpacingXs))
+        Text(
+            text = "($count)",
+            fontSize = DepthTypeTokens.ListRowSubtitleSize,
+            fontWeight = FontWeight.Medium,
+            color = OnSurfaceVariantLight
+        )
+        Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun LedgerEmptyStateCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    description: String
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .cardRise(1)
+            .depthCard(cornerRadius = Dimens.CardCornerRadius),
+        shape = RoundedCornerShape(Dimens.CardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Dimens.SpacingHuge, horizontal = Dimens.SpacingXxl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(Dimens.PaidOutIconTileSize + Dimens.SpacingLg)
+                    .depthRaisedIconTile(
+                        gradientColors = listOf(PureWhite, BadgeBlueBg),
+                        cornerRadius = Dimens.RadiusEmployeeAvatarTile
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = PrimaryBlueLight,
+                    modifier = Modifier.size(Dimens.IconLg)
+                )
+            }
+            Spacer(Modifier.height(Dimens.SpacingLg))
+            Text(
+                text = title,
+                fontSize = DepthTypeTokens.EmptyStateTitleSize,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimaryReport
+            )
+            Spacer(Modifier.height(Dimens.SpacingXs))
+            Text(
+                text = description,
+                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                color = OnSurfaceVariantLight,
+                textAlign = TextAlign.Center,
+                maxLines = 3
+            )
+        }
+    }
+}
+
 /* ----------------------------------------------------------------------
  * TAB 4: WALKOUT LEDGER (Unpaid Invoices / Walkouts)
  * ---------------------------------------------------------------------- */
@@ -419,243 +536,130 @@ fun WalkoutLedgerTab(
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
     val totalWalkout = list.sumOf { it.amountMinor }
     val count = list.size
+    val depthStyle = LocalDepthStyle.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(16.dp)
+            .background(depthStyle.reportPageBackground)
+            .padding(Dimens.SpacingLg)
             .verticalScroll(rememberScrollState())
     ) {
         // Section 1 — KPI Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .cardRise(0)
-                .depthSemanticCard(
-                    backgroundColor = ErrorContainer,
-                    borderColor = ErrorRedLight.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icon circle
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(ErrorRedLight.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PersonOff,
-                        contentDescription = null,
-                        tint = ErrorRedLight,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(Modifier.width(14.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.total_walkout_loss),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextHintColor,
-                        letterSpacing = 0.5.sp
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = MoneyFormat.formatMinor(totalWalkout, currency),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ErrorRedLight
-                    )
-                }
-
-                // Count badge on the right
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = SurfaceLight.copy(alpha = 0.7f),
-                    border = BorderStroke(0.5.dp, ErrorRedLight.copy(alpha = 0.35f))
-                ) {
-                    Text(
-                        text = if (count == 1) stringResource(R.string.walkout_bill_singular_fmt, count) else stringResource(R.string.walkout_bills_plural_fmt, count),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = ErrorRedLight,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
+        LedgerKpiSummaryCard(
+            icon = Icons.Outlined.PersonOff,
+            title = stringResource(R.string.total_walkout_loss),
+            formattedAmount = MoneyFormat.formatMinor(totalWalkout, currency),
+            badgeText = if (count == 1) {
+                stringResource(R.string.walkout_bill_singular_fmt, count)
+            } else {
+                stringResource(R.string.walkout_bills_plural_fmt, count)
             }
-        }
+        )
 
         // Section 2 — Section Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(width = 3.dp, height = 14.dp)
-                    .background(ErrorRedLight, RoundedCornerShape(2.dp))
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.walkout_bills_section_header),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryIndigoDark,
-                letterSpacing = 0.3.sp
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = "($count)",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextHintColor
-            )
-            Spacer(Modifier.weight(1f))
-        }
+        LedgerSectionHeaderRow(
+            title = stringResource(R.string.walkout_bills_section_header),
+            count = count
+        )
 
         // Section 3 & 4 — Entries or Empty State
         if (list.isEmpty()) {
-            Column(
+            LedgerEmptyStateCard(
+                icon = Icons.Outlined.PersonOff,
+                title = stringResource(R.string.no_walkout_records),
+                description = stringResource(R.string.walkout_empty_desc)
+            )
+        } else {
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 40.dp, horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .cardRise(1)
+                    .depthCard(cornerRadius = Dimens.CardCornerRadius),
+                shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(SurfaceVariantLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PersonOff,
-                        contentDescription = null,
-                        tint = TextHintColor,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    text = stringResource(R.string.no_walkout_records),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = OnSurfaceLight
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = stringResource(R.string.walkout_empty_desc),
-                    fontSize = 12.sp,
-                    color = OnSurfaceVariantLight,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp,
-                    maxLines = 3
-                )
-            }
-        } else {
-            list.forEachIndexed { idx, item ->
-                Card(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .cardRise(idx + 1)
-                        .depthCard(shape = RoundedCornerShape(12.dp)),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        .padding(
+                            horizontal = Dimens.ReportCardInnerPadding,
+                            vertical = Dimens.SpacingXs
+                        )
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Left — warning icon
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(ErrorContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.ReceiptLong,
-                                contentDescription = null,
-                                tint = ErrorRedLight,
-                                modifier = Modifier.size(20.dp)
+                    list.forEachIndexed { idx, item ->
+                        if (idx > 0) {
+                            HorizontalDivider(
+                                thickness = Dimens.RowDividerWidth,
+                                color = depthStyle.listDividerColor
                             )
                         }
-                        Spacer(Modifier.width(12.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = Dimens.ListRowPaddingVertical),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Left — SH1 raised rose tile
+                            LedgerRoseIconTile(icon = Icons.Outlined.ReceiptLong)
+                            Spacer(Modifier.width(Dimens.SettingsIconTitleGap))
 
-                        // Middle — record details
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = item.description,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurfaceLight,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(Modifier.height(4.dp))
-
-                            // Cashier + Date row (inline, bullet-separated)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Person,
-                                    contentDescription = null,
-                                    tint = TextHintColor,
-                                    modifier = Modifier.size(11.dp)
-                                )
-                                Spacer(Modifier.width(3.dp))
+                            // Middle — record details
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = item.cashierName.replace("(", "").replace(")", ""),
-                                    fontSize = 11.sp,
-                                    color = TextHintColor,
+                                    text = item.description,
+                                    fontSize = DepthTypeTokens.ListRowTitleSize,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextPrimaryReport,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false)
+                                    overflow = TextOverflow.Ellipsis
                                 )
-                                Spacer(Modifier.width(8.dp))
+                                Spacer(Modifier.height(Dimens.SpacingXxs))
+
+                                // Cashier + Date row (inline, bullet-separated)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Person,
+                                        contentDescription = null,
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(Dimens.SpacingMd)
+                                    )
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
+                                    Text(
+                                        text = item.cashierName.replace("(", "").replace(")", ""),
+                                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                        color = OnSurfaceVariantLight,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
+                                    Text(
+                                        text = "•",
+                                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                        color = OnSurfaceVariantLight
+                                    )
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
+                                    Text(
+                                        text = dateFormat.format(Date(item.dateInMillis)),
+                                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                        color = OnSurfaceVariantLight,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(Dimens.SpacingSm))
+
+                            // Right — amount
+                            Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "•",
-                                    fontSize = 11.sp,
-                                    color = TextHintColor
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = dateFormat.format(Date(item.dateInMillis)),
-                                    fontSize = 11.sp,
-                                    color = TextHintColor,
-                                    maxLines = 1
+                                    text = MoneyFormat.formatMinor(item.amountMinor, currency),
+                                    fontSize = DepthTypeTokens.CardSectionHeadingSize,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimaryReport
                                 )
                             }
-                        }
-                        Spacer(Modifier.width(8.dp))
-
-                        // Right — amount
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = MoneyFormat.formatMinor(item.amountMinor, currency),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ErrorRedLight
-                            )
                         }
                     }
                 }
@@ -663,4 +667,3 @@ fun WalkoutLedgerTab(
         }
     }
 }
-

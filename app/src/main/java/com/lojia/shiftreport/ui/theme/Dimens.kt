@@ -221,5 +221,33 @@ object Dimens {
     val KeypadButtonHeight: Dp = 84.dp
     val KeypadShadowOffsetY: Dp = 8.dp
     val KeypadShadowBlur: Dp = 14.dp
-}
 
+    // =========================================================================
+    // STAGE 26G SPEC GAP PARITY TOKENS
+    // =========================================================================
+    /** Width and height for Register dial-code picker button (78.dp x 46.dp). */
+    val DialButtonWidth: Dp = 78.dp
+    val DialButtonHeight: Dp = 46.dp
+    /** Solid bottom lip thickness for Register dial-code picker button (2.dp). */
+    val DialButtonLipHeight: Dp = 2.dp
+    /** Asymmetric start/end content padding for Register dial-code button (10.dp / 8.dp). */
+    val DialButtonPaddingStart: Dp = 10.dp
+    val DialButtonPaddingEnd: Dp = 8.dp
+
+    /** Inner padding and inset shadow geometry for Register privacy note box (12.dp, 0/1.dp blur 2.dp). */
+    val RegisterNotePadding: Dp = 12.dp
+    val RegisterNoteShadowOffsetY: Dp = 1.dp
+    val RegisterNoteShadowBlur: Dp = 2.dp
+
+    /** Inner padding for Password Recovery info block (10.dp). */
+    val RecoveryInfoPadding: Dp = 10.dp
+    /** Password Recovery icon tile size, radius, and shadow geometry (46.dp, 15.dp, 0/4.dp blur 8.dp). */
+    val RecoveryTileSize: Dp = 46.dp
+    val RadiusRecoveryTile: Dp = 15.dp
+    val RecoveryTileShadowOffsetY: Dp = 4.dp
+    val RecoveryTileShadowBlur: Dp = 8.dp
+
+    /** Inner top shadow offset and blur for Report Entry read-only numeric wells (0/2.dp blur 3.dp). */
+    val ReportReadOnlyShadowOffsetY: Dp = 2.dp
+    val ReportReadOnlyShadowBlur: Dp = 3.dp
+}

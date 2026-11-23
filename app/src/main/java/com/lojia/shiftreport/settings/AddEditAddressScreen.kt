@@ -729,7 +729,11 @@ fun AddEditAddressScreen(
         ModalBottomSheet(
             onDismissRequest = { showCountrySheet = false },
             sheetState = sheetState,
-            containerColor = SurfaceLight
+            containerColor = SurfaceLight,
+            shape = RoundedCornerShape(
+                topStart = Dimens.BottomSheetCornerRadius,
+                topEnd = Dimens.BottomSheetCornerRadius
+            )
         ) {
             Column(
                 modifier = Modifier

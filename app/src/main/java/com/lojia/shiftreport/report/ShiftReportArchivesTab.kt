@@ -48,28 +48,39 @@ fun MetricCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Dimens.CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(0.dp),
-        modifier = modifier.depthCard(shape = RoundedCornerShape(12.dp))
+        elevation = CardDefaults.cardElevation(Dimens.SpacingNone),
+        modifier = modifier.depthCard(cornerRadius = Dimens.CardCornerRadius)
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(Dimens.ReportCardInnerPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(bgColor),
+                    .size(Dimens.PaidOutIconTileSize)
+                    .depthRaisedIconTile(
+                        gradientColors = listOf(PureWhite, bgColor),
+                        cornerRadius = Dimens.RadiusSettingsIconTile
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(Dimens.IconField))
             }
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(Dimens.SettingsIconTitleGap))
             Column {
-                Text(title, fontSize = 11.sp, color = ShiftColors.TextMuted)
-                Text(amount, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Charcoal)
+                Text(
+                    text = title,
+                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                    color = OnSurfaceVariantLight
+                )
+                Text(
+                    text = amount,
+                    fontSize = DepthTypeTokens.CardSectionHeadingSize,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimaryReport
+                )
             }
         }
     }
@@ -88,6 +99,7 @@ fun ShiftReportArchivesTab(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var reportToDelete by remember { mutableStateOf<ShiftReport?>(null) }
+    val depthStyle = LocalDepthStyle.current
 
     val filteredReports = remember(reports, searchQuery) {
         if (searchQuery.isBlank()) reports
@@ -101,37 +113,41 @@ fun ShiftReportArchivesTab(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .background(depthStyle.reportPageBackground)
+            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
     ) {
-        // Search Bar (depth inset well with >= 48.dp touch target)
+        // Search Bar (52dp/14dp depth inset well matching Paid Out & Report spec)
         var isSearchFocused by remember { mutableStateOf(false) }
+        val searchShape = RoundedCornerShape(Dimens.RadiusReportInput)
         Surface(
-            shape = RoundedCornerShape(10.dp),
+            shape = searchShape,
             color = Color.Transparent,
-            shadowElevation = 0.dp,
+            shadowElevation = Dimens.SpacingNone,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = Dimens.MinTouchTarget)
+                .heightIn(min = Dimens.TextFieldHeightReport)
                 .depthInset(
                     isFocused = isSearchFocused,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = searchShape,
+                    cornerRadius = Dimens.RadiusReportInput,
+                    borderColorOverride = if (!isSearchFocused) depthStyle.reportFieldBorderColor else null,
+                    topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha
                 )
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = Dimens.MinTouchTarget)
-                    .padding(horizontal = 12.dp),
+                    .heightIn(min = Dimens.TextFieldHeightReport)
+                    .padding(horizontal = Dimens.InsetFieldPaddingHorizontal),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = null,
                     tint = OnSurfaceVariantLight,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconField)
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(Dimens.SpacingSm))
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.CenterStart
@@ -139,8 +155,8 @@ fun ShiftReportArchivesTab(
                     if (searchQuery.isEmpty()) {
                         Text(
                             text = stringResource(R.string.search_cashier_shift),
-                            fontSize = 13.sp,
-                            color = TextHintColor
+                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            color = depthStyle.reportFieldPlaceholderColor
                         )
                     }
                     BasicTextField(
@@ -148,8 +164,8 @@ fun ShiftReportArchivesTab(
                         onValueChange = { searchQuery = it },
                         singleLine = true,
                         textStyle = TextStyle(
-                            fontSize = 13.sp,
-                            color = OnSurfaceLight
+                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            color = depthStyle.reportFieldTextColor
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -165,112 +181,119 @@ fun ShiftReportArchivesTab(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.btn_clear),
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
                     }
                 }
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(Dimens.SpacingMd))
 
         if (filteredReports.isEmpty()) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = Color.Transparent,
+            Card(
+                shape = RoundedCornerShape(Dimens.CardCornerRadius),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 24.dp)
+                    .padding(vertical = Dimens.SpacingXl)
                     .cardRise(0)
-                    .depthCard(shape = RoundedCornerShape(12.dp))
+                    .depthCard(cornerRadius = Dimens.CardCornerRadius)
             ) {
                 Column(
-                    modifier = Modifier.padding(36.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Dimens.SpacingHuge, horizontal = Dimens.SpacingXxl),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = BackgroundLight,
-                        modifier = Modifier.size(64.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(Dimens.PaidOutIconTileSize + Dimens.SpacingLg)
+                            .depthRaisedIconTile(
+                                gradientColors = listOf(PureWhite, BadgeBlueBg),
+                                cornerRadius = Dimens.RadiusEmployeeAvatarTile
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                imageVector = Icons.Default.FolderOpen,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp),
-                                tint = OnSurfaceVariantLight
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            modifier = Modifier.size(Dimens.IconLg),
+                            tint = PrimaryBlueLight
+                        )
                     }
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(Dimens.SpacingLg))
                     Text(
                         text = stringResource(R.string.no_archived_reports),
-                        fontSize = 14.sp,
+                        fontSize = DepthTypeTokens.EmptyStateTitleSize,
                         fontWeight = FontWeight.SemiBold,
-                        color = OnSurfaceLight,
+                        color = TextPrimaryReport,
                         textAlign = TextAlign.Center
                     )
                 }
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = PaddingValues(bottom = Dimens.KeypadButtonHeight)
             ) {
                 itemsIndexed(filteredReports, key = { _, it -> it.id }) { idx, report ->
                     Card(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                            .padding(bottom = Dimens.ReportGridGap)
                             .cardRise(idx)
-                            .depthCard(shape = RoundedCornerShape(12.dp))
+                            .depthCard(cornerRadius = Dimens.CardCornerRadius)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp)
+                                .padding(Dimens.ReportCardInnerPadding)
                         ) {
-                            // Row 1 (header row — top of card):
+                            // Row 1 (header row — top of card)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(PrimaryContainerLight),
+                                        .size(Dimens.AvatarBadgeSize)
+                                        .depthRaisedIconTile(
+                                            gradientColors = listOf(PureWhite, BadgeBlueBg),
+                                            cornerRadius = Dimens.RadiusEmployeeAvatarTile
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = report.cashierName.take(1).uppercase(),
-                                        fontSize = 16.sp,
+                                        fontSize = DepthTypeTokens.SectionTitleSize,
                                         fontWeight = FontWeight.Bold,
-                                        color = PrimaryIndigoLight
+                                        color = PrimaryBlueLight
                                     )
                                 }
 
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(start = 10.dp, end = 8.dp)
+                                        .padding(start = Dimens.SettingsIconTitleGap, end = Dimens.SpacingSm)
                                 ) {
                                     Text(
                                         text = report.cashierName,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = OnSurfaceLight,
+                                        fontSize = DepthTypeTokens.ListRowTitleSize,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextPrimaryReport,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(Modifier.height(2.dp))
+                                    Spacer(Modifier.height(Dimens.SpacingXxs))
                                     Text(
                                         text = DateTimeFormatUtils.formatDateTime(report.dateInMillis),
-                                        fontSize = 11.sp,
-                                        color = TextHintColor,
+                                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                        color = OnSurfaceVariantLight,
                                         maxLines = 1
                                     )
                                 }
@@ -284,62 +307,69 @@ fun ShiftReportArchivesTab(
                                     else -> report.shift
                                 }
                                 val shiftBg = when {
-                                    shiftNormalized.equals("Morning", ignoreCase = true) -> SuccessContainer
-                                    shiftNormalized.equals("Evening", ignoreCase = true) -> WarningContainer
-                                    shiftNormalized.equals("Night", ignoreCase = true) -> PrimaryContainerLight
-                                    else -> SurfaceVariantLight
+                                    shiftNormalized.equals("Morning", ignoreCase = true) -> BadgeGreenBg
+                                    shiftNormalized.equals("Evening", ignoreCase = true) -> BadgeAmberBg
+                                    shiftNormalized.equals("Night", ignoreCase = true) -> BadgeBlueBg
+                                    else -> SegmentTrackBg
                                 }
                                 val shiftFg = when {
-                                    shiftNormalized.equals("Morning", ignoreCase = true) -> SuccessGreen
-                                    shiftNormalized.equals("Evening", ignoreCase = true) -> WarningOrange
-                                    shiftNormalized.equals("Night", ignoreCase = true) -> PrimaryIndigoDark
+                                    shiftNormalized.equals("Morning", ignoreCase = true) -> BadgeGreenText
+                                    shiftNormalized.equals("Evening", ignoreCase = true) -> BadgeAmberTextDark
+                                    shiftNormalized.equals("Night", ignoreCase = true) -> BadgeBlueText
                                     else -> OnSurfaceVariantLight
                                 }
 
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = RoundedCornerShape(Dimens.RadiusFull),
                                     color = shiftBg,
-                                    modifier = Modifier
-                                        .wrapContentWidth()
-                                        .widthIn(min = 60.dp)
+                                    modifier = Modifier.wrapContentWidth()
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(
-                                            text = shiftDisplayName,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = shiftFg,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                                            maxLines = 1,
-                                            softWrap = false
-                                        )
-                                    }
+                                    Text(
+                                        text = shiftDisplayName,
+                                        fontSize = DepthTypeTokens.ChipLabelSize,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = shiftFg,
+                                        modifier = Modifier.padding(
+                                            horizontal = Dimens.ReportGridGap,
+                                            vertical = Dimens.SpacingXs
+                                        ),
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
                                 }
 
-                                Spacer(Modifier.width(6.dp))
+                                Spacer(Modifier.width(Dimens.SpacingXs))
 
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = SurfaceVariantLight,
-                                    border = BorderStroke(0.5.dp, OutlineLight)
+                                    shape = RoundedCornerShape(Dimens.RadiusFull),
+                                    color = BadgeBlueBg
                                 ) {
                                     Text(
                                         text = "#${report.id}",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = OnSurfaceVariantLight,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                        fontSize = DepthTypeTokens.ChipLabelSize,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = BadgeBlueText,
+                                        modifier = Modifier.padding(
+                                            horizontal = Dimens.ReportGridGap,
+                                            vertical = Dimens.SpacingXs
+                                        ),
                                         maxLines = 1,
                                         softWrap = false
                                     )
                                 }
                             }
 
-                            // Row 2 (stat row — mid of card, top padding 12.dp)
+                            Spacer(Modifier.height(Dimens.SpacingMd))
+                            HorizontalDivider(
+                                thickness = Dimens.RowDividerWidth,
+                                color = depthStyle.listDividerColor
+                            )
+
+                            // Row 2 (stat row — mid of card)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 12.dp),
+                                    .padding(vertical = Dimens.ListRowPaddingVertical),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
@@ -348,17 +378,19 @@ fun ShiftReportArchivesTab(
                                 ) {
                                     Text(
                                         text = stringResource(R.string.gross_revenue).uppercase(),
-                                        fontSize = 9.sp,
+                                        fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                                         fontWeight = FontWeight.Medium,
-                                        color = TextHintColor,
-                                        letterSpacing = 0.5.sp
+                                        color = OnSurfaceVariantLight,
+                                        letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(Modifier.height(2.dp))
+                                    Spacer(Modifier.height(Dimens.SpacingXxs))
                                     Text(
                                         text = MoneyFormat.formatMinor(report.totalSales, currentCurrency),
-                                        fontSize = 13.sp,
+                                        fontSize = DepthTypeTokens.ListRowTitleSize,
                                         fontWeight = FontWeight.Bold,
-                                        color = OnSurfaceLight,
+                                        color = TextPrimaryReport,
                                         maxLines = 1
                                     )
                                 }
@@ -369,16 +401,19 @@ fun ShiftReportArchivesTab(
                                 ) {
                                     Text(
                                         text = stringResource(R.string.mada_bank).uppercase(),
-                                        fontSize = 9.sp,
+                                        fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                                         fontWeight = FontWeight.Medium,
-                                        color = TextHintColor
+                                        color = OnSurfaceVariantLight,
+                                        letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(Modifier.height(2.dp))
+                                    Spacer(Modifier.height(Dimens.SpacingXxs))
                                     Text(
                                         text = MoneyFormat.formatMinor(report.madaPayments, currentCurrency),
-                                        fontSize = 13.sp,
+                                        fontSize = DepthTypeTokens.ListRowTitleSize,
                                         fontWeight = FontWeight.Bold,
-                                        color = PrimaryIndigoLight,
+                                        color = PrimaryBlueLight,
                                         maxLines = 1
                                     )
                                 }
@@ -389,88 +424,102 @@ fun ShiftReportArchivesTab(
                                 ) {
                                     Text(
                                         text = stringResource(R.string.net_cash_1).uppercase(),
-                                        fontSize = 9.sp,
+                                        fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
                                         fontWeight = FontWeight.Medium,
-                                        color = TextHintColor
+                                        color = OnSurfaceVariantLight,
+                                        letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(Modifier.height(2.dp))
+                                    Spacer(Modifier.height(Dimens.SpacingXxs))
                                     Text(
                                         text = MoneyFormat.formatMinor(report.netCash, currentCurrency),
-                                        fontSize = 13.sp,
+                                        fontSize = DepthTypeTokens.ListRowTitleSize,
                                         fontWeight = FontWeight.Bold,
-                                        color = SuccessGreen,
+                                        color = BadgeGreenText,
                                         maxLines = 1
                                     )
                                 }
                             }
 
-                            // Row 3 (action row — bottom of card, top padding 12.dp)
+                            HorizontalDivider(
+                                thickness = Dimens.RowDividerWidth,
+                                color = depthStyle.listDividerColor
+                            )
+
+                            // Row 3 (action row — bottom of card)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 12.dp),
+                                    .padding(top = Dimens.SpacingMd),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 OutlinedButton(
                                     onClick = { reportToDelete = report },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                                     border = null,
                                     elevation = null,
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         containerColor = Color.Transparent,
                                         contentColor = ErrorRedLight
                                     ),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    contentPadding = PaddingValues(
+                                        horizontal = Dimens.SpacingMd,
+                                        vertical = Dimens.SpacingSm
+                                    ),
                                     modifier = Modifier
                                         .heightIn(min = Dimens.MinTouchTarget)
                                         .depthSecondaryButton(
                                             borderColor = ErrorRedLight,
-                                            cornerRadius = 8.dp
+                                            cornerRadius = Dimens.RadiusReportInput
                                         )
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.DeleteOutline,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(Dimens.IconSm),
                                         tint = ErrorRedLight
                                     )
-                                    Spacer(Modifier.width(4.dp))
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.delete),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = ErrorRedLight,
                                         maxLines = 1,
                                         softWrap = false
                                     )
                                 }
 
-                                Spacer(Modifier.width(8.dp))
+                                Spacer(Modifier.width(Dimens.SpacingSm))
 
                                 Button(
                                     onClick = { onPreviewPdf(report) },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
                                     elevation = null,
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color.Transparent,
                                         contentColor = PureWhite
                                     ),
-                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                    contentPadding = PaddingValues(
+                                        horizontal = Dimens.SpacingLg,
+                                        vertical = Dimens.SpacingSm
+                                    ),
                                     modifier = Modifier
                                         .heightIn(min = Dimens.MinTouchTarget)
-                                        .depthRaisedButton(cornerRadius = 8.dp)
+                                        .depthRaisedButton(cornerRadius = Dimens.RadiusReportInput)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.PictureAsPdf,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(Dimens.IconSm),
                                         tint = PureWhite
                                     )
-                                    Spacer(Modifier.width(4.dp))
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.preview_pdf),
-                                        fontSize = 12.sp,
+                                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
                                         fontWeight = FontWeight.SemiBold,
                                         color = PureWhite,
                                         maxLines = 1,

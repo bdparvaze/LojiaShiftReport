@@ -33,6 +33,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.res.stringResource
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.*
 
 /**
@@ -281,104 +282,131 @@ fun PermissionRationaleDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AlertDialog(
+    LojiaDialog(
         onDismissRequest = onDismiss,
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        containerColor = Color.White,
-        icon = {
+        maxWidth = Dimens.DialogSmallMaxWidth,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.DialogPaddingComfortable),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+        ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(SuccessContainer),
+                    .size(Dimens.TextFieldHeightStandard)
+                    .depthRaisedIconTile(
+                        gradientColors = listOf(PureWhite, TileTealEnd),
+                        cornerRadius = Dimens.RadiusEmployeeAvatarTile
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = feature.icon,
                     contentDescription = null,
                     tint = AccentEmerald,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(Dimens.IconLg)
                 )
             }
-        },
-        title = {
+
             Text(
                 text = stringResource(feature.titleRes),
-                fontSize = 18.sp,
+                fontSize = DepthTypeTokens.QuickPinTitleSize,
                 fontWeight = FontWeight.Bold,
-                color = OnBackgroundLight,
+                color = TextPrimaryReport,
                 textAlign = TextAlign.Center
             )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = stringResource(feature.descriptionRes),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    color = OnSurfaceVariantLight,
-                    textAlign = TextAlign.Center
-                )
 
-                if (isPermanentlyDenied) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Surface(
-                        color = ErrorContainerLight,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = null,
-                                tint = ErrorRedLight,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.permission_permanently_denied_desc),
-                                fontSize = 12.sp,
-                                lineHeight = 16.sp,
-                                color = ErrorRedLight
-                            )
-                        }
-                    }
+            Text(
+                text = stringResource(feature.descriptionRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = OnSurfaceVariantLight,
+                textAlign = TextAlign.Center
+            )
+
+            if (isPermanentlyDenied) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .depthSemanticCard(
+                            backgroundColor = ErrorContainerLight,
+                            borderColor = ErrorRedLight.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(Dimens.RadiusMd)
+                        )
+                        .padding(Dimens.SpacingMd),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = ErrorRedLight,
+                        modifier = Modifier.size(Dimens.IconSm)
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                    Text(
+                        text = stringResource(R.string.permission_permanently_denied_desc),
+                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                        color = ErrorRedLight
+                    )
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (isPermanentlyDenied) {
-                        onOpenSettingsClick()
-                    } else {
-                        onGrantClick()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = AccentEmerald),
-                shape = RoundedCornerShape(12.dp)
+
+            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (isPermanentlyDenied) stringResource(R.string.btn_open_settings) else stringResource(R.string.btn_grant_permission),
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(contentColor = TextHintColor)
-            ) {
-                Text(stringResource(R.string.btn_not_now))
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = OnSurfaceVariantLight
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
+                        .depthSecondaryButton(cornerRadius = Dimens.RadiusReportInput)
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_not_now),
+                        fontWeight = FontWeight.SemiBold,
+                        color = OnSurfaceVariantLight
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if (isPermanentlyDenied) {
+                            onOpenSettingsClick()
+                        } else {
+                            onGrantClick()
+                        }
+                    },
+                    elevation = null,
+                    shape = RoundedCornerShape(Dimens.RadiusReportInput),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PureWhite
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = Dimens.ButtonHeightPrimary)
+                        .depthRaisedButton(cornerRadius = Dimens.RadiusReportInput)
+                ) {
+                    Text(
+                        text = if (isPermanentlyDenied) stringResource(R.string.btn_open_settings) else stringResource(R.string.btn_grant_permission),
+                        fontWeight = FontWeight.SemiBold,
+                        color = PureWhite
+                    )
+                }
             }
         }
-    )
+    }
 }

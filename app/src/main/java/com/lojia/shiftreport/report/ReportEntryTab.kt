@@ -777,19 +777,17 @@ fun ReportEntryTab(
 
     // ---- Reset confirmation ----
     if (showResetConfirm) {
-        AlertDialog(
+        com.lojia.shiftreport.ui.common.LojiaConfirmDialog(
+            title = stringResource(R.string.clean_data),
+            message = stringResource(R.string.confirm_clean_data),
             onDismissRequest = { showResetConfirm = false },
-            containerColor = PureWhite,
-            titleContentColor = OnBackgroundLight,
-            textContentColor = OnSurfaceVariantLight,
-            title = { Text(stringResource(R.string.clean_data), color = OnBackgroundLight, fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.confirm_clean_data), color = OnSurfaceVariantLight) },
-            confirmButton = {
-                TextButton(onClick = { resetAll(); showResetConfirm = false }) { Text(stringResource(R.string.yes), color = ShiftColors.Danger, fontWeight = FontWeight.Bold) }
+            onConfirm = {
+                resetAll()
+                showResetConfirm = false
             },
-            dismissButton = {
-                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            }
+            confirmText = stringResource(R.string.yes),
+            dismissText = stringResource(R.string.cancel),
+            isDestructive = true
         )
     }
 
@@ -977,15 +975,16 @@ fun EmployerAdvanceSection(
         val advanceAmountClass = classifyMoneyInput(amount, MoneyFormat.minorUnitDigits(currency))
         val isAdvanceAmountInvalid = advanceAmountClass is MoneyInput.Invalid
 
+        val isAdvanceFieldEnabled = selectedEmployee != null
         LojiaTextField(
             value = amount,
             onValueChange = onAmountChange,
             label = { Text(stringResource(R.string.advance_amount_label)) },
-            enabled = selectedEmployee != null,
+            enabled = isAdvanceFieldEnabled,
             isError = isAdvanceAmountInvalid,
             textStyle = LocalTextStyle.current.copy(
                 fontSize = DepthTypeTokens.ReportFieldTextSize,
-                fontWeight = FontWeight.Medium,
+                fontWeight = if (isAdvanceFieldEnabled) FontWeight.Medium else FontWeight.Normal,
                 color = depthStyle.reportFieldTextColor
             ),
             supportingText = if (isAdvanceAmountInvalid) {
@@ -999,9 +998,14 @@ fun EmployerAdvanceSection(
             shape = RoundedCornerShape(Dimens.RadiusReportInput),
             minHeight = Dimens.TextFieldHeightReport,
             borderColorOverride = depthStyle.reportFieldBorderColor,
-            topShadowAlphaOverride = depthStyle.reportFieldInsetAlpha,
+            topShadowAlphaOverride = if (isAdvanceFieldEnabled) depthStyle.reportFieldInsetAlpha else DepthTokens.REPORT_READ_ONLY_INSET_ALPHA,
             placeholderColor = depthStyle.reportFieldPlaceholderColor,
             placeholderFontSize = DepthTypeTokens.ReportFieldTextSize,
+            disabledBackgroundOverride = DepthTokens.ReportReadOnlyBackground,
+            disabledBorderColorOverride = DepthTokens.ReportReadOnlyBorderColor,
+            insetShadowOffsetYOverride = Dimens.ReportReadOnlyShadowOffsetY,
+            insetShadowBlurOverride = Dimens.ReportReadOnlyShadowBlur,
+            disabledTextColor = DepthTokens.ReportReadOnlyTextColor,
             modifier = Modifier.fillMaxWidth()
         )
 

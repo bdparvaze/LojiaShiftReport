@@ -343,6 +343,31 @@ object DepthTokens {
 
     /** Peak diameter multiplier for the expanding LIVE pulse ring. */
     const val LIVE_HALO_MAX_SCALE: Float = 1.85f
+
+    // ============ STAGE 26G SPEC GAP PARITY TOKENS ============
+    /** Register dial-code button text ink (#334155), border (#CBD5E1), lip (#D5DCEB), and gradient (#FFFFFF..#F1F5FF). */
+    val DialButtonTextColor: Color = DialCodeTextColor
+    val DialButtonBorderColor: Color = InsetFieldBorderColor
+    val DialButtonLipColor: Color = KeypadButtonLipColor
+    val DialButtonGradientStart: Color = SecondaryButtonGradientStart
+    val DialButtonGradientEnd: Color = SecondaryButtonGradientEnd
+
+    /** Register info/privacy note block fill (#F1F5FB), border (#E2E8F0), and inset shadow alpha (0.12). */
+    val RegisterNoteBackground: Color = RegisterNoteFill
+    val RegisterNoteBorderColor: Color = OutlineVariantLight
+    const val REGISTER_NOTE_SHADOW_ALPHA: Float = 0.12f
+
+    /** Password recovery info block fill (#EEF3FF) & border (#D0DDFF), and 46dp icon tile stops (#FFFFFF..#D0DDFF). */
+    val RecoveryInfoBackground: Color = CashWellBg
+    val RecoveryInfoBorderColor: Color = RecoveryInfoBorder
+    val RecoveryTileGradientStart: Color = PureWhite
+    val RecoveryTileGradientEnd: Color = RecoveryInfoBorder
+
+    /** Report Entry read-only/disabled box fill (#EEF1F7), border (#C9D3E8), text ink (#667085), and inset alpha (0.06). */
+    val ReportReadOnlyBackground: Color = ReportReadOnlyFill
+    val ReportReadOnlyBorderColor: Color = ReportInputBorder
+    val ReportReadOnlyTextColor: Color = TextPlaceholderReport
+    const val REPORT_READ_ONLY_INSET_ALPHA: Float = 0.06f
 }
 
 /**
@@ -413,6 +438,8 @@ object DepthTypeTokens {
     val SegmentedChipTextSize: TextUnit = 13.sp
     val StatCountSize: TextUnit = 18.sp
     val EmptyStateTitleSize: TextUnit = 16.sp
+    /** Register dial-code button text size (13.5.sp). */
+    val DialButtonTextSize: TextUnit = 13.5.sp
 }
 
 /**
