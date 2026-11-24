@@ -62,6 +62,9 @@ fun ReportEntryTab(
     shiftReports: List<ShiftReport> = emptyList(),
     formState: ShiftFormState = ShiftFormState(),
     formActions: ShiftFormActions = ShiftFormActions(),
+    requestedModalType: ModalType = ModalType.NONE,
+    modalRequestNonce: Long = 0L,
+    onRequestedModalHandled: () -> Unit = {},
     onSave: (ShiftReportData) -> Unit
 ) {
     val shiftOptions = listOf(stringResource(R.string.shift_day), stringResource(R.string.shift_night_option))
@@ -95,6 +98,12 @@ fun ReportEntryTab(
     val purchasedItems = formState.purchasedItems
 
     var modalType by remember { mutableStateOf(ModalType.NONE) }
+    LaunchedEffect(modalRequestNonce, requestedModalType) {
+        if (modalRequestNonce > 0L && requestedModalType != ModalType.NONE) {
+            modalType = requestedModalType
+            onRequestedModalHandled()
+        }
+    }
     var showResetConfirm by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 

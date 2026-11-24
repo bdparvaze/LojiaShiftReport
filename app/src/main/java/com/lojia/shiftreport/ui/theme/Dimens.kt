@@ -250,4 +250,48 @@ object Dimens {
     /** Inner top shadow offset and blur for Report Entry read-only numeric wells (0/2.dp blur 3.dp). */
     val ReportReadOnlyShadowOffsetY: Dp = 2.dp
     val ReportReadOnlyShadowBlur: Dp = 3.dp
+
+    // =========================================================================
+    // STAGE 27A HOME DASHBOARD BOARD PARITY TOKENS
+    // =========================================================================
+    /** Overlap distance between top brand header (GR6) and floating Shift status card (22.dp). */
+    val HomeHeaderOverlapOffset: Dp = 22.dp
+    /** Bottom padding inside top brand header beneath date to accommodate card overlap (36.dp). */
+    val HomeHeaderBottomPadding: Dp = 36.dp
+    /** Vertical section spacing between Home Dashboard cards (14.dp). */
+    val HomeSectionGap: Dp = 14.dp
+    /** Grid gap between 2x2 Home KPI cards and Quick Action tiles (10.dp). */
+    val HomeKpiGridGap: Dp = 10.dp
+    /** Vertical gap between KPI tile label and hero KPI figure (10.dp). */
+    val HomeKpiValueTopGap: Dp = 10.dp
+    /** Proportional cash/bank/wallet split bar track height (10.dp), radius (7.dp), and gap (3.dp). */
+    val HomeBreakdownTrackHeight: Dp = 10.dp
+    val HomeBreakdownTrackRadius: Dp = 7.dp
+    val HomeBreakdownSegmentGap: Dp = 3.dp
+    /** Legend color swatch size (10.dp) and radius (3.dp) on Sales Summary breakdown rows. */
+    val HomeBreakdownSwatchSize: Dp = 10.dp
+    val HomeBreakdownSwatchRadius: Dp = 3.dp
+    /** Quick action raised SH1 icon tile size (46.dp) and radius (15.dp). */
+    val HomeQuickActionTileSize: Dp = 46.dp
+    val HomeQuickActionTileRadius: Dp = 15.dp
+    /** Draft / Review alert banner minimum height (72.dp). */
+    val HomeDraftBannerMinHeight: Dp = 72.dp
+    /** Last 7 days bar chart container height (132.dp), bar width (24.dp), radius (8.dp), and min bar height (6.dp). */
+    val HomeChartHeight: Dp = 132.dp
+    val HomeChartBarWidth: Dp = 24.dp
+    val HomeChartBarRadius: Dp = 8.dp
+    val HomeChartBarMinHeight: Dp = 6.dp
+    /** Fixed vertical header band above chart bars for compact numeric value labels (18.dp). */
+    val HomeChartValueLabelHeight: Dp = 18.dp
+    /** Minimum height for Shift/LIVE status pills (26.dp). */
+    val HomeStatusBadgeHeight: Dp = 26.dp
+    /** Large inner padding for hero Sales Summary & Shift status cards (18.dp). */
+    val HomeCardPaddingLarge: Dp = 18.dp
+    /** Soft amber/emerald glow shadow offsets and blur for Home Dashboard badges and banners. */
+    val HomeLiveBadgeShadowOffsetY: Dp = 2.dp
+    val HomeLiveBadgeShadowBlur: Dp = 6.dp
+    val HomeDraftBannerShadowOffsetY: Dp = 6.dp
+    val HomeDraftBannerShadowBlur: Dp = 16.dp
+    val HomeChartTodayGlowOffsetY: Dp = 4.dp
+    val HomeChartTodayGlowBlur: Dp = 10.dp
 }

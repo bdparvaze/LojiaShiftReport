@@ -307,3 +307,35 @@ val RecoveryInfoBorder = Color(0xFFD0DDFF)
 /** Report Entry read-only/disabled numeric field background fill (#EEF1F7). */
 val ReportReadOnlyFill = Color(0xFFEEF1F7)
 
+// ============ STAGE 27A HOME DASHBOARD BOARD TOKENS ============
+/** Greeting subtitle color over the diagonal brand header (#DCE6FF). */
+val HomeGreetingTextColor = Color(0xFFDCE6FF)
+
+/** Vertical gradient top stop for the LIVE status badge pill (#E3FBEC). */
+val LiveBadgeGradientStart = Color(0xFFE3FBEC)
+
+/** Vertical gradient bottom stop for the LIVE status badge pill (#C6F3DA). */
+val LiveBadgeGradientEnd = Color(0xFFC6F3DA)
+
+/** Proportional breakdown bar segment start/end for Bank / Mada (#19B3A3 -> #0E9384). */
+val SegmentTealStart = Color(0xFF19B3A3)
+val SegmentTealEnd = Color(0xFF0E9384)
+
+/** Proportional breakdown bar segment start/end for Digital Wallet (#FDB022 -> #F79009). */
+val SegmentAmberStart = Color(0xFFFDB022)
+val SegmentAmberEnd = Color(0xFFF79009)
+
+/** 145-deg SH1 raised icon tile bottom-right gradient stops matching Home Dashboard KPI & Quick Actions. */
+val TileGreenEnd = Color(0xFFD1FADF)
+val TileBlueEnd = Color(0xFFD0DDFF)
+val TileAmberEnd = Color(0xFFFDE9B0)
+val TileMintEnd = Color(0xFFC3F2D6)
+val TileRoseEnd = Color(0xFFFBD3CF)
+
+/** Inactive day vertical gradient stops for the 7-day sales chart (GR10, #D3E0FF -> #B3C9FF). */
+val ChartBarInactiveStart = Color(0xFFD3E0FF)
+val ChartBarInactiveEnd = Color(0xFFB3C9FF)
+
+/** Warm amber shadow tint beneath the Draft / Review banner. */
+val DraftBannerShadowColor = ChartAmber
+

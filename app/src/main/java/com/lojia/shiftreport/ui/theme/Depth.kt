@@ -368,6 +368,36 @@ object DepthTokens {
     val ReportReadOnlyBorderColor: Color = ReportInputBorder
     val ReportReadOnlyTextColor: Color = TextPlaceholderReport
     const val REPORT_READ_ONLY_INSET_ALPHA: Float = 0.06f
+
+    // ============ STAGE 27A HOME DASHBOARD TOKENS ============
+    /** Greeting text color over GR6 brand header (#DCE6FF). */
+    val HomeHeaderGreetingColor: Color = HomeGreetingTextColor
+
+    /** LIVE badge vertical gradient (#E3FBEC -> #C6F3DA), border (#BBF7D0), ink (#05603A), and glow alpha. */
+    val LiveBadgeBgStart: Color = LiveBadgeGradientStart
+    val LiveBadgeBgEnd: Color = LiveBadgeGradientEnd
+    val LiveBadgeBorder: Color = PositiveBannerBorder
+    val LiveBadgeText: Color = BadgeGreenText
+    const val LIVE_BADGE_SHADOW_ALPHA: Float = 0.22f
+
+    /** Closed shift pill fill (#F1F5F9), border (#E2E8F0), and slate ink (#344054). */
+    val ClosedBadgeBackground: Color = SurfaceVariantLight
+    val ClosedBadgeBorderColor: Color = OutlineVariantLight
+    val ClosedBadgeTextColor: Color = TextSlate700
+
+    /** Proportional payment split bar gradients for Bank (#19B3A3 -> #0E9384) and Wallet (#FDB022 -> #F79009). */
+    val BankSegmentGradientStart: Color = SegmentTealStart
+    val BankSegmentGradientEnd: Color = SegmentTealEnd
+    val WalletSegmentGradientStart: Color = SegmentAmberStart
+    val WalletSegmentGradientEnd: Color = SegmentAmberEnd
+
+    /** Draft / Review amber banner glow shadow alpha. */
+    const val DRAFT_BANNER_SHADOW_ALPHA: Float = 0.16f
+
+    /** Last 7 days bar chart prior-day gradient (#D3E0FF -> #B3C9FF) and today glow alpha. */
+    val ChartBarInactiveGradientStart: Color = ChartBarInactiveStart
+    val ChartBarInactiveGradientEnd: Color = ChartBarInactiveEnd
+    const val CHART_TODAY_GLOW_ALPHA: Float = 0.28f
 }
 
 /**
@@ -394,6 +424,13 @@ object DepthMotionTokens {
 
     /** Full cycle period (ms) for a LIVE status indicator pulse. */
     const val LIVE_PULSE_PERIOD_MS: Int = 1400
+
+    /** Hero net sales one-shot count-up duration (ms) when animations are enabled. */
+    const val HERO_COUNTUP_DURATION_MS: Int = 650
+
+    /** 7-day bar chart bar grow-up duration (ms) and per-bar stagger (ms). */
+    const val CHART_BAR_GROW_DURATION_MS: Int = 550
+    const val CHART_BAR_STAGGER_MS: Int = 45
 }
 
 /**
@@ -440,6 +477,17 @@ object DepthTypeTokens {
     val EmptyStateTitleSize: TextUnit = 16.sp
     /** Register dial-code button text size (13.5.sp). */
     val DialButtonTextSize: TextUnit = 13.5.sp
+
+    // ============ STAGE 27A HOME DASHBOARD TYPOGRAPHY ============
+    val HomeGreetingSize: TextUnit = 14.sp
+    val HomeDateTitleSize: TextUnit = 18.sp
+    val HomeHeroNetSalesSize: TextUnit = 34.sp
+    val HomeKpiValueSize: TextUnit = 20.sp
+    val HomeLiveBadgeSize: TextUnit = 11.sp
+    val HomeLiveBadgeTracking: TextUnit = 0.44.sp
+    val HomeChartValueSize: TextUnit = 10.5.sp
+    val HomeChartDayLabelSize: TextUnit = 11.sp
+    val HomeQuickActionLabelSize: TextUnit = 12.sp
 }
 
 /**

@@ -55,13 +55,14 @@ sealed interface AppNavState {
     val icon: ImageVector
 
     sealed class ShiftReportState(override val titleKey: String, override val icon: ImageVector) : AppNavState {
+        data object Home : ShiftReportState("nav_home", Icons.Default.Home)
         data object Reports : ShiftReportState("nav_reports", Icons.Default.Assessment)
         data object Analytics : ShiftReportState("nav_analytics", Icons.Default.BarChart)
         data object DocumentScanner : ShiftReportState("nav_document_scanner", Icons.Outlined.DocumentScanner)
         data class SettingsDetail(val section: String = "profile") : ShiftReportState("nav_settings", Icons.Default.Settings)
 
         companion object {
-            val primaryTabs: List<ShiftReportState> get() = listOf(Reports, Analytics)
+            val primaryTabs: List<ShiftReportState> get() = listOf(Home, Reports, Analytics)
         }
     }
 }
@@ -69,20 +70,22 @@ sealed interface AppNavState {
 private val AppNavStateSaver = androidx.compose.runtime.saveable.Saver<AppNavState, String>(
     save = { state ->
         when (state) {
+            is AppNavState.ShiftReportState.Home -> "home"
             is AppNavState.ShiftReportState.Reports -> "reports"
             is AppNavState.ShiftReportState.Analytics -> "analytics"
             is AppNavState.ShiftReportState.DocumentScanner -> "scanner"
             is AppNavState.ShiftReportState.SettingsDetail -> "settings:${state.section}"
-            else -> "reports"
+            else -> "home"
         }
     },
     restore = { key ->
         when {
+            key == "home" -> AppNavState.ShiftReportState.Home
             key == "reports" -> AppNavState.ShiftReportState.Reports
             key == "analytics" -> AppNavState.ShiftReportState.Analytics
             key == "scanner" -> AppNavState.ShiftReportState.DocumentScanner
             key.startsWith("settings:") -> AppNavState.ShiftReportState.SettingsDetail(key.removePrefix("settings:"))
-            else -> AppNavState.ShiftReportState.Reports
+            else -> AppNavState.ShiftReportState.Home
         }
     }
 )
@@ -147,8 +150,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             val businessProfile by reportViewModel.businessProfile.collectAsState()
 
             var navState by rememberSaveable(stateSaver = AppNavStateSaver) {
-                mutableStateOf<AppNavState>(AppNavState.ShiftReportState.Reports)
+                mutableStateOf<AppNavState>(AppNavState.ShiftReportState.Home)
             }
+            var requestedReportTab by rememberSaveable { mutableStateOf(ShiftReportTab.REPORT_ENTRY) }
+            var requestedEntryModal by remember { mutableStateOf(ModalType.NONE) }
+            var reportRouteNonce by remember { mutableLongStateOf(0L) }
 
             val navBackStack = remember { mutableStateListOf<AppNavState>() }
 
@@ -331,11 +337,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             modifier = Modifier.fillMaxSize()
                         ) {
                             val focusManager = LocalFocusManager.current
-                            val isRootScreen = navState is AppNavState.ShiftReportState.Reports
+                            val isRootScreen = navState is AppNavState.ShiftReportState.Home
                             val isScannerActive = navState is AppNavState.ShiftReportState.DocumentScanner
 
-                            // Handle back button smoothly to close drawer, pop back stack, return to Reports or exit
-                            val canHandleBack = drawerState.isOpen || topMenuState.isOpen || navBackStack.isNotEmpty() || navState != AppNavState.ShiftReportState.Reports
+                            // Handle back button smoothly to close drawer, pop back stack, return to Home or exit
+                            val canHandleBack = drawerState.isOpen || topMenuState.isOpen || navBackStack.isNotEmpty() || navState != AppNavState.ShiftReportState.Home
                             BackHandler(enabled = !isScannerActive && canHandleBack) {
                                 if (drawerState.isOpen || topMenuState.isOpen) {
                                     topMenuState.onDismissBackPress()
@@ -343,14 +349,15 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                 } else if (navBackStack.isNotEmpty()) {
                                     focusManager.clearFocus()
                                     navState = navBackStack.removeAt(navBackStack.lastIndex)
-                                } else if (navState != AppNavState.ShiftReportState.Reports) {
+                                } else if (navState != AppNavState.ShiftReportState.Home) {
                                     focusManager.clearFocus()
-                                    navState = AppNavState.ShiftReportState.Reports
+                                    navState = AppNavState.ShiftReportState.Home
                                 }
                             }
 
                             val depthStyle = LocalDepthStyle.current
                             val screenCanvasBackground = when (navState) {
+                                is AppNavState.ShiftReportState.Home,
                                 is AppNavState.ShiftReportState.Reports,
                                 is AppNavState.ShiftReportState.SettingsDetail -> depthStyle.reportPageBackground
                                 else -> MaterialTheme.colorScheme.background
@@ -390,8 +397,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                         val isFullScreenAddressRoute = navState is AppNavState.ShiftReportState.SettingsDetail &&
                                                 selectedSettingsMenu?.startsWith("settings/profile/addresses") == true
 
-                                        if (!isFullScreenAddressRoute) {
+                                        val isHomeRoute = navState is AppNavState.ShiftReportState.Home
+
+                                        if (!isFullScreenAddressRoute && !isHomeRoute) {
                                             val screenTitle = when (val state = navState) {
+                                                is AppNavState.ShiftReportState.Home -> stringResource(R.string.nav_home)
                                                 is AppNavState.ShiftReportState.Reports -> stringResource(R.string.nav_reports)
                                                 is AppNavState.ShiftReportState.Analytics -> stringResource(R.string.nav_analytics)
                                                 is AppNavState.ShiftReportState.DocumentScanner -> stringResource(R.string.document_scanner)
@@ -474,6 +484,17 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                             reportViewModel = reportViewModel,
                                             language = currentLanguage,
                                             activity = this@MainActivity,
+                                            requestedReportTab = requestedReportTab,
+                                            requestedEntryModal = requestedEntryModal,
+                                            reportRouteNonce = reportRouteNonce,
+                                            onReportRouteHandled = { requestedEntryModal = ModalType.NONE },
+                                            onOpenDrawer = openTopMenu,
+                                            onNavigateToReportTab = { targetTab, targetModal ->
+                                                requestedReportTab = targetTab
+                                                requestedEntryModal = targetModal
+                                                reportRouteNonce += 1L
+                                                navigateTo(AppNavState.ShiftReportState.Reports)
+                                            },
                                             onPreviewPdf = { report -> previewReport = report },
                                             onNavigateToSection = { section ->
                                                 navigateTo(AppNavState.ShiftReportState.SettingsDetail(section))
@@ -482,7 +503,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 if (navBackStack.isNotEmpty()) {
                                                     navState = navBackStack.removeAt(navBackStack.lastIndex)
                                                 } else {
-                                                    navState = AppNavState.ShiftReportState.Reports
+                                                    navState = AppNavState.ShiftReportState.Home
                                                 }
                                             }
                                         )
@@ -678,6 +699,12 @@ fun AppNavigationHost(
     reportViewModel: ReportViewModel,
     language: AppLanguage,
     activity: android.app.Activity,
+    requestedReportTab: ShiftReportTab = ShiftReportTab.REPORT_ENTRY,
+    requestedEntryModal: ModalType = ModalType.NONE,
+    reportRouteNonce: Long = 0L,
+    onReportRouteHandled: () -> Unit = {},
+    onOpenDrawer: () -> Unit = {},
+    onNavigateToReportTab: (ShiftReportTab, ModalType) -> Unit = { _, _ -> },
     onPreviewPdf: (ShiftReport) -> Unit,
     onNavigateToSection: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
@@ -696,6 +723,12 @@ fun AppNavigationHost(
                     reportViewModel = reportViewModel,
                     language = language,
                     activity = activity,
+                    requestedReportTab = requestedReportTab,
+                    requestedEntryModal = requestedEntryModal,
+                    reportRouteNonce = reportRouteNonce,
+                    onReportRouteHandled = onReportRouteHandled,
+                    onOpenDrawer = onOpenDrawer,
+                    onNavigateToReportTab = onNavigateToReportTab,
                     onPreviewPdf = onPreviewPdf,
                     onNavigateToSection = onNavigateToSection,
                     onNavigateBack = onNavigateBack
@@ -706,7 +739,7 @@ fun AppNavigationHost(
 }
 
 /**
- * Isolated Shift Report Module Container (Shift Reports, Analytics, Report Settings).
+ * Isolated Shift Report Module Container (Home Dashboard, Shift Reports, Analytics, Report Settings).
  */
 @Composable
 private fun ShiftReportModuleNavHost(
@@ -714,15 +747,34 @@ private fun ShiftReportModuleNavHost(
     reportViewModel: ReportViewModel,
     language: AppLanguage,
     activity: android.app.Activity,
+    requestedReportTab: ShiftReportTab = ShiftReportTab.REPORT_ENTRY,
+    requestedEntryModal: ModalType = ModalType.NONE,
+    reportRouteNonce: Long = 0L,
+    onReportRouteHandled: () -> Unit = {},
+    onOpenDrawer: () -> Unit = {},
+    onNavigateToReportTab: (ShiftReportTab, ModalType) -> Unit = { _, _ -> },
     onPreviewPdf: (ShiftReport) -> Unit,
     onNavigateToSection: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     when (destination) {
+        is AppNavState.ShiftReportState.Home -> {
+            HomeDashboardScreen(
+                reportViewModel = reportViewModel,
+                language = language,
+                onOpenDrawer = onOpenDrawer,
+                onNavigateToReportTab = onNavigateToReportTab,
+                onPreviewPdf = onPreviewPdf
+            )
+        }
         is AppNavState.ShiftReportState.Reports -> {
             ShiftReportScreen(
                 viewModel = reportViewModel,
                 language = language,
+                requestedTab = requestedReportTab,
+                requestedEntryModal = requestedEntryModal,
+                routeNonce = reportRouteNonce,
+                onRouteRequestHandled = onReportRouteHandled,
                 onPreviewPdf = onPreviewPdf
             )
         }

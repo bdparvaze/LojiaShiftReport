@@ -1209,3 +1209,102 @@ fun Modifier.depthRecoveryTile(): Modifier = this
         cornerRadius = Dimens.RadiusRecoveryTile
     )
 
+/**
+ * Composable helper returning true when animations are allowed (not in inspection and system animator scale > 0).
+ */
+@Composable
+fun rememberShouldAnimate(): Boolean {
+    val context = LocalContext.current
+    val isInspection = LocalInspectionMode.current
+    val animatorScale = remember(context) { readAnimatorDurationScale(context) }
+    return !isInspection && shouldAnimate(animatorScale)
+}
+
+/**
+ * Emerald gradient pill + soft glow shadow for the Home Dashboard LIVE badge.
+ */
+fun Modifier.depthLiveBadge(): Modifier = composed {
+    val shape = RoundedCornerShape(Dimens.RadiusFull)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = DepthTokens.LiveDotColor.copy(alpha = DepthTokens.LIVE_BADGE_SHADOW_ALPHA),
+                offsetY = Dimens.HomeLiveBadgeShadowOffsetY,
+                blurRadius = Dimens.HomeLiveBadgeShadowBlur,
+                cornerRadius = Dimens.RadiusFull
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(
+                    colors = listOf(DepthTokens.LiveBadgeBgStart, DepthTokens.LiveBadgeBgEnd)
+                )
+            )
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = Dimens.CardBorderWidth.toPx(),
+                color = DepthTokens.LiveBadgeBorder
+            )
+        }
+}
+
+/**
+ * Warm amber raised draft/review alert banner matching board GR13 + amber glow shadow.
+ */
+fun Modifier.depthDraftBanner(
+    cornerRadius: Dp = Dimens.RadiusKpiCard
+): Modifier = composed {
+    val shape = RoundedCornerShape(cornerRadius)
+    this
+        .drawBehind {
+            drawSoftDropShadow(
+                color = DraftBannerShadowColor.copy(alpha = DepthTokens.DRAFT_BANNER_SHADOW_ALPHA),
+                offsetY = Dimens.HomeDraftBannerShadowOffsetY,
+                blurRadius = Dimens.HomeDraftBannerShadowBlur,
+                cornerRadius = cornerRadius
+            )
+        }
+        .clip(shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.verticalGradient(
+                    colors = listOf(SectionAmberGradientStart, SectionAmberGradientEnd)
+                )
+            )
+            val borderPx = Dimens.CardBorderWidth.toPx()
+            val sheenY = borderPx + borderPx * 0.5f
+            drawLine(
+                color = PureWhite.copy(alpha = DepthTokens.SECTION_PILL_HIGHLIGHT_ALPHA),
+                start = Offset(borderPx, sheenY),
+                end = Offset((size.width - borderPx).coerceAtLeast(borderPx), sheenY),
+                strokeWidth = borderPx
+            )
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = borderPx,
+                color = SectionAmberBorder
+            )
+        }
+}
+
+/**
+ * Soft brand blue glow beneath today's highlighted bar in the 7-day sales chart.
+ */
+fun Modifier.depthChartTodayBarGlow(
+    cornerRadius: Dp = Dimens.HomeChartBarRadius
+): Modifier = composed {
+    this.drawBehind {
+        drawSoftDropShadow(
+            color = DepthTokens.RaisedButtonShadowColor.copy(alpha = DepthTokens.CHART_TODAY_GLOW_ALPHA),
+            offsetY = Dimens.HomeChartTodayGlowOffsetY,
+            blurRadius = Dimens.HomeChartTodayGlowBlur,
+            cornerRadius = cornerRadius
+        )
+    }
+}
+

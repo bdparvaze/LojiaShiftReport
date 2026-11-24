@@ -165,6 +165,10 @@ val SHIFT_REPORT_TABS: List<ShiftReportTab> = ShiftReportTab.entries
 fun ShiftReportScreen(
     viewModel: ReportViewModel,
     language: AppLanguage = AppLanguage.ENGLISH,
+    requestedTab: ShiftReportTab = ShiftReportTab.REPORT_ENTRY,
+    requestedEntryModal: ModalType = ModalType.NONE,
+    routeNonce: Long = 0L,
+    onRouteRequestHandled: () -> Unit = {},
     onPreviewPdf: (ShiftReport) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -301,6 +305,10 @@ fun ShiftReportScreen(
         language = language,
         currentCurrency = currentCurrency,
         businessProfile = businessProfile,
+        requestedTab = requestedTab,
+        requestedEntryModal = requestedEntryModal,
+        routeNonce = routeNonce,
+        onRouteRequestHandled = onRouteRequestHandled,
         onPreviewPdf = onPreviewPdf,
         onSaveReportData = { data ->
             val digits = MoneyFormat.minorUnitDigits(currentCurrency)
@@ -439,6 +447,10 @@ fun ShiftReportScreenContent(
     language: AppLanguage = AppLanguage.BENGALI,
     currentCurrency: String = MoneyFormat.DEFAULT_CURRENCY_CODE,
     businessProfile: BusinessProfile? = null,
+    requestedTab: ShiftReportTab = ShiftReportTab.REPORT_ENTRY,
+    requestedEntryModal: ModalType = ModalType.NONE,
+    routeNonce: Long = 0L,
+    onRouteRequestHandled: () -> Unit = {},
     onPreviewPdf: (ShiftReport) -> Unit = {},
     onSaveReportData: (ShiftReportData) -> Unit = {},
     onOpenShift: (String, String, Double) -> Unit = { _, _, _ -> },
@@ -447,6 +459,8 @@ fun ShiftReportScreenContent(
 ) {
     // 0 = Report Entry, 1 = Due History, 2 = Employer, 3 = Shopping/Paid Out, 4 = Walkout, 5 = Archives
     var savedTab by rememberSaveable { mutableIntStateOf(0) }
+    var entryModalRequest by remember { mutableStateOf(ModalType.NONE) }
+    var entryModalNonce by remember { mutableLongStateOf(0L) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -466,6 +480,19 @@ fun ShiftReportScreenContent(
 
     val pagerState = rememberPagerState(initialPage = savedTab.coerceIn(0, SHIFT_REPORT_TABS.size - 1)) {
         SHIFT_REPORT_TABS.size
+    }
+
+    LaunchedEffect(routeNonce, requestedTab, requestedEntryModal) {
+        if (routeNonce > 0L) {
+            val targetPage = requestedTab.ordinal.coerceIn(0, SHIFT_REPORT_TABS.size - 1)
+            savedTab = targetPage
+            pagerState.scrollToPage(targetPage)
+            if (requestedEntryModal != ModalType.NONE && requestedTab == ShiftReportTab.REPORT_ENTRY) {
+                entryModalRequest = requestedEntryModal
+                entryModalNonce = routeNonce
+            }
+            onRouteRequestHandled()
+        }
     }
 
     LaunchedEffect(pagerState.currentPage) {
@@ -597,6 +624,9 @@ fun ShiftReportScreenContent(
                     shiftReports = shiftReports,
                     formState = formState,
                     formActions = formActions,
+                    requestedModalType = entryModalRequest,
+                    modalRequestNonce = entryModalNonce,
+                    onRequestedModalHandled = { entryModalRequest = ModalType.NONE },
                     onSave = onSaveReportData
                 )
                 ShiftReportTab.DUE_HISTORY -> DueLedgerTab(

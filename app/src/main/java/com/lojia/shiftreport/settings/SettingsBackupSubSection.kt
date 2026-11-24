@@ -201,44 +201,6 @@ fun SettingsBackupSubSection(
             .fillMaxWidth()
             .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
     ) {
-        // Top Back Header
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier
-                    .size(Dimens.MinTouchTarget)
-                    .clip(CircleShape)
-                    .background(PrimaryContainerLight)
-                    .testTag("btn_backup_back")
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back),
-                    tint = PrimaryIndigoLight,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
-                Text(
-                    text = stringResource(R.string.backup_settings),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurfaceLight
-                )
-                Text(
-                    text = stringResource(R.string.backup_subtitle),
-                    fontSize = 11.5.sp,
-                    color = TextSecondaryLight
-                )
-            }
-        }
-
         // ==========================================
         // 0. BACKUP ENCRYPTION PASSWORD (ADMIN-GATED)
         // ==========================================

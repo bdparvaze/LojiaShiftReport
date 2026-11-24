@@ -174,13 +174,27 @@ fun MainAppDrawer(
             // ===============================================
             // Group A — NO header
             // ===============================================
+            // 0. Home Dashboard
+            DrawerMenuItem(
+                title = stringResource(R.string.nav_home),
+                icon = Icons.Outlined.Home,
+                activeColor = PrimaryIndigoLight,
+                isSelected = navState is AppNavState.ShiftReportState.Home,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .testTag("drawer_item_home"),
+                onClick = {
+                    onNavigate(AppNavState.ShiftReportState.Home)
+                    onCloseDrawer()
+                }
+            )
+
             // 1. Analytics
             DrawerMenuItem(
                 title = stringResource(R.string.nav_analytics),
                 icon = Icons.Outlined.Insights,
                 activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.Analytics,
-                modifier = Modifier.padding(top = 8.dp),
                 onClick = {
                     onNavigate(AppNavState.ShiftReportState.Analytics)
                     onCloseDrawer()
