@@ -5,8 +5,6 @@ import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,7 +56,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ImageBitmap
@@ -78,7 +75,6 @@ import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.ErrorContainerLight
 import com.lojia.shiftreport.ui.theme.ErrorRedLight
 import com.lojia.shiftreport.ui.theme.OnBackgroundLight
-import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
 import com.lojia.shiftreport.ui.theme.OutlineLight
 import com.lojia.shiftreport.ui.theme.PrimaryBlueDark

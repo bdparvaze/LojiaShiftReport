@@ -339,3 +339,7 @@ val ChartBarInactiveEnd = Color(0xFFB3C9FF)
 /** Warm amber shadow tint beneath the Draft / Review banner. */
 val DraftBannerShadowColor = ChartAmber
 
+// ============ STAGE 28B MISSING DESIGN TOKEN ============
+/** Soft cool-blue surface gradient end stop (#F5F7FD) for light card/button surface gradients; added in Stage 28B without altering existing board-locked DepthTokens stops. */
+val SurfaceGradientEnd = Color(0xFFF5F7FD)
+

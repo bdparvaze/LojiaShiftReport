@@ -64,14 +64,6 @@ fun chooseHeaderMetaLabelKind(rawVat: String?, rawPhone: String?): HeaderMetaLab
 }
 
 /**
- * Pure guard for demo seed insertion: demo data may only be seeded in debug builds
- * when the database has no existing records.
- */
-fun shouldSeedDemoData(isDebugBuild: Boolean, databaseIsEmpty: Boolean): Boolean {
-    return isDebugBuild && databaseIsEmpty
-}
-
-/**
  * Pure width-in-dots mapping for ESC/POS thermal printers (203 dpi).
  * 80 mm -> 576 dots; 58 mm, null, or any other value -> 384 dots.
  */

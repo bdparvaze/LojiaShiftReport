@@ -3,7 +3,6 @@ package com.lojia.shiftreport.settings
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,7 +41,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 enum class CashierStatusFilter {
     ALL, ACTIVE, ON_SHIFT, ARCHIVED

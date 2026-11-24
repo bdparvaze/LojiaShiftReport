@@ -1,7 +1,6 @@
 package com.lojia.shiftreport.settings
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,6 @@ import com.lojia.shiftreport.data.AppCountry
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.report.ReportViewModel
-import com.lojia.shiftreport.ui.common.LojiaDimens
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.AppConstants

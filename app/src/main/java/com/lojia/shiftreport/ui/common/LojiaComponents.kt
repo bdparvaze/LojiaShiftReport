@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.ui.theme.BadgeBlueBg
 import com.lojia.shiftreport.ui.theme.DepthTypeTokens
 import com.lojia.shiftreport.ui.theme.Dimens

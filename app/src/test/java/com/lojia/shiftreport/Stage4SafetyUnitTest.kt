@@ -2,16 +2,13 @@ package com.lojia.shiftreport
 
 import com.lojia.shiftreport.util.HeaderMetaLabelKind
 import com.lojia.shiftreport.util.chooseHeaderMetaLabelKind
-import com.lojia.shiftreport.util.shouldSeedDemoData
 import com.lojia.shiftreport.util.vatNumberForPrint
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Stage 4 & 4B Unit Test: Verifies VAT printing normalization, label selection, and release-safe demo seed guard.
+ * Stage 4 & 4B Unit Test: Verifies VAT printing normalization and label selection.
  */
 class Stage4SafetyUnitTest {
 
@@ -33,21 +30,6 @@ class Stage4SafetyUnitTest {
     @Test
     fun vatNumberForPrint_paddedNumber_returnsTrimmed() {
         assertEquals("300123456789003", vatNumberForPrint(" 300123456789003 "))
-    }
-
-    @Test
-    fun shouldSeedDemoData_releaseBuildEmptyDb_returnsFalse() {
-        assertFalse(shouldSeedDemoData(isDebugBuild = false, databaseIsEmpty = true))
-    }
-
-    @Test
-    fun shouldSeedDemoData_debugBuildNonEmptyDb_returnsFalse() {
-        assertFalse(shouldSeedDemoData(isDebugBuild = true, databaseIsEmpty = false))
-    }
-
-    @Test
-    fun shouldSeedDemoData_debugBuildEmptyDb_returnsTrue() {
-        assertTrue(shouldSeedDemoData(isDebugBuild = true, databaseIsEmpty = true))
     }
 
     @Test

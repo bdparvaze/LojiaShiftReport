@@ -3,7 +3,6 @@ package com.lojia.shiftreport.ui.theme
 import android.content.Context
 import android.provider.Settings
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat

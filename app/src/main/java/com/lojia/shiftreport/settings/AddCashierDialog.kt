@@ -1,6 +1,5 @@
 package com.lojia.shiftreport.settings
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,7 +42,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
-import com.lojia.shiftreport.auth.AuthPinConstants
 import com.lojia.shiftreport.auth.SixDigitPinInput
 import com.lojia.shiftreport.data.Cashier
 import com.lojia.shiftreport.data.UserProfile

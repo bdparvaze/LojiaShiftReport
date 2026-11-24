@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.*
@@ -42,7 +41,6 @@ import com.lojia.shiftreport.settings.backup.BackupLocation
 import com.lojia.shiftreport.settings.backup.BackupManager
 import com.lojia.shiftreport.ui.common.*
 import com.lojia.shiftreport.ui.theme.*
-import com.lojia.shiftreport.util.BackupInfo
 import com.lojia.shiftreport.util.BackupSummary
 import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.DriveBackupItem

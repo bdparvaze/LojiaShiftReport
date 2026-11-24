@@ -2,7 +2,6 @@ package com.lojia.shiftreport.report
 
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,15 +22,11 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.HourglassEmpty
-import androidx.compose.material.icons.outlined.LocalMall
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.PersonOff
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.ShoppingBag
-import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -66,7 +61,6 @@ import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
 import com.lojia.shiftreport.util.normalizeReceiptNumber
 import com.lojia.shiftreport.util.summarizeDueMinor
-import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

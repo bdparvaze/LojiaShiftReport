@@ -23,7 +23,6 @@ import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
-import java.util.Locale
 
 /* ----------------------------------------------------------------------
  * 4-CARD INTERNATIONAL POS RECONCILIATION SUMMARY (SQUARE/LOYVERSE STYLE)

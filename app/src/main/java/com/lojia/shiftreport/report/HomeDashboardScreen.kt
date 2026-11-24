@@ -78,7 +78,6 @@ import com.lojia.shiftreport.ui.theme.BadgeAmberAccent
 import com.lojia.shiftreport.ui.theme.BadgeAmberTextDark
 import com.lojia.shiftreport.ui.theme.BadgeBlueText
 import com.lojia.shiftreport.ui.theme.BadgeGreenText
-import com.lojia.shiftreport.ui.theme.ChartAmber
 import com.lojia.shiftreport.ui.theme.DepthCardBorder
 import com.lojia.shiftreport.ui.theme.DepthMotionTokens
 import com.lojia.shiftreport.ui.theme.DepthTokens
