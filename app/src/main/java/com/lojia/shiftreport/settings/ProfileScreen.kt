@@ -799,10 +799,12 @@ private fun EditFullNameDialog(
                 Text(stringResource(R.string.profile_edit_full_name_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
             }
 
+            val firstNameLabel = stringResource(R.string.profile_first_name_label)
             LojiaTextField(
                 value = firstName,
                 onValueChange = { firstName = it },
-                label = { Text(stringResource(R.string.profile_first_name_label)) },
+                label = { Text(firstNameLabel) },
+                contentDescription = firstNameLabel,
                 singleLine = true,
                 isError = firstName.isBlank(),
                 supportingText = if (firstName.isBlank()) {
@@ -813,10 +815,12 @@ private fun EditFullNameDialog(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            val lastNameLabel = stringResource(R.string.profile_last_name_label)
             LojiaTextField(
                 value = lastName,
                 onValueChange = { lastName = it },
-                label = { Text(stringResource(R.string.profile_last_name_label)) },
+                label = { Text(lastNameLabel) },
+                contentDescription = lastNameLabel,
                 singleLine = true,
                 isError = lastName.isBlank(),
                 supportingText = if (lastName.isBlank()) {
@@ -923,10 +927,12 @@ private fun EditEmailDialog(
                 Text(stringResource(R.string.profile_edit_email_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
             }
 
+            val emailRequiredLabel = stringResource(R.string.profile_email_required_label)
             LojiaTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text(stringResource(R.string.profile_email_required_label)) },
+                label = { Text(emailRequiredLabel) },
+                contentDescription = emailRequiredLabel,
                 singleLine = true,
                 isError = email.isNotBlank() && !isEmailValid,
                 supportingText = if (email.isNotBlank() && !isEmailValid) {
@@ -1033,10 +1039,12 @@ private fun EditPhoneDialog(
                 Text(stringResource(R.string.profile_edit_phone_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
             }
 
+            val phoneRequiredLabel = stringResource(R.string.profile_phone_required_label)
             LojiaTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                label = { Text(stringResource(R.string.profile_phone_required_label)) },
+                label = { Text(phoneRequiredLabel) },
+                contentDescription = phoneRequiredLabel,
                 placeholder = { Text("+966 50 000 0000") },
                 singleLine = true,
                 isError = phone.isNotBlank() && !isValid,
@@ -1134,11 +1142,13 @@ private fun EditRecoveryQuestionDialog(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
             ) {
+                val securityQuestionLabel = stringResource(R.string.security_question_label)
                 LojiaTextField(
                     value = selectedQuestion,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text(stringResource(R.string.security_question_label)) },
+                    label = { Text(securityQuestionLabel) },
+                    contentDescription = securityQuestionLabel,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     shape = RoundedCornerShape(Dimens.RadiusMd),
                     modifier = Modifier
@@ -1161,10 +1171,12 @@ private fun EditRecoveryQuestionDialog(
                 }
             }
 
+            val profileAnswerLabel = stringResource(R.string.profile_answer_label)
             LojiaTextField(
                 value = answer,
                 onValueChange = { answer = it },
-                label = { Text(stringResource(R.string.profile_answer_label)) },
+                label = { Text(profileAnswerLabel) },
+                contentDescription = profileAnswerLabel,
                 singleLine = true,
                 visualTransformation = if (answerVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -1305,10 +1317,12 @@ private fun ProfileChangePasswordDialog(
                 Text(stringResource(R.string.change_password_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
             }
 
+            val currentPasswordLabel = stringResource(R.string.profile_current_password_label)
             LojiaTextField(
                 value = currentPass,
                 onValueChange = { currentPass = it; errorText = null },
-                label = { Text(stringResource(R.string.profile_current_password_label)) },
+                label = { Text(currentPasswordLabel) },
+                contentDescription = currentPasswordLabel,
                 singleLine = true,
                 visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -1323,10 +1337,12 @@ private fun ProfileChangePasswordDialog(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            val newPasswordLabel = stringResource(R.string.profile_new_password_label)
             LojiaTextField(
                 value = newPass,
                 onValueChange = { newPass = it; errorText = null },
-                label = { Text(stringResource(R.string.profile_new_password_label)) },
+                label = { Text(newPasswordLabel) },
+                contentDescription = newPasswordLabel,
                 singleLine = true,
                 visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -1350,10 +1366,12 @@ private fun ProfileChangePasswordDialog(
                 )
             }
 
+            val confirmPasswordLabel = stringResource(R.string.profile_confirm_password_label)
             LojiaTextField(
                 value = confirmPass,
                 onValueChange = { confirmPass = it; errorText = null },
-                label = { Text(stringResource(R.string.profile_confirm_password_label)) },
+                label = { Text(confirmPasswordLabel) },
+                contentDescription = confirmPasswordLabel,
                 singleLine = true,
                 isError = confirmPass.isNotEmpty() && confirmPass != newPass,
                 visualTransformation = if (showConfirm) VisualTransformation.None else PasswordVisualTransformation(),

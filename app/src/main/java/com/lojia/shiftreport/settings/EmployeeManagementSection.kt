@@ -659,10 +659,12 @@ private fun AddEditEmployeeDialog(
                 color = TextPrimaryReport
             )
 
+            val employeeNameLabel = stringResource(R.string.employee_name_label)
             LojiaTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text(stringResource(R.string.employee_name_label)) },
+                label = { Text(employeeNameLabel) },
+                contentDescription = employeeNameLabel,
                 placeholder = { Text(stringResource(R.string.employee_name_hint)) },
                 isError = isDuplicateName,
                 supportingText = if (isDuplicateName) {
@@ -676,10 +678,12 @@ private fun AddEditEmployeeDialog(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            val monthlySalaryLabel = stringResource(R.string.monthly_salary_label)
             LojiaTextField(
                 value = salaryText,
                 onValueChange = { salaryText = it },
-                label = { Text(stringResource(R.string.monthly_salary_label)) },
+                label = { Text(monthlySalaryLabel) },
+                contentDescription = monthlySalaryLabel,
                 placeholder = { Text(stringResource(R.string.employee_salary_hint)) },
                 isError = isSalaryInvalid || isSalaryZero,
                 supportingText = when {
@@ -703,10 +707,12 @@ private fun AddEditEmployeeDialog(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            val phoneOptionalLabel = stringResource(R.string.phone_optional_label)
             LojiaTextField(
                 value = phone,
                 onValueChange = { phone = it },
-                label = { Text(stringResource(R.string.phone_optional_label)) },
+                label = { Text(phoneOptionalLabel) },
+                contentDescription = phoneOptionalLabel,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 shape = RoundedCornerShape(Dimens.RadiusReportInput),
                 minHeight = Dimens.TextFieldHeightReport,

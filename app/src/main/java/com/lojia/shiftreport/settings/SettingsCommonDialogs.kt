@@ -425,17 +425,21 @@ fun SettingsCommonDialogs(
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(stringResource(R.string.need_help_with_pos), fontSize = 13.sp, color = TextSecondaryLight)
+                        val subjectLabel = stringResource(R.string.subject_eg_printer_setup)
                         LojiaTextField(
                             value = subject,
                             onValueChange = { subject = it },
-                            label = { Text(stringResource(R.string.subject_eg_printer_setup)) },
+                            label = { Text(subjectLabel) },
+                            contentDescription = subjectLabel,
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
+                        val issueDetailsLabel = stringResource(R.string.describe_the_issue)
                         LojiaMultilineTextField(
                             value = details,
                             onValueChange = { details = it },
-                            label = { Text(stringResource(R.string.describe_the_issue)) },
+                            label = { Text(issueDetailsLabel) },
+                            contentDescription = issueDetailsLabel,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 100.dp)
@@ -1064,18 +1068,21 @@ fun ChangeEmailDialog(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            val newEmailMismatchText = stringResource(R.string.settings_emails_do_not_match)
+            val newEmailLabel = stringResource(R.string.new_email_label)
             LojiaTextField(
                 value = newEmail,
                 onValueChange = {
                     newEmail = it
                     emailError = null
                     if (confirmEmail.isNotBlank() && it.trim() != confirmEmail.trim()) {
-                        confirmError = context.getString(R.string.settings_emails_do_not_match)
+                        confirmError = newEmailMismatchText
                     } else {
                         confirmError = null
                     }
                 },
-                label = { Text(stringResource(R.string.new_email_label)) },
+                label = { Text(newEmailLabel) },
+                contentDescription = newEmailLabel,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 isError = emailError != null,
@@ -1089,17 +1096,20 @@ fun ChangeEmailDialog(
                 )
             }
 
+            val confirmEmailMismatchText = stringResource(R.string.settings_emails_do_not_match)
+            val confirmEmailLabel = stringResource(R.string.confirm_email_label)
             LojiaTextField(
                 value = confirmEmail,
                 onValueChange = {
                     confirmEmail = it
                     if (it.trim() != newEmail.trim()) {
-                        confirmError = context.getString(R.string.settings_emails_do_not_match)
+                        confirmError = confirmEmailMismatchText
                     } else {
                         confirmError = null
                     }
                 },
-                label = { Text(stringResource(R.string.confirm_email_label)) },
+                label = { Text(confirmEmailLabel) },
+                contentDescription = confirmEmailLabel,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 isError = confirmError != null,

@@ -460,16 +460,18 @@ fun AddEditAddressScreen(
                     }
 
                     // Street address text input (also populated by map picker)
+                    val streetAddressLabel = stringResource(R.string.street_address_required)
                     LojiaTextField(
                         value = addressLine,
                         onValueChange = { addressLine = it },
                         label = {
                             Text(
-                                text = stringResource(R.string.street_address_required),
+                                text = streetAddressLabel,
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
                         },
+                        contentDescription = streetAddressLabel,
                         placeholder = {
                             Text(
                                 text = stringResource(R.string.street_building_district_hint),
@@ -487,16 +489,18 @@ fun AddEditAddressScreen(
                     )
 
                     // Apt, suite, unit (optional)
+                    val aptSuiteLabel = stringResource(R.string.apt_suite_optional)
                     LojiaTextField(
                         value = aptSuite,
                         onValueChange = { aptSuite = it },
                         label = {
                             Text(
-                                text = stringResource(R.string.apt_suite_optional),
+                                text = aptSuiteLabel,
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
                         },
+                        contentDescription = aptSuiteLabel,
                         singleLine = true,
                         shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
@@ -508,16 +512,18 @@ fun AddEditAddressScreen(
                     // Address label with Suggestion chip on trailing
                     val storeSuggestion = stringResource(R.string.address_tag_store)
                     val warehouseSuggestion = stringResource(R.string.address_tag_warehouse)
+                    val addressLabelOptional = stringResource(R.string.address_label_optional)
                     LojiaTextField(
                         value = addressLabel,
                         onValueChange = { addressLabel = it },
                         label = {
                             Text(
-                                text = stringResource(R.string.address_label_optional),
+                                text = addressLabelOptional,
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
                         },
+                        contentDescription = addressLabelOptional,
                         trailingIcon = {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
@@ -560,16 +566,18 @@ fun AddEditAddressScreen(
                         color = OnSurfaceLight
                     )
 
+                    val firstNameLabel = stringResource(R.string.profile_first_name_label)
                     LojiaTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
                         label = {
                             Text(
-                                text = stringResource(R.string.profile_first_name_label),
+                                text = firstNameLabel,
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
                         },
+                        contentDescription = firstNameLabel,
                         singleLine = true,
                         shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
@@ -578,16 +586,18 @@ fun AddEditAddressScreen(
                             .testTag("input_first_name")
                     )
 
+                    val lastNameLabel = stringResource(R.string.profile_last_name_label)
                     LojiaTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
                         label = {
                             Text(
-                                text = stringResource(R.string.profile_last_name_label),
+                                text = lastNameLabel,
                                 fontSize = 13.sp,
                                 color = OnSurfaceVariantLight
                             )
                         },
+                        contentDescription = lastNameLabel,
                         singleLine = true,
                         shape = RoundedCornerShape(Dimens.RadiusMd),
                         colors = textFieldColors,
@@ -602,17 +612,19 @@ fun AddEditAddressScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val mobileDialCodeLabel = stringResource(R.string.address_dial_code_label)
                         LojiaTextField(
                             value = dialCode,
                             onValueChange = {},
                             readOnly = true,
                             label = {
                                 Text(
-                                    text = stringResource(R.string.address_dial_code_label),
+                                    text = mobileDialCodeLabel,
                                     fontSize = 11.sp,
                                     color = OnSurfaceVariantLight
                                 )
                             },
+                            contentDescription = mobileDialCodeLabel,
                             singleLine = true,
                             shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
@@ -621,6 +633,7 @@ fun AddEditAddressScreen(
                                 .testTag("input_mobile_dial_code")
                         )
 
+                        val mobileRequiredLabel = stringResource(R.string.address_mobile_required)
                         LojiaTextField(
                             value = mobileNumber,
                             onValueChange = { raw ->
@@ -628,11 +641,12 @@ fun AddEditAddressScreen(
                             },
                             label = {
                                 Text(
-                                    text = stringResource(R.string.address_mobile_required),
+                                    text = mobileRequiredLabel,
                                     fontSize = 13.sp,
                                     color = OnSurfaceVariantLight
                                 )
                             },
+                            contentDescription = mobileRequiredLabel,
                             trailingIcon = {
                                 IconButton(
                                     onClick = requestPhoneHint,
@@ -664,17 +678,19 @@ fun AddEditAddressScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val altDialCodeLabel = stringResource(R.string.address_dial_code_label)
                         LojiaTextField(
                             value = dialCode,
                             onValueChange = {},
                             readOnly = true,
                             label = {
                                 Text(
-                                    text = stringResource(R.string.address_dial_code_label),
+                                    text = altDialCodeLabel,
                                     fontSize = 11.sp,
                                     color = OnSurfaceVariantLight
                                 )
                             },
+                            contentDescription = altDialCodeLabel,
                             singleLine = true,
                             shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
@@ -683,6 +699,7 @@ fun AddEditAddressScreen(
                                 .testTag("input_alt_dial_code")
                         )
 
+                        val alternatePhoneLabel = stringResource(R.string.alternate_phone_label)
                         LojiaTextField(
                             value = alternatePhone,
                             onValueChange = { raw ->
@@ -690,11 +707,12 @@ fun AddEditAddressScreen(
                             },
                             label = {
                                 Text(
-                                    text = stringResource(R.string.alternate_phone_label),
+                                    text = alternatePhoneLabel,
                                     fontSize = 13.sp,
                                     color = OnSurfaceVariantLight
                                 )
                             },
+                            contentDescription = alternatePhoneLabel,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true,
                             shape = RoundedCornerShape(Dimens.RadiusMd),

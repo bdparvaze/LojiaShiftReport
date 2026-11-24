@@ -394,6 +394,7 @@ fun AdminAuthDialog(
                         }
                     } else {
                         // Admin Password Field
+                        val adminPasswordLabel = stringResource(R.string.admin_password_label)
                         com.lojia.shiftreport.ui.common.LojiaTextField(
                             value = password,
                             onValueChange = {
@@ -405,7 +406,8 @@ fun AdminAuthDialog(
                                     }
                                 }
                             },
-                            label = { Text(stringResource(R.string.admin_password_label)) },
+                            label = { Text(adminPasswordLabel) },
+                            contentDescription = adminPasswordLabel,
                             singleLine = true,
                             isError = isError,
                             visualTransformation = if (passwordVisible) {

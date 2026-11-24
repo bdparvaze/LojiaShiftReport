@@ -123,6 +123,7 @@ fun AddEntryDialog(
                             value = receipt,
                             onValueChange = { receipt = it },
                             label = { Text(stringResource(R.string.receipt_number)) },
+                            contentDescription = stringResource(R.string.receipt_number),
                             shape = RoundedCornerShape(Dimens.RadiusReportInput),
                             minHeight = Dimens.TextFieldHeightReport,
                             borderColorOverride = depthStyle.reportFieldBorderColor,
@@ -157,6 +158,7 @@ fun AddEntryDialog(
                             value = receipt,
                             onValueChange = { receipt = it },
                             label = { Text(stringResource(R.string.receipt_number)) },
+                            contentDescription = stringResource(R.string.receipt_number),
                             shape = RoundedCornerShape(Dimens.RadiusReportInput),
                             minHeight = Dimens.TextFieldHeightReport,
                             borderColorOverride = depthStyle.reportFieldBorderColor,
@@ -193,6 +195,7 @@ fun AddEntryDialog(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text(stringResource(R.string.name_description)) },
+                            contentDescription = stringResource(R.string.name_description),
                             shape = RoundedCornerShape(Dimens.RadiusReportInput),
                             minHeight = Dimens.TextFieldHeightReport,
                             borderColorOverride = depthStyle.reportFieldBorderColor,
@@ -229,6 +232,7 @@ fun AddEntryDialog(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text(stringResource(R.string.name_description)) },
+                            contentDescription = stringResource(R.string.name_description),
                             shape = RoundedCornerShape(Dimens.RadiusReportInput),
                             minHeight = Dimens.TextFieldHeightReport,
                             borderColorOverride = depthStyle.reportFieldBorderColor,
@@ -407,6 +411,7 @@ fun AddEntryDialog(
                                         color = OnSurfaceVariantLight
                                     )
                                 },
+                                contentDescription = stringResource(R.string.add_entry_quantity_optional),
                                 placeholder = {
                                     Text(
                                         text = stringResource(R.string.add_entry_quantity_hint),
@@ -453,6 +458,7 @@ fun AddEntryDialog(
                                         color = OnSurfaceVariantLight
                                     )
                                 },
+                                contentDescription = stringResource(R.string.add_entry_unit_price_optional),
                                 placeholder = {
                                     Text(
                                         text = stringResource(R.string.add_entry_auto_filled_hint),

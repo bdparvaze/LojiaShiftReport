@@ -260,13 +260,15 @@ fun BackupPasswordSetupDialog(
                 )
             }
 
+            val newPasswordLabel = stringResource(R.string.backup_pw_new_label)
             LojiaTextField(
                 value = newPasswordText,
                 onValueChange = {
                     newPasswordText = it
                     errorMessage = null
                 },
-                label = { Text(stringResource(R.string.backup_pw_new_label)) },
+                label = { Text(newPasswordLabel) },
+                contentDescription = newPasswordLabel,
                 singleLine = true,
                 enabled = !isSaving,
                 visualTransformation = if (newPasswordVisible) {
@@ -298,13 +300,15 @@ fun BackupPasswordSetupDialog(
                     .testTag("input_backup_pw_new")
             )
 
+            val confirmPasswordLabel = stringResource(R.string.backup_pw_confirm_label)
             LojiaTextField(
                 value = confirmPasswordText,
                 onValueChange = {
                     confirmPasswordText = it
                     errorMessage = null
                 },
-                label = { Text(stringResource(R.string.backup_pw_confirm_label)) },
+                label = { Text(confirmPasswordLabel) },
+                contentDescription = confirmPasswordLabel,
                 singleLine = true,
                 enabled = !isSaving,
                 visualTransformation = if (confirmPasswordVisible) {
@@ -630,10 +634,12 @@ fun BackupRestorePasswordDialog(
                     )
                 }
 
+                val restorePasswordLabel = stringResource(R.string.backup_pw_enter_label)
                 LojiaTextField(
                     value = passwordInput,
                     onValueChange = { passwordInput = it },
-                    label = { Text(stringResource(R.string.backup_pw_enter_label)) },
+                    label = { Text(restorePasswordLabel) },
+                    contentDescription = restorePasswordLabel,
                     singleLine = true,
                     enabled = !isRestoring,
                     visualTransformation = if (passwordVisible) {

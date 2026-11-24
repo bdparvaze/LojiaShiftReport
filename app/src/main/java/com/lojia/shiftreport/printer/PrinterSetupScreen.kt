@@ -514,6 +514,7 @@ fun PrinterSetupScreen(
                                         value = networkNameInput,
                                         onValueChange = { networkNameInput = it },
                                         label = { Text(stringResource(R.string.printer_name_label)) },
+                                        contentDescription = stringResource(R.string.printer_name_label),
                                         placeholder = { Text(stringResource(R.string.printer_name_placeholder)) },
                                         singleLine = true,
                                         modifier = Modifier
@@ -531,6 +532,7 @@ fun PrinterSetupScreen(
                                             value = ipInput,
                                             onValueChange = { ipInput = it },
                                             label = { Text(stringResource(R.string.printer_ip_label)) },
+                                            contentDescription = stringResource(R.string.printer_ip_label),
                                             placeholder = { Text(stringResource(R.string.printer_network_ip_placeholder)) },
                                             singleLine = true,
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -543,6 +545,7 @@ fun PrinterSetupScreen(
                                             value = portInput,
                                             onValueChange = { portInput = it },
                                             label = { Text(stringResource(R.string.printer_port_short_label)) },
+                                            contentDescription = stringResource(R.string.printer_port_short_label),
                                             singleLine = true,
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             modifier = Modifier

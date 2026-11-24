@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -20,10 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
@@ -94,7 +94,8 @@ fun LojiaTextField(
     disabledBorderColorOverride: Color? = null,
     insetShadowOffsetYOverride: androidx.compose.ui.unit.Dp? = null,
     insetShadowBlurOverride: androidx.compose.ui.unit.Dp? = null,
-    disabledTextColor: Color = OnSurfaceVariantLight
+    disabledTextColor: Color = OnSurfaceVariantLight,
+    contentDescription: String? = null
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val effectiveTextStyle = textStyle.copy(
@@ -128,10 +129,19 @@ fun LojiaTextField(
         }
     }
 
+    val talkBackDescription = contentDescription
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.defaultMinSize(minHeight = minHeight),
+        modifier = modifier
+            .defaultMinSize(minHeight = minHeight)
+            .then(
+                if (talkBackDescription != null) {
+                    Modifier.semantics { this.contentDescription = talkBackDescription }
+                } else {
+                    Modifier
+                }
+            ),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = effectiveTextStyle,
@@ -144,59 +154,47 @@ fun LojiaTextField(
         interactionSource = interactionSource,
         cursorBrush = SolidColor(if (isError) ErrorRedLight else PrimaryIndigoLight),
         decorationBox = { innerTextField ->
-            Box {
-                // Keep label composable purely for TalkBack semantics without visual rendering.
-                if (label != null && (placeholder != null || value.isNotEmpty())) {
+            TextFieldDefaults.DecorationBox(
+                value = value,
+                innerTextField = innerTextField,
+                enabled = enabled,
+                singleLine = singleLine,
+                visualTransformation = visualTransformation,
+                interactionSource = interactionSource,
+                isError = isError,
+                label = null,
+                placeholder = styledPlaceholder,
+                leadingIcon = paddedLeadingIcon,
+                trailingIcon = trailingIcon,
+                suffix = suffix,
+                supportingText = supportingText,
+                shape = shape,
+                colors = colors,
+                contentPadding = PaddingValues(
+                    horizontal = Dimens.InsetFieldPaddingHorizontal,
+                    vertical = Dimens.SpacingMd
+                ),
+                container = {
+                    val resolvedBorderOverride = when {
+                        !enabled && !isError && disabledBorderColorOverride != null -> disabledBorderColorOverride
+                        enabled && !isError && !isFocused -> borderColorOverride
+                        else -> null
+                    }
                     Box(
-                        modifier = Modifier
-                            .size(Dimens.SpacingNone)
-                            .drawWithContent {}
-                    ) {
-                        label()
-                    }
-                }
-                TextFieldDefaults.DecorationBox(
-                    value = value,
-                    innerTextField = innerTextField,
-                    enabled = enabled,
-                    singleLine = singleLine,
-                    visualTransformation = visualTransformation,
-                    interactionSource = interactionSource,
-                    isError = isError,
-                    label = null,
-                    placeholder = styledPlaceholder,
-                    leadingIcon = paddedLeadingIcon,
-                    trailingIcon = trailingIcon,
-                    suffix = suffix,
-                    supportingText = supportingText,
-                    shape = shape,
-                    colors = colors,
-                    contentPadding = PaddingValues(
-                        horizontal = Dimens.InsetFieldPaddingHorizontal,
-                        vertical = Dimens.SpacingMd
-                    ),
-                    container = {
-                        val resolvedBorderOverride = when {
-                            !enabled && !isError && disabledBorderColorOverride != null -> disabledBorderColorOverride
-                            enabled && !isError && !isFocused -> borderColorOverride
-                            else -> null
-                        }
-                        Box(
-                            modifier = Modifier.depthInset(
-                                enabled = enabled,
-                                isError = isError,
-                                isFocused = isFocused,
-                                shape = shape,
-                                borderColorOverride = resolvedBorderOverride,
-                                topShadowAlphaOverride = topShadowAlphaOverride,
-                                disabledBackgroundOverride = disabledBackgroundOverride,
-                                insetShadowOffsetYOverride = insetShadowOffsetYOverride,
-                                insetShadowBlurOverride = insetShadowBlurOverride
-                            )
+                        modifier = Modifier.depthInset(
+                            enabled = enabled,
+                            isError = isError,
+                            isFocused = isFocused,
+                            shape = shape,
+                            borderColorOverride = resolvedBorderOverride,
+                            topShadowAlphaOverride = topShadowAlphaOverride,
+                            disabledBackgroundOverride = disabledBackgroundOverride,
+                            insetShadowOffsetYOverride = insetShadowOffsetYOverride,
+                            insetShadowBlurOverride = insetShadowBlurOverride
                         )
-                    }
-                )
-            }
+                    )
+                }
+            )
         }
     )
 }
@@ -224,7 +222,8 @@ fun LojiaMultilineTextField(
     shape: Shape = RoundedCornerShape(Dimens.RadiusMd),
     colors: TextFieldColors = lojiaDefaultTextFieldColors(),
     supportingText: @Composable (() -> Unit)? = null,
-    suffix: @Composable (() -> Unit)? = null
+    suffix: @Composable (() -> Unit)? = null,
+    contentDescription: String? = null
 ) {
     LojiaTextField(
         value = value,
@@ -248,6 +247,7 @@ fun LojiaMultilineTextField(
         shape = shape,
         colors = colors,
         supportingText = supportingText,
-        suffix = suffix
+        suffix = suffix,
+        contentDescription = contentDescription
     )
 }

@@ -207,6 +207,7 @@ fun AuthScreenLoginTab(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Operator Username Field
+        val usernameLabel = stringResource(R.string.auth_username_or_email)
         com.lojia.shiftreport.ui.common.LojiaTextField(
             value = username,
             onValueChange = {
@@ -215,11 +216,12 @@ fun AuthScreenLoginTab(
             },
             label = {
                 Text(
-                    text = stringResource(R.string.auth_username_or_email),
+                    text = usernameLabel,
                     fontFamily = PoppinsFontFamily,
                     fontSize = 13.sp
                 )
             },
+            contentDescription = usernameLabel,
             placeholder = {
                 Text(
                     text = stringResource(R.string.auth_username_or_email),
@@ -258,6 +260,7 @@ fun AuthScreenLoginTab(
         Spacer(modifier = Modifier.height(12.dp))
 
         // Password Field with Eye Toggle
+        val passwordLabel = stringResource(R.string.auth_password)
         com.lojia.shiftreport.ui.common.LojiaTextField(
             value = password,
             onValueChange = {
@@ -266,11 +269,12 @@ fun AuthScreenLoginTab(
             },
             label = {
                 Text(
-                    text = stringResource(R.string.auth_password),
+                    text = passwordLabel,
                     fontFamily = PoppinsFontFamily,
                     fontSize = 13.sp
                 )
             },
+            contentDescription = passwordLabel,
             placeholder = {
                 Text(
                     text = stringResource(R.string.auth_password),
