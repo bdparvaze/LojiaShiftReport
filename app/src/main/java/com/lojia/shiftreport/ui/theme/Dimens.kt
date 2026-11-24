@@ -269,7 +269,7 @@ object Dimens {
     val HomeHeaderBottomPadding: Dp = 36.dp
     /** Vertical section spacing between Home Dashboard cards (14.dp). */
     val HomeSectionGap: Dp = 14.dp
-    /** Grid gap between 2x2 Home KPI cards and Quick Action tiles (10.dp). */
+    /** Grid gap between 2x2 Home KPI cards (10.dp). */
     val HomeKpiGridGap: Dp = 10.dp
     /** Vertical gap between KPI tile label and hero KPI figure (10.dp). */
     val HomeKpiValueTopGap: Dp = 10.dp
@@ -280,9 +280,6 @@ object Dimens {
     /** Legend color swatch size (10.dp) and radius (3.dp) on Sales Summary breakdown rows. */
     val HomeBreakdownSwatchSize: Dp = 10.dp
     val HomeBreakdownSwatchRadius: Dp = 3.dp
-    /** Quick action flat icon tile size (46.dp) and radius (15.dp). */
-    val HomeQuickActionTileSize: Dp = 46.dp
-    val HomeQuickActionTileRadius: Dp = 15.dp
     /** Draft / Review alert banner minimum height (72.dp). */
     val HomeDraftBannerMinHeight: Dp = 72.dp
     /** Last 7 days bar chart container height (132.dp), bar width (24.dp), radius (8.dp), and min bar height (6.dp). */

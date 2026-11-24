@@ -493,6 +493,9 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                 reportRouteNonce += 1L
                                                 navigateTo(AppNavState.ShiftReportState.Reports)
                                             },
+                                            onNavigateToAnalytics = {
+                                                navigateTo(AppNavState.ShiftReportState.Analytics)
+                                            },
                                             onPreviewPdf = { report -> previewReport = report },
                                             onNavigateToSection = { section ->
                                                 navigateTo(AppNavState.ShiftReportState.SettingsDetail(section))
@@ -703,6 +706,7 @@ fun AppNavigationHost(
     onReportRouteHandled: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
     onNavigateToReportTab: (ShiftReportTab, ModalType) -> Unit = { _, _ -> },
+    onNavigateToAnalytics: () -> Unit = {},
     onPreviewPdf: (ShiftReport) -> Unit,
     onNavigateToSection: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
@@ -727,6 +731,7 @@ fun AppNavigationHost(
                     onReportRouteHandled = onReportRouteHandled,
                     onOpenDrawer = onOpenDrawer,
                     onNavigateToReportTab = onNavigateToReportTab,
+                    onNavigateToAnalytics = onNavigateToAnalytics,
                     onPreviewPdf = onPreviewPdf,
                     onNavigateToSection = onNavigateToSection,
                     onNavigateBack = onNavigateBack
@@ -751,6 +756,7 @@ private fun ShiftReportModuleNavHost(
     onReportRouteHandled: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
     onNavigateToReportTab: (ShiftReportTab, ModalType) -> Unit = { _, _ -> },
+    onNavigateToAnalytics: () -> Unit = {},
     onPreviewPdf: (ShiftReport) -> Unit,
     onNavigateToSection: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {}
@@ -762,6 +768,7 @@ private fun ShiftReportModuleNavHost(
                 language = language,
                 onOpenDrawer = onOpenDrawer,
                 onNavigateToReportTab = onNavigateToReportTab,
+                onNavigateToAnalytics = onNavigateToAnalytics,
                 onPreviewPdf = onPreviewPdf
             )
         }

@@ -38,8 +38,6 @@ import androidx.compose.material.icons.outlined.Drafts
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.PointOfSale
-import androidx.compose.material.icons.outlined.PostAdd
-import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -67,7 +65,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -97,7 +94,6 @@ import com.lojia.shiftreport.ui.theme.TextSlate700
 import com.lojia.shiftreport.ui.theme.TileAmberEnd
 import com.lojia.shiftreport.ui.theme.TileBlueEnd
 import com.lojia.shiftreport.ui.theme.TileGreenEnd
-import com.lojia.shiftreport.ui.theme.TileMintEnd
 import com.lojia.shiftreport.ui.theme.TileRoseEnd
 import com.lojia.shiftreport.ui.theme.WarningText
 import com.lojia.shiftreport.ui.theme.cardRise
@@ -130,6 +126,7 @@ fun HomeDashboardScreen(
     language: AppLanguage,
     onOpenDrawer: () -> Unit,
     onNavigateToReportTab: (ShiftReportTab, ModalType) -> Unit,
+    onNavigateToAnalytics: () -> Unit = {},
     onPreviewPdf: (ShiftReport) -> Unit
 ) {
     val shiftReports by reportViewModel.shiftReports.collectAsState()
@@ -198,7 +195,7 @@ fun HomeDashboardScreen(
         onOpenDuesClick = { onNavigateToReportTab(ShiftReportTab.DUE_HISTORY, ModalType.NONE) },
         onOpenAdvancesClick = { onNavigateToReportTab(ShiftReportTab.EMPLOYER_ADVANCES, ModalType.NONE) },
         onOpenPaidOutClick = { onNavigateToReportTab(ShiftReportTab.PAID_OUT, ModalType.NONE) },
-        onOpenAddDueClick = { onNavigateToReportTab(ShiftReportTab.REPORT_ENTRY, ModalType.CREDIT) }
+        onOpenAnalyticsClick = onNavigateToAnalytics
     )
 
     if (showOpenShiftDialog) {
@@ -243,7 +240,7 @@ fun HomeDashboardContent(
     onOpenDuesClick: () -> Unit,
     onOpenAdvancesClick: () -> Unit,
     onOpenPaidOutClick: () -> Unit,
-    onOpenAddDueClick: () -> Unit
+    onOpenAnalyticsClick: () -> Unit = {}
 ) {
     val depthStyle = LocalDepthStyle.current
     val animateMotion = rememberShouldAnimate()
@@ -359,21 +356,14 @@ fun HomeDashboardContent(
                 )
             }
 
-            HomeQuickActionsCard(
-                onNewReportClick = onContinueReportClick,
-                onAddDueClick = onOpenAddDueClick,
-                onAdvanceClick = onOpenAdvancesClick,
-                onPaidOutClick = onOpenPaidOutClick,
-                modifier = Modifier.cardRise(if (summary.hasUnsavedDraft) 5 else 4)
-            )
-
             if (summary.showOwnerOnlyParts) {
                 HomeLast7DaysChartCard(
                     points = summary.last7Days,
                     currency = currency,
                     locale = locale,
                     animateMotion = animateMotion,
-                    modifier = Modifier.cardRise(if (summary.hasUnsavedDraft) 6 else 5)
+                    onViewDetailsClick = onOpenAnalyticsClick,
+                    modifier = Modifier.cardRise(if (summary.hasUnsavedDraft) 5 else 4)
                 )
             }
 
@@ -1139,128 +1129,12 @@ private fun HomeDraftReviewBanner(
 }
 
 @Composable
-private fun HomeQuickActionsCard(
-    onNewReportClick: () -> Unit,
-    onAddDueClick: () -> Unit,
-    onAdvanceClick: () -> Unit,
-    onPaidOutClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val cardShape = RoundedCornerShape(Dimens.RadiusKpiCard)
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .depthCard(shape = cardShape, cornerRadius = Dimens.RadiusKpiCard)
-            .padding(Dimens.ReportCardInnerPadding)
-            .testTag("home_quick_actions_card"),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
-    ) {
-        Text(
-            text = stringResource(R.string.home_quick_actions),
-            fontSize = DepthTypeTokens.CardSectionHeadingSize,
-            fontWeight = FontWeight.Bold,
-            color = TextPrimaryReport
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.HomeKpiGridGap)
-        ) {
-            HomeQuickActionItem(
-                label = stringResource(R.string.home_action_new_report),
-                icon = Icons.Outlined.PostAdd,
-                iconTint = PrimaryBlueLight,
-                tileColors = listOf(PureWhite, TileBlueEnd),
-                onClick = onNewReportClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("home_quick_action_new_report")
-            )
-            HomeQuickActionItem(
-                label = stringResource(R.string.home_action_add_due),
-                icon = Icons.AutoMirrored.Outlined.ReceiptLong,
-                iconTint = BadgeAmberAccent,
-                tileColors = listOf(PureWhite, TileAmberEnd),
-                onClick = onAddDueClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("home_quick_action_add_due")
-            )
-            HomeQuickActionItem(
-                label = stringResource(R.string.employer_advance),
-                icon = Icons.Outlined.AccountBalanceWallet,
-                iconTint = PosSurplusGreen,
-                tileColors = listOf(PureWhite, TileMintEnd),
-                onClick = onAdvanceClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("home_quick_action_advance")
-            )
-            HomeQuickActionItem(
-                label = stringResource(R.string.paid_out),
-                icon = Icons.Outlined.ShoppingCart,
-                iconTint = PosExpenseRed,
-                tileColors = listOf(PureWhite, TileRoseEnd),
-                onClick = onPaidOutClick,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("home_quick_action_paid_out")
-            )
-        }
-    }
-}
-
-@Composable
-private fun HomeQuickActionItem(
-    label: String,
-    icon: ImageVector,
-    iconTint: Color,
-    tileColors: List<Color>,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .defaultMinSize(minWidth = Dimens.MinTouchTarget, minHeight = Dimens.MinTouchTarget)
-            .clip(RoundedCornerShape(Dimens.RadiusMd))
-            .clickable(onClick = onClick)
-            .padding(vertical = Dimens.SpacingXs, horizontal = Dimens.SpacingXxs),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(Dimens.HomeQuickActionTileSize)
-                .depthRaisedIconTile(
-                    gradientColors = tileColors,
-                    cornerRadius = Dimens.HomeQuickActionTileRadius
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = iconTint,
-                modifier = Modifier.size(Dimens.IconMd)
-            )
-        }
-        Text(
-            text = label,
-            fontSize = DepthTypeTokens.HomeQuickActionLabelSize,
-            fontWeight = FontWeight.SemiBold,
-            color = TextSlate700,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
 private fun HomeLast7DaysChartCard(
     points: List<HomeDaySalesPoint>,
     currency: String,
     locale: Locale,
     animateMotion: Boolean,
+    onViewDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val digits = remember(currency) { MoneyFormat.minorUnitDigits(currency) }
@@ -1281,34 +1155,68 @@ private fun HomeLast7DaysChartCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = Dimens.SpacingSm)
+            ) {
                 Text(
                     text = stringResource(R.string.home_last_7_days),
                     fontSize = DepthTypeTokens.SectionTitleSize,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimaryReport
+                    color = TextPrimaryReport,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = stringResource(R.string.home_last_7_days_subtitle),
                     fontSize = DepthTypeTokens.ListRowSubtitleSize,
-                    color = TextPlaceholderReport
+                    color = TextPlaceholderReport,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            Box(
-                modifier = Modifier
-                    .size(Dimens.SectionIconTileSize)
-                    .depthRaisedIconTile(
-                        gradientColors = listOf(PureWhite, TileBlueEnd),
-                        cornerRadius = Dimens.RadiusSectionIconTile
-                    ),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.LockOpen,
-                    contentDescription = null,
-                    tint = BadgeBlueText,
-                    modifier = Modifier.size(Dimens.IconSm)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(Dimens.SectionIconTileSize)
+                        .depthRaisedIconTile(
+                            gradientColors = listOf(PureWhite, TileBlueEnd),
+                            cornerRadius = Dimens.RadiusSectionIconTile
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.LockOpen,
+                        contentDescription = null,
+                        tint = BadgeBlueText,
+                        modifier = Modifier.size(Dimens.IconSm)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .defaultMinSize(
+                            minWidth = Dimens.MinTouchTarget,
+                            minHeight = Dimens.MinTouchTarget
+                        )
+                        .clip(RoundedCornerShape(Dimens.RadiusSm))
+                        .clickable(role = Role.Button, onClick = onViewDetailsClick)
+                        .padding(horizontal = Dimens.SpacingXs)
+                        .testTag("home_chart_view_details"),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_view_details),
+                        fontSize = DepthTypeTokens.AuthRowLinkTextSize,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrimaryBlueLight,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
 

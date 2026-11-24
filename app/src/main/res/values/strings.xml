@@ -2279,11 +2279,9 @@
     <string name="home_draft_banner_title">Unsaved shift report draft</string>
     <string name="home_draft_banner_subtitle">Entries are waiting to be reviewed and saved.</string>
     <string name="home_draft_review_action">Review</string>
-    <string name="home_quick_actions">Quick actions</string>
-    <string name="home_action_new_report">New report</string>
-    <string name="home_action_add_due">Add due</string>
     <string name="home_last_7_days">Last 7 days</string>
     <string name="home_last_7_days_subtitle">Daily net sales</string>
+    <string name="home_view_details">View details</string>
     <string name="home_chart_no_sales">No sales recorded in the last 7 days</string>
     <string name="home_open_shift_dialog_title">Open Shift</string>
     <string name="home_open_shift_float_label">Starting cash float</string>

@@ -496,7 +496,6 @@ object DepthTypeTokens {
     val HomeLiveBadgeTracking: TextUnit = 0.44.sp
     val HomeChartValueSize: TextUnit = 10.5.sp
     val HomeChartDayLabelSize: TextUnit = 11.sp
-    val HomeQuickActionLabelSize: TextUnit = 12.sp
 }
 
 /**

@@ -2279,11 +2279,9 @@
     <string name="home_draft_banner_title">مسودة تقرير وردية غير محفوظة</string>
     <string name="home_draft_banner_subtitle">توجد إدخالات بانتظار المراجعة والحفظ.</string>
     <string name="home_draft_review_action">مراجعة</string>
-    <string name="home_quick_actions">إجراءات سريعة</string>
-    <string name="home_action_new_report">تقرير جديد</string>
-    <string name="home_action_add_due">إضافة دين</string>
     <string name="home_last_7_days">آخر 7 أيام</string>
     <string name="home_last_7_days_subtitle">صافي المبيعات اليومية</string>
+    <string name="home_view_details">عرض التفاصيل</string>
     <string name="home_chart_no_sales">لم يتم تسجيل مبيعات في آخر 7 أيام</string>
     <string name="home_open_shift_dialog_title">فتح وردية</string>
     <string name="home_open_shift_float_label">رصيد النقدية الافتتاحي</string>

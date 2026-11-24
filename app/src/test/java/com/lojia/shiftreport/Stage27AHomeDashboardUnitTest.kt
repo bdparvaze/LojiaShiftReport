@@ -420,8 +420,6 @@ class Stage27AHomeDashboardUnitTest {
         assertEquals(36.dp, Dimens.HomeHeaderBottomPadding)
         assertEquals(14.dp, Dimens.HomeSectionGap)
         assertEquals(10.dp, Dimens.HomeKpiGridGap)
-        assertEquals(46.dp, Dimens.HomeQuickActionTileSize)
-        assertEquals(15.dp, Dimens.HomeQuickActionTileRadius)
         assertEquals(72.dp, Dimens.HomeDraftBannerMinHeight)
         assertEquals(132.dp, Dimens.HomeChartHeight)
         assertEquals(24.dp, Dimens.HomeChartBarWidth)
@@ -446,11 +444,34 @@ class Stage27AHomeDashboardUnitTest {
         assertTrue("Zero Color(0x outside ui/theme/, found: $offendingFiles", offendingFiles.isEmpty())
 
         val homeScreenSrc = File(appDir, "src/main/java/com/lojia/shiftreport/report/HomeDashboardScreen.kt").readText()
+        assertFalse(
+            "HomeDashboardScreen.kt must no longer contain home_quick_action",
+            homeScreenSrc.contains("home_quick_action")
+        )
         assertTrue(
-            "HomeLast7DaysChartCard must be omitted cleanly when !summary.showOwnerOnlyParts",
+            "Shift open and close button tags must still exist on HomeDashboardScreen",
+            homeScreenSrc.contains("testTag(\"home_open_shift_btn\")") &&
+                homeScreenSrc.contains("testTag(\"home_close_shift_btn\")")
+        )
+        assertTrue(
+            "HomeLast7DaysChartCard must be omitted cleanly when !summary.showOwnerOnlyParts and include home_chart_view_details",
             homeScreenSrc.contains("if (summary.showOwnerOnlyParts)") &&
+                homeScreenSrc.contains("HomeLast7DaysChartCard(") &&
+                homeScreenSrc.contains("testTag(\"home_chart_view_details\")") &&
                 homeScreenSrc.contains("rememberShouldAnimate()")
         )
+        listOf(
+            "src/main/res/values/strings.xml",
+            "src/main/res/values-bn/strings.xml",
+            "src/main/res/values-ar/strings.xml"
+        ).forEach { relPath ->
+            val xml = File(appDir, relPath).readText()
+            val match = Regex("""<string name="home_view_details">([^<]+)</string>""").find(xml)
+            assertTrue(
+                "home_view_details must exist and be non-empty in $relPath",
+                match != null && match.groupValues[1].isNotBlank()
+            )
+        }
 
         val mainActivitySrc = File(appDir, "src/main/java/com/lojia/shiftreport/MainActivity.kt").readText()
         assertTrue(

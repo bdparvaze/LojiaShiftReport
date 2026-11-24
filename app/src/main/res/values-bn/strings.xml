@@ -2279,11 +2279,9 @@
     <string name="home_draft_banner_title">অসংরক্ষিত শিফট রিপোর্ট ড্রাফট</string>
     <string name="home_draft_banner_subtitle">এন্ট্রিগুলো পর্যালোচনা ও সংরক্ষণের অপেক্ষায় রয়েছে।</string>
     <string name="home_draft_review_action">পর্যালোচনা</string>
-    <string name="home_quick_actions">দ্রুত অ্যাকশন</string>
-    <string name="home_action_new_report">নতুন রিপোর্ট</string>
-    <string name="home_action_add_due">বকেয়া যোগ</string>
     <string name="home_last_7_days">গত ৭ দিন</string>
     <string name="home_last_7_days_subtitle">দৈনিক নিট বিক্রি</string>
+    <string name="home_view_details">বিস্তারিত দেখুন</string>
     <string name="home_chart_no_sales">গত ৭ দিনে কোনো বিক্রি রেকর্ড হয়নি</string>
     <string name="home_open_shift_dialog_title">শিফট খুলুন</string>
     <string name="home_open_shift_float_label">প্রারম্ভিক নগদ ফ্লোট</string>
