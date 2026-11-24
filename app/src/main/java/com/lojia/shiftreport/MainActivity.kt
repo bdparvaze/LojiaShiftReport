@@ -768,8 +768,7 @@ private fun ShiftReportModuleNavHost(
                 language = language,
                 onOpenDrawer = onOpenDrawer,
                 onNavigateToReportTab = onNavigateToReportTab,
-                onNavigateToAnalytics = onNavigateToAnalytics,
-                onPreviewPdf = onPreviewPdf
+                onNavigateToAnalytics = onNavigateToAnalytics
             )
         }
         is AppNavState.ShiftReportState.Reports -> {

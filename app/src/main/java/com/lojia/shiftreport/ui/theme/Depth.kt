@@ -389,11 +389,6 @@ object DepthTokens {
     val LiveBadgeText: Color = BadgeGreenText
     const val LIVE_BADGE_SHADOW_ALPHA: Float = 0.0f
 
-    /** Closed shift pill fill (#F1F5F9), border (#E2E8F0), and slate ink (#344054). */
-    val ClosedBadgeBackground: Color = SurfaceVariantLight
-    val ClosedBadgeBorderColor: Color = OutlineVariantLight
-    val ClosedBadgeTextColor: Color = TextSlate700
-
     /** Flat payment split bar fills for Bank (solid teal #0E9384) and Wallet (solid amber #F79009). */
     val BankSegmentGradientStart: Color = SegmentTealEnd
     val BankSegmentGradientEnd: Color = SegmentTealEnd

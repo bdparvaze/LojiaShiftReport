@@ -2,7 +2,6 @@ package com.lojia.shiftreport.report
 
 import com.lojia.shiftreport.data.Employee
 import com.lojia.shiftreport.data.ShiftReport
-import com.lojia.shiftreport.data.ShiftSession
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
@@ -76,10 +75,6 @@ data class HomeLiveDraftInput(
 
 data class HomeDashboardSummary(
     val todayLocalDate: LocalDate,
-    val isShiftOpen: Boolean,
-    val openShiftName: String,
-    val openShiftCashier: String,
-    val openShiftOpenedAtMillis: Long?,
     val hasUnsavedDraft: Boolean,
     val todaySales: HomePeriodSalesSummary,
     val thisWeekSales: HomePeriodSalesSummary,
@@ -107,7 +102,6 @@ data class HomeDashboardSummary(
 
 private const val LAST_DAYS_CHART_COUNT = 7
 private const val ROLE_ADMIN = "ADMIN"
-private const val SESSION_STATUS_OPEN = "OPEN"
 
 private fun minorFromClassified(input: MoneyInput): Long = when (input) {
     is MoneyInput.Valid -> input.minor
@@ -192,7 +186,6 @@ fun buildHomeLiveDraftInput(
 
 fun buildHomeDashboardSummary(
     reports: List<ShiftReport>,
-    activeSession: ShiftSession?,
     advances: List<EmployerAdvanceItem> = parseEmployerAdvances(reports),
     employees: List<Employee> = emptyList(),
     role: String = ROLE_ADMIN,
@@ -214,34 +207,15 @@ fun buildHomeDashboardSummary(
 
     val monthRange = currentMonthRange(nowMillis, zone)
 
-    val isShiftOpen = activeSession != null && activeSession.status.equals(SESSION_STATUS_OPEN, ignoreCase = true)
-    val hasSessionSales = isShiftOpen && (
-        activeSession!!.cashSales != 0L ||
-            activeSession.cardSales != 0L ||
-            activeSession.digitalSales != 0L ||
-            activeSession.totalDiscounts != 0L ||
-            activeSession.salesReturns != 0L
-        )
-
-    // Determine in-progress live sales source:
-    // 1. If an OPEN ShiftSession already tracks cash/card/digital sales, use it.
-    // 2. Otherwise, use the live ReportEntry draft if any entry data has been typed ("Updates as you enter").
+    // In-progress live sales come solely from the Shift Report tab draft ("Updates as you enter").
     val inProgressTimestamp: Long?
     val inProgressCash: Long
     val inProgressBank: Long
     val inProgressWallet: Long
     val inProgressDiscounts: Long
     val inProgressReturns: Long
-    if (hasSessionSales) {
-        val sess = activeSession!!
-        inProgressTimestamp = sess.openedAt
-        inProgressCash = sess.cashSales
-        inProgressBank = sess.cardSales
-        inProgressWallet = sess.digitalSales
-        inProgressDiscounts = sess.totalDiscounts
-        inProgressReturns = sess.salesReturns
-    } else if (liveDraft != null && liveDraft.hasAnyInput) {
-        inProgressTimestamp = if (liveDraft.dateInMillis > 0L) liveDraft.dateInMillis else (activeSession?.openedAt ?: nowMillis)
+    if (liveDraft != null && liveDraft.hasAnyInput) {
+        inProgressTimestamp = if (liveDraft.dateInMillis > 0L) liveDraft.dateInMillis else nowMillis
         inProgressCash = liveDraft.cashSalesMinor
         inProgressBank = liveDraft.bankSalesMinor
         inProgressWallet = liveDraft.walletSalesMinor
@@ -298,44 +272,19 @@ fun buildHomeDashboardSummary(
         compareBy<ShiftReport> { it.dateInMillis }.thenBy { it.id }
     )
 
-    val expectedDrawerCashMinor = when {
-        isShiftOpen && !hasSessionSales && liveDraft != null && liveDraft.hasAnyInput -> {
-            val sess = activeSession!!
-            if (liveDraft.openingCashMinor > 0L) {
-                liveDraft.expectedCashMinor
-            } else {
-                MoneyFormat.calculateExpectedCashMinor(
-                    startingCash = sess.startingCash,
-                    cashSales = liveDraft.cashSalesMinor,
-                    payIn = MoneyFormat.addMinor(sess.totalPayIn, liveDraft.previousDueCashMinor),
-                    payOut = MoneyFormat.addMinor(
-                        sess.totalPayOut,
-                        liveDraft.expensesMinor,
-                        liveDraft.staffAdvancesCashMinor,
-                        liveDraft.purchasedCashMinor
-                    ),
-                    salesReturns = liveDraft.returnsMinor
-                )
-            }
-        }
-        isShiftOpen -> {
-            val sess = activeSession!!
-            if (sess.expectedCash != 0L || (sess.startingCash == 0L && sess.cashSales == 0L && sess.totalPayIn == 0L && sess.totalPayOut == 0L)) {
-                sess.expectedCash
-            } else {
-                MoneyFormat.calculateExpectedCashMinor(
-                    startingCash = sess.startingCash,
-                    cashSales = sess.cashSales,
-                    payIn = sess.totalPayIn,
-                    payOut = sess.totalPayOut,
-                    salesReturns = sess.salesReturns
-                )
-            }
-        }
-        liveDraft != null && liveDraft.hasAnyInput && (liveDraft.openingCashMinor != 0L || liveDraft.cashSalesMinor != 0L || liveDraft.expensesMinor != 0L) -> {
-            liveDraft.expectedCashMinor
-        }
-        else -> latestReport?.expectedCashInDrawer ?: 0L
+    val expectedDrawerCashMinor = if (
+        liveDraft != null &&
+        liveDraft.hasAnyInput &&
+        (liveDraft.openingCashMinor != 0L ||
+            liveDraft.cashSalesMinor != 0L ||
+            liveDraft.expensesMinor != 0L ||
+            liveDraft.staffAdvancesCashMinor != 0L ||
+            liveDraft.previousDueCashMinor != 0L ||
+            liveDraft.purchasedCashMinor != 0L)
+    ) {
+        liveDraft.expectedCashMinor
+    } else {
+        latestReport?.expectedCashInDrawer ?: 0L
     }
 
     val hasLastShiftReport = latestReport != null
@@ -377,7 +326,7 @@ fun buildHomeDashboardSummary(
         zone = zone
     )
 
-    // Expenses today: operational expenses + paid-out purchases in today's range (plus live draft / open session payout)
+    // Expenses today: operational expenses + paid-out purchases in today's range (plus live draft)
     var expensesTodayMinor = 0L
     var expensesTodayCount = 0
     for (report in reports) {
@@ -391,10 +340,7 @@ fun buildHomeDashboardSummary(
             expensesTodayCount += paidOutItems.size
         }
     }
-    if (isShiftOpen && activeSession!!.openedAt in todayRange && activeSession.totalPayOut > 0L && (liveDraft == null || !liveDraft.hasAnyInput)) {
-        expensesTodayMinor += activeSession.totalPayOut
-        expensesTodayCount += 1
-    } else if (liveDraft != null && liveDraft.hasAnyInput && (liveDraft.dateInMillis in todayRange || isShiftOpen)) {
+    if (liveDraft != null && liveDraft.hasAnyInput && (liveDraft.dateInMillis <= 0L || liveDraft.dateInMillis in todayRange)) {
         if (liveDraft.expensesMinor > 0L) {
             expensesTodayMinor += liveDraft.expensesMinor
             expensesTodayCount += 1
@@ -442,10 +388,6 @@ fun buildHomeDashboardSummary(
 
     return HomeDashboardSummary(
         todayLocalDate = todayDate,
-        isShiftOpen = isShiftOpen,
-        openShiftName = activeSession?.shiftName.orEmpty(),
-        openShiftCashier = activeSession?.cashierName.orEmpty(),
-        openShiftOpenedAtMillis = activeSession?.openedAt,
         hasUnsavedDraft = liveDraft?.hasAnyInput == true,
         todaySales = todaySales,
         thisWeekSales = thisWeekSales,

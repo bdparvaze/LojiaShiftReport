@@ -3,7 +3,6 @@ package com.lojia.shiftreport.report
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,11 +37,8 @@ import androidx.compose.material.icons.outlined.Drafts
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.PointOfSale
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
@@ -102,9 +98,7 @@ import com.lojia.shiftreport.ui.theme.depthChartTodayBarGlow
 import com.lojia.shiftreport.ui.theme.depthDraftBanner
 import com.lojia.shiftreport.ui.theme.depthInset
 import com.lojia.shiftreport.ui.theme.depthLiveBadge
-import com.lojia.shiftreport.ui.theme.depthRaisedButton
 import com.lojia.shiftreport.ui.theme.depthRaisedIconTile
-import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 import com.lojia.shiftreport.ui.theme.depthSegmentActiveThumb
 import com.lojia.shiftreport.ui.theme.rememberShouldAnimate
 import com.lojia.shiftreport.util.MoneyFormat
@@ -112,7 +106,6 @@ import kotlinx.coroutines.delay
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
-import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -126,21 +119,17 @@ fun HomeDashboardScreen(
     language: AppLanguage,
     onOpenDrawer: () -> Unit,
     onNavigateToReportTab: (ShiftReportTab, ModalType) -> Unit,
-    onNavigateToAnalytics: () -> Unit = {},
-    onPreviewPdf: (ShiftReport) -> Unit
+    onNavigateToAnalytics: () -> Unit = {}
 ) {
     val shiftReports by reportViewModel.shiftReports.collectAsState()
-    val activeShiftSession by reportViewModel.activeShiftSession.collectAsState()
     val employees by reportViewModel.employees.collectAsState()
     val currentRole by reportViewModel.currentRole.collectAsState()
     val currentCurrency by reportViewModel.currentCurrency.collectAsState()
     val draftFormState by reportViewModel.draftFormState.collectAsState()
-    val cashiersState by reportViewModel.cashiers.collectAsState()
-    val activeCashier by reportViewModel.activeCashier.collectAsState()
 
     val activeLocale = remember(language) { Locale.forLanguageTag(language.code) }
     val zone = remember { ZoneId.systemDefault() }
-    val nowMillis = remember(shiftReports, activeShiftSession, draftFormState) {
+    val nowMillis = remember(shiftReports, draftFormState) {
         System.currentTimeMillis()
     }
     val liveDraft = remember(draftFormState, currentCurrency) {
@@ -148,7 +137,6 @@ fun HomeDashboardScreen(
     }
     val summary = remember(
         shiftReports,
-        activeShiftSession,
         employees,
         currentRole,
         nowMillis,
@@ -158,7 +146,6 @@ fun HomeDashboardScreen(
     ) {
         buildHomeDashboardSummary(
             reports = shiftReports,
-            activeSession = activeShiftSession,
             advances = parseEmployerAdvances(shiftReports),
             employees = employees,
             role = currentRole,
@@ -169,62 +156,17 @@ fun HomeDashboardScreen(
         )
     }
 
-    val cashierOptions = remember(cashiersState) {
-        cashiersState
-            .filter { !it.isArchived && it.isActive && it.active }
-            .map { it.name }
-            .filter { it.isNotBlank() }
-    }
-
-    var showOpenShiftDialog by remember { mutableStateOf(false) }
-    var showCloseShiftDialog by remember { mutableStateOf(false) }
-
     HomeDashboardContent(
         summary = summary,
         currency = currentCurrency,
         locale = activeLocale,
-        zone = zone,
         onOpenDrawer = onOpenDrawer,
-        onOpenShiftClick = { showOpenShiftDialog = true },
-        onCloseShiftClick = {
-            if (activeShiftSession != null) {
-                showCloseShiftDialog = true
-            }
-        },
         onContinueReportClick = { onNavigateToReportTab(ShiftReportTab.REPORT_ENTRY, ModalType.NONE) },
         onOpenDuesClick = { onNavigateToReportTab(ShiftReportTab.DUE_HISTORY, ModalType.NONE) },
         onOpenAdvancesClick = { onNavigateToReportTab(ShiftReportTab.EMPLOYER_ADVANCES, ModalType.NONE) },
         onOpenPaidOutClick = { onNavigateToReportTab(ShiftReportTab.PAID_OUT, ModalType.NONE) },
         onOpenAnalyticsClick = onNavigateToAnalytics
     )
-
-    if (showOpenShiftDialog) {
-        HomeOpenShiftDialog(
-            cashierOptions = cashierOptions,
-            defaultCashier = draftFormState.cashier.ifBlank { activeCashier },
-            currency = currentCurrency,
-            onDismiss = { showOpenShiftDialog = false },
-            onConfirmOpen = { cashier, shiftName, startingCash ->
-                showOpenShiftDialog = false
-                reportViewModel.openShift(cashier, shiftName, startingCash)
-            }
-        )
-    }
-
-    val openSession = activeShiftSession
-    if (showCloseShiftDialog && openSession != null) {
-        HomeCloseShiftDialog(
-            session = openSession,
-            expectedDrawerCashMinor = summary.expectedDrawerCashMinor,
-            currency = currentCurrency,
-            locale = activeLocale,
-            onDismiss = { showCloseShiftDialog = false },
-            onConfirmClose = { actualCash, notes ->
-                showCloseShiftDialog = false
-                reportViewModel.closeShiftWithZReport(openSession, actualCash, notes, onPreviewPdf)
-            }
-        )
-    }
 }
 
 @Composable
@@ -232,10 +174,7 @@ fun HomeDashboardContent(
     summary: HomeDashboardSummary,
     currency: String,
     locale: Locale,
-    zone: ZoneId = ZoneId.systemDefault(),
     onOpenDrawer: () -> Unit,
-    onOpenShiftClick: () -> Unit,
-    onCloseShiftClick: () -> Unit,
     onContinueReportClick: () -> Unit,
     onOpenDuesClick: () -> Unit,
     onOpenAdvancesClick: () -> Unit,
@@ -320,16 +259,6 @@ fun HomeDashboardContent(
                 .padding(horizontal = Dimens.SpacingLg),
             verticalArrangement = Arrangement.spacedBy(Dimens.HomeSectionGap)
         ) {
-            HomeShiftStatusCard(
-                summary = summary,
-                locale = locale,
-                zone = zone,
-                onOpenShiftClick = onOpenShiftClick,
-                onCloseShiftClick = onCloseShiftClick,
-                onContinueReportClick = onContinueReportClick,
-                modifier = Modifier.cardRise(0)
-            )
-
             HomeSalesSummaryCard(
                 summary = summary,
                 selectedPeriod = selectedPeriod,
@@ -337,7 +266,7 @@ fun HomeDashboardContent(
                 currency = currency,
                 locale = locale,
                 animateMotion = animateMotion,
-                modifier = Modifier.cardRise(1)
+                modifier = Modifier.cardRise(0)
             )
 
             HomeKpiGridSection(
@@ -352,7 +281,7 @@ fun HomeDashboardContent(
             if (summary.hasUnsavedDraft) {
                 HomeDraftReviewBanner(
                     onClick = onContinueReportClick,
-                    modifier = Modifier.cardRise(4)
+                    modifier = Modifier.cardRise(3)
                 )
             }
 
@@ -363,203 +292,11 @@ fun HomeDashboardContent(
                     locale = locale,
                     animateMotion = animateMotion,
                     onViewDetailsClick = onOpenAnalyticsClick,
-                    modifier = Modifier.cardRise(if (summary.hasUnsavedDraft) 5 else 4)
+                    modifier = Modifier.cardRise(if (summary.hasUnsavedDraft) 4 else 3)
                 )
             }
 
             Spacer(modifier = Modifier.height(Dimens.SpacingXs))
-        }
-    }
-}
-
-@Composable
-private fun HomeShiftStatusCard(
-    summary: HomeDashboardSummary,
-    locale: Locale,
-    zone: ZoneId,
-    onOpenShiftClick: () -> Unit,
-    onCloseShiftClick: () -> Unit,
-    onContinueReportClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val shiftCardCd = stringResource(R.string.home_cd_shift_card)
-    val cardShape = RoundedCornerShape(Dimens.CardCornerRadius)
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .semantics { contentDescription = shiftCardCd }
-            .depthCard(shape = cardShape, cornerRadius = Dimens.CardCornerRadius)
-            .padding(Dimens.HomeCardPaddingLarge)
-            .testTag("home_shift_status_card"),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.home_shift_status),
-                fontSize = DepthTypeTokens.SectionTitleSize,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimaryReport
-            )
-            if (summary.isShiftOpen) {
-                Row(
-                    modifier = Modifier
-                        .heightIn(min = Dimens.HomeStatusBadgeHeight)
-                        .depthLiveBadge()
-                        .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
-                ) {
-                    LojiaLiveDot()
-                    Text(
-                        text = stringResource(R.string.home_shift_open_badge),
-                        fontSize = DepthTypeTokens.HomeLiveBadgeSize,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = DepthTypeTokens.HomeLiveBadgeTracking,
-                        color = BadgeGreenText
-                    )
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .heightIn(min = Dimens.HomeStatusBadgeHeight)
-                        .clip(RoundedCornerShape(Dimens.RadiusFull))
-                        .background(DepthTokens.ClosedBadgeBackground)
-                        .border(
-                            width = Dimens.CardBorderWidth,
-                            color = DepthTokens.ClosedBadgeBorderColor,
-                            shape = RoundedCornerShape(Dimens.RadiusFull)
-                        )
-                        .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_shift_closed_badge),
-                        fontSize = DepthTypeTokens.HomeLiveBadgeSize,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = DepthTypeTokens.HomeLiveBadgeTracking,
-                        color = DepthTokens.ClosedBadgeTextColor
-                    )
-                }
-            }
-        }
-
-        if (summary.isShiftOpen) {
-            val openedTimeText = remember(summary.openShiftOpenedAtMillis, locale, zone) {
-                val millis = summary.openShiftOpenedAtMillis ?: 0L
-                DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
-                    .withLocale(locale)
-                    .format(Instant.ofEpochMilli(millis).atZone(zone))
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
-                Text(
-                    text = stringResource(
-                        R.string.home_open_shift_detail_fmt,
-                        summary.openShiftName.ifBlank { stringResource(R.string.shift_day) },
-                        summary.openShiftCashier.ifBlank { stringResource(R.string.cashier) },
-                        openedTimeText
-                    ),
-                    fontSize = DepthTypeTokens.ListRowTitleSize,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimaryReport
-                )
-                if (summary.hasUnsavedDraft) {
-                    Text(
-                        text = stringResource(R.string.home_report_in_progress),
-                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
-                        color = BadgeGreenText,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.HomeKpiGridGap)
-            ) {
-                OutlinedButton(
-                    onClick = onContinueReportClick,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    border = null,
-                    elevation = null,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = PrimaryBlueLight
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = Dimens.ButtonHeightPrimary)
-                        .depthSecondaryButton(cornerRadius = Dimens.RadiusMd)
-                        .testTag("home_continue_report_btn")
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_continue_report),
-                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                Button(
-                    onClick = onCloseShiftClick,
-                    shape = RoundedCornerShape(Dimens.RadiusMd),
-                    elevation = null,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = PureWhite
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = Dimens.ButtonHeightPrimary)
-                        .depthRaisedButton(isDestructive = false, cornerRadius = Dimens.RadiusMd)
-                        .testTag("home_close_shift_btn")
-                ) {
-                    Text(
-                        text = stringResource(R.string.close_shift),
-                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXxs)) {
-                Text(
-                    text = stringResource(R.string.home_no_open_shift),
-                    fontSize = DepthTypeTokens.ListRowTitleSize,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimaryReport
-                )
-                Text(
-                    text = stringResource(R.string.home_no_open_shift_desc),
-                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
-                    color = TextPlaceholderReport
-                )
-            }
-            Button(
-                onClick = onOpenShiftClick,
-                shape = RoundedCornerShape(Dimens.RadiusMd),
-                elevation = null,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = PureWhite
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = Dimens.ButtonHeightPrimary)
-                    .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
-                    .testTag("home_open_shift_btn")
-            ) {
-                Text(
-                    text = stringResource(R.string.open_shift),
-                    fontSize = DepthTypeTokens.PrimaryButtonTextSize,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
         }
     }
 }
@@ -616,25 +353,23 @@ private fun HomeSalesSummaryCard(
                 fontWeight = FontWeight.Bold,
                 color = TextPrimaryReport
             )
-            if (summary.isShiftOpen) {
-                Row(
-                    modifier = Modifier
-                        .heightIn(min = Dimens.HomeStatusBadgeHeight)
-                        .depthLiveBadge()
-                        .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs)
-                        .testTag("home_live_badge"),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
-                ) {
-                    LojiaLiveDot()
-                    Text(
-                        text = stringResource(R.string.home_live_badge),
-                        fontSize = DepthTypeTokens.HomeLiveBadgeSize,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = DepthTypeTokens.HomeLiveBadgeTracking,
-                        color = BadgeGreenText
-                    )
-                }
+            Row(
+                modifier = Modifier
+                    .heightIn(min = Dimens.HomeStatusBadgeHeight)
+                    .depthLiveBadge()
+                    .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs)
+                    .testTag("home_live_badge"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
+            ) {
+                LojiaLiveDot()
+                Text(
+                    text = stringResource(R.string.home_live_badge),
+                    fontSize = DepthTypeTokens.HomeLiveBadgeSize,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = DepthTypeTokens.HomeLiveBadgeTracking,
+                    color = BadgeGreenText
+                )
             }
         }
 
@@ -923,7 +658,7 @@ private fun HomeKpiGridSection(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .cardRise(2)
+                    .cardRise(1)
                     .testTag("home_kpi_expected_drawer")
             )
             HomeKpiCard(
@@ -938,7 +673,7 @@ private fun HomeKpiGridSection(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .cardRise(2)
+                    .cardRise(1)
                     .testTag("home_kpi_outstanding_dues")
             )
         }
@@ -961,7 +696,7 @@ private fun HomeKpiGridSection(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .cardRise(3)
+                    .cardRise(2)
                     .testTag("home_kpi_advances_month")
             )
             HomeKpiCard(
@@ -976,7 +711,7 @@ private fun HomeKpiGridSection(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .cardRise(3)
+                    .cardRise(2)
                     .testTag("home_kpi_expenses_today")
             )
         }

@@ -5,7 +5,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.data.Employee
 import com.lojia.shiftreport.data.ShiftReport
-import com.lojia.shiftreport.data.ShiftSession
 import com.lojia.shiftreport.report.HomeSalesPeriod
 import com.lojia.shiftreport.report.HomeVarianceStatus
 import com.lojia.shiftreport.report.ShiftFormState
@@ -69,14 +68,12 @@ class Stage27AHomeDashboardUnitTest {
 
         val summary = buildHomeDashboardSummary(
             reports = emptyList(),
-            activeSession = null,
             role = "ADMIN",
             nowMillis = nowMillis,
             zone = zone,
             locale = Locale.US
         )
 
-        assertFalse(summary.isShiftOpen)
         assertFalse(summary.hasUnsavedDraft)
         assertEquals(0L, summary.todaySales.netSalesMinor)
         assertEquals(0L, summary.thisWeekSales.netSalesMinor)
@@ -135,7 +132,6 @@ class Stage27AHomeDashboardUnitTest {
 
         val usSummary = buildHomeDashboardSummary(
             reports = reports,
-            activeSession = null,
             nowMillis = nowMillis,
             zone = zone,
             locale = Locale.US
@@ -146,7 +142,6 @@ class Stage27AHomeDashboardUnitTest {
 
         val deSummary = buildHomeDashboardSummary(
             reports = reports,
-            activeSession = null,
             nowMillis = nowMillis,
             zone = zone,
             locale = Locale.GERMANY
@@ -158,7 +153,6 @@ class Stage27AHomeDashboardUnitTest {
         // Exact UTC comparison checks timezone boundary sensitivity cleanly
         val utcSummary = buildHomeDashboardSummary(
             reports = reports,
-            activeSession = null,
             nowMillis = nowMillis,
             zone = ZoneOffset.UTC,
             locale = Locale.US
@@ -226,7 +220,6 @@ class Stage27AHomeDashboardUnitTest {
                     salesReturns = 10_00L
                 )
             ),
-            activeSession = null,
             nowMillis = nowMillis,
             zone = zone,
             locale = Locale.US
@@ -254,45 +247,44 @@ class Stage27AHomeDashboardUnitTest {
             // Today (index 6)
             ShiftReport(id = 3, cashierName = "A", dateInMillis = millisAt(2025, 7, 15, 10, 0, zone), grossCash = 300_00L)
         )
-        val openSession = ShiftSession(
-            id = 9,
-            cashierName = "Nadia",
-            shiftName = "Night",
-            status = "OPEN",
-            openedAt = nowMillis,
-            startingCash = 100_00L,
-            cashSales = 50_00L,
-            cardSales = 25_00L,
-            expectedCash = 150_00L
+        val draftInput = buildHomeLiveDraftInput(
+            ShiftFormState(
+                cashier = "Nadia",
+                dateMillis = nowMillis,
+                startingCashInput = "100.00",
+                cashReceipts = "50.00",
+                madaPayments = "25.00"
+            ),
+            currencyCode = "USD"
         )
 
         val adminSummary = buildHomeDashboardSummary(
             reports = reports,
-            activeSession = openSession,
             role = "ADMIN",
             nowMillis = nowMillis,
             zone = zone,
-            locale = Locale.US
+            locale = Locale.US,
+            liveDraft = draftInput
         )
-        assertTrue(adminSummary.isShiftOpen)
+        assertTrue(adminSummary.hasUnsavedDraft)
         assertTrue(adminSummary.showOwnerOnlyParts)
         assertEquals(7, adminSummary.last7Days.size)
         assertEquals(LocalDate.of(2025, 7, 9), adminSummary.last7Days.first().date)
         assertEquals(LocalDate.of(2025, 7, 15), adminSummary.last7Days.last().date)
         assertEquals(120_00L, adminSummary.last7Days[0].netSalesMinor)
         assertEquals(0L, adminSummary.last7Days[1].netSalesMinor)
-        // Today combines closed report (300_00) + open session live (50_00 + 25_00) = 375_00
+        // Today combines closed report (300_00) + live draft (50_00 + 25_00) = 375_00
         assertEquals(375_00L, adminSummary.last7Days[6].netSalesMinor)
         assertTrue(adminSummary.last7Days[6].isToday)
         assertEquals(150_00L, adminSummary.expectedDrawerCashMinor)
 
         val cashierSummary = buildHomeDashboardSummary(
             reports = reports,
-            activeSession = openSession,
             role = "CASHIER",
             nowMillis = nowMillis,
             zone = zone,
-            locale = Locale.US
+            locale = Locale.US,
+            liveDraft = draftInput
         )
         assertFalse(cashierSummary.showOwnerOnlyParts)
         assertTrue(cashierSummary.last7Days.isEmpty())
@@ -360,7 +352,6 @@ class Stage27AHomeDashboardUnitTest {
 
         val summaryOver = buildHomeDashboardSummary(
             reports = reports,
-            activeSession = null,
             advances = advances,
             employees = employees,
             nowMillis = nowMillis,
@@ -380,7 +371,6 @@ class Stage27AHomeDashboardUnitTest {
 
         val shortSummary = buildHomeDashboardSummary(
             reports = listOf(latestReport.copy(closingCash = 320_00L)),
-            activeSession = null,
             nowMillis = nowMillis,
             zone = zone,
             locale = Locale.US
@@ -390,7 +380,6 @@ class Stage27AHomeDashboardUnitTest {
 
         val balancedSummary = buildHomeDashboardSummary(
             reports = listOf(latestReport.copy(closingCash = 325_00L)),
-            activeSession = null,
             nowMillis = nowMillis,
             zone = zone,
             locale = Locale.US
@@ -448,10 +437,17 @@ class Stage27AHomeDashboardUnitTest {
             "HomeDashboardScreen.kt must no longer contain home_quick_action",
             homeScreenSrc.contains("home_quick_action")
         )
+        assertFalse(
+            "HomeDashboardScreen.kt must no longer contain shift status card or Home shift dialogs",
+            homeScreenSrc.contains("home_shift_status_card") ||
+                homeScreenSrc.contains("home_open_shift_btn") ||
+                homeScreenSrc.contains("home_close_shift_btn") ||
+                homeScreenSrc.contains("HomeOpenShiftDialog") ||
+                homeScreenSrc.contains("HomeCloseShiftDialog")
+        )
         assertTrue(
-            "Shift open and close button tags must still exist on HomeDashboardScreen",
-            homeScreenSrc.contains("testTag(\"home_open_shift_btn\")") &&
-                homeScreenSrc.contains("testTag(\"home_close_shift_btn\")")
+            "LIVE badge must remain on HomeDashboardScreen",
+            homeScreenSrc.contains("testTag(\"home_live_badge\")")
         )
         assertTrue(
             "HomeLast7DaysChartCard must be omitted cleanly when !summary.showOwnerOnlyParts and include home_chart_view_details",

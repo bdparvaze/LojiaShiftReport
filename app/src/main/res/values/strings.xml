@@ -2250,14 +2250,6 @@
     <!-- Stage 27A: Home Dashboard -->
     <string name="nav_home">Home</string>
     <string name="home_welcome_back">Welcome back</string>
-    <string name="home_shift_status">Shift status</string>
-    <string name="home_shift_open_badge">OPEN</string>
-    <string name="home_shift_closed_badge">CLOSED</string>
-    <string name="home_no_open_shift">No open shift</string>
-    <string name="home_no_open_shift_desc">Open a shift to start tracking live drawer cash and sales.</string>
-    <string name="home_open_shift_detail_fmt">%1$s • %2$s • Opened %3$s</string>
-    <string name="home_report_in_progress">Report in progress</string>
-    <string name="home_continue_report">Continue report</string>
     <string name="home_live_badge">LIVE</string>
     <string name="home_period_today">Today</string>
     <string name="home_period_this_week">This week</string>
@@ -2283,12 +2275,6 @@
     <string name="home_last_7_days_subtitle">Daily net sales</string>
     <string name="home_view_details">View details</string>
     <string name="home_chart_no_sales">No sales recorded in the last 7 days</string>
-    <string name="home_open_shift_dialog_title">Open Shift</string>
-    <string name="home_open_shift_float_label">Starting cash float</string>
-    <string name="home_close_shift_dialog_title">Close Shift</string>
-    <string name="home_close_shift_actual_label">Actual cash counted</string>
-    <string name="home_close_shift_notes_label">Closing notes (optional)</string>
-    <string name="home_cd_shift_card">Shift status overview</string>
     <string name="home_cd_chart_bar_fmt">%1$s: %2$s</string>
 
     <!-- Stage 28A: International hardcode sweep -->

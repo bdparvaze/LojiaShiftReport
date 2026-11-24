@@ -2250,14 +2250,6 @@
     <!-- Stage 27A: Home Dashboard -->
     <string name="nav_home">হোম</string>
     <string name="home_welcome_back">স্বাগতম</string>
-    <string name="home_shift_status">শিফটের অবস্থা</string>
-    <string name="home_shift_open_badge">খোলা</string>
-    <string name="home_shift_closed_badge">বন্ধ</string>
-    <string name="home_no_open_shift">কোনো খোলা শিফট নেই</string>
-    <string name="home_no_open_shift_desc">লাইভ ড্রয়ার নগদ এবং বিক্রি ট্র্যাক করতে একটি শিফট খুলুন।</string>
-    <string name="home_open_shift_detail_fmt">%1$s • %2$s • খোলা হয়েছে %3$s</string>
-    <string name="home_report_in_progress">রিপোর্ট চলমান</string>
-    <string name="home_continue_report">রিপোর্ট চালিয়ে যান</string>
     <string name="home_live_badge">লাইভ</string>
     <string name="home_period_today">আজ</string>
     <string name="home_period_this_week">এই সপ্তাহ</string>
@@ -2283,12 +2275,6 @@
     <string name="home_last_7_days_subtitle">দৈনিক নিট বিক্রি</string>
     <string name="home_view_details">বিস্তারিত দেখুন</string>
     <string name="home_chart_no_sales">গত ৭ দিনে কোনো বিক্রি রেকর্ড হয়নি</string>
-    <string name="home_open_shift_dialog_title">শিফট খুলুন</string>
-    <string name="home_open_shift_float_label">প্রারম্ভিক নগদ ফ্লোট</string>
-    <string name="home_close_shift_dialog_title">শিফট বন্ধ করুন</string>
-    <string name="home_close_shift_actual_label">গণনাকৃত প্রকৃত নগদ</string>
-    <string name="home_close_shift_notes_label">সমাপনী নোট (ঐচ্ছিক)</string>
-    <string name="home_cd_shift_card">শিফটের অবস্থার সারসংক্ষেপ</string>
     <string name="home_cd_chart_bar_fmt">%1$s: %2$s</string>
 
     <!-- Stage 28A: International hardcode sweep -->
