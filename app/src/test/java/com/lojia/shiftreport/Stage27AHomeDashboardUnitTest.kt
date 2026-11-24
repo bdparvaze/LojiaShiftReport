@@ -467,4 +467,26 @@ class Stage27AHomeDashboardUnitTest {
             DepthTokens.LIVE_BADGE_SHADOW_ALPHA > 0f
         )
     }
+
+    @Test
+    fun stage27A_fix_backupSubSectionTopHeaderAndBaselineRestored() {
+        val appDir = resolveAppModuleDir()
+        val backupSrc = File(
+            appDir,
+            "src/main/java/com/lojia/shiftreport/settings/SettingsBackupSubSection.kt"
+        ).readText()
+        assertTrue(backupSrc.contains("testTag(\"btn_backup_back\")"))
+        assertTrue(backupSrc.contains("R.string.back"))
+        assertTrue(backupSrc.contains("R.string.backup_settings"))
+        assertTrue(backupSrc.contains("R.string.backup_subtitle"))
+
+        val baselineLine = File(appDir, "src/test/resources/stage26c_ui_baseline.txt")
+            .readLines()
+            .firstOrNull { it.startsWith("settings/SettingsBackupSubSection.kt:") }
+            .orEmpty()
+        assertTrue(baselineLine.contains("testTag(\"btn_backup_back\")"))
+        assertTrue(baselineLine.contains("R.string.back"))
+        assertTrue(baselineLine.contains("R.string.backup_settings"))
+        assertTrue(baselineLine.contains("R.string.backup_subtitle"))
+    }
 }
