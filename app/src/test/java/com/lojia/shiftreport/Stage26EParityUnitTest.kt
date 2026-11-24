@@ -104,13 +104,13 @@ class Stage26EParityUnitTest {
 
         assertEquals(1.0f, DepthTokens.RAISED_CARD_BORDER_ALPHA, 1e-6f)
         assertEquals(1.0f, DepthTokens.INSET_FIELD_BORDER_ALPHA, 1e-6f)
-        assertEquals(1.0f, DepthTokens.RAISED_BUTTON_LIP_ALPHA, 1e-6f)
-        assertEquals(1.0f, DepthTokens.SECONDARY_BUTTON_LIP_ALPHA, 1e-6f)
+        assertEquals(0.0f, DepthTokens.RAISED_BUTTON_LIP_ALPHA, 1e-6f)
+        assertEquals(0.0f, DepthTokens.SECONDARY_BUTTON_LIP_ALPHA, 1e-6f)
 
         assertNotEquals(DepthTokens.KeypadButtonLipColor, DepthTokens.KeypadButtonGradientEnd)
         assertNotEquals(DepthTokens.KeypadButtonLipColor, DepthTokens.PageBackground)
-        assertNotEquals(DepthTokens.RaisedButtonLipColor, DepthTokens.BrandButtonGradientEnd)
-        assertNotEquals(DepthTokens.SecondaryButtonLipColor, DepthTokens.SecondaryButtonGradientEnd)
+        assertEquals(DepthTokens.RaisedButtonLipColor, DepthTokens.BrandButtonGradientEnd)
+        assertEquals(DepthTokens.SecondaryButtonLipColor, DepthTokens.SecondaryButtonGradientEnd)
     }
 
     @Test
@@ -129,21 +129,18 @@ class Stage26EParityUnitTest {
 
         val insetSection = depthCompSrc.substringAfter("fun Modifier.depthInset(").substringBefore("fun Modifier.depthRaisedButton(")
         val insetFillIdx = insetSection.indexOf("drawOutline(")
-        val insetHighlightIdx = insetSection.indexOf("insetBottomHighlightColor")
         val insetBorderIdx = insetSection.indexOf("drawInsetShapeBorder(")
-        assertTrue("depthInset must draw fill first", insetFillIdx in 0 until insetHighlightIdx)
-        assertTrue(
-            "depthInset must draw bottom highlight before crisp perimeter border",
-            insetHighlightIdx in 0 until insetBorderIdx
-        )
+        assertTrue("depthInset must draw flat fill before crisp perimeter border", insetFillIdx in 0 until insetBorderIdx)
+        assertFalse("depthInset must not draw bottom highlight in flat UI", insetSection.contains("insetBottomHighlightColor"))
 
         val keypadSection = depthCompSrc.substringAfter("fun Modifier.depthKeypadKey(").substringBefore("fun Modifier.depthLogoTile(")
         val shadowIdx = keypadSection.indexOf("drawSoftDropShadow(")
         val clipIdx = keypadSection.indexOf(".clip(shape)")
-        val lipDrawIdx = keypadSection.indexOf("keypadLipColor")
-        val faceDrawIdx = keypadSection.indexOf("keypadGradientStart")
+        val faceDrawIdx = keypadSection.indexOf("drawOutline(")
+        val borderDrawIdx = keypadSection.indexOf("drawInsetShapeBorder(")
         assertTrue("depthKeypadKey drop shadow must draw before .clip(shape)", shadowIdx in 0 until clipIdx)
-        assertTrue("depthKeypadKey unblurred lip must draw after .clip(shape)", clipIdx in 0 until lipDrawIdx)
-        assertTrue("depthKeypadKey face gradient must draw on top of solid lip", lipDrawIdx in 0 until faceDrawIdx)
+        assertTrue("depthKeypadKey flat fill must draw after .clip(shape)", clipIdx in 0 until faceDrawIdx)
+        assertTrue("depthKeypadKey flat border must draw after fill", faceDrawIdx in 0 until borderDrawIdx)
+        assertFalse("depthKeypadKey must not draw 3D lip in flat UI", keypadSection.contains("keypadLipColor"))
     }
 }

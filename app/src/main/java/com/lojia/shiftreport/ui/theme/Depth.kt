@@ -23,210 +23,227 @@ object DepthTokens {
     /** Report Entry, Due History, and Employer Advances canvas background (#EEF2FB). */
     val ReportPageBackground: Color = ReportCanvasBackground
 
-    // ============ BRAND GRADIENTS (HEADER & PRIMARY BUTTONS) ============
-    /** Diagonal 135-deg start gradient stop for full-width headers (#2B5DE8, GR6). */
-    val BrandHeaderGradientStart: Color = BrandHeaderDiagonalStart
+    // ============ BRAND SOLID COLORS (HEADER & PRIMARY BUTTONS) ============
+    /** Flat solid primary header color (no gradient). */
+    val BrandHeaderGradientStart: Color = PrimaryBlueLight
 
-    /** Diagonal 135-deg end gradient stop for full-width headers (#1238A8, GR6). */
-    val BrandHeaderGradientEnd: Color = BrandHeaderDiagonalEnd
+    /** Flat solid primary header color (no gradient). */
+    val BrandHeaderGradientEnd: Color = PrimaryBlueLight
 
-    /** Top gradient stop for raised primary action buttons (#3B6BF0). */
-    val BrandButtonGradientStart: Color = Color(0xFF3B6BF0)
+    /** Flat solid primary button color (#1D4FD8). */
+    val BrandButtonGradientStart: Color = PrimaryBlueLight
 
-    /** Bottom gradient stop for raised primary action buttons (#1D4FD8). */
+    /** Flat solid primary button color (#1D4FD8). */
     val BrandButtonGradientEnd: Color = PrimaryBlueLight
 
-    // ============ SURFACE & CARD GRADIENTS ============
-    /** Top gradient stop for standard depth cards (crisp white surface #FFFFFF). */
-    val CardGradientStart: Color = SurfaceLight
+    // ============ FLAT SURFACE & CARD TOKENS ============
+    /** Solid flat white fill for standard cards (#FFFFFF). */
+    val FlatCardFill: Color = PureWhite
 
-    /** Bottom gradient stop for standard depth cards (#F9FAFF). */
-    val CardGradientEnd: Color = Color(0xFFF9FAFF)
+    /** Solid flat accent fill for highlighted cards (#EFF6FF). */
+    val FlatCardAccentSurface: Color = FlatCardAccentFill
 
-    /** Top gradient stop for highlighted/accent depth cards (soft ice blue). */
-    val CardAccentGradientStart: Color = Color(0xFFEFF6FF)
+    /** Single soft shadow tint for flat elevated cards and primary buttons (#000000). */
+    val FlatCardShadowColor: Color = PureBlack
 
-    /** Bottom gradient stop for highlighted/accent depth cards, reusing PrimaryContainerLight. */
-    val CardAccentGradientEnd: Color = PrimaryContainerLight
+    /** Single soft shadow opacity (6% black) beneath flat elevated cards and primary buttons. */
+    const val FLAT_CARD_SHADOW_ALPHA: Float = 0.06f
 
-    // ============ RAISED CARD SHADOW & BORDER TOKENS ============
-    /** Close ambient shadow tint rgba(16, 24, 40, ...) beneath raised cards. */
-    val CardShadowCloseColor: Color = ShadowSlateColor
+    /** Flat solid primary button fill and 8% darkened pressed fill. */
+    val FlatPrimaryButtonFill: Color = PrimaryBlueLight
+    val FlatPrimaryButtonPressedFill: Color = FlatPrimaryPressed
 
-    /** Far directional brand shadow tint rgba(29, 79, 216, ...) beneath raised cards. */
-    val RaisedCardShadowColor: Color = PrimaryBlueLight
+    /** Flat solid destructive button fill and 8% darkened pressed fill. */
+    val FlatDestructiveButtonFill: Color = ErrorRedLight
+    val FlatDestructiveButtonPressedFill: Color = FlatDestructivePressed
 
-    /** 1dp crisp perimeter border color for raised cards (#E5E9F5). */
-    val RaisedCardBorderColor: Color = DepthCardBorder
+    /** Pressed fill tint alpha (6%) over white for secondary flat buttons. */
+    const val FLAT_SECONDARY_PRESSED_ALPHA: Float = 0.06f
 
-    /** Border color for highlighted accent depth cards. */
+    /** Solid card fill matching FlatCardFill (#FFFFFF). */
+    val CardGradientStart: Color = FlatCardFill
+
+    /** Solid card fill matching FlatCardFill (#FFFFFF). */
+    val CardGradientEnd: Color = FlatCardFill
+
+    /** Solid fill for highlighted/accent cards (#EFF6FF). */
+    val CardAccentGradientStart: Color = FlatCardAccentSurface
+
+    /** Solid fill for highlighted/accent cards (#EFF6FF). */
+    val CardAccentGradientEnd: Color = FlatCardAccentSurface
+
+    // ============ FLAT CARD SHADOW & BORDER TOKENS ============
+    /** Single soft shadow tint rgba(0, 0, 0, 0.06) beneath flat cards. */
+    val CardShadowCloseColor: Color = FlatCardShadowColor
+
+    /** Secondary shadow color aliased to FlatCardShadowColor (spot alpha = 0). */
+    val RaisedCardShadowColor: Color = FlatCardShadowColor
+
+    /** 1dp crisp perimeter border color for flat cards (#E3E8F0). */
+    val RaisedCardBorderColor: Color = FlatBorder
+
+    /** Border color for highlighted accent flat cards. */
     val RaisedCardAccentBorderColor: Color = PrimaryLight
 
-    /** Close ambient shadow alpha rgba(16, 24, 40, 0.06). */
-    const val RAISED_CARD_AMBIENT_ALPHA: Float = 0.06f
+    /** Single soft card shadow alpha rgba(0, 0, 0, 0.06). */
+    const val RAISED_CARD_AMBIENT_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Far directional shadow alpha rgba(29, 79, 216, 0.12). */
-    const val RAISED_CARD_SPOT_ALPHA: Float = 0.12f
+    /** Second directional card shadow disabled in Stage 29A flat UI (0.0f). */
+    const val RAISED_CARD_SPOT_ALPHA: Float = 0.0f
 
-    /** Hairline border alpha for standard raised cards (solid 1.0f). */
+    /** Hairline border alpha for standard flat cards (solid 1.0f). */
     const val RAISED_CARD_BORDER_ALPHA: Float = 1.0f
 
     /** Accent card border alpha for highlighted KPI and summary cards. */
     const val RAISED_CARD_ACCENT_BORDER_ALPHA: Float = 0.35f
 
-    /** Top 1dp white inner highlight alpha along the upper edge of raised cards. */
-    const val RAISED_CARD_TOP_SHEEN_ALPHA: Float = 1.0f
+    /** Top white highlight removed in Stage 29A flat UI (0.0f). */
+    const val RAISED_CARD_TOP_SHEEN_ALPHA: Float = 0.0f
 
-    // ============ RAISED BUTTON SHADOW & LIP TOKENS ============
-    /** Lower 3D "lip" color anchored beneath enabled primary depth buttons (#153AA8). */
-    val RaisedButtonLipColor: Color = Color(0xFF153AA8)
+    // ============ FLAT PRIMARY BUTTON TOKENS ============
+    /** Lip removed in Stage 29A flat UI; kept matching FlatPrimaryButtonFill for binary compatibility. */
+    val RaisedButtonLipColor: Color = FlatPrimaryButtonFill
 
-    /** Top gradient stop for disabled depth buttons. */
+    /** Flat disabled fill for primary buttons. */
     val RaisedButtonDisabledStart: Color = SurfaceVariantLight
 
-    /** Bottom gradient stop for disabled depth buttons. */
-    val RaisedButtonDisabledEnd: Color = OutlineVariantLight
+    /** Flat disabled fill for primary buttons. */
+    val RaisedButtonDisabledEnd: Color = SurfaceVariantLight
 
-    /** Lower lip color anchored beneath disabled depth buttons. */
+    /** Disabled button lip color (unused in flat UI). */
     val RaisedButtonLipDisabledColor: Color = OutlineLight
 
-    /** Elevation shadow tint beneath enabled raised buttons (#1D4FD8). */
-    val RaisedButtonShadowColor: Color = PrimaryBlueLight
+    /** Elevation shadow tint beneath enabled flat primary buttons (#000000 @ 0.06f). */
+    val RaisedButtonShadowColor: Color = FlatCardShadowColor
 
-    /** Opacity applied to the lower lip on enabled raised buttons. */
-    const val RAISED_BUTTON_LIP_ALPHA: Float = 1.0f
+    /** Lip opacity disabled in Stage 29A flat UI (0.0f). */
+    const val RAISED_BUTTON_LIP_ALPHA: Float = 0.0f
 
-    /** Opacity applied to the lower lip on disabled raised buttons. */
-    const val RAISED_BUTTON_LIP_DISABLED_ALPHA: Float = 0.70f
+    /** Disabled lip opacity disabled in Stage 29A flat UI (0.0f). */
+    const val RAISED_BUTTON_LIP_DISABLED_ALPHA: Float = 0.0f
 
-    /** Drop-shadow opacity rgba(29, 79, 216, 0.30) beneath enabled raised buttons. */
-    const val RAISED_BUTTON_SHADOW_ALPHA: Float = 0.30f
+    /** Soft drop-shadow opacity rgba(0, 0, 0, 0.06) beneath enabled flat primary buttons. */
+    const val RAISED_BUTTON_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Inner 1dp top white highlight alpha on enabled primary buttons. */
-    const val RAISED_BUTTON_TOP_HIGHLIGHT_ALPHA: Float = 0.30f
+    /** Top white highlight disabled in Stage 29A flat UI (0.0f). */
+    const val RAISED_BUTTON_TOP_HIGHLIGHT_ALPHA: Float = 0.0f
 
-    // ============ SECONDARY & DESTRUCTIVE BUTTON TOKENS ============
-    /** Top gradient stop for raised secondary/outlined buttons (#FFFFFF). */
+    // ============ SECONDARY & DESTRUCTIVE FLAT BUTTON TOKENS ============
+    /** Flat white fill for secondary buttons (#FFFFFF). */
     val SecondaryButtonGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for raised secondary/outlined buttons (#F1F5FF). */
-    val SecondaryButtonGradientEnd: Color = Color(0xFFF1F5FF)
+    /** Flat white fill for secondary buttons (#FFFFFF). */
+    val SecondaryButtonGradientEnd: Color = PureWhite
 
-    /** Lower lip color beneath enabled secondary buttons (#C5D5FB). */
-    val SecondaryButtonLipColor: Color = Color(0xFFC5D5FB)
+    /** Secondary lip color (unused in Stage 29A flat UI). */
+    val SecondaryButtonLipColor: Color = PureWhite
 
-    /** Perimeter border color for secondary raised buttons (#1D4FD8). */
+    /** 1dp perimeter border color for secondary flat buttons (#1D4FD8). */
     val SecondaryButtonBorderColor: Color = PrimaryBlueLight
 
-    /** Soft shadow tint beneath enabled secondary buttons (#1D4FD8). */
-    val SecondaryButtonShadowColor: Color = PrimaryBlueLight
+    /** Secondary button shadow color (alpha = 0). */
+    val SecondaryButtonShadowColor: Color = FlatCardShadowColor
 
-    /** Top gradient stop for disabled secondary buttons. */
+    /** Flat fill for disabled secondary buttons. */
     val SecondaryButtonDisabledStart: Color = SurfaceVariantLight
 
-    /** Bottom gradient stop for disabled secondary buttons. */
-    val SecondaryButtonDisabledEnd: Color = BackgroundLight
+    /** Flat fill for disabled secondary buttons. */
+    val SecondaryButtonDisabledEnd: Color = SurfaceVariantLight
 
-    /** Shadow opacity beneath enabled secondary buttons. */
-    const val SECONDARY_BUTTON_SHADOW_ALPHA: Float = 0.12f
+    /** Secondary buttons have no drop shadow in Stage 29A flat UI. */
+    const val SECONDARY_BUTTON_SHADOW_ALPHA: Float = 0.0f
 
-    /** Lip opacity beneath enabled secondary buttons. */
-    const val SECONDARY_BUTTON_LIP_ALPHA: Float = 1.0f
+    /** Secondary buttons have no lower lip in Stage 29A flat UI. */
+    const val SECONDARY_BUTTON_LIP_ALPHA: Float = 0.0f
 
-    /** Lip opacity beneath disabled secondary buttons. */
-    const val SECONDARY_BUTTON_LIP_DISABLED_ALPHA: Float = 0.50f
+    /** Disabled secondary buttons have no lower lip in Stage 29A flat UI. */
+    const val SECONDARY_BUTTON_LIP_DISABLED_ALPHA: Float = 0.0f
 
-    /** Top gradient stop for destructive raised buttons. */
-    val DestructiveButtonGradientStart: Color = PosExpenseRedFill
+    /** Solid fill for destructive flat buttons (#B91C1C). */
+    val DestructiveButtonGradientStart: Color = FlatDestructiveButtonFill
 
-    /** Bottom gradient stop for destructive raised buttons. */
-    val DestructiveButtonGradientEnd: Color = ErrorRedLight
+    /** Solid fill for destructive flat buttons (#B91C1C). */
+    val DestructiveButtonGradientEnd: Color = FlatDestructiveButtonFill
 
-    /** Lower lip color anchored beneath destructive raised buttons. */
-    val DestructiveButtonLipColor: Color = OnErrorContainerLight
+    /** Destructive lip color (unused in Stage 29A flat UI). */
+    val DestructiveButtonLipColor: Color = FlatDestructiveButtonFill
 
-    /** Elevation shadow tint beneath destructive raised buttons. */
-    val DestructiveButtonShadowColor: Color = ErrorRedLight
+    /** Elevation shadow tint beneath destructive flat buttons (#000000 @ 0.06f). */
+    val DestructiveButtonShadowColor: Color = FlatCardShadowColor
 
-    // ============ INSET FIELD TOKENS (PRESSED-IN SURFACES) ============
-    /** Top gradient stop for standard inset text fields (#FFFFFF). */
+    // ============ FLAT INSET FIELD TOKENS ============
+    /** Solid white fill for flat input fields (#FFFFFF). */
     val InsetFieldGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for standard inset text fields and empty PIN cells (#F7F9FD). */
-    val InsetFieldBackground: Color = Color(0xFFF7F9FD)
+    /** Solid white fill for flat input fields (#FFFFFF). */
+    val InsetFieldBackground: Color = PureWhite
 
-    /** Recessed bottom gradient stop when an inset text field holds focus (#F4F7FD). */
-    val InsetFieldFocusedBackground: Color = PageBackground
+    /** Solid white fill when a flat input field holds focus (#FFFFFF). */
+    val InsetFieldFocusedBackground: Color = PureWhite
 
-    /** Recessed fill background when an inset text field is in error state. */
+    /** Fill background when an input field is in error state. */
     val InsetFieldErrorBackground: Color = NegativeBannerSurface
 
-    /** Recessed fill background when an inset text field is disabled. */
+    /** Fill background when an input field is disabled. */
     val InsetFieldDisabledBackground: Color = SurfaceVariantLight
 
-    /** Inner top shadow tint rgba(16, 24, 40, ...) cast inside inset input wells. */
-    val InsetFieldShadowColor: Color = ShadowSlateColor
+    /** Inner shadow color (unused in Stage 29A flat UI; alpha = 0). */
+    val InsetFieldShadowColor: Color = FlatCardShadowColor
 
-    /** Perimeter stroke color for unfocused inset input wells (#CBD5E1). */
-    val InsetFieldBorderColor: Color = OutlineLight
+    /** Perimeter 1dp stroke color for unfocused flat input fields (#D5DBE6). */
+    val InsetFieldBorderColor: Color = FlatInsetBorder
 
-    /** Perimeter stroke color when an inset input well holds focus (#1D4FD8). */
+    /** Perimeter 1.5dp stroke color when an input field holds focus (#1D4FD8). */
     val InsetFieldFocusedBorderColor: Color = PrimaryBlueLight
 
-    /** Perimeter stroke color when an inset input well is in error state. */
+    /** Perimeter 1.5dp stroke color when an input field is in error state. */
     val InsetFieldErrorBorderColor: Color = ErrorRedLight
 
-    /** Perimeter stroke color when an inset input well is disabled. */
+    /** Perimeter 1dp stroke color when an input field is disabled. */
     val InsetFieldDisabledBorderColor: Color = OutlineVariantLight
 
-    /** Crisp 1dp lower-edge white bevel highlight color on inset wells (#FFFFFF). */
+    /** Bottom bevel highlight color (unused in Stage 29A flat UI; alpha = 0). */
     val InsetFieldHighlightColor: Color = PureWhite
 
     /** Standard inset icon color (#475467). */
     val InsetIconColor: Color = OnSurfaceVariantLight
 
-    /** Standard inset placeholder color (#64748B). */
+    /** Accessible grey hint/placeholder color (#64748B, WCAG >= 4.5:1 on white). */
     val InsetPlaceholderColor: Color = TextHintColor
 
-    /** Register compact field icon color (#94A3B8). */
-    val RegisterIconColor: Color = TextDisabledColor
+    /** Accessible grey icon color for Register compact fields (#64748B). */
+    val RegisterIconColor: Color = TextHintColor
 
-    /** Register compact field placeholder color (#94A3B8). */
-    val RegisterPlaceholderColor: Color = TextDisabledColor
+    /** Accessible grey placeholder color for Register compact fields (#64748B, WCAG >= 4.5:1 on white). */
+    val RegisterPlaceholderColor: Color = TextHintColor
 
-    /** Inner top-edge shadow alpha rgba(16, 24, 40, 0.07) creating pressed-in depth. */
-    const val INSET_FIELD_TOP_SHADOW_ALPHA: Float = 0.07f
-
-    /** Subtle side/edge shadow alpha inside inset input fields. */
-    const val INSET_FIELD_SIDE_SHADOW_ALPHA: Float = 0.04f
-
-    /** Border opacity for inset input wells. */
+    /** Inner shadows and bevels removed in Stage 29A flat UI (0.0f). */
+    const val INSET_FIELD_TOP_SHADOW_ALPHA: Float = 0.0f
+    const val INSET_FIELD_SIDE_SHADOW_ALPHA: Float = 0.0f
     const val INSET_FIELD_BORDER_ALPHA: Float = 1.0f
-
-    /** Bottom 1dp white bevel highlight opacity for inset input wells. */
-    const val INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA: Float = 1.0f
+    const val INSET_FIELD_BOTTOM_HIGHLIGHT_ALPHA: Float = 0.0f
 
     // ============ LOGO TILE, PIN CELLS & KEYPAD TOKENS ============
-    /** Top-left stop for the 145-degree diagonal app logo tile gradient (#FFFFFF). */
-    val LogoTileGradientStart: Color = PureWhite
+    /** Solid white fill for the 48dp flat app logo tile (#FFFFFF). */
+    val LogoTileGradientStart: Color = FlatCardFill
 
-    /** Bottom-right stop for the 145-degree diagonal app logo tile gradient (#DCE6FF). */
-    val LogoTileGradientEnd: Color = Color(0xFFDCE6FF)
+    /** Solid white fill for the 48dp flat app logo tile (#FFFFFF). */
+    val LogoTileGradientEnd: Color = FlatCardFill
 
-    /** Drop shadow color beneath the 48dp app logo tile (#1D4FD8 @ 0.25f). */
-    val LogoTileShadowColor: Color = PrimaryBlueLight
+    /** Soft drop shadow tint beneath the 48dp app logo tile (#000000 @ 0.06f). */
+    val LogoTileShadowColor: Color = FlatCardShadowColor
 
-    /** Drop shadow opacity beneath the 48dp app logo tile. */
-    const val LOGO_TILE_SHADOW_ALPHA: Float = 0.25f
+    /** Soft drop shadow opacity beneath the 48dp app logo tile. */
+    const val LOGO_TILE_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Inner bottom bevel edge opacity on the app logo tile rgba(16, 24, 40, 0.07). */
-    const val LOGO_TILE_BOTTOM_EDGE_ALPHA: Float = 0.07f
+    /** Inner bottom bevel removed in Stage 29A flat UI (0.0f). */
+    const val LOGO_TILE_BOTTOM_EDGE_ALPHA: Float = 0.0f
 
-    /** Top gradient stop for filled Quick PIN cells (#FFFFFF). */
+    /** Solid fill for filled Quick PIN cells (#FFFFFF). */
     val PinCellFilledGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for filled Quick PIN cells (#F1F5FF). */
-    val PinCellFilledGradientEnd: Color = Color(0xFFF1F5FF)
+    /** Solid accent tint for filled Quick PIN cells (#EFF6FF). */
+    val PinCellFilledGradientEnd: Color = FlatCardAccentSurface
 
     /** Aspect ratio multiplier defining Quick PIN cell height = width * 1.15f. */
     const val PIN_CELL_HEIGHT_MULTIPLIER: Float = 1.15f
@@ -234,49 +251,49 @@ object DepthTokens {
     /** Width-to-height ratio (width / height = 1 / 1.15) for Compose Modifier.aspectRatio. */
     const val PIN_CELL_ASPECT_RATIO: Float = 1f / PIN_CELL_HEIGHT_MULTIPLIER
 
-    /** Top gradient stop for Quick PIN square keypad keys (#FFFFFF). */
+    /** Solid white fill for Quick PIN square keypad keys (#FFFFFF). */
     val KeypadButtonGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for Quick PIN square keypad keys (#F1F4FB). */
-    val KeypadButtonGradientEnd: Color = Color(0xFFF1F4FB)
+    /** Solid white fill for Quick PIN square keypad keys (#FFFFFF). */
+    val KeypadButtonGradientEnd: Color = PureWhite
 
-    /** Lower 4dp lip color beneath Quick PIN keypad keys (#D5DCEB). */
-    val KeypadButtonLipColor: Color = Color(0xFFD5DCEB)
+    /** Border tint used for flat keypad keys (#E3E8F0). */
+    val KeypadButtonLipColor: Color = FlatBorder
 
-    /** Drop shadow tint beneath Quick PIN keypad keys (#101828 @ 0.10f). */
-    val KeypadButtonShadowColor: Color = ShadowSlateColor
+    /** Soft drop shadow tint beneath Quick PIN keypad keys (#000000 @ 0.06f). */
+    val KeypadButtonShadowColor: Color = FlatCardShadowColor
 
-    /** Drop shadow opacity rgba(16, 24, 40, 0.10) beneath Quick PIN keypad keys. */
-    const val KEYPAD_BUTTON_SHADOW_ALPHA: Float = 0.10f
+    /** Soft drop shadow opacity rgba(0, 0, 0, 0.06) beneath Quick PIN keypad keys. */
+    const val KEYPAD_BUTTON_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
     // ============ TAB BAR TOKENS ============
-    /** Top gradient stop for raised tab bar containers (#FFFFFF). */
+    /** Solid fill for flat tab bar containers (#FFFFFF). */
     val TabBarGradientStart: Color = PureWhite
 
-    /** Bottom gradient stop for raised tab bar containers (#FFFFFF). */
+    /** Solid fill for flat tab bar containers (#FFFFFF). */
     val TabBarGradientEnd: Color = PureWhite
 
-    /** Start stop for active tab indicator pill gradient (#3B6BF0, GR3). */
-    val TabIndicatorGradientStart: Color = BrandButtonGradientStart
+    /** Solid color for active tab indicator bar (#1D4FD8). */
+    val TabIndicatorGradientStart: Color = PrimaryBlueLight
 
-    /** End stop for active tab indicator pill gradient (#1D4FD8, GR3). */
-    val TabIndicatorGradientEnd: Color = BrandButtonGradientEnd
+    /** Solid color for active tab indicator bar (#1D4FD8). */
+    val TabIndicatorGradientEnd: Color = PrimaryBlueLight
 
-    // ============ REPORT & LEDGER PARITY SHADOW/COLOR TOKENS (STAGE 26F-1) ============
-    /** Top header drop shadow tint (#1238A8, SH7). */
-    val HeaderShadowColor: Color = BrandHeaderDiagonalEnd
-    const val HEADER_SHADOW_ALPHA: Float = 0.35f
+    // ============ REPORT & LEDGER FLAT TOKENS ============
+    /** Top header drop shadow disabled in Stage 29A flat UI (alpha = 0). */
+    val HeaderShadowColor: Color = FlatCardShadowColor
+    const val HEADER_SHADOW_ALPHA: Float = 0.0f
 
-    /** Tab bar drop shadow tint (#101828, SH8). */
-    val TabBarShadowColor: Color = ShadowSlateColor
-    const val TAB_BAR_SHADOW_ALPHA: Float = 0.08f
+    /** Tab bar drop shadow disabled in Stage 29A flat UI (alpha = 0). */
+    val TabBarShadowColor: Color = FlatCardShadowColor
+    const val TAB_BAR_SHADOW_ALPHA: Float = 0.0f
 
-    /** Active tab indicator upward glow tint (#1D4FD8, SH9). */
+    /** Active tab indicator glow disabled in Stage 29A flat UI (alpha = 0). */
     val TabIndicatorGlowColor: Color = PrimaryBlueLight
-    const val TAB_INDICATOR_GLOW_ALPHA: Float = 0.35f
+    const val TAB_INDICATOR_GLOW_ALPHA: Float = 0.0f
 
-    /** Unfocused 1dp border color on Report Entry & search fields (#C9D3E8). */
-    val ReportFieldBorderColor: Color = ReportInputBorder
+    /** Unfocused 1dp border color on Report Entry & search fields (#D5DBE6). */
+    val ReportFieldBorderColor: Color = FlatInsetBorder
 
     /** Primary ink on Report Entry & Ledger screens (#101828). */
     val ReportFieldTextColor: Color = TextPrimaryReport
@@ -284,28 +301,28 @@ object DepthTokens {
     /** Slate 700 label color on Report Entry & Ledger screens (#344054). */
     val ReportFieldLabelColor: Color = TextSlate700
 
-    /** Report placeholder ink (#667085). */
-    val ReportFieldPlaceholderColor: Color = TextPlaceholderReport
+    /** Report placeholder ink (#64748B). */
+    val ReportFieldPlaceholderColor: Color = TextHintColor
 
-    /** Inner top shadow alpha for report fields & Cash/Bank breakdown wells (SH4/SH20). */
-    const val INSET_REPORT_TOP_SHADOW_ALPHA: Float = 0.06f
+    /** Inner shadows removed on report fields & wells in Stage 29A flat UI (0.0f). */
+    const val INSET_REPORT_TOP_SHADOW_ALPHA: Float = 0.0f
 
-    /** Drop shadow alpha for section accordion headers (SH16). */
-    const val SECTION_PILL_SHADOW_ALPHA: Float = 0.10f
+    /** Soft flat card shadow alpha for section accordion headers (0.06f). */
+    const val SECTION_PILL_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Drop shadow alpha for 32dp section icon tiles (SH17). */
-    const val SECTION_ICON_SHADOW_ALPHA: Float = 0.15f
+    /** Soft flat card shadow alpha for 32dp section icon tiles (0.06f). */
+    const val SECTION_ICON_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Inner top highlight alpha for section accordion headers. */
-    const val SECTION_PILL_HIGHLIGHT_ALPHA: Float = 0.80f
+    /** Inner top highlight removed on section accordion headers in Stage 29A flat UI (0.0f). */
+    const val SECTION_PILL_HIGHLIGHT_ALPHA: Float = 0.0f
 
-    /** Inner top shadow alpha for segmented period track (SH18). */
-    const val SEGMENT_TRACK_INSET_ALPHA: Float = 0.10f
+    /** Inner top shadow removed on segmented period track in Stage 29A flat UI (0.0f). */
+    const val SEGMENT_TRACK_INSET_ALPHA: Float = 0.0f
 
-    /** Drop shadow alpha for active segmented thumb (SH19). */
-    const val SEGMENT_ACTIVE_SHADOW_ALPHA: Float = 0.35f
+    /** Glow shadow removed on active segmented thumb in Stage 29A flat UI (0.0f). */
+    const val SEGMENT_ACTIVE_SHADOW_ALPHA: Float = 0.0f
 
-    // ============ PAID OUT, SETTINGS & EMPLOYEES PARITY TOKENS (STAGE 26F-2) ============
+    // ============ PAID OUT, SETTINGS & EMPLOYEES FLAT TOKENS ============
     /** Hairline row divider gray (#EAECF0) inside grouped list & settings cards. */
     val ListDividerColor: Color = ListDividerGray
 
@@ -313,98 +330,90 @@ object DepthTokens {
     val FormWellBackground: Color = FormWellFill
     val FormWellStrokeColor: Color = FormWellBorder
 
-    /** Outer drop shadow alpha beneath SH1 145-deg raised icon tiles rgba(16, 24, 40, 0.14). */
-    const val ICON_TILE_SHADOW_ALPHA: Float = 0.14f
+    /** Outer flat card shadow alpha beneath icon tiles rgba(0, 0, 0, 0.06). */
+    const val ICON_TILE_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Inner top 1dp specular white highlight alpha on SH1 raised icon tiles (0.90). */
-    const val ICON_TILE_TOP_HIGHLIGHT_ALPHA: Float = 0.90f
+    /** Specular highlight & bottom bevel removed on flat icon tiles in Stage 29A (0.0f). */
+    const val ICON_TILE_TOP_HIGHLIGHT_ALPHA: Float = 0.0f
+    const val ICON_TILE_BOTTOM_BEVEL_ALPHA: Float = 0.0f
 
-    /** Inner bottom 2dp bevel shadow alpha on SH1 raised icon tiles rgba(16, 24, 40, 0.07). */
-    const val ICON_TILE_BOTTOM_BEVEL_ALPHA: Float = 0.07f
+    /** Inner top shadow removed for flat form wells in Stage 29A (0.0f). */
+    const val INSET_WELL_TOP_SHADOW_ALPHA: Float = 0.0f
 
-    /** Inner top shadow alpha for secondary SH10 inset wells (0.08). */
-    const val INSET_WELL_TOP_SHADOW_ALPHA: Float = 0.08f
-
-    // ============ HEADER & LIVE PULSE TOKENS ============
-    /** Specular sheen highlight alpha along the top of brand gradient headers. */
-    const val HEADER_SHEEN_ALPHA: Float = 0.14f
+    // ============ HEADER & LIVE INDICATOR TOKENS ============
+    /** Specular sheen removed from flat headers in Stage 29A (0.0f). */
+    const val HEADER_SHEEN_ALPHA: Float = 0.0f
 
     /** Active dot color for LIVE status indicators. */
     val LiveDotColor: Color = LiveDotGlowGreen
 
-    /** Starting halo alpha when a LIVE pulse expands outward. */
-    const val LIVE_HALO_START_ALPHA: Float = 0.45f
-
-    /** Ending halo alpha as a LIVE pulse dissipates. */
+    /** Pulse halo disabled in Stage 29A flat UI (static clean dot). */
+    const val LIVE_HALO_START_ALPHA: Float = 0.0f
     const val LIVE_HALO_END_ALPHA: Float = 0.0f
+    const val LIVE_HALO_STEADY_ALPHA: Float = 0.0f
+    const val LIVE_HALO_MAX_SCALE: Float = 1.0f
 
-    /** Steady halo alpha shown when reduced motion disables animation. */
-    const val LIVE_HALO_STEADY_ALPHA: Float = 0.28f
-
-    /** Peak diameter multiplier for the expanding LIVE pulse ring. */
-    const val LIVE_HALO_MAX_SCALE: Float = 1.85f
-
-    // ============ STAGE 26G SPEC GAP PARITY TOKENS ============
-    /** Register dial-code button text ink (#334155), border (#CBD5E1), lip (#D5DCEB), and gradient (#FFFFFF..#F1F5FF). */
+    // ============ STAGE 26G SPEC GAP FLAT TOKENS ============
+    /** Register dial-code button flat white fill, text ink (#334155), and 1dp border (#D5DBE6). */
     val DialButtonTextColor: Color = DialCodeTextColor
-    val DialButtonBorderColor: Color = InsetFieldBorderColor
-    val DialButtonLipColor: Color = KeypadButtonLipColor
-    val DialButtonGradientStart: Color = SecondaryButtonGradientStart
-    val DialButtonGradientEnd: Color = SecondaryButtonGradientEnd
+    val DialButtonBorderColor: Color = FlatInsetBorder
+    val DialButtonLipColor: Color = PureWhite
+    val DialButtonGradientStart: Color = PureWhite
+    val DialButtonGradientEnd: Color = PureWhite
 
-    /** Register info/privacy note block fill (#F1F5FB), border (#E2E8F0), and inset shadow alpha (0.12). */
+    /** Register info/privacy note block fill (#F1F5FB), border (#E2E8F0); inset shadow disabled (0.0f). */
     val RegisterNoteBackground: Color = RegisterNoteFill
     val RegisterNoteBorderColor: Color = OutlineVariantLight
-    const val REGISTER_NOTE_SHADOW_ALPHA: Float = 0.12f
+    const val REGISTER_NOTE_SHADOW_ALPHA: Float = 0.0f
 
-    /** Password recovery info block fill (#EEF3FF) & border (#D0DDFF), and 46dp icon tile stops (#FFFFFF..#D0DDFF). */
+    /** Password recovery info block fill (#EEF3FF), border (#D0DDFF), and flat 46dp icon tile fill. */
     val RecoveryInfoBackground: Color = CashWellBg
     val RecoveryInfoBorderColor: Color = RecoveryInfoBorder
-    val RecoveryTileGradientStart: Color = PureWhite
-    val RecoveryTileGradientEnd: Color = RecoveryInfoBorder
+    val RecoveryTileGradientStart: Color = CashWellBg
+    val RecoveryTileGradientEnd: Color = CashWellBg
 
-    /** Report Entry read-only/disabled box fill (#EEF1F7), border (#C9D3E8), text ink (#667085), and inset alpha (0.06). */
+    /** Report Entry read-only/disabled box fill (#EEF1F7), border (#D5DBE6), text ink (#64748B); inset disabled (0.0f). */
     val ReportReadOnlyBackground: Color = ReportReadOnlyFill
-    val ReportReadOnlyBorderColor: Color = ReportInputBorder
-    val ReportReadOnlyTextColor: Color = TextPlaceholderReport
-    const val REPORT_READ_ONLY_INSET_ALPHA: Float = 0.06f
+    val ReportReadOnlyBorderColor: Color = FlatInsetBorder
+    val ReportReadOnlyTextColor: Color = TextHintColor
+    const val REPORT_READ_ONLY_INSET_ALPHA: Float = 0.0f
 
-    // ============ STAGE 27A HOME DASHBOARD TOKENS ============
-    /** Greeting text color over GR6 brand header (#DCE6FF). */
+    // ============ STAGE 27A HOME DASHBOARD FLAT TOKENS ============
+    /** Greeting text color over primary brand header (#DCE6FF). */
     val HomeHeaderGreetingColor: Color = HomeGreetingTextColor
 
-    /** LIVE badge vertical gradient (#E3FBEC -> #C6F3DA), border (#BBF7D0), ink (#05603A), and glow alpha. */
-    val LiveBadgeBgStart: Color = LiveBadgeGradientStart
-    val LiveBadgeBgEnd: Color = LiveBadgeGradientEnd
+    /** LIVE badge flat emerald pill (#D1FADF), border (#BBF7D0), ink (#05603A), glow disabled (0.0f). */
+    val LiveBadgeBgStart: Color = BadgeGreenBg
+    val LiveBadgeBgEnd: Color = BadgeGreenBg
     val LiveBadgeBorder: Color = PositiveBannerBorder
     val LiveBadgeText: Color = BadgeGreenText
-    const val LIVE_BADGE_SHADOW_ALPHA: Float = 0.22f
+    const val LIVE_BADGE_SHADOW_ALPHA: Float = 0.0f
 
     /** Closed shift pill fill (#F1F5F9), border (#E2E8F0), and slate ink (#344054). */
     val ClosedBadgeBackground: Color = SurfaceVariantLight
     val ClosedBadgeBorderColor: Color = OutlineVariantLight
     val ClosedBadgeTextColor: Color = TextSlate700
 
-    /** Proportional payment split bar gradients for Bank (#19B3A3 -> #0E9384) and Wallet (#FDB022 -> #F79009). */
-    val BankSegmentGradientStart: Color = SegmentTealStart
+    /** Flat payment split bar fills for Bank (solid teal #0E9384) and Wallet (solid amber #F79009). */
+    val BankSegmentGradientStart: Color = SegmentTealEnd
     val BankSegmentGradientEnd: Color = SegmentTealEnd
-    val WalletSegmentGradientStart: Color = SegmentAmberStart
+    val WalletSegmentGradientStart: Color = SegmentAmberEnd
     val WalletSegmentGradientEnd: Color = SegmentAmberEnd
 
-    /** Draft / Review amber banner glow shadow alpha. */
-    const val DRAFT_BANNER_SHADOW_ALPHA: Float = 0.16f
+    /** Draft / Review amber banner soft card shadow alpha (0.06f). */
+    const val DRAFT_BANNER_SHADOW_ALPHA: Float = FLAT_CARD_SHADOW_ALPHA
 
-    /** Last 7 days bar chart prior-day gradient (#D3E0FF -> #B3C9FF) and today glow alpha. */
+    /** Last 7 days bar chart flat solid prior-day fill (#D3E0FF) and today glow disabled (0.0f). */
     val ChartBarInactiveGradientStart: Color = ChartBarInactiveStart
-    val ChartBarInactiveGradientEnd: Color = ChartBarInactiveEnd
-    const val CHART_TODAY_GLOW_ALPHA: Float = 0.28f
+    val ChartBarInactiveGradientEnd: Color = ChartBarInactiveStart
+    const val CHART_TODAY_GLOW_ALPHA: Float = 0.0f
 }
 
 /**
- * Motion duration, stagger, press scale, and cap constants for Lojia's depth transitions.
+ * Motion duration, stagger, press scale, and cap constants for Lojia transitions.
  */
 object DepthMotionTokens {
-    /** Duration (ms) for a single one-shot card-rise entrance animation. */
+    /** Duration (ms) for a single one-shot card-rise fade-in entrance animation. */
     const val CARD_RISE_DURATION_MS: Int = 550
 
     /** Incremental stagger delay (ms) per list card index. */
@@ -413,16 +422,16 @@ object DepthMotionTokens {
     /** Maximum total stagger delay (ms) so long lists never stall before appearing. */
     const val CARD_RISE_MAX_DELAY_MS: Int = 600
 
-    /** Easing curve (0.2, 0.8, 0.2, 1) for card-rise animations. */
+    /** Easing curve (0.2, 0.8, 0.2, 1) for card-rise fade animations. */
     val CardRiseEasing: CubicBezierEasing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
 
-    /** Tactile press compression duration (ms) for raised buttons. */
+    /** Color press transition duration (ms) for flat buttons. */
     const val PRESS_DURATION_MS: Int = 150
 
-    /** Tactile scale factor when a primary raised button is pressed (0.98f). */
-    const val BUTTON_PRESSED_SCALE: Float = 0.98f
+    /** Scale disabled in Stage 29A flat UI (1.0f). */
+    const val BUTTON_PRESSED_SCALE: Float = 1.0f
 
-    /** Full cycle period (ms) for a LIVE status indicator pulse. */
+    /** Period constant retained for binary compatibility (LIVE dot is static in Stage 29A). */
     const val LIVE_PULSE_PERIOD_MS: Int = 1400
 
     /** Hero net sales one-shot count-up duration (ms) when animations are enabled. */
@@ -524,18 +533,23 @@ val LojiaShapes = Shapes(
 )
 
 /**
- * Consolidated soft-depth theme style provided via [LocalDepthStyle] inside [LojiaTheme].
+ * Consolidated flat-theme style provided via [LocalDepthStyle] inside [LojiaTheme].
  */
 @Immutable
 data class DepthStyle(
     val pageBackground: Color = DepthTokens.PageBackground,
     val reportPageBackground: Color = DepthTokens.ReportPageBackground,
     val listDividerColor: Color = DepthTokens.ListDividerColor,
+    val headerFillColor: Color = PrimaryBlueLight,
     val headerGradientStart: Color = DepthTokens.BrandHeaderGradientStart,
     val headerGradientEnd: Color = DepthTokens.BrandHeaderGradientEnd,
     val headerShadowColor: Color = DepthTokens.HeaderShadowColor,
     val headerShadowAlpha: Float = DepthTokens.HEADER_SHADOW_ALPHA,
     val headerSheenAlpha: Float = DepthTokens.HEADER_SHEEN_ALPHA,
+    val buttonFillColor: Color = DepthTokens.FlatPrimaryButtonFill,
+    val buttonPressedFillColor: Color = DepthTokens.FlatPrimaryButtonPressedFill,
+    val destructiveButtonFillColor: Color = DepthTokens.FlatDestructiveButtonFill,
+    val destructiveButtonPressedFillColor: Color = DepthTokens.FlatDestructiveButtonPressedFill,
     val buttonGradientStart: Color = DepthTokens.BrandButtonGradientStart,
     val buttonGradientEnd: Color = DepthTokens.BrandButtonGradientEnd,
     val buttonLipColor: Color = DepthTokens.RaisedButtonLipColor,
@@ -571,6 +585,8 @@ data class DepthStyle(
     val destructiveButtonGradientEnd: Color = DepthTokens.DestructiveButtonGradientEnd,
     val destructiveButtonLipColor: Color = DepthTokens.DestructiveButtonLipColor,
     val destructiveButtonShadowColor: Color = DepthTokens.DestructiveButtonShadowColor,
+    val cardFillColor: Color = DepthTokens.FlatCardFill,
+    val cardAccentFillColor: Color = DepthTokens.FlatCardAccentSurface,
     val cardGradientStart: Color = DepthTokens.CardGradientStart,
     val cardGradientEnd: Color = DepthTokens.CardGradientEnd,
     val cardAccentGradientStart: Color = DepthTokens.CardAccentGradientStart,

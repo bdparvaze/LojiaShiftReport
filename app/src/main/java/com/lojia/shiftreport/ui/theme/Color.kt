@@ -343,3 +343,20 @@ val DraftBannerShadowColor = ChartAmber
 /** Soft cool-blue surface gradient end stop (#F5F7FD) for light card/button surface gradients; added in Stage 28B without altering existing board-locked DepthTokens stops. */
 val SurfaceGradientEnd = Color(0xFFF5F7FD)
 
+// ============ STAGE 29A FLAT UI DESIGN TOKENS ============
+/** 1dp crisp perimeter border for flat cards, tiles, and containers (#E3E8F0). */
+val FlatBorder = Color(0xFFE3E8F0)
+
+/** 1dp border for flat inset input fields (#D5DBE6). */
+val FlatInsetBorder = Color(0xFFD5DBE6)
+
+/** Soft solid surface fill for accent depth cards (#EFF6FF). */
+val FlatCardAccentFill = Color(0xFFEFF6FF)
+
+/** Solid primary button pressed color (~8% darker than PrimaryBlueLight #1D4FD8). */
+val FlatPrimaryPressed = Color(0xFF1B49C7)
+
+/** Solid destructive button pressed color (~8% darker than ErrorRedLight #B91C1C). */
+val FlatDestructivePressed = Color(0xFFAA1A1A)
+
+

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
@@ -103,7 +105,9 @@ fun LojiaTextField(
         }
     )
 
-    val styledPlaceholder: (@Composable () -> Unit)? = placeholder?.let { ph ->
+    // Show exactly one static hint inside the field (placeholder wins if both are supplied).
+    val effectiveHint: (@Composable () -> Unit)? = placeholder ?: label
+    val styledPlaceholder: (@Composable () -> Unit)? = effectiveHint?.let { hint ->
         {
             ProvideTextStyle(
                 value = LocalTextStyle.current.copy(
@@ -111,7 +115,7 @@ fun LojiaTextField(
                     color = placeholderColor
                 )
             ) {
-                ph()
+                hint()
             }
         }
     }
@@ -140,48 +144,59 @@ fun LojiaTextField(
         interactionSource = interactionSource,
         cursorBrush = SolidColor(if (isError) ErrorRedLight else PrimaryIndigoLight),
         decorationBox = { innerTextField ->
-            TextFieldDefaults.DecorationBox(
-                value = value,
-                innerTextField = innerTextField,
-                enabled = enabled,
-                singleLine = singleLine,
-                visualTransformation = visualTransformation,
-                interactionSource = interactionSource,
-                isError = isError,
-                label = label,
-                placeholder = styledPlaceholder,
-                leadingIcon = paddedLeadingIcon,
-                trailingIcon = trailingIcon,
-                suffix = suffix,
-                supportingText = supportingText,
-                shape = shape,
-                colors = colors,
-                contentPadding = if (label == null) {
-                    PaddingValues(horizontal = Dimens.InsetFieldPaddingHorizontal, vertical = Dimens.SpacingMd)
-                } else {
-                    TextFieldDefaults.contentPaddingWithLabel()
-                },
-                container = {
-                    val resolvedBorderOverride = when {
-                        !enabled && !isError && disabledBorderColorOverride != null -> disabledBorderColorOverride
-                        enabled && !isError && !isFocused -> borderColorOverride
-                        else -> null
-                    }
+            Box {
+                // Keep label composable purely for TalkBack semantics without visual rendering.
+                if (label != null && (placeholder != null || value.isNotEmpty())) {
                     Box(
-                        modifier = Modifier.depthInset(
-                            enabled = enabled,
-                            isError = isError,
-                            isFocused = isFocused,
-                            shape = shape,
-                            borderColorOverride = resolvedBorderOverride,
-                            topShadowAlphaOverride = topShadowAlphaOverride,
-                            disabledBackgroundOverride = disabledBackgroundOverride,
-                            insetShadowOffsetYOverride = insetShadowOffsetYOverride,
-                            insetShadowBlurOverride = insetShadowBlurOverride
-                        )
-                    )
+                        modifier = Modifier
+                            .size(Dimens.SpacingNone)
+                            .drawWithContent {}
+                    ) {
+                        label()
+                    }
                 }
-            )
+                TextFieldDefaults.DecorationBox(
+                    value = value,
+                    innerTextField = innerTextField,
+                    enabled = enabled,
+                    singleLine = singleLine,
+                    visualTransformation = visualTransformation,
+                    interactionSource = interactionSource,
+                    isError = isError,
+                    label = null,
+                    placeholder = styledPlaceholder,
+                    leadingIcon = paddedLeadingIcon,
+                    trailingIcon = trailingIcon,
+                    suffix = suffix,
+                    supportingText = supportingText,
+                    shape = shape,
+                    colors = colors,
+                    contentPadding = PaddingValues(
+                        horizontal = Dimens.InsetFieldPaddingHorizontal,
+                        vertical = Dimens.SpacingMd
+                    ),
+                    container = {
+                        val resolvedBorderOverride = when {
+                            !enabled && !isError && disabledBorderColorOverride != null -> disabledBorderColorOverride
+                            enabled && !isError && !isFocused -> borderColorOverride
+                            else -> null
+                        }
+                        Box(
+                            modifier = Modifier.depthInset(
+                                enabled = enabled,
+                                isError = isError,
+                                isFocused = isFocused,
+                                shape = shape,
+                                borderColorOverride = resolvedBorderOverride,
+                                topShadowAlphaOverride = topShadowAlphaOverride,
+                                disabledBackgroundOverride = disabledBackgroundOverride,
+                                insetShadowOffsetYOverride = insetShadowOffsetYOverride,
+                                insetShadowBlurOverride = insetShadowBlurOverride
+                            )
+                        )
+                    }
+                )
+            }
         }
     )
 }

@@ -462,9 +462,17 @@ class Stage27AHomeDashboardUnitTest {
             mainActivitySrc.contains("reportPageBackground") &&
                 mainActivitySrc.contains("MaterialTheme.colorScheme.background")
         )
-        assertTrue(
-            "Home tokens check",
-            DepthTokens.LIVE_BADGE_SHADOW_ALPHA > 0f
+        assertEquals(
+            "Flat UI removes LIVE badge glow shadow",
+            0.0f,
+            DepthTokens.LIVE_BADGE_SHADOW_ALPHA,
+            1e-6f
+        )
+        assertEquals(
+            "Flat UI gives Draft banner standard card soft shadow alpha",
+            DepthTokens.FLAT_CARD_SHADOW_ALPHA,
+            DepthTokens.DRAFT_BANNER_SHADOW_ALPHA,
+            1e-6f
         )
     }
 

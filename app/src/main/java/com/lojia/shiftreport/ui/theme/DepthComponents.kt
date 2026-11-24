@@ -3,15 +3,8 @@ package com.lojia.shiftreport.ui.theme
 import android.content.Context
 import android.provider.Settings
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -32,11 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
@@ -46,6 +34,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -54,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Size
 import kotlinx.coroutines.delay
 
 private fun readAnimatorDurationScale(context: Context): Float {
@@ -104,7 +94,7 @@ private fun DrawScope.drawSoftDropShadow(
 
 /**
  * Draws a crisp perimeter stroke fully inside [shape] bounds so anti-aliased clipping
- * and inner fills/highlights never wash out or overwrite the border color.
+ * and inner fills never wash out or overwrite the border color.
  */
 private fun DrawScope.drawInsetShapeBorder(
     shape: Shape,
@@ -119,10 +109,13 @@ private fun DrawScope.drawInsetShapeBorder(
     val outline = shape.createOutline(size, layoutDirection, this)
     if (outline is Outline.Rounded) {
         val rr = outline.roundRect
-        val shrink = { cr: CornerRadius ->
-            CornerRadius((cr.x - half).coerceAtLeast(0f), (cr.y - half).coerceAtLeast(0f))
+        val shrink = { cr: androidx.compose.ui.geometry.CornerRadius ->
+            androidx.compose.ui.geometry.CornerRadius(
+                (cr.x - half).coerceAtLeast(0f),
+                (cr.y - half).coerceAtLeast(0f)
+            )
         }
-        val insetRr = RoundRect(
+        val insetRr = androidx.compose.ui.geometry.RoundRect(
             left = rr.left + half,
             top = rr.top + half,
             right = rr.right - half,
@@ -133,7 +126,7 @@ private fun DrawScope.drawInsetShapeBorder(
             bottomLeftCornerRadius = shrink(rr.bottomLeftCornerRadius)
         )
         drawOutline(
-            outline = Outline.Rounded(insetRr),
+            outline = androidx.compose.ui.graphics.Outline.Rounded(insetRr),
             color = color,
             style = Stroke(width = borderWidthPx)
         )
@@ -166,7 +159,8 @@ private fun Modifier.trackButtonPress(
 }
 
 /**
- * Raised soft-depth card container styling driven strictly by [LocalDepthStyle].
+ * Clean flat card container styling driven strictly by [LocalDepthStyle]:
+ * solid surface fill, 1dp border, and single soft shadow (0/1dp blur 4dp black @ 6%).
  */
 fun Modifier.depthCard(
     accent: Boolean = false,
@@ -176,10 +170,10 @@ fun Modifier.depthCard(
     val style = LocalDepthStyle.current
     val resolvedRadius = cornerRadius ?: style.cardCornerRadius
     val resolvedShape = shape ?: RoundedCornerShape(resolvedRadius)
-    val gradientColors = if (accent) {
-        listOf(style.cardAccentGradientStart, style.cardAccentGradientEnd)
+    val fillColor = if (accent) {
+        style.cardAccentFillColor
     } else {
-        listOf(style.cardGradientStart, style.cardGradientEnd)
+        style.cardFillColor
     }
     val borderColor = if (accent) {
         style.cardAccentBorderColor.copy(alpha = style.cardAccentBorderAlpha)
@@ -195,39 +189,24 @@ fun Modifier.depthCard(
                 blurRadius = style.cardShadowCloseBlur,
                 cornerRadius = resolvedRadius
             )
-            drawSoftDropShadow(
-                color = style.cardShadowColor.copy(alpha = style.cardSpotShadowAlpha),
-                offsetY = style.cardShadowFarOffsetY,
-                blurRadius = style.cardShadowFarBlur,
-                cornerRadius = resolvedRadius
-            )
         }
         .clip(resolvedShape)
         .drawBehind {
             val outline = resolvedShape.createOutline(size, layoutDirection, this)
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(colors = gradientColors)
-            )
-            val borderPx = style.cardBorderWidth.toPx()
-            val sheenY = borderPx + borderPx * 0.5f
-            val insetX = resolvedRadius.toPx().coerceAtMost(size.width * 0.25f) * 0.25f + borderPx
-            drawLine(
-                color = PureWhite.copy(alpha = style.cardTopSheenAlpha),
-                start = Offset(insetX, sheenY),
-                end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
-                strokeWidth = borderPx
+                color = fillColor
             )
             drawInsetShapeBorder(
                 shape = resolvedShape,
-                borderWidthPx = borderPx,
+                borderWidthPx = style.cardBorderWidth.toPx(),
                 color = borderColor
             )
         }
 }
 
 /**
- * Raised soft-depth semantic card preserving an explicit semantic tint and border color.
+ * Flat semantic card preserving an explicit semantic solid tint, 1dp border, and soft card shadow.
  */
 fun Modifier.depthSemanticCard(
     backgroundColor: Color,
@@ -247,38 +226,23 @@ fun Modifier.depthSemanticCard(
                 blurRadius = style.cardShadowCloseBlur,
                 cornerRadius = resolvedRadius
             )
-            drawSoftDropShadow(
-                color = style.cardShadowColor.copy(alpha = style.cardSpotShadowAlpha),
-                offsetY = style.cardShadowFarOffsetY,
-                blurRadius = style.cardShadowFarBlur,
-                cornerRadius = resolvedRadius
-            )
         }
         .clip(resolvedShape)
         .drawBehind {
             val outline = resolvedShape.createOutline(size, layoutDirection, this)
             drawOutline(outline = outline, color = backgroundColor)
-            val borderPx = style.cardBorderWidth.toPx()
-            val sheenY = borderPx + borderPx * 0.5f
-            val insetX = borderPx
-            drawLine(
-                color = PureWhite.copy(alpha = style.cardTopSheenAlpha * 0.65f),
-                start = Offset(insetX, sheenY),
-                end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
-                strokeWidth = borderPx
-            )
             drawInsetShapeBorder(
                 shape = resolvedShape,
-                borderWidthPx = borderPx,
+                borderWidthPx = style.cardBorderWidth.toPx(),
                 color = borderColor
             )
         }
 }
 
 /**
- * Pressed-in inset surface styling for input fields and recessed wells.
- * Draws gradient fill -> inner shadows -> bottom white highlight -> crisp perimeter border on top.
+ * Flat input field container styling with crisp 1dp / 1.5dp border and solid surface fill.
  */
+@Suppress("UNUSED_PARAMETER")
 fun Modifier.depthInset(
     enabled: Boolean = true,
     isError: Boolean = false,
@@ -297,16 +261,13 @@ fun Modifier.depthInset(
     val style = LocalDepthStyle.current
     val resolvedRadius = cornerRadius ?: style.insetCornerRadius
     val resolvedShape = shape ?: RoundedCornerShape(resolvedRadius)
-    val resolvedTopShadowAlpha = topShadowAlphaOverride ?: style.insetTopShadowAlpha
     val resolvedDisabledBg = disabledBackgroundOverride ?: style.insetDisabledBackground
-    val resolvedShadowOffsetY = insetShadowOffsetYOverride ?: style.insetShadowOffsetY
-    val resolvedShadowBlur = insetShadowBlurOverride ?: style.insetShadowBlur
-    val resolvedGradient = when {
-        !enabled -> listOf(resolvedDisabledBg, resolvedDisabledBg)
-        isError -> listOf(style.insetErrorBackground, style.insetErrorBackground)
-        gradientColors != null -> gradientColors
-        isFocused -> listOf(style.insetGradientStart, style.insetFocusedBackground)
-        else -> listOf(style.insetGradientStart, style.insetBackground)
+    val resolvedFill = when {
+        !enabled -> resolvedDisabledBg
+        isError -> style.insetErrorBackground
+        gradientColors != null -> gradientColors.lastOrNull() ?: style.insetBackground
+        isFocused -> style.insetFocusedBackground
+        else -> style.insetBackground
     }
     val resolvedBorder = when {
         borderColorOverride != null -> borderColorOverride
@@ -323,50 +284,21 @@ fun Modifier.depthInset(
         .clip(resolvedShape)
         .drawBehind {
             val outline = resolvedShape.createOutline(size, layoutDirection, this)
-            // 1) Recessed vertical gradient fill
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(colors = resolvedGradient)
+                color = resolvedFill
             )
-
-            // 2) Top inner shadow (inset 0 2dp 4dp rgba(16,24,40,0.07))
-            val shadowHeightPx = (resolvedShadowOffsetY + resolvedShadowBlur).toPx()
-                .coerceAtMost(size.height * 0.45f)
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        style.insetShadowColor.copy(alpha = resolvedTopShadowAlpha),
-                        Color.Transparent
-                    ),
-                    startY = 0f,
-                    endY = shadowHeightPx
-                ),
-                size = Size(size.width, shadowHeightPx)
-            )
-
-            // 3) Bottom 1dp white bevel highlight inside the perimeter stroke
-            val borderPx = resolvedBorderWidth.toPx()
-            val highlightPx = 1.dp.toPx()
-            val bottomY = (size.height - borderPx - highlightPx * 0.5f).coerceAtLeast(0f)
-            drawLine(
-                color = style.insetBottomHighlightColor.copy(alpha = style.insetBottomHighlightAlpha),
-                start = Offset(borderPx, bottomY),
-                end = Offset((size.width - borderPx).coerceAtLeast(borderPx), bottomY),
-                strokeWidth = highlightPx
-            )
-
-            // 4) Crisp perimeter border drawn LAST above fill, inner shadows, and highlights
             drawInsetShapeBorder(
                 shape = resolvedShape,
-                borderWidthPx = borderPx,
+                borderWidthPx = resolvedBorderWidth.toPx(),
                 color = resolvedBorder
             )
         }
 }
 
 /**
- * Raised 3D button styling with brand gradient face and crisp unblurred lower lip,
- * preserving minimum touch targets and tactile press compression honoring reduced motion.
+ * Flat primary action button styling with solid fill, 8% darkened pressed fill,
+ * soft card-matching shadow, and >= 48dp minimum touch targets.
  */
 fun Modifier.depthRaisedButton(
     enabled: Boolean = true,
@@ -377,18 +309,19 @@ fun Modifier.depthRaisedButton(
     val style = LocalDepthStyle.current
     val resolvedCorner = cornerRadius ?: style.buttonCornerRadius
     val shape = RoundedCornerShape(resolvedCorner)
-    val context = LocalContext.current
-    val isInspection = LocalInspectionMode.current
-    val animatorScale = remember(context) { readAnimatorDurationScale(context) }
-    val animateMotion = !isInspection && shouldAnimate(animatorScale)
     var isPressed by remember { mutableStateOf(false) }
-    val pressProgress by animateFloatAsState(
-        targetValue = if (animateMotion && enabled && isPressed) 1f else 0f,
-        animationSpec = tween(durationMillis = if (animateMotion) style.pressDurationMs else 0),
-        label = "raised_btn_press"
-    )
 
-    val shadowColor = if (isDestructive) style.destructiveButtonShadowColor else style.buttonShadowColor
+    val baseFill = when {
+        !enabled -> style.buttonDisabledEnd
+        isDestructive -> style.destructiveButtonFillColor
+        else -> style.buttonFillColor
+    }
+    val pressedFill = when {
+        !enabled -> style.buttonDisabledEnd
+        isDestructive -> style.destructiveButtonPressedFillColor
+        else -> style.buttonPressedFillColor
+    }
+    val resolvedFill = if (enabled && isPressed) pressedFill else baseFill
 
     this
         .defaultMinSize(
@@ -396,18 +329,10 @@ fun Modifier.depthRaisedButton(
             minHeight = minHeight.coerceAtLeast(Dimens.MinTouchTarget)
         )
         .trackButtonPress(enabled = enabled) { isPressed = it }
-        .graphicsLayer {
-            if (animateMotion && enabled) {
-                translationY = pressProgress * style.buttonPressedTranslationY.toPx()
-                val s = 1f - pressProgress * (1f - style.buttonPressedScale)
-                scaleX = s
-                scaleY = s
-            }
-        }
         .drawBehind {
             if (enabled) {
                 drawSoftDropShadow(
-                    color = shadowColor.copy(alpha = style.buttonShadowAlpha),
+                    color = style.buttonShadowColor.copy(alpha = style.buttonShadowAlpha),
                     offsetY = style.buttonShadowOffsetY,
                     blurRadius = style.buttonShadowBlur,
                     cornerRadius = resolvedCorner
@@ -416,60 +341,19 @@ fun Modifier.depthRaisedButton(
         }
         .clip(shape)
         .drawBehind {
-            val lipPx = style.buttonLipHeight.toPx().coerceAtMost(size.height * 0.25f)
-            val cornerPx = resolvedCorner.toPx()
-            val cr = CornerRadius(cornerPx, cornerPx)
-
-            val lipColor = when {
-                !enabled -> style.buttonLipDisabledColor.copy(alpha = style.buttonLipDisabledAlpha)
-                isDestructive -> style.destructiveButtonLipColor.copy(alpha = style.buttonLipAlpha)
-                else -> style.buttonLipColor.copy(alpha = style.buttonLipAlpha)
-            }
-            // 1) Unblurred solid 4dp bottom lip
-            drawRoundRect(
-                color = lipColor,
-                topLeft = Offset.Zero,
-                size = size,
-                cornerRadius = cr
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                color = resolvedFill
             )
-
-            // 2) Raised gradient face above the lip
-            val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
-            val faceColors = when {
-                !enabled -> listOf(style.buttonDisabledStart, style.buttonDisabledEnd)
-                isDestructive -> listOf(style.destructiveButtonGradientStart, style.destructiveButtonGradientEnd)
-                else -> listOf(style.buttonGradientStart, style.buttonGradientEnd)
-            }
-            drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = faceColors,
-                    startY = 0f,
-                    endY = faceHeight
-                ),
-                topLeft = Offset.Zero,
-                size = Size(size.width, faceHeight),
-                cornerRadius = cr
-            )
-
-            // 3) Top 1dp white specular highlight
-            if (enabled) {
-                val highlightPx = 1.dp.toPx()
-                val insetX = (cornerPx * 0.35f).coerceAtMost(size.width * 0.25f)
-                drawLine(
-                    color = PureWhite.copy(alpha = style.buttonTopHighlightAlpha),
-                    start = Offset(insetX, highlightPx * 0.5f),
-                    end = Offset((size.width - insetX).coerceAtLeast(insetX), highlightPx * 0.5f),
-                    strokeWidth = highlightPx
-                )
-            }
         }
-        .padding(bottom = style.buttonLipHeight)
 }
 
 /**
- * Lighter raised 3D secondary/outlined button styling with subtle surface gradient, unblurred lower lip,
- * perimeter stroke, soft shadow, and >= 48.dp touch target preservation.
+ * Flat secondary/outlined button styling with white fill, 1dp border, 6% pressed tint fill,
+ * no drop shadow, and >= 48dp touch target preservation.
  */
+@Suppress("UNUSED_PARAMETER")
 fun Modifier.depthSecondaryButton(
     enabled: Boolean = true,
     borderColor: Color? = null,
@@ -490,26 +374,23 @@ fun Modifier.depthSecondaryButton(
     val shape = RoundedCornerShape(resolvedCorner)
     val resolvedBorderColor = borderColor ?: style.secondaryButtonBorderColor
     val resolvedBorderWidth = borderWidth ?: style.secondaryButtonBorderWidth
-    val resolvedLipHeight = lipHeight ?: style.secondaryButtonLipHeight
-    val resolvedLipColor = (lipColor ?: style.secondaryButtonLipColor).copy(
-        alpha = if (enabled) style.secondaryButtonLipAlpha else style.secondaryButtonLipDisabledAlpha
-    )
-    val resolvedShadowColor = (shadowColor ?: style.secondaryButtonShadowColor).copy(
-        alpha = shadowAlpha ?: style.secondaryButtonShadowAlpha
-    )
-    val resolvedShadowOffsetY = shadowOffsetY ?: style.buttonShadowOffsetY
-    val resolvedShadowBlur = shadowBlur ?: style.buttonShadowBlur
-
-    val context = LocalContext.current
-    val isInspection = LocalInspectionMode.current
-    val animatorScale = remember(context) { readAnimatorDurationScale(context) }
-    val animateMotion = !isInspection && shouldAnimate(animatorScale)
     var isPressed by remember { mutableStateOf(false) }
-    val pressProgress by animateFloatAsState(
-        targetValue = if (animateMotion && enabled && isPressed) 1f else 0f,
-        animationSpec = tween(durationMillis = if (animateMotion) style.pressDurationMs else 0),
-        label = "secondary_btn_press"
-    )
+
+    val baseFill = if (enabled) {
+        gradientColors?.firstOrNull() ?: style.secondaryButtonGradientStart
+    } else {
+        style.secondaryButtonDisabledStart
+    }
+    val pressedTintSource = if (borderColor != null && borderColor.alpha > 0f) {
+        PrimaryBlueLight
+    } else {
+        style.secondaryButtonBorderColor
+    }
+    val resolvedFill = if (enabled && isPressed) {
+        lerp(baseFill, pressedTintSource, DepthTokens.FLAT_SECONDARY_PRESSED_ALPHA)
+    } else {
+        baseFill
+    }
 
     val resolvedMinWidth = if (enforceMinTouchTarget) Dimens.MinTouchTarget else Dp.Unspecified
     val resolvedMinHeight = if (enforceMinTouchTarget) minHeight.coerceAtLeast(Dimens.MinTouchTarget) else minHeight
@@ -520,51 +401,13 @@ fun Modifier.depthSecondaryButton(
             minHeight = resolvedMinHeight
         )
         .trackButtonPress(enabled = enabled) { isPressed = it }
-        .graphicsLayer {
-            if (animateMotion && enabled) {
-                translationY = pressProgress * style.buttonPressedTranslationY.toPx()
-            }
-        }
-        .drawBehind {
-            if (enabled) {
-                drawSoftDropShadow(
-                    color = resolvedShadowColor,
-                    offsetY = resolvedShadowOffsetY,
-                    blurRadius = resolvedShadowBlur,
-                    cornerRadius = resolvedCorner
-                )
-            }
-        }
         .clip(shape)
         .drawBehind {
-            val lipPx = resolvedLipHeight.toPx().coerceAtMost(size.height * 0.25f)
-            val cornerPx = resolvedCorner.toPx()
-            val cr = CornerRadius(cornerPx, cornerPx)
-
-            drawRoundRect(
-                color = resolvedLipColor,
-                topLeft = Offset.Zero,
-                size = size,
-                cornerRadius = cr
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                color = resolvedFill
             )
-
-            val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
-            val faceColors = if (enabled) {
-                gradientColors ?: listOf(style.secondaryButtonGradientStart, style.secondaryButtonGradientEnd)
-            } else {
-                listOf(style.secondaryButtonDisabledStart, style.secondaryButtonDisabledEnd)
-            }
-            drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = faceColors,
-                    startY = 0f,
-                    endY = faceHeight
-                ),
-                topLeft = Offset.Zero,
-                size = Size(size.width, faceHeight),
-                cornerRadius = cr
-            )
-
             if (resolvedBorderWidth > 0.dp) {
                 drawInsetShapeBorder(
                     shape = shape,
@@ -573,12 +416,11 @@ fun Modifier.depthSecondaryButton(
                 )
             }
         }
-        .padding(bottom = resolvedLipHeight)
 }
 
 /**
- * Square raised 3D keypad key styling for the Quick PIN screen matching Stage 26D boards.
- * Draws outer drop shadow -> unblurred solid 4dp #D5DCEB bottom lip -> #FFFFFF..#F1F4FB face.
+ * Flat keypad key styling for the Quick PIN screen with solid white fill, 1dp border,
+ * and subtle card shadow.
  */
 fun Modifier.depthKeypadKey(
     enabled: Boolean = true,
@@ -587,16 +429,14 @@ fun Modifier.depthKeypadKey(
     val style = LocalDepthStyle.current
     val resolvedCorner = cornerRadius ?: style.keypadCornerRadius
     val shape = RoundedCornerShape(resolvedCorner)
-    val context = LocalContext.current
-    val isInspection = LocalInspectionMode.current
-    val animatorScale = remember(context) { readAnimatorDurationScale(context) }
-    val animateMotion = !isInspection && shouldAnimate(animatorScale)
     var isPressed by remember { mutableStateOf(false) }
-    val pressProgress by animateFloatAsState(
-        targetValue = if (animateMotion && enabled && isPressed) 1f else 0f,
-        animationSpec = tween(durationMillis = if (animateMotion) style.pressDurationMs else 0),
-        label = "keypad_key_press"
-    )
+
+    val baseFill = if (enabled) style.keypadGradientStart else style.secondaryButtonDisabledStart
+    val resolvedFill = if (enabled && isPressed) {
+        lerp(baseFill, PrimaryBlueLight, DepthTokens.FLAT_SECONDARY_PRESSED_ALPHA)
+    } else {
+        baseFill
+    }
 
     this
         .defaultMinSize(
@@ -604,11 +444,6 @@ fun Modifier.depthKeypadKey(
             minHeight = style.keypadHeight
         )
         .trackButtonPress(enabled = enabled) { isPressed = it }
-        .graphicsLayer {
-            if (animateMotion && enabled) {
-                translationY = pressProgress * style.buttonPressedTranslationY.toPx()
-            }
-        }
         .drawBehind {
             if (enabled) {
                 drawSoftDropShadow(
@@ -621,52 +456,21 @@ fun Modifier.depthKeypadKey(
         }
         .clip(shape)
         .drawBehind {
-            val lipPx = style.buttonLipHeight.toPx().coerceAtMost(size.height * 0.25f)
-            val cornerPx = resolvedCorner.toPx()
-            val cr = CornerRadius(cornerPx, cornerPx)
-
-            // 1) Crisp unblurred 4dp solid #D5DCEB lip (no maskFilter)
-            drawRoundRect(
-                color = if (enabled) style.keypadLipColor else style.buttonLipDisabledColor,
-                topLeft = Offset.Zero,
-                size = size,
-                cornerRadius = cr
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                color = resolvedFill
             )
-
-            // 2) Full vertical gradient #FFFFFF -> #F1F4FB face above the 4dp lip
-            val faceHeight = (size.height - lipPx).coerceAtLeast(1f)
-            val faceColors = if (enabled) {
-                listOf(style.keypadGradientStart, style.keypadGradientEnd)
-            } else {
-                listOf(style.secondaryButtonDisabledStart, style.secondaryButtonDisabledEnd)
-            }
-            drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = faceColors,
-                    startY = 0f,
-                    endY = faceHeight
-                ),
-                topLeft = Offset.Zero,
-                size = Size(size.width, faceHeight),
-                cornerRadius = cr
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = style.cardBorderWidth.toPx(),
+                color = style.cardBorderColor
             )
-
-            if (enabled) {
-                val highlightPx = 1.dp.toPx()
-                val insetX = (cornerPx * 0.35f).coerceAtMost(size.width * 0.25f)
-                drawLine(
-                    color = PureWhite,
-                    start = Offset(insetX, highlightPx * 0.5f),
-                    end = Offset((size.width - insetX).coerceAtLeast(insetX), highlightPx * 0.5f),
-                    strokeWidth = highlightPx
-                )
-            }
         }
-        .padding(bottom = style.buttonLipHeight)
 }
 
 /**
- * Standalone 48dp diagonal-gradient app logo tile with soft drop shadow and 1dp inner bottom edge.
+ * Standalone 48dp flat app logo tile with solid fill, 1dp border, and subtle card shadow.
  */
 fun Modifier.depthLogoTile(): Modifier = composed {
     val style = LocalDepthStyle.current
@@ -685,38 +489,29 @@ fun Modifier.depthLogoTile(): Modifier = composed {
         }
         .clip(shape)
         .drawBehind {
-            // 145-degree CSS linear gradient vector
-            val dx = size.width * 0.287f
-            val dy = size.height * 0.410f
-            val cx = size.width * 0.5f
-            val cy = size.height * 0.5f
-            drawRect(
-                brush = Brush.linearGradient(
-                    colors = listOf(style.logoTileGradientStart, style.logoTileGradientEnd),
-                    start = Offset(cx - dx, cy - dy),
-                    end = Offset(cx + dx, cy + dy)
-                ),
-                size = size
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                color = style.logoTileGradientStart
             )
-            val edgePx = 1.dp.toPx()
-            drawLine(
-                color = style.cardShadowCloseColor.copy(alpha = style.logoTileBottomEdgeAlpha),
-                start = Offset(0f, size.height - edgePx * 0.5f),
-                end = Offset(size.width, size.height - edgePx * 0.5f),
-                strokeWidth = edgePx
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = style.cardBorderWidth.toPx(),
+                color = style.cardBorderColor
             )
         }
 }
 
 /**
- * Top brand gradient container with RTL-safe padding and bottom-start/end corners.
+ * Top solid primary-blue header container with RTL-safe padding and bottom-start/end corners.
  */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun LojiaGradientHeader(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(bottomStart = Dimens.RadiusXl, bottomEnd = Dimens.RadiusXl),
     cornerRadiusForShadow: Dp = 0.dp,
-    showDropShadow: Boolean = true,
+    showDropShadow: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = Dimens.SpacingLg,
         vertical = Dimens.SpacingLg
@@ -727,44 +522,8 @@ fun LojiaGradientHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (showDropShadow) {
-                    Modifier.drawBehind {
-                        drawSoftDropShadow(
-                            color = style.headerShadowColor.copy(alpha = style.headerShadowAlpha),
-                            offsetY = Dimens.HeaderShadowOffsetY,
-                            blurRadius = Dimens.HeaderShadowBlur,
-                            cornerRadius = cornerRadiusForShadow
-                        )
-                    }
-                } else {
-                    Modifier
-                }
-            )
             .clip(shape)
-            .drawBehind {
-                // 135-deg linear gradient matching board GR6 (#2B5DE8 -> #1238A8)
-                drawRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(style.headerGradientStart, style.headerGradientEnd),
-                        start = Offset.Zero,
-                        end = Offset(size.width, size.height)
-                    ),
-                    size = size
-                )
-                val sheenHeight = size.height * 0.45f
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PureWhite.copy(alpha = style.headerSheenAlpha),
-                            Color.Transparent
-                        ),
-                        startY = 0f,
-                        endY = sheenHeight
-                    ),
-                    size = Size(size.width, sheenHeight)
-                )
-            }
+            .background(color = style.headerFillColor)
     ) {
         Column(
             modifier = Modifier
@@ -776,8 +535,7 @@ fun LojiaGradientHeader(
 }
 
 /**
- * One-time entrance fade and upward rise animation staggered by [index].
- * Automatically skipped when system animator duration scale is 0 (reduced motion) or in preview inspection.
+ * One-time subtle alpha fade-in entrance staggered by [index], honoring reduced motion.
  */
 fun Modifier.cardRise(index: Int): Modifier = composed {
     val style = LocalDepthStyle.current
@@ -812,61 +570,17 @@ fun Modifier.cardRise(index: Int): Modifier = composed {
     }
 
     this.graphicsLayer {
-        val value = progress.value
-        alpha = value
-        translationY = (1f - value) * style.cardRiseTranslationY.toPx()
+        alpha = progress.value
     }
 }
 
 /**
- * Pulsing outer halo modifier for small LIVE status dots, honoring reduced-motion settings.
+ * Static flat LIVE indicator modifier (glow pulse animation removed in Stage 29A).
  */
-fun Modifier.livePulse(): Modifier = composed {
-    val style = LocalDepthStyle.current
-    val context = LocalContext.current
-    val isInspection = LocalInspectionMode.current
-    val animatorScale = remember(context) { readAnimatorDurationScale(context) }
-
-    if (isInspection || !shouldAnimate(animatorScale)) {
-        return@composed this.drawBehind {
-            val baseRadius = size.minDimension / 2f
-            drawCircle(
-                color = style.liveDotColor.copy(alpha = style.liveHaloSteadyAlpha),
-                radius = baseRadius * 1.45f,
-                center = center
-            )
-        }
-    }
-
-    val transition = rememberInfiniteTransition(label = "live_pulse")
-    val pulseFraction by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = style.livePulsePeriodMs,
-                easing = LinearEasing
-            ),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "live_pulse_fraction"
-    )
-
-    this.drawBehind {
-        val baseRadius = size.minDimension / 2f
-        val haloRadius = baseRadius * (1f + (style.liveHaloMaxScale - 1f) * pulseFraction)
-        val haloAlpha = style.liveHaloStartAlpha +
-            (style.liveHaloEndAlpha - style.liveHaloStartAlpha) * pulseFraction
-        drawCircle(
-            color = style.liveDotColor.copy(alpha = haloAlpha.coerceIn(0f, 1f)),
-            radius = haloRadius,
-            center = center
-        )
-    }
-}
+fun Modifier.livePulse(): Modifier = this
 
 /**
- * Compact circular LIVE indicator dot combining [livePulse] and [DepthStyle.liveDotColor].
+ * Compact flat circular LIVE indicator dot using [DepthStyle.liveDotColor].
  */
 @Composable
 fun LojiaLiveDot(modifier: Modifier = Modifier) {
@@ -880,37 +594,18 @@ fun LojiaLiveDot(modifier: Modifier = Modifier) {
 }
 
 /**
- * Tab bar container shadow matching board SH8 (0 3dp 8dp rgba(16,24,40,0.08)).
+ * Flat tab bar container modifier (shadow removed in Stage 29A).
  */
-fun Modifier.depthTabBarShadow(): Modifier = composed {
-    val style = LocalDepthStyle.current
-    this.drawBehind {
-        drawSoftDropShadow(
-            color = style.tabBarShadowColor.copy(alpha = style.tabBarShadowAlpha),
-            offsetY = Dimens.TabBarShadowOffsetY,
-            blurRadius = Dimens.TabBarShadowBlur,
-            cornerRadius = 0.dp
-        )
-    }
-}
+fun Modifier.depthTabBarShadow(): Modifier = this
 
 /**
- * Active tab bottom pill glow matching board SH9 (0 -2dp 8dp rgba(29,79,216,0.35)).
+ * Plain solid tab indicator modifier (glow removed in Stage 29A).
  */
-fun Modifier.depthTabIndicatorGlow(cornerRadius: Dp = Dimens.TabIndicatorHeight): Modifier = composed {
-    val style = LocalDepthStyle.current
-    this.drawBehind {
-        drawSoftDropShadow(
-            color = style.tabIndicatorGlowColor.copy(alpha = style.tabIndicatorGlowAlpha),
-            offsetY = Dimens.TabIndicatorGlowOffsetY,
-            blurRadius = Dimens.TabIndicatorGlowBlur,
-            cornerRadius = cornerRadius
-        )
-    }
-}
+@Suppress("UNUSED_PARAMETER")
+fun Modifier.depthTabIndicatorGlow(cornerRadius: Dp = Dimens.TabIndicatorHeight): Modifier = this
 
 /**
- * Raised tinted gradient card for Due History / Ledger KPI & summary cards (SH2 + gradient + 1dp border).
+ * Flat tinted summary/KPI card with solid background, 1dp border, and subtle soft shadow.
  */
 fun Modifier.depthGradientCard(
     gradientColors: List<Color>,
@@ -919,6 +614,7 @@ fun Modifier.depthGradientCard(
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
+    val fillColor = gradientColors.lastOrNull() ?: style.cardFillColor
     this
         .drawBehind {
             drawSoftDropShadow(
@@ -927,39 +623,24 @@ fun Modifier.depthGradientCard(
                 blurRadius = style.cardShadowCloseBlur,
                 cornerRadius = cornerRadius
             )
-            drawSoftDropShadow(
-                color = style.cardShadowColor.copy(alpha = style.cardSpotShadowAlpha),
-                offsetY = style.cardShadowFarOffsetY,
-                blurRadius = style.cardShadowFarBlur,
-                cornerRadius = cornerRadius
-            )
         }
         .clip(shape)
         .drawBehind {
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(colors = gradientColors)
-            )
-            val borderPx = style.cardBorderWidth.toPx()
-            val sheenY = borderPx + borderPx * 0.5f
-            val insetX = cornerRadius.toPx().coerceAtMost(size.width * 0.25f) * 0.25f + borderPx
-            drawLine(
-                color = PureWhite.copy(alpha = style.cardTopSheenAlpha),
-                start = Offset(insetX, sheenY),
-                end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
-                strokeWidth = borderPx
+                color = fillColor
             )
             drawInsetShapeBorder(
                 shape = shape,
-                borderWidthPx = borderPx,
+                borderWidthPx = style.cardBorderWidth.toPx(),
                 color = borderColor
             )
         }
 }
 
 /**
- * Accordion / section header banner matching board SH16 + gradient + 1dp border + top white highlight.
+ * Flat section accordion banner with solid fill, 1dp border, and subtle soft shadow.
  */
 fun Modifier.depthSectionBanner(
     gradientColors: List<Color>,
@@ -968,6 +649,7 @@ fun Modifier.depthSectionBanner(
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
+    val fillColor = gradientColors.lastOrNull() ?: style.cardFillColor
     this
         .drawBehind {
             drawSoftDropShadow(
@@ -982,27 +664,18 @@ fun Modifier.depthSectionBanner(
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(colors = gradientColors)
-            )
-            val borderPx = style.cardBorderWidth.toPx()
-            val sheenY = borderPx + borderPx * 0.5f
-            val insetX = borderPx
-            drawLine(
-                color = PureWhite.copy(alpha = DepthTokens.SECTION_PILL_HIGHLIGHT_ALPHA),
-                start = Offset(insetX, sheenY),
-                end = Offset((size.width - insetX).coerceAtLeast(insetX), sheenY),
-                strokeWidth = borderPx
+                color = fillColor
             )
             drawInsetShapeBorder(
                 shape = shape,
-                borderWidthPx = borderPx,
+                borderWidthPx = style.cardBorderWidth.toPx(),
                 color = borderColor
             )
         }
 }
 
 /**
- * Small raised 32dp / 38dp icon tile inside section headers & KPI cards matching board SH17.
+ * Flat compact icon tile inside section headers & KPI cards with solid fill, 1dp border, and soft shadow.
  */
 fun Modifier.depthRaisedTile(
     gradientColors: List<Color>,
@@ -1010,6 +683,7 @@ fun Modifier.depthRaisedTile(
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
+    val fillColor = gradientColors.lastOrNull() ?: style.cardFillColor
     this
         .drawBehind {
             drawSoftDropShadow(
@@ -1024,20 +698,18 @@ fun Modifier.depthRaisedTile(
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(colors = gradientColors)
+                color = fillColor
             )
-            val highlightPx = 1.dp.toPx()
-            drawLine(
-                color = PureWhite,
-                start = Offset(0f, highlightPx * 0.5f),
-                end = Offset(size.width, highlightPx * 0.5f),
-                strokeWidth = highlightPx
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = style.cardBorderWidth.toPx(),
+                color = style.cardBorderColor
             )
         }
 }
 
 /**
- * Active thumb for segmented period selector matching board GR3 + SH19 (0 3dp 8dp #1D4FD8@0.35).
+ * Flat active thumb for segmented period selector (solid primary blue, no glow).
  */
 fun Modifier.depthSegmentActiveThumb(
     cornerRadius: Dp = Dimens.RadiusSegmentThumb
@@ -1045,37 +717,13 @@ fun Modifier.depthSegmentActiveThumb(
     val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
     this
-        .drawBehind {
-            drawSoftDropShadow(
-                color = style.buttonShadowColor.copy(alpha = DepthTokens.SEGMENT_ACTIVE_SHADOW_ALPHA),
-                offsetY = Dimens.SegmentActiveShadowOffsetY,
-                blurRadius = Dimens.SegmentActiveShadowBlur,
-                cornerRadius = cornerRadius
-            )
-        }
         .clip(shape)
-        .drawBehind {
-            val outline = shape.createOutline(size, layoutDirection, this)
-            drawOutline(
-                outline = outline,
-                brush = Brush.verticalGradient(
-                    colors = listOf(style.buttonGradientStart, style.buttonGradientEnd)
-                )
-            )
-            val highlightPx = 1.dp.toPx()
-            drawLine(
-                color = PureWhite.copy(alpha = style.buttonTopHighlightAlpha),
-                start = Offset(0f, highlightPx * 0.5f),
-                end = Offset(size.width, highlightPx * 0.5f),
-                strokeWidth = highlightPx
-            )
-        }
+        .background(color = style.buttonFillColor, shape = shape)
 }
 
 /**
- * Raised 145-degree diagonal gradient icon tile matching board SH1:
- * 0 4dp 8dp rgba(16, 24, 40, 0.14) drop shadow, 145-deg diagonal gradient fill,
- * 1dp inner top white highlight (0.90), and 2dp inner bottom bevel edge (0.07).
+ * Flat icon tile for Settings, Quick Actions, and List rows:
+ * solid surface fill, 1dp border, and subtle soft shadow.
  */
 fun Modifier.depthRaisedIconTile(
     gradientColors: List<Color>,
@@ -1083,6 +731,7 @@ fun Modifier.depthRaisedIconTile(
 ): Modifier = composed {
     val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
+    val fillColor = gradientColors.lastOrNull() ?: style.cardFillColor
     this
         .drawBehind {
             drawSoftDropShadow(
@@ -1094,67 +743,33 @@ fun Modifier.depthRaisedIconTile(
         }
         .clip(shape)
         .drawBehind {
-            // 145-degree CSS linear gradient vector
-            val dx = size.width * 0.287f
-            val dy = size.height * 0.410f
-            val cx = size.width * 0.5f
-            val cy = size.height * 0.5f
-            drawRect(
-                brush = Brush.linearGradient(
-                    colors = gradientColors,
-                    start = Offset(cx - dx, cy - dy),
-                    end = Offset(cx + dx, cy + dy)
-                ),
-                size = size
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                color = fillColor
             )
-            val topPx = 1.dp.toPx()
-            drawLine(
-                color = PureWhite.copy(alpha = DepthTokens.ICON_TILE_TOP_HIGHLIGHT_ALPHA),
-                start = Offset(0f, topPx * 0.5f),
-                end = Offset(size.width, topPx * 0.5f),
-                strokeWidth = topPx
-            )
-            val bevelPx = Dimens.IconTileBottomBevelHeight.toPx()
-            drawLine(
-                color = style.cardShadowCloseColor.copy(alpha = DepthTokens.ICON_TILE_BOTTOM_BEVEL_ALPHA),
-                start = Offset(0f, size.height - bevelPx * 0.5f),
-                end = Offset(size.width, size.height - bevelPx * 0.5f),
-                strokeWidth = bevelPx
+            drawInsetShapeBorder(
+                shape = shape,
+                borderWidthPx = style.cardBorderWidth.toPx(),
+                color = style.cardBorderColor
             )
         }
 }
 
 /**
- * Recessed note/privacy block matching Register screen Gap 2 spec:
- * #F1F5FB fill, 1dp #E2E8F0 border, 10dp radius, inset 0/1dp blur 2dp rgba(16,24,40,0.12).
+ * Flat note/privacy block with solid fill and 1dp border.
  */
 fun Modifier.depthNoteBox(
     cornerRadius: Dp = Dimens.RadiusInputRegister,
     fillColor: Color = DepthTokens.RegisterNoteBackground,
     borderColor: Color = DepthTokens.RegisterNoteBorderColor
 ): Modifier = composed {
-    val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
     this
         .clip(shape)
         .drawBehind {
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(outline = outline, color = fillColor)
-
-            val shadowHeightPx = (Dimens.RegisterNoteShadowOffsetY + Dimens.RegisterNoteShadowBlur).toPx()
-                .coerceAtMost(size.height * 0.45f)
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        style.insetShadowColor.copy(alpha = DepthTokens.REGISTER_NOTE_SHADOW_ALPHA),
-                        Color.Transparent
-                    ),
-                    startY = 0f,
-                    endY = shadowHeightPx
-                ),
-                size = Size(size.width, shadowHeightPx)
-            )
-
             drawInsetShapeBorder(
                 shape = shape,
                 borderWidthPx = Dimens.CardBorderWidth.toPx(),
@@ -1164,8 +779,7 @@ fun Modifier.depthNoteBox(
 }
 
 /**
- * Password recovery tinted info block matching Gap 3 spec:
- * #EEF3FF fill, 1dp #D0DDFF border, 10dp radius, inner top 1dp #FFFFFF highlight.
+ * Flat tinted info block with solid fill and 1dp border.
  */
 fun Modifier.depthInfoBlock(
     cornerRadius: Dp = Dimens.RadiusInputRegister,
@@ -1178,28 +792,16 @@ fun Modifier.depthInfoBlock(
         .drawBehind {
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(outline = outline, color = fillColor)
-
-            val borderPx = Dimens.CardBorderWidth.toPx()
-            val highlightY = borderPx + borderPx * 0.5f
-            drawLine(
-                color = PureWhite,
-                start = Offset(borderPx, highlightY),
-                end = Offset((size.width - borderPx).coerceAtLeast(borderPx), highlightY),
-                strokeWidth = borderPx
-            )
-
             drawInsetShapeBorder(
                 shape = shape,
-                borderWidthPx = borderPx,
+                borderWidthPx = Dimens.CardBorderWidth.toPx(),
                 color = borderColor
             )
         }
 }
 
 /**
- * 46x46dp diagonal 145-deg icon tile for password recovery spec tokens:
- * #FFFFFF to #D0DDFF, radius 15dp, drop shadow 0/4dp blur 8dp rgba(16,24,40,0.14),
- * inset 0/1dp #FFFFFF + inset 0/-2dp rgba(16,24,40,0.07).
+ * 46x46dp flat icon tile for password recovery info block.
  */
 fun Modifier.depthRecoveryTile(): Modifier = this
     .size(Dimens.RecoveryTileSize)
@@ -1220,27 +822,17 @@ fun rememberShouldAnimate(): Boolean {
 }
 
 /**
- * Emerald gradient pill + soft glow shadow for the Home Dashboard LIVE badge.
+ * Flat emerald status badge pill with solid fill and 1dp border (no glow shadow).
  */
 fun Modifier.depthLiveBadge(): Modifier = composed {
     val shape = RoundedCornerShape(Dimens.RadiusFull)
     this
-        .drawBehind {
-            drawSoftDropShadow(
-                color = DepthTokens.LiveDotColor.copy(alpha = DepthTokens.LIVE_BADGE_SHADOW_ALPHA),
-                offsetY = Dimens.HomeLiveBadgeShadowOffsetY,
-                blurRadius = Dimens.HomeLiveBadgeShadowBlur,
-                cornerRadius = Dimens.RadiusFull
-            )
-        }
         .clip(shape)
         .drawBehind {
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(
-                    colors = listOf(DepthTokens.LiveBadgeBgStart, DepthTokens.LiveBadgeBgEnd)
-                )
+                color = DepthTokens.LiveBadgeBgStart
             )
             drawInsetShapeBorder(
                 shape = shape,
@@ -1251,16 +843,17 @@ fun Modifier.depthLiveBadge(): Modifier = composed {
 }
 
 /**
- * Warm amber raised draft/review alert banner matching board GR13 + amber glow shadow.
+ * Flat amber draft/review alert banner with solid fill, 1dp border, and subtle soft shadow.
  */
 fun Modifier.depthDraftBanner(
     cornerRadius: Dp = Dimens.RadiusKpiCard
 ): Modifier = composed {
+    val style = LocalDepthStyle.current
     val shape = RoundedCornerShape(cornerRadius)
     this
         .drawBehind {
             drawSoftDropShadow(
-                color = DraftBannerShadowColor.copy(alpha = DepthTokens.DRAFT_BANNER_SHADOW_ALPHA),
+                color = style.cardShadowCloseColor.copy(alpha = DepthTokens.DRAFT_BANNER_SHADOW_ALPHA),
                 offsetY = Dimens.HomeDraftBannerShadowOffsetY,
                 blurRadius = Dimens.HomeDraftBannerShadowBlur,
                 cornerRadius = cornerRadius
@@ -1271,39 +864,20 @@ fun Modifier.depthDraftBanner(
             val outline = shape.createOutline(size, layoutDirection, this)
             drawOutline(
                 outline = outline,
-                brush = Brush.verticalGradient(
-                    colors = listOf(SectionAmberGradientStart, SectionAmberGradientEnd)
-                )
-            )
-            val borderPx = Dimens.CardBorderWidth.toPx()
-            val sheenY = borderPx + borderPx * 0.5f
-            drawLine(
-                color = PureWhite.copy(alpha = DepthTokens.SECTION_PILL_HIGHLIGHT_ALPHA),
-                start = Offset(borderPx, sheenY),
-                end = Offset((size.width - borderPx).coerceAtLeast(borderPx), sheenY),
-                strokeWidth = borderPx
+                color = SectionAmberGradientEnd
             )
             drawInsetShapeBorder(
                 shape = shape,
-                borderWidthPx = borderPx,
+                borderWidthPx = Dimens.CardBorderWidth.toPx(),
                 color = SectionAmberBorder
             )
         }
 }
 
 /**
- * Soft brand blue glow beneath today's highlighted bar in the 7-day sales chart.
+ * Flat chart today-bar modifier (glow removed in Stage 29A).
  */
+@Suppress("UNUSED_PARAMETER")
 fun Modifier.depthChartTodayBarGlow(
     cornerRadius: Dp = Dimens.HomeChartBarRadius
-): Modifier = composed {
-    this.drawBehind {
-        drawSoftDropShadow(
-            color = DepthTokens.RaisedButtonShadowColor.copy(alpha = DepthTokens.CHART_TODAY_GLOW_ALPHA),
-            offsetY = Dimens.HomeChartTodayGlowOffsetY,
-            blurRadius = Dimens.HomeChartTodayGlowBlur,
-            cornerRadius = cornerRadius
-        )
-    }
-}
-
+): Modifier = this

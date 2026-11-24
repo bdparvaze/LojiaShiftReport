@@ -94,10 +94,10 @@ class Stage26F1SpecParityUnitTest {
 
         assertEquals(Color(0xFF2B5DE8), BrandHeaderDiagonalStart)
         assertEquals(Color(0xFF1238A8), BrandHeaderDiagonalEnd)
-        assertEquals(BrandHeaderDiagonalEnd, DepthTokens.HeaderShadowColor)
-        assertEquals(0.35f, DepthTokens.HEADER_SHADOW_ALPHA, 1e-6f)
-        assertEquals(0.08f, DepthTokens.TAB_BAR_SHADOW_ALPHA, 1e-6f)
-        assertEquals(0.35f, DepthTokens.TAB_INDICATOR_GLOW_ALPHA, 1e-6f)
+        assertEquals(PureWhite.copy(red = 0f, green = 0f, blue = 0f), DepthTokens.HeaderShadowColor)
+        assertEquals(0.0f, DepthTokens.HEADER_SHADOW_ALPHA, 1e-6f)
+        assertEquals(0.0f, DepthTokens.TAB_BAR_SHADOW_ALPHA, 1e-6f)
+        assertEquals(0.0f, DepthTokens.TAB_INDICATOR_GLOW_ALPHA, 1e-6f)
 
         assertEquals(Color(0xFF101828), TextPrimaryReport)
         assertEquals(Color(0xFF344054), TextSlate700)
@@ -137,24 +137,24 @@ class Stage26F1SpecParityUnitTest {
 
         val style = DepthStyle()
         assertEquals(DepthTokens.ReportPageBackground, style.reportPageBackground)
-        assertEquals(ReportInputBorder, style.reportFieldBorderColor)
+        assertEquals(Color(0xFFD5DBE6), style.reportFieldBorderColor)
         assertEquals(TextPrimaryReport, style.reportFieldTextColor)
         assertEquals(TextSlate700, style.reportFieldLabelColor)
-        assertEquals(TextPlaceholderReport, style.reportFieldPlaceholderColor)
-        assertEquals(0.06f, style.reportFieldInsetAlpha, 1e-6f)
+        assertEquals(Color(0xFF64748B), style.reportFieldPlaceholderColor)
+        assertEquals(0.0f, style.reportFieldInsetAlpha, 1e-6f)
     }
 
     @Test
     fun stage26F1_exactBoardGeometryAndTypographyTokensMatch() {
         assertEquals(64.dp, Dimens.TopBarHeight)
-        assertEquals(4.dp, Dimens.HeaderShadowOffsetY)
-        assertEquals(14.dp, Dimens.HeaderShadowBlur)
+        assertEquals(0.dp, Dimens.HeaderShadowOffsetY)
+        assertEquals(0.dp, Dimens.HeaderShadowBlur)
         assertEquals(56.dp, Dimens.TabBarMinHeight)
-        assertEquals(3.dp, Dimens.TabBarShadowOffsetY)
-        assertEquals(8.dp, Dimens.TabBarShadowBlur)
+        assertEquals(0.dp, Dimens.TabBarShadowOffsetY)
+        assertEquals(0.dp, Dimens.TabBarShadowBlur)
         assertEquals(3.dp, Dimens.TabIndicatorHeight)
-        assertEquals((-2).dp, Dimens.TabIndicatorGlowOffsetY)
-        assertEquals(8.dp, Dimens.TabIndicatorGlowBlur)
+        assertEquals(0.dp, Dimens.TabIndicatorGlowOffsetY)
+        assertEquals(0.dp, Dimens.TabIndicatorGlowBlur)
 
         assertEquals(14.dp, Dimens.RadiusReportInput)
         assertEquals(22.dp, Dimens.CardCornerRadius)
@@ -192,7 +192,7 @@ class Stage26F1SpecParityUnitTest {
         assertEquals(100, DepthMotionTokens.CARD_RISE_STAGGER_STEP_MS)
         assertEquals(600, DepthMotionTokens.CARD_RISE_MAX_DELAY_MS)
         assertEquals(150, DepthMotionTokens.PRESS_DURATION_MS)
-        assertEquals(16.dp, Dimens.CardRiseTranslationY)
+        assertEquals(0.dp, Dimens.CardRiseTranslationY)
 
         assertFalse(shouldAnimate(0f))
         assertFalse(shouldAnimate(-1f))

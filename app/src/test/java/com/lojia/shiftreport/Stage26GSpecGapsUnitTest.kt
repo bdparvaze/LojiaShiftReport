@@ -60,65 +60,65 @@ class Stage26GSpecGapsUnitTest {
 
     @Test
     fun stage26G_exactSpecGapColorGradientAndAlphaTokensMatch() {
-        // Gap 1: Register dial-code button
+        // Gap 1: Register dial-code button (Stage 29A flat UI)
         assertEquals(Color(0xFF334155), DialCodeTextColor)
         assertEquals(DialCodeTextColor, DepthTokens.DialButtonTextColor)
-        assertEquals(OutlineLight, DepthTokens.DialButtonBorderColor)
-        assertEquals(Color(0xFFD5DCEB), DepthTokens.DialButtonLipColor)
+        assertEquals(Color(0xFFD5DBE6), DepthTokens.DialButtonBorderColor)
+        assertEquals(PureWhite, DepthTokens.DialButtonLipColor)
         assertEquals(PureWhite, DepthTokens.DialButtonGradientStart)
-        assertEquals(Color(0xFFF1F5FF), DepthTokens.DialButtonGradientEnd)
+        assertEquals(PureWhite, DepthTokens.DialButtonGradientEnd)
 
-        // Gap 2: Register note box
+        // Gap 2: Register note box (Stage 29A flat UI)
         assertEquals(Color(0xFFF1F5FB), RegisterNoteFill)
         assertEquals(RegisterNoteFill, DepthTokens.RegisterNoteBackground)
         assertEquals(OutlineVariantLight, DepthTokens.RegisterNoteBorderColor)
-        assertEquals(0.12f, DepthTokens.REGISTER_NOTE_SHADOW_ALPHA, 1e-6f)
+        assertEquals(0.0f, DepthTokens.REGISTER_NOTE_SHADOW_ALPHA, 1e-6f)
 
-        // Gap 3: Password recovery info block & 46dp icon tile
+        // Gap 3: Password recovery info block & 46dp icon tile (Stage 29A flat UI)
         assertEquals(Color(0xFFEEF3FF), CashWellBg)
         assertEquals(CashWellBg, DepthTokens.RecoveryInfoBackground)
         assertEquals(Color(0xFFD0DDFF), RecoveryInfoBorder)
         assertEquals(RecoveryInfoBorder, DepthTokens.RecoveryInfoBorderColor)
-        assertEquals(PureWhite, DepthTokens.RecoveryTileGradientStart)
-        assertEquals(RecoveryInfoBorder, DepthTokens.RecoveryTileGradientEnd)
+        assertEquals(CashWellBg, DepthTokens.RecoveryTileGradientStart)
+        assertEquals(CashWellBg, DepthTokens.RecoveryTileGradientEnd)
 
-        // Gap 4: Report Entry read-only/disabled numeric wells
+        // Gap 4: Report Entry read-only/disabled numeric wells (Stage 29A flat UI)
         assertEquals(Color(0xFFEEF1F7), ReportReadOnlyFill)
         assertEquals(ReportReadOnlyFill, DepthTokens.ReportReadOnlyBackground)
-        assertEquals(ReportInputBorder, DepthTokens.ReportReadOnlyBorderColor)
-        assertEquals(TextPlaceholderReport, DepthTokens.ReportReadOnlyTextColor)
-        assertEquals(0.06f, DepthTokens.REPORT_READ_ONLY_INSET_ALPHA, 1e-6f)
+        assertEquals(Color(0xFFD5DBE6), DepthTokens.ReportReadOnlyBorderColor)
+        assertEquals(Color(0xFF64748B), DepthTokens.ReportReadOnlyTextColor)
+        assertEquals(0.0f, DepthTokens.REPORT_READ_ONLY_INSET_ALPHA, 1e-6f)
     }
 
     @Test
     fun stage26G_exactSpecGapGeometryAndTypographyTokensMatch() {
-        // Gap 1: Dial-code button geometry & typography
+        // Gap 1: Dial-code button geometry & typography (Stage 29A flat UI)
         assertEquals(78.dp, Dimens.DialButtonWidth)
         assertEquals(46.dp, Dimens.DialButtonHeight)
         assertEquals(10.dp, Dimens.RadiusInputRegister)
-        assertEquals(2.dp, Dimens.DialButtonLipHeight)
+        assertEquals(0.dp, Dimens.DialButtonLipHeight)
         assertEquals(10.dp, Dimens.DialButtonPaddingStart)
         assertEquals(8.dp, Dimens.DialButtonPaddingEnd)
         assertEquals(13.5.sp, DepthTypeTokens.DialButtonTextSize)
 
-        // Gap 2: Register note box geometry
+        // Gap 2: Register note box geometry (Stage 29A flat UI)
         assertEquals(12.dp, Dimens.RegisterNotePadding)
-        assertEquals(1.dp, Dimens.RegisterNoteShadowOffsetY)
-        assertEquals(2.dp, Dimens.RegisterNoteShadowBlur)
+        assertEquals(0.dp, Dimens.RegisterNoteShadowOffsetY)
+        assertEquals(0.dp, Dimens.RegisterNoteShadowBlur)
 
-        // Gap 3: Recovery info block & tile geometry
+        // Gap 3: Recovery info block & tile geometry (Stage 29A flat UI)
         assertEquals(10.dp, Dimens.RecoveryInfoPadding)
         assertEquals(46.dp, Dimens.RecoveryTileSize)
         assertEquals(15.dp, Dimens.RadiusRecoveryTile)
-        assertEquals(4.dp, Dimens.RecoveryTileShadowOffsetY)
-        assertEquals(8.dp, Dimens.RecoveryTileShadowBlur)
+        assertEquals(1.dp, Dimens.RecoveryTileShadowOffsetY)
+        assertEquals(4.dp, Dimens.RecoveryTileShadowBlur)
 
-        // Gap 4: Report read-only well geometry
+        // Gap 4: Report read-only well geometry (Stage 29A flat UI)
         assertEquals(52.dp, Dimens.TextFieldHeightReport)
         assertEquals(14.dp, Dimens.RadiusReportInput)
         assertEquals(14.dp, Dimens.InsetFieldPaddingHorizontal)
-        assertEquals(2.dp, Dimens.ReportReadOnlyShadowOffsetY)
-        assertEquals(3.dp, Dimens.ReportReadOnlyShadowBlur)
+        assertEquals(0.dp, Dimens.ReportReadOnlyShadowOffsetY)
+        assertEquals(0.dp, Dimens.ReportReadOnlyShadowBlur)
         assertEquals(16.sp, DepthTypeTokens.ReportFieldTextSize)
     }
 

@@ -93,37 +93,45 @@ object Dimens {
     val IconXl: Dp = 36.dp
 
     // =========================================================================
-    // DEPTH ELEVATION, BORDER & COMPONENT TOKENS
+    // DEPTH ELEVATION, BORDER & COMPONENT TOKENS (FLATTENED IN STAGE 29A)
     // =========================================================================
+    /** Standard 1dp border width for flat cards, buttons, and inputs. */
+    val FlatBorderWidth: Dp = 1.dp
+    /** Border width for focused and error flat input fields (1.5.dp). */
+    val FlatFocusedBorderWidth: Dp = 1.5.dp
+    /** Single soft drop shadow Y-offset (1.dp) and blur (4.dp) for flat elevated cards and primary buttons. */
+    val FlatCardShadowOffsetY: Dp = 1.dp
+    val FlatCardShadowBlur: Dp = 4.dp
+
     val CardElevation: Dp = 10.dp
     val CardAccentElevation: Dp = 12.dp
     /** Inner content padding for auth cards (18.dp). */
     val CardPaddingAuth: Dp = 18.dp
-    /** Close ambient card shadow Y-offset and blur (1.dp / 2.dp). */
-    val CardShadowCloseOffsetY: Dp = 1.dp
-    val CardShadowCloseBlur: Dp = 2.dp
-    /** Far directional card shadow Y-offset and blur (10.dp / 26.dp). */
-    val CardShadowFarOffsetY: Dp = 10.dp
-    val CardShadowFarBlur: Dp = 26.dp
+    /** Single soft ambient card shadow Y-offset and blur (1.dp / 4.dp). */
+    val CardShadowCloseOffsetY: Dp = FlatCardShadowOffsetY
+    val CardShadowCloseBlur: Dp = FlatCardShadowBlur
+    /** Far directional card shadow removed in Stage 29A flat UI (0.dp / 0.dp). */
+    val CardShadowFarOffsetY: Dp = 0.dp
+    val CardShadowFarBlur: Dp = 0.dp
 
     val RaisedButtonElevation: Dp = 8.dp
-    val ButtonLipHeight: Dp = 4.dp
-    /** Primary button shadow Y-offset and blur (8.dp / 16.dp). */
-    val ButtonShadowOffsetY: Dp = 8.dp
-    val ButtonShadowBlur: Dp = 16.dp
-    /** Vertical press offset when raised/keypad buttons are pressed (2.dp). */
-    val ButtonPressedTranslationY: Dp = 2.dp
+    val ButtonLipHeight: Dp = 0.dp
+    /** Primary button soft shadow Y-offset and blur matching flat cards (1.dp / 4.dp). */
+    val ButtonShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val ButtonShadowBlur: Dp = FlatCardShadowBlur
+    /** Vertical press offset removed in Stage 29A flat UI (0.dp). */
+    val ButtonPressedTranslationY: Dp = 0.dp
 
-    val CardBorderWidth: Dp = 1.dp
-    val InsetBorderWidth: Dp = 1.dp
-    /** Border width for compact register inset fields (1.5.dp). */
-    val InsetRegisterBorderWidth: Dp = 1.5.dp
-    /** Border width for focused and error inset fields (2.dp). */
-    val InsetFocusedBorderWidth: Dp = 2.dp
-    val InsetShadowHeight: Dp = 4.dp
-    /** Inner top shadow offset and blur for inset wells (2.dp / 4.dp). */
-    val InsetShadowOffsetY: Dp = 2.dp
-    val InsetShadowBlur: Dp = 4.dp
+    val CardBorderWidth: Dp = FlatBorderWidth
+    val InsetBorderWidth: Dp = FlatBorderWidth
+    /** Border width for compact register inset fields (1.dp). */
+    val InsetRegisterBorderWidth: Dp = FlatBorderWidth
+    /** Border width for focused and error inset fields (1.5.dp). */
+    val InsetFocusedBorderWidth: Dp = FlatFocusedBorderWidth
+    val InsetShadowHeight: Dp = 0.dp
+    /** Inner top shadow removed in Stage 29A flat UI (0.dp / 0.dp). */
+    val InsetShadowOffsetY: Dp = 0.dp
+    val InsetShadowBlur: Dp = 0.dp
     /** Horizontal padding inside standard inset fields (14.dp). */
     val InsetFieldPaddingHorizontal: Dp = 14.dp
     /** Horizontal padding inside register inset fields (12.dp). */
@@ -131,21 +139,22 @@ object Dimens {
     /** Horizontal gap between leading icon and text in inset fields (12.dp). */
     val InsetIconTextGap: Dp = 12.dp
 
-    val CardRiseTranslationY: Dp = 16.dp
+    /** Card-rise vertical translation removed in Stage 29A (alpha fade only). */
+    val CardRiseTranslationY: Dp = 0.dp
     val LiveDotSize: Dp = 8.dp
-    val SecondaryButtonElevation: Dp = 4.dp
-    val SecondaryButtonLipHeight: Dp = 4.dp
-    /** Border width for secondary depth buttons (1.5.dp). */
-    val SecondaryButtonBorderWidth: Dp = 1.5.dp
+    val SecondaryButtonElevation: Dp = 0.dp
+    val SecondaryButtonLipHeight: Dp = 0.dp
+    /** Border width for secondary flat buttons (1.dp). */
+    val SecondaryButtonBorderWidth: Dp = FlatBorderWidth
     val TopBarHeight: Dp = 64.dp
-    val HeaderShadowOffsetY: Dp = 4.dp
-    val HeaderShadowBlur: Dp = 14.dp
+    val HeaderShadowOffsetY: Dp = 0.dp
+    val HeaderShadowBlur: Dp = 0.dp
     val TabBarMinHeight: Dp = 56.dp
-    val TabBarShadowOffsetY: Dp = 3.dp
-    val TabBarShadowBlur: Dp = 8.dp
+    val TabBarShadowOffsetY: Dp = 0.dp
+    val TabBarShadowBlur: Dp = 0.dp
     val TabIndicatorHeight: Dp = 3.dp
-    val TabIndicatorGlowOffsetY: Dp = (-2).dp
-    val TabIndicatorGlowBlur: Dp = 8.dp
+    val TabIndicatorGlowOffsetY: Dp = 0.dp
+    val TabIndicatorGlowBlur: Dp = 0.dp
     val TopAccentStripHeight: Dp = 4.dp
 
     // =========================================================================
@@ -154,14 +163,14 @@ object Dimens {
     val SectionHeaderHeight: Dp = 52.dp
     val SectionIconTileSize: Dp = 32.dp
     val KpiIconTileSize: Dp = 38.dp
-    val SectionTileShadowOffsetY: Dp = 2.dp
-    val SectionTileShadowBlur: Dp = 5.dp
-    val SectionPillShadowOffsetY: Dp = 3.dp
-    val SectionPillShadowBlur: Dp = 8.dp
+    val SectionTileShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val SectionTileShadowBlur: Dp = FlatCardShadowBlur
+    val SectionPillShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val SectionPillShadowBlur: Dp = FlatCardShadowBlur
     val SegmentTrackHeight: Dp = 52.dp
     val SegmentThumbHeight: Dp = 44.dp
-    val SegmentActiveShadowOffsetY: Dp = 3.dp
-    val SegmentActiveShadowBlur: Dp = 8.dp
+    val SegmentActiveShadowOffsetY: Dp = 0.dp
+    val SegmentActiveShadowBlur: Dp = 0.dp
     val ReportGridGap: Dp = 10.dp
     val ReportCardInnerPadding: Dp = 16.dp
     val LedgerSectionAccentWidth: Dp = 3.dp
@@ -178,20 +187,20 @@ object Dimens {
     val SettingsIconTileSize: Dp = 42.dp
     /** Avatar tile size for Employee list rows (44.dp). */
     val EmployeeAvatarTileSize: Dp = 44.dp
-    /** Corner radius for 40dp/42dp SH1 gradient icon tiles (13.dp). */
+    /** Corner radius for 40dp/42dp icon tiles (13.dp). */
     val RadiusSettingsIconTile: Dp = 13.dp
-    /** Corner radius for 44dp SH1 gradient employee avatar tiles (14.dp). */
+    /** Corner radius for 44dp employee avatar tiles (14.dp). */
     val RadiusEmployeeAvatarTile: Dp = 14.dp
     /** Corner radius for 36dp secondary edit icon tiles (10.dp). */
     val RadiusActionIconTile: Dp = 10.dp
-    /** Outer drop shadow Y-offset and blur for SH1 raised icon tiles (4.dp / 8.dp). */
-    val IconTileShadowOffsetY: Dp = 4.dp
-    val IconTileShadowBlur: Dp = 8.dp
-    /** Inner bottom bevel thickness for SH1 raised icon tiles (2.dp). */
-    val IconTileBottomBevelHeight: Dp = 2.dp
+    /** Single soft card drop shadow Y-offset and blur for icon tiles (1.dp / 4.dp). */
+    val IconTileShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val IconTileShadowBlur: Dp = FlatCardShadowBlur
+    /** Inner bottom bevel removed in Stage 29A flat UI (0.dp). */
+    val IconTileBottomBevelHeight: Dp = 0.dp
     /** Hairline row divider thickness inside grouped cards (1.dp). */
     val RowDividerWidth: Dp = 1.dp
-    /** Horizontal gap between SH1 icon tile and row label column (12.dp). */
+    /** Horizontal gap between icon tile and row label column (12.dp). */
     val SettingsIconTitleGap: Dp = 12.dp
     /** Vertical row padding inside grouped list cards (12.dp). */
     val ListRowPaddingVertical: Dp = 12.dp
@@ -203,8 +212,8 @@ object Dimens {
     // =========================================================================
     val LogoTileSize: Dp = 48.dp
     val LogoTileIconSize: Dp = 24.dp
-    val LogoTileShadowOffsetY: Dp = 6.dp
-    val LogoTileShadowBlur: Dp = 14.dp
+    val LogoTileShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val LogoTileShadowBlur: Dp = FlatCardShadowBlur
 
     val AuthScreenSidePadding: Dp = 32.dp
     val AuthCardMaxWidth: Dp = 360.dp
@@ -219,8 +228,8 @@ object Dimens {
     val PinCellGap: Dp = 8.dp
     val KeypadColumnGap: Dp = 14.dp
     val KeypadButtonHeight: Dp = 84.dp
-    val KeypadShadowOffsetY: Dp = 8.dp
-    val KeypadShadowBlur: Dp = 14.dp
+    val KeypadShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val KeypadShadowBlur: Dp = FlatCardShadowBlur
 
     // =========================================================================
     // STAGE 26G SPEC GAP PARITY TOKENS
@@ -228,33 +237,33 @@ object Dimens {
     /** Width and height for Register dial-code picker button (78.dp x 46.dp). */
     val DialButtonWidth: Dp = 78.dp
     val DialButtonHeight: Dp = 46.dp
-    /** Solid bottom lip thickness for Register dial-code picker button (2.dp). */
-    val DialButtonLipHeight: Dp = 2.dp
+    /** Bottom lip removed in Stage 29A flat UI (0.dp). */
+    val DialButtonLipHeight: Dp = 0.dp
     /** Asymmetric start/end content padding for Register dial-code button (10.dp / 8.dp). */
     val DialButtonPaddingStart: Dp = 10.dp
     val DialButtonPaddingEnd: Dp = 8.dp
 
-    /** Inner padding and inset shadow geometry for Register privacy note box (12.dp, 0/1.dp blur 2.dp). */
+    /** Inner padding for Register privacy note box (12.dp); inset shadow removed in Stage 29A. */
     val RegisterNotePadding: Dp = 12.dp
-    val RegisterNoteShadowOffsetY: Dp = 1.dp
-    val RegisterNoteShadowBlur: Dp = 2.dp
+    val RegisterNoteShadowOffsetY: Dp = 0.dp
+    val RegisterNoteShadowBlur: Dp = 0.dp
 
     /** Inner padding for Password Recovery info block (10.dp). */
     val RecoveryInfoPadding: Dp = 10.dp
-    /** Password Recovery icon tile size, radius, and shadow geometry (46.dp, 15.dp, 0/4.dp blur 8.dp). */
+    /** Password Recovery icon tile size, radius, and flat shadow geometry (46.dp, 15.dp, 1.dp / 4.dp). */
     val RecoveryTileSize: Dp = 46.dp
     val RadiusRecoveryTile: Dp = 15.dp
-    val RecoveryTileShadowOffsetY: Dp = 4.dp
-    val RecoveryTileShadowBlur: Dp = 8.dp
+    val RecoveryTileShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val RecoveryTileShadowBlur: Dp = FlatCardShadowBlur
 
-    /** Inner top shadow offset and blur for Report Entry read-only numeric wells (0/2.dp blur 3.dp). */
-    val ReportReadOnlyShadowOffsetY: Dp = 2.dp
-    val ReportReadOnlyShadowBlur: Dp = 3.dp
+    /** Inner top shadow removed on Report Entry read-only numeric wells in Stage 29A (0.dp / 0.dp). */
+    val ReportReadOnlyShadowOffsetY: Dp = 0.dp
+    val ReportReadOnlyShadowBlur: Dp = 0.dp
 
     // =========================================================================
     // STAGE 27A HOME DASHBOARD BOARD PARITY TOKENS
     // =========================================================================
-    /** Overlap distance between top brand header (GR6) and floating Shift status card (22.dp). */
+    /** Overlap distance between top brand header and floating Shift status card (22.dp). */
     val HomeHeaderOverlapOffset: Dp = 22.dp
     /** Bottom padding inside top brand header beneath date to accommodate card overlap (36.dp). */
     val HomeHeaderBottomPadding: Dp = 36.dp
@@ -271,7 +280,7 @@ object Dimens {
     /** Legend color swatch size (10.dp) and radius (3.dp) on Sales Summary breakdown rows. */
     val HomeBreakdownSwatchSize: Dp = 10.dp
     val HomeBreakdownSwatchRadius: Dp = 3.dp
-    /** Quick action raised SH1 icon tile size (46.dp) and radius (15.dp). */
+    /** Quick action flat icon tile size (46.dp) and radius (15.dp). */
     val HomeQuickActionTileSize: Dp = 46.dp
     val HomeQuickActionTileRadius: Dp = 15.dp
     /** Draft / Review alert banner minimum height (72.dp). */
@@ -287,11 +296,11 @@ object Dimens {
     val HomeStatusBadgeHeight: Dp = 26.dp
     /** Large inner padding for hero Sales Summary & Shift status cards (18.dp). */
     val HomeCardPaddingLarge: Dp = 18.dp
-    /** Soft amber/emerald glow shadow offsets and blur for Home Dashboard badges and banners. */
-    val HomeLiveBadgeShadowOffsetY: Dp = 2.dp
-    val HomeLiveBadgeShadowBlur: Dp = 6.dp
-    val HomeDraftBannerShadowOffsetY: Dp = 6.dp
-    val HomeDraftBannerShadowBlur: Dp = 16.dp
-    val HomeChartTodayGlowOffsetY: Dp = 4.dp
-    val HomeChartTodayGlowBlur: Dp = 10.dp
+    /** Flat shadow tokens for Home Dashboard badges and banners (glows removed). */
+    val HomeLiveBadgeShadowOffsetY: Dp = 0.dp
+    val HomeLiveBadgeShadowBlur: Dp = 0.dp
+    val HomeDraftBannerShadowOffsetY: Dp = FlatCardShadowOffsetY
+    val HomeDraftBannerShadowBlur: Dp = FlatCardShadowBlur
+    val HomeChartTodayGlowOffsetY: Dp = 0.dp
+    val HomeChartTodayGlowBlur: Dp = 0.dp
 }

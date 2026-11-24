@@ -115,27 +115,31 @@ class Stage26AThemeFoundationUnitTest {
 
     @Test
     fun gradientsAreOrderedAndDistinct_andAlphaConstantsInUnitRange() {
-        assertNotEquals(DepthTokens.BrandHeaderGradientStart, DepthTokens.BrandHeaderGradientEnd)
-        assertNotEquals(DepthTokens.BrandButtonGradientStart, DepthTokens.BrandButtonGradientEnd)
-        assertNotEquals(DepthTokens.CardGradientStart, DepthTokens.CardGradientEnd)
-        assertNotEquals(DepthTokens.CardAccentGradientStart, DepthTokens.CardAccentGradientEnd)
+        // Stage 29A: flat solid fills unify paired start/end surface tokens.
+        assertEquals(DepthTokens.BrandHeaderGradientStart, DepthTokens.BrandHeaderGradientEnd)
+        assertEquals(DepthTokens.BrandButtonGradientStart, DepthTokens.BrandButtonGradientEnd)
+        assertEquals(DepthTokens.CardGradientStart, DepthTokens.CardGradientEnd)
+        assertEquals(DepthTokens.CardAccentGradientStart, DepthTokens.CardAccentGradientEnd)
 
-        // Top stops are lighter than bottom stops (consistent top-lit depth direction)
-        assertTrue(
-            relativeLuminance(DepthTokens.BrandHeaderGradientStart) >
-                relativeLuminance(DepthTokens.BrandHeaderGradientEnd)
+        assertEquals(
+            relativeLuminance(DepthTokens.BrandHeaderGradientStart),
+            relativeLuminance(DepthTokens.BrandHeaderGradientEnd),
+            1e-6
         )
-        assertTrue(
-            relativeLuminance(DepthTokens.BrandButtonGradientStart) >
-                relativeLuminance(DepthTokens.BrandButtonGradientEnd)
+        assertEquals(
+            relativeLuminance(DepthTokens.BrandButtonGradientStart),
+            relativeLuminance(DepthTokens.BrandButtonGradientEnd),
+            1e-6
         )
-        assertTrue(
-            relativeLuminance(DepthTokens.CardGradientStart) >
-                relativeLuminance(DepthTokens.CardGradientEnd)
+        assertEquals(
+            relativeLuminance(DepthTokens.CardGradientStart),
+            relativeLuminance(DepthTokens.CardGradientEnd),
+            1e-6
         )
-        assertTrue(
-            relativeLuminance(DepthTokens.CardAccentGradientStart) >
-                relativeLuminance(DepthTokens.CardAccentGradientEnd)
+        assertEquals(
+            relativeLuminance(DepthTokens.CardAccentGradientStart),
+            relativeLuminance(DepthTokens.CardAccentGradientEnd),
+            1e-6
         )
 
         val alphas = listOf(
