@@ -40,10 +40,12 @@ import java.io.FileOutputStream
 
 import java.io.OutputStream
 
-import java.text.SimpleDateFormat
 import java.util.*
 
 object PdfReportGenerator {
+    /** Machine filename prefix for exported individual shift closing PDFs. */
+    private const val SHIFT_CLOSING_REPORT_FILE_PREFIX = "Shift_Closing_Report_"
+
     private fun getLocalizedShiftName(context: Context, shift: String): String {
         return when (shift.lowercase()) {
             "morning" -> context.getString(R.string.shift_morning)
@@ -705,7 +707,7 @@ object PdfReportGenerator {
                 canvas.drawRect(RectF(margin, currentY, PAGE_WIDTH - margin, currentY + 18f), zebraPaint)
             }
 
-            canvas.drawText(DateTimeFormatUtils.formatDateOnly(report.dateInMillis, Locale.US), colDate, rowY, textPaint)
+            canvas.drawText(DateTimeFormatUtils.formatDateOnly(report.dateInMillis, Locale.forLanguageTag(language.code)), colDate, rowY, textPaint)
             val truncatedCashier = if (report.cashierName.length > 15) report.cashierName.take(13) + ".." else report.cashierName
             canvas.drawText(truncatedCashier, colCashier, rowY, textPaint)
             canvas.drawText(getLocalizedShiftName(context, report.shift), colShift, rowY, textPaint)
@@ -1464,7 +1466,7 @@ object PdfReportGenerator {
             pdfDocument.finishPage(page)
         }
 
-        val fileName = "Shift_Closing_Report_${report.cashierName.replace(" ", "_")}_${report.shift}_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.pdf"
+        val fileName = "${SHIFT_CLOSING_REPORT_FILE_PREFIX}${report.cashierName.replace(" ", "_")}_${report.shift}_${DateTimeFormatUtils.formatFileTimestamp()}.pdf"
         return savePdfToStorage(context, pdfDocument, fileName)
     }
 

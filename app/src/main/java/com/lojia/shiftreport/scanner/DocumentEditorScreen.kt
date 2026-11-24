@@ -41,11 +41,14 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 import java.util.*
+
+/** Machine default filename prefix for newly scanned/cropped documents. */
+private const val DEFAULT_DOCUMENT_TITLE_PREFIX = "Doc_"
 
 private val ScannerEmerald = PosCashGreenFill
 private val ScannerEditorBg = OnBackgroundLight
@@ -97,7 +100,7 @@ fun DocumentEditorScreen(
 
     // Document Title & Saving
     val defaultTitle = remember {
-        "Doc_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        DEFAULT_DOCUMENT_TITLE_PREFIX + DateTimeFormatUtils.formatFileTimestamp()
     }
     var documentTitle by remember { mutableStateOf(defaultTitle) }
     var isEditingTitle by remember { mutableStateOf(false) }
@@ -447,7 +450,7 @@ fun DocumentEditorScreen(
                                             modifier = Modifier.weight(1f)
                                         )
                                         Text(
-                                            text = String.format(Locale.US, "%.1fx", adjustments.contrast),
+                                            text = String.format(DateTimeFormatUtils.getAppLocale(), context.getString(R.string.contrast_multiplier_fmt), adjustments.contrast),
                                             fontSize = 11.sp,
                                             color = TextDisabledColor,
                                             modifier = Modifier.width(32.dp)

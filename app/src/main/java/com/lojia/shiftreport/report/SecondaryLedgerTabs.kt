@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.MoneyFormat
-import java.text.SimpleDateFormat
 import java.util.*
 
 /* ----------------------------------------------------------------------
@@ -80,7 +80,6 @@ fun PaidOutShoppingLedgerTab(
     currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
 ) {
     val list = remember(reports) { parsePaidOutItems(reports) }
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
     val totalExpense = list.sumOf { it.totalAmountMinor }
     val depthStyle = LocalDepthStyle.current
 
@@ -290,7 +289,7 @@ fun PaidOutShoppingLedgerTab(
                                     )
                                     Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
-                                        text = dateFormat.format(Date(item.dateInMillis)),
+                                        text = DateTimeFormatUtils.formatDate(item.dateInMillis),
                                         fontSize = DepthTypeTokens.ListRowSubtitleSize,
                                         color = OnSurfaceVariantLight,
                                         maxLines = 1
@@ -533,7 +532,6 @@ fun WalkoutLedgerTab(
     currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
 ) {
     val list = remember(reports) { parseWalkoutItems(reports) }
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
     val totalWalkout = list.sumOf { it.amountMinor }
     val count = list.size
     val depthStyle = LocalDepthStyle.current
@@ -642,7 +640,7 @@ fun WalkoutLedgerTab(
                                     )
                                     Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
-                                        text = dateFormat.format(Date(item.dateInMillis)),
+                                        text = DateTimeFormatUtils.formatDate(item.dateInMillis),
                                         fontSize = DepthTypeTokens.ListRowSubtitleSize,
                                         color = OnSurfaceVariantLight,
                                         maxLines = 1

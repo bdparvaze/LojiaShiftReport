@@ -14,7 +14,6 @@ import com.lojia.shiftreport.ui.common.*
 import com.lojia.shiftreport.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -113,7 +112,7 @@ class ReportBackupManager(
             val result = GoogleDriveManager.handleOAuthCallback(context, code, resolvedState)
             result.onSuccess { account: DriveAccountInfo ->
                 _driveAccountInfo.value = account
-                val emailStr = account.email ?: context.getString(R.string.google_account)
+                val emailStr = account.email?.takeIf { it.isNotBlank() } ?: context.getString(R.string.google_account)
                 emitUiMessage(UiText.StringResource(R.string.drive_connected_as, emailStr))
                 fetchGoogleDriveBackups()
                 withContext(Dispatchers.Main) { onComplete(true) }
@@ -384,7 +383,7 @@ class ReportBackupManager(
                 context.getString(R.string.cloud_backup_success_notif_title),
                 context.getString(
                     R.string.cloud_backup_success_notif_body,
-                    SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(now))
+                    DateTimeFormatUtils.formatTime(now)
                 )
             )
         }

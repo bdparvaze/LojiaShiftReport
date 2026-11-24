@@ -56,8 +56,8 @@ object CryptoUtils {
         val skf = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
         val hashBytes = skf.generateSecret(spec).encoded
 
-        val saltHex = actualSalt.joinToString("") { "%02x".format(Locale.US, it) }
-        val hashHex = hashBytes.joinToString("") { "%02x".format(Locale.US, it) }
+        val saltHex = actualSalt.joinToString("") { "%02x".format(Locale.ROOT, it) }
+        val hashHex = hashBytes.joinToString("") { "%02x".format(Locale.ROOT, it) }
 
         return "pbkdf2:sha256:$iterations:$saltHex:$hashHex"
     }
@@ -67,7 +67,7 @@ object CryptoUtils {
      */
     fun generateSalt(): String {
         val bytes = ByteArray(16).apply { SecureRandom().nextBytes(this) }
-        return bytes.joinToString("") { "%02x".format(Locale.US, it) }
+        return bytes.joinToString("") { "%02x".format(Locale.ROOT, it) }
     }
 
     /**
@@ -117,7 +117,7 @@ object CryptoUtils {
         val saltedInput = "$salt:$trimmed"
         val md = MessageDigest.getInstance("SHA-256")
         val hashBytes = md.digest(saltedInput.toByteArray(Charsets.UTF_8))
-        return hashBytes.joinToString("") { "%02x".format(Locale.US, it) }
+        return hashBytes.joinToString("") { "%02x".format(Locale.ROOT, it) }
     }
 
     /**
@@ -128,7 +128,7 @@ object CryptoUtils {
         if (trimmed.isEmpty()) return ""
         val md = MessageDigest.getInstance("SHA-256")
         val hashBytes = md.digest(trimmed.toByteArray(Charsets.UTF_8))
-        return hashBytes.joinToString("") { "%02x".format(Locale.US, it) }
+        return hashBytes.joinToString("") { "%02x".format(Locale.ROOT, it) }
     }
 
     /**

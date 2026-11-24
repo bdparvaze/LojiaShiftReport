@@ -20,12 +20,18 @@ import kotlinx.coroutines.runBlocking
 val Context.languageDataStore: DataStore<Preferences> by preferencesDataStore(name = "language_preferences")
 
 data class LanguagePreferenceData(
-    val currentCode: String = "en",
-    val secondaryCode: String = "ar",
+    val currentCode: String = LanguagePreferences.DEFAULT_PRIMARY_LANGUAGE_CODE,
+    val secondaryCode: String = LanguagePreferences.DEFAULT_SECONDARY_LANGUAGE_CODE,
     val lastUpdatedMillis: Long = System.currentTimeMillis()
 )
 
 object LanguagePreferences {
+    /** ISO 639-1 fallback primary language code when no explicit user preference is stored. */
+    const val DEFAULT_PRIMARY_LANGUAGE_CODE = "en"
+
+    /** ISO 639-1 fallback secondary toggle language code when no explicit toggle preference is stored. */
+    const val DEFAULT_SECONDARY_LANGUAGE_CODE = "ar"
+
     private const val PREFS_NAME = "language_prefs"
     private const val KEY_LANGUAGE = "selected_language"
     
@@ -85,18 +91,18 @@ object LanguagePreferences {
     }
 
     /**
-     * Toggle the application's display language between primary (English or custom)
-     * and secondary toggle target (Arabic/Bengali/etc.) using DataStore preferences.
+     * Toggle the application's display language between primary (DEFAULT_PRIMARY_LANGUAGE_CODE)
+     * and secondary toggle target using DataStore preferences.
      * Returns the newly activated AppLanguage.
      */
     suspend fun toggleLanguage(context: Context): AppLanguage {
         val prefs = context.languageDataStore.data.first()
         val current = prefs[LANGUAGE_KEY] ?: getLanguage(context)
-        val secondary = prefs[SECONDARY_LANGUAGE_KEY] ?: "ar"
+        val secondary = prefs[SECONDARY_LANGUAGE_KEY] ?: DEFAULT_SECONDARY_LANGUAGE_CODE
 
-        // If currently on secondary, toggle back to English ("en"); otherwise toggle to secondary
+        // If currently on secondary, toggle back to primary; otherwise toggle to secondary
         val targetCode = if (current.equals(secondary, ignoreCase = true)) {
-            "en"
+            DEFAULT_PRIMARY_LANGUAGE_CODE
         } else {
             secondary
         }
@@ -107,15 +113,15 @@ object LanguagePreferences {
 
     /**
      * Synchronous retrieval with DataStore first-check fallback.
-     * Safely sanitizes the language to only supported codes (en, bn, ar), falling back to "en".
+     * Safely sanitizes the language to only supported codes, falling back to DEFAULT_PRIMARY_LANGUAGE_CODE.
      */
     fun getLanguage(context: Context): String {
         val rawCode = try {
             runBlocking {
                 context.languageDataStore.data.map { prefs -> prefs[LANGUAGE_KEY] }.first()
-            } ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
+            } ?: getPrefs(context).getString(KEY_LANGUAGE, DEFAULT_PRIMARY_LANGUAGE_CODE) ?: DEFAULT_PRIMARY_LANGUAGE_CODE
         } catch (e: Exception) {
-            getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
+            getPrefs(context).getString(KEY_LANGUAGE, DEFAULT_PRIMARY_LANGUAGE_CODE) ?: DEFAULT_PRIMARY_LANGUAGE_CODE
         }
         return AppLanguage.fromCode(rawCode).code
     }
@@ -125,7 +131,7 @@ object LanguagePreferences {
      */
     fun getLanguageFlow(context: Context): Flow<String> {
         return context.languageDataStore.data.map { preferences ->
-            val raw = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
+            val raw = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, DEFAULT_PRIMARY_LANGUAGE_CODE) ?: DEFAULT_PRIMARY_LANGUAGE_CODE
             AppLanguage.fromCode(raw).code
         }
     }
@@ -135,8 +141,8 @@ object LanguagePreferences {
      */
     fun getLanguagePreferenceDataFlow(context: Context): Flow<LanguagePreferenceData> {
         return context.languageDataStore.data.map { preferences ->
-            val rawCode = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, "en") ?: "en"
-            val rawSecondary = preferences[SECONDARY_LANGUAGE_KEY] ?: "ar"
+            val rawCode = preferences[LANGUAGE_KEY] ?: getPrefs(context).getString(KEY_LANGUAGE, DEFAULT_PRIMARY_LANGUAGE_CODE) ?: DEFAULT_PRIMARY_LANGUAGE_CODE
+            val rawSecondary = preferences[SECONDARY_LANGUAGE_KEY] ?: DEFAULT_SECONDARY_LANGUAGE_CODE
             val validCode = AppLanguage.fromCode(rawCode).code
             val validSecondary = AppLanguage.fromCode(rawSecondary).code
             val updated = preferences[LAST_UPDATED_KEY] ?: System.currentTimeMillis()

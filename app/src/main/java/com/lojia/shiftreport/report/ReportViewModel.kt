@@ -140,7 +140,7 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val result = syncManager.setCurrency(currencyCode)
             if (result.isSuccess) {
-                _uiMessage.emit(UiText.StringResource(R.string.toast_currency_set, currencyCode.trim().uppercase(Locale.US)))
+                _uiMessage.emit(UiText.StringResource(R.string.toast_currency_set, currencyCode.trim().uppercase(Locale.ROOT)))
             } else {
                 _uiMessage.emit(UiText.StringResource(R.string.currency_locked_message))
             }
@@ -232,8 +232,11 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    private val defaultNotConnectedLabel: String =
+        getApplication<Application>().getString(R.string.backup_status_not_connected)
+
     var googleAccount: MutableStateFlow<String> = MutableStateFlow(
-        prefs.getString("google_account", "Not Connected") ?: "Not Connected"
+        prefs.getString("google_account", defaultNotConnectedLabel) ?: defaultNotConnectedLabel
     )
 
     val backupManager = ReportBackupManager(
@@ -1219,13 +1222,20 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     // Shift Drawer Operations (Open Shift / Close Shift / Pay In / Pay Out)
     fun openShift(cashierName: String, shiftName: String, startingCash: Double) {
+        val resolvedCashier = normalizeOpenShiftCashier(cashierName)
+        if (resolvedCashier == null) {
+            viewModelScope.launch {
+                _uiMessage.emit(UiText.StringResource(R.string.cashier_name_required))
+            }
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) {
             val curr = syncManager.currentCurrency.value
             val digits = MoneyFormat.minorUnitDigits(curr)
             serialUpdater.update {
                 val startingCashMinor = MoneyFormat.toMinorUnits(startingCash, digits)
                 val newSession = ShiftSession(
-                    cashierName = cashierName.ifBlank { "Cashier" },
+                    cashierName = resolvedCashier,
                     shiftName = shiftName,
                     status = "OPEN",
                     openedAt = System.currentTimeMillis(),
@@ -1235,13 +1245,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 reportDao.insertShiftSession(newSession)
                 reportDao.insertAuditLog(
                     AuditLog(
-                        username = cashierName.ifBlank { "Cashier" },
+                        username = resolvedCashier,
                         action = "OPEN_SHIFT",
                         details = "Opened $shiftName shift. Starting Float: $startingCash"
                     )
                 )
             }
-            NotificationHelper.sendShiftOpenedNotification(context, cashierName, startingCash, curr)
+            NotificationHelper.sendShiftOpenedNotification(context, resolvedCashier, startingCash, curr)
             _uiMessage.emit(
                 UiText.StringResource(
                     R.string.toast_shift_opened_cash,

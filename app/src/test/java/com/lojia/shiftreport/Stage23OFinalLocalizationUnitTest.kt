@@ -251,7 +251,6 @@ class Stage23OFinalLocalizationUnitTest {
             // ReportEntryTab.kt
             "CASH", // internal paymentMode enum/DB value
             "BANK", // internal paymentMode enum/DB value
-            "dd-MM-yyyy", // SimpleDateFormat pattern
             "shift_report_dashboard", // Compose testTag
             "Day", // internal shift identifier matching DB/ViewModel
             "Night", // internal shift identifier matching DB/ViewModel
@@ -296,13 +295,11 @@ class Stage23OFinalLocalizationUnitTest {
             "weekly",
             "manual",
             "btn_danger_clear_all",
-            "MMM dd, yyyy • hh:mm a",
             "store_admin@outlook.com",
             "ms_token_",
             "DELETE", // exact uppercase confirmation token required in Danger Zone check
             "input_delete_confirmation",
             "btn_confirm_delete_everything",
-            "MMM dd, yyyy",
 
             // PrinterSetupScreen.kt internal mode keys, testTags, thermal print markup & multilingual hardware font test
             "network",

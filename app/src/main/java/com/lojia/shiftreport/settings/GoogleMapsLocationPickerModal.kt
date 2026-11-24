@@ -870,7 +870,7 @@ fun GoogleMapsLocationPickerModal(
                                 border = BorderStroke(1.dp, OutlineLight)
                             ) {
                                 Text(
-                                    text = String.format(Locale.US, "📍 %.4f, %.4f", currentLat, currentLng),
+                                    text = String.format(com.lojia.shiftreport.util.DateTimeFormatUtils.getAppLocale(), "📍 %.4f, %.4f", currentLat, currentLng),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = OnSurfaceLight,

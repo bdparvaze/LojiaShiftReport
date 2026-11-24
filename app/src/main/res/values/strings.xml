@@ -159,7 +159,7 @@
     <string name="shift_morning_option">Morning</string>
     <string name="section_revenue_sales">2. Revenue &amp; Sales Receipts</string>
     <string name="gross_cash_receipts">Gross Cash Receipts</string>
-    <string name="card_mada_payments">Card / Mada Payments</string>
+    <string name="card_mada_payments">Bank / Card Payments</string>
     <string name="cash_label">Cash</string>
     <string name="card_label">Card</string>
     <string name="section_expenses_meals">3. Operational Expenses &amp; Staff Meals</string>
@@ -241,7 +241,7 @@
     <string name="checkout">Checkout</string>
     <string name="select_payment_method">Select Payment Method:</string>
     <string name="cash_payment_opt">Cash</string>
-    <string name="card_payment_opt">Mada / Card</string>
+    <string name="card_payment_opt">Bank / Card</string>
     <string name="digital_payment_opt">Apple Pay / STC Pay</string>
     <string name="customer">Customer</string>
     <string name="select_customer">Select Customer</string>
@@ -252,7 +252,7 @@
     <string name="subtotal">Subtotal</string>
     <string name="total_amount">Total Amount</string>
     <string name="cash">Cash</string>
-    <string name="card">Card / Mada</string>
+    <string name="card">Bank / Card</string>
     <string name="split_payment">Split Payment</string>
     <string name="tendered_amount">Tendered Amount</string>
     <string name="change_due">Change Due</string>
@@ -315,7 +315,7 @@
     <string name="date">Date</string>
     <string name="financial_inputs">Financial Inputs</string>
     <string name="gross_cash">Gross Cash</string>
-    <string name="mada_payments">Mada / Card Payments</string>
+    <string name="mada_payments">Bank / Card Payments</string>
     <string name="digital_wallet">Digital Wallet / STC Pay</string>
     <string name="staff_meals_count">Staff Meals Count</string>
     <string name="total_expenses">Total Expenses</string>
@@ -325,7 +325,7 @@
     <string name="shift_history">Shift History &amp; Records</string>
     <string name="no_reports_yet">No shift reports recorded yet</string>
     <string name="gross_cash_required">Gross cash is required</string>
-    <string name="mada_required">Mada payments amount is required</string>
+    <string name="mada_required">Bank / Card payments amount is required</string>
     <string name="wallet_required">Digital wallet amount is required</string>
     <string name="expenses_required">Total expenses amount is required</string>
     <string name="tab_report_entry">Report Entry</string>
@@ -349,7 +349,7 @@
     <string name="clean_data">Clean Data</string>
     <string name="confirm_clean_data">Are you sure you want to clear all data?</string>
     <string name="yes">Yes</string>
-    <string name="net_mada_bank">NET MADA / BANK</string>
+    <string name="net_mada_bank">NET BANK / CARD</string>
     <string name="live_summary">Live summary</string>
     <string name="no_transactions_yet">No transactions recorded yet</string>
     <string name="cash_sales">Cash Sales</string>
@@ -423,7 +423,7 @@
     <string name="remove">Remove</string>
     <string name="people_count">%d People</string>
     <string name="pcs_at_price" formatted="false">%d pcs @ %.2f SAR • %s</string>
-    <string name="mada_bank">Mada / Bank</string>
+    <string name="mada_bank">Bank / Card</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
@@ -554,7 +554,7 @@
     <string name="msg_2f_s_13" formatted="false">%.2f %s</string>
     <string name="msg_5week_distribution">5-Week Distribution</string>
     <string name="msg_2f_s_d" formatted="false">%.2f %s (%d%%)</string>
-    <string name="cash_0f_mada_0f" formatted="false">Cash: %.0f | Mada: %.0f</string>
+    <string name="cash_0f_mada_0f" formatted="false">Cash: %.0f | Bank / Card: %.0f</string>
     <string name="msg_2f_s_14" formatted="false">%.2f %s</string>
     <string name="select_target_role_to">Select target role to simulate staff privileges:</string>
     <string name="administrator">Administrator</string>
@@ -696,7 +696,7 @@
     <string name="cashier_5">Cashier</string>
     <string name="shift_1">Shift</string>
     <string name="cash_1">Cash</string>
-    <string name="madacard">Mada/Card</string>
+    <string name="madacard">Bank / Card</string>
     <string name="expenses">Expenses</string>
     <string name="msg_0f">%.0f</string>
     <string name="msg_0f_1">%.0f</string>
@@ -742,7 +742,7 @@
     <string name="pdf_total_currency">Total (%1$s)</string>
     <string name="pdf_more_entries">... and %1$d more entries recorded in database.</string>
     <string name="pdf_operational_metrics">OPERATIONAL METRICS:  Staff Meals Served: %1$d meals  |  Muassel / Shisha Served: %2$d heads</string>
-    <string name="pdf_payment_split">Payment Split: Cash %1$d%%  |  Mada/Bank Cards %2$d%%  |  Digital Wallet %3$d%%</string>
+    <string name="pdf_payment_split">Payment Split: Cash %1$d%%  |  Bank / Card %2$d%%  |  Digital Wallet %3$d%%</string>
     <string name="pdf_vat_reg_no_tel">VAT Reg No: %1$s | Tel: %2$s</string>
     <string name="pdf_vat_id_tel">VAT ID: %1$s | Tel: %2$s</string>
     <string name="pdf_invoice_number">Invoice Number: %1$s</string>
@@ -826,13 +826,13 @@
     <string name="search_products">Search products or scan barcode...</string>
     <string name="monthly_sales_shift_summary_report">MONTHLY SALES &amp; SHIFT SUMMARY REPORT</string>
     <string name="total_revenue_label">TOTAL REVENUE</string>
-    <string name="mada_cards_label">MADA &amp; CARDS</string>
+    <string name="mada_cards_label">BANK &amp; CARDS</string>
     <string name="net_cash_in_drawer_label">NET CASH IN DRAWER</string>
     <string name="scan_data_label">SCAN DATA</string>
     <string name="default_business_name">Lojia Superstore &amp; Cafe</string>
     <string name="shift_closing_revenue_cert">SHIFT CLOSING &amp; REVENUE CERTIFICATE</string>
     <string name="gross_cash_received">Gross Cash Received</string>
-    <string name="mada_bank_cards">Mada &amp; Bank Cards</string>
+    <string name="mada_bank_cards">Bank &amp; Card Payments</string>
     <string name="digital_wallet_applepay">Digital Wallet/ApplePay</string>
     <string name="total_expenses_dash">Total Expenses (-)</string>
     <string name="due_sales_credit_entries">Due Sales (Credit Entries)</string>
@@ -892,7 +892,7 @@
     <string name="shift_report_title_fmt">Shift Report - %s</string>
     <string name="payment_success">Payment Success</string>
     <string name="auto_calculated_financial_summary">Auto-calculated sales, cash/bank inflow, due credits, expenses &amp; product purchases</string>
-    <string name="bank_mada_fmt">Bank/Mada: %1$s %2$s</string>
+    <string name="bank_mada_fmt">Bank / Card: %1$s %2$s</string>
     <string name="due_collected_fmt">Due Collected: %1$s %2$s</string>
     <string name="staff_advances_fmt">Staff Advances: %1$s %2$s</string>
     <string name="product_purchases">Product Purchases</string>
@@ -942,12 +942,12 @@
     <string name="pdf_date">Date</string>
     <string name="pdf_financial_breakdown">Financial Revenue Breakdown</string>
     <string name="pdf_gross_cash">Gross Cash Received</string>
-    <string name="pdf_mada_bank">Mada &amp; Bank Card Payments</string>
+    <string name="pdf_mada_bank">Bank &amp; Card Payments</string>
     <string name="pdf_digital_wallet">Digital Wallet / Apple Pay</string>
     <string name="pdf_gross_total_sales">GROSS TOTAL SALES</string>
     <string name="pdf_expenses">Shift Operational Expenses (-)</string>
     <string name="pdf_net_cash_in_drawer">NET CASH IN DRAWER</string>
-    <string name="pdf_net_mada_bank">NET MADA / BANK</string>
+    <string name="pdf_net_mada_bank">NET BANK / CARD</string>
     <string name="pdf_due_sales">Due Sales (Credit Entries)</string>
     <string name="pdf_due_collection">Due Collection (Previous Dues)</string>
     <string name="pdf_employer_advances">Employer Advances (Staff Advances)</string>
@@ -1266,7 +1266,7 @@
     <string name="toast_admin_authenticated">Admin authenticated. Audit log generated.</string>
     <string name="pdf_sales_summary_title">Sales Summary</string>
     <string name="pdf_cash_sales_label">Cash Sales</string>
-    <string name="pdf_card_mada_sales_label">Card / Mada Sales</string>
+    <string name="pdf_card_mada_sales_label">Bank / Card Sales</string>
     <string name="pdf_cash_reconciliation_title">Cash Drawer Reconciliation</string>
     <string name="pdf_starting_cash_label">Starting Cash (Opening Float)</string>
     <string name="pdf_cash_in_label">Cash In (Pay-Ins + Previous Due Collections)</string>
@@ -1437,7 +1437,7 @@
     <string name="zreport_cashier">Cashier:</string>
     <string name="zreport_sec_sales">1. SALES BY PAYMENT METHOD</string>
     <string name="zreport_cash_sales">Cash Sales:</string>
-    <string name="zreport_card_mada">Card / Mada:</string>
+    <string name="zreport_card_mada">Bank / Card:</string>
     <string name="zreport_digital_wallet">Digital Wallet:</string>
     <string name="zreport_total_revenue">TOTAL REVENUE:</string>
     <string name="zreport_sec_cash_recon">2. CASH RECONCILIATION</string>
@@ -2026,7 +2026,7 @@
     <string name="notify_channel_system_name">System &amp; Security</string>
     <string name="notify_channel_system_desc">Backup reminders, security notices, and hardware status</string>
 
-    <string name="export_csv_header">Report ID,Cashier Name,Shift,Date,Gross Cash (%1$s),Mada/Card (%1$s),Digital Wallet (%1$s),Staff Meals,Expenses (%1$s),Net Cash (%1$s),Total Sales (%1$s),Notes</string>
+    <string name="export_csv_header">Report ID,Cashier Name,Shift,Date,Gross Cash (%1$s),Bank / Card (%1$s),Digital Wallet (%1$s),Staff Meals,Expenses (%1$s),Net Cash (%1$s),Total Sales (%1$s),Notes</string>
     <string name="export_csv_share_title">Export Shift Reports CSV</string>
     <string name="export_pdf_share_title">Shift Reports PDF</string>
 
@@ -2162,7 +2162,7 @@
     <string name="monthly_week_3_label">Week 3 (15-21)</string>
     <string name="monthly_week_4_label">Week 4 (22-28)</string>
     <string name="monthly_week_5_fmt">Week 5 (29-%1$d)</string>
-    <string name="monthly_mada_digital_settlements">MADA &amp; digital settlements</string>
+    <string name="monthly_mada_digital_settlements">Bank / Card &amp; digital settlements</string>
     <string name="monthly_salary_advance_payouts">Salary advance payouts</string>
     <string name="phone_hint_none_found">No phone number found</string>
     <string name="phone_hint_error_fmt">Error: %1$s</string>
@@ -2292,4 +2292,7 @@
     <string name="home_close_shift_notes_label">Closing notes (optional)</string>
     <string name="home_cd_shift_card">Shift status overview</string>
     <string name="home_cd_chart_bar_fmt">%1$s: %2$s</string>
+
+    <!-- Stage 28A: International hardcode sweep -->
+    <string name="contrast_multiplier_fmt">%.1fx</string>
 </resources>

@@ -21,7 +21,7 @@ fun decideCurrencyRestore(
     localLocked: Boolean,
     backupCode: String?
 ): CurrencyRestoreDecision {
-    val normalizedBackup = backupCode?.trim()?.uppercase(Locale.US)
+    val normalizedBackup = backupCode?.trim()?.uppercase(Locale.ROOT)
     if (normalizedBackup.isNullOrBlank()) {
         return CurrencyRestoreDecision.RejectInvalid
     }
@@ -33,7 +33,7 @@ fun decideCurrencyRestore(
     if (!localLocked) {
         return CurrencyRestoreDecision.Allow
     }
-    val normalizedLocal = localCode.trim().uppercase(Locale.US)
+    val normalizedLocal = localCode.trim().uppercase(Locale.ROOT)
     return if (normalizedBackup != normalizedLocal) {
         CurrencyRestoreDecision.RejectMismatch(
             backupCode = normalizedBackup,

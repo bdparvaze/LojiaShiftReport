@@ -45,6 +45,12 @@ import com.lojia.shiftreport.util.MoneyInput
 import com.lojia.shiftreport.util.classifyMoneyInput
 import java.util.Locale
 
+internal fun normalizeOpenShiftCashier(cashierName: String): String? =
+    cashierName.trim().takeIf { it.isNotBlank() }
+
+internal fun canConfirmOpenShift(isFloatError: Boolean, cashierName: String): Boolean =
+    !isFloatError && cashierName.isNotBlank()
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeOpenShiftDialog(
@@ -71,7 +77,7 @@ fun HomeOpenShiftDialog(
         is MoneyInput.Valid -> classifiedFloat.minor
         MoneyInput.Empty, MoneyInput.Invalid -> 0L
     }
-    val canConfirm = !isFloatError && (cashierOptions.isEmpty() || cashier.isNotBlank())
+    val canConfirm = canConfirmOpenShift(isFloatError = isFloatError, cashierName = cashier)
 
     LojiaFormDialog(
         title = stringResource(R.string.home_open_shift_dialog_title),
@@ -79,7 +85,7 @@ fun HomeOpenShiftDialog(
         onDismissRequest = onDismiss,
         onConfirm = {
             val major = MoneyFormat.toMajorUnits(startingMinor, digits)
-            onConfirmOpen(cashier, selectedShift, major)
+            onConfirmOpen(cashier.trim(), selectedShift, major)
         },
         isConfirmEnabled = canConfirm,
         confirmTestTag = "home_dialog_open_shift_confirm",

@@ -4,6 +4,7 @@ import android.content.Context
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.util.AppLogger
 import com.lojia.shiftreport.util.BackupPasswordRequiredException
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.OfflineBackupManager
 import com.lojia.shiftreport.util.canCreatePortableBackup
 import com.lojia.shiftreport.util.withVaultPassword
@@ -11,9 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * Universal multi-cloud backup orchestrator for Lojia POS.
@@ -106,7 +104,7 @@ class BackupManager(private val context: Context) {
                 return@withContext results
             }
 
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
             val outFile = File(context.cacheDir, "lojia_backup_$timeStamp.lsb")
             tempFile = outFile
             FileOutputStream(outFile).use { out ->

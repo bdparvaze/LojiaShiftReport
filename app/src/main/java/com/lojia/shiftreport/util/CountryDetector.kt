@@ -21,13 +21,13 @@ object CountryDetector {
             val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
 
             // 1. SIM Country ISO
-            val simCountry = tm?.simCountryIso?.trim()?.uppercase(Locale.US)
+            val simCountry = tm?.simCountryIso?.trim()?.uppercase(Locale.ROOT)
             if (!simCountry.isNullOrEmpty() && simCountry.length == 2) {
                 return simCountry
             }
 
             // 2. Network Country ISO
-            val netCountry = tm?.networkCountryIso?.trim()?.uppercase(Locale.US)
+            val netCountry = tm?.networkCountryIso?.trim()?.uppercase(Locale.ROOT)
             if (!netCountry.isNullOrEmpty() && netCountry.length == 2) {
                 return netCountry
             }
@@ -35,7 +35,7 @@ object CountryDetector {
 
         // 3. System Locale Fallback
         try {
-            val localeCountry = Locale.getDefault().country?.trim()?.uppercase(Locale.US)
+            val localeCountry = Locale.getDefault().country?.trim()?.uppercase(Locale.ROOT)
             if (!localeCountry.isNullOrEmpty() && localeCountry.length == 2) {
                 return localeCountry
             }
@@ -43,7 +43,7 @@ object CountryDetector {
 
         // Fallback to primary locale configuration
         try {
-            val configCountry = context.resources.configuration.locales[0]?.country?.trim()?.uppercase(Locale.US)
+            val configCountry = context.resources.configuration.locales[0]?.country?.trim()?.uppercase(Locale.ROOT)
             if (!configCountry.isNullOrEmpty() && configCountry.length == 2) {
                 return configCountry
             }

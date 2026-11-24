@@ -37,12 +37,11 @@ import com.lojia.shiftreport.data.ShiftReportRepository
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.ui.common.*
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 enum class CashierStatusFilter {
@@ -998,7 +997,7 @@ private fun CashierCard(
                 if (isArchived && cashier.archivedAt != null) {
                     Spacer(modifier = Modifier.height(3.dp))
                     val dateFormatted = remember(cashier.archivedAt) {
-                        SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(cashier.archivedAt))
+                        DateTimeFormatUtils.formatDateTime(cashier.archivedAt)
                     }
                     Text(
                         text = stringResource(R.string.cashier_archived_date_fmt, dateFormatted),

@@ -281,6 +281,22 @@ object GoogleDriveManager {
         }
     }
 
+    internal fun parseDriveUserInfoResponse(responseCode: Int, responseBody: String?): DriveAccountInfo {
+        if (responseCode !in 200..299 || responseBody.isNullOrBlank()) {
+            return DriveAccountInfo(isConnected = true, email = "", displayName = "")
+        }
+        return try {
+            val root = JSONObject(responseBody)
+            val user = root.optJSONObject("user")
+            val email = user?.optString("emailAddress", "") ?: ""
+            val name = user?.optString("displayName", "") ?: ""
+            val photo = if (user?.has("photoLink") == true && !user.isNull("photoLink")) user.getString("photoLink") else null
+            DriveAccountInfo(isConnected = true, email = email, displayName = name, photoUrl = photo)
+        } catch (_: Exception) {
+            DriveAccountInfo(isConnected = true, email = "", displayName = "")
+        }
+    }
+
     private fun fetchDriveUserInfo(accessToken: String): DriveAccountInfo {
         return try {
             val url = URL("https://www.googleapis.com/drive/v3/about?fields=user")
@@ -288,19 +304,15 @@ object GoogleDriveManager {
             conn.setRequestProperty("Authorization", "Bearer $accessToken")
             conn.requestMethod = "GET"
 
-            if (conn.responseCode in 200..299) {
-                val text = conn.inputStream.bufferedReader().use { it.readText() }
-                val root = JSONObject(text)
-                val user = root.optJSONObject("user")
-                val email = user?.optString("emailAddress", "Google Drive User") ?: "Google Drive User"
-                val name = user?.optString("displayName", "User") ?: "User"
-                val photo = if (user?.has("photoLink") == true && !user.isNull("photoLink")) user.getString("photoLink") else null
-                DriveAccountInfo(isConnected = true, email = email, displayName = name, photoUrl = photo)
+            val responseCode = conn.responseCode
+            val text = if (responseCode in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
             } else {
-                DriveAccountInfo(isConnected = true, email = "Google Drive Connected", displayName = "User")
+                null
             }
+            parseDriveUserInfoResponse(responseCode, text)
         } catch (e: Exception) {
-            DriveAccountInfo(isConnected = true, email = "Google Drive Connected", displayName = "User")
+            DriveAccountInfo(isConnected = true, email = "", displayName = "")
         }
     }
 

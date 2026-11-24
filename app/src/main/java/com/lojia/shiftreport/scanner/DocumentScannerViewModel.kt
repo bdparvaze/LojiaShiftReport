@@ -22,12 +22,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class DocumentScannerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -65,7 +63,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
                 val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
 
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
                 val title = customTitle?.ifBlank { null } ?: "Scan_$timeStamp"
                 val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
                 val destFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
@@ -176,7 +174,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
                 val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
 
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
                 val title = customTitle?.ifBlank { null } ?: "PhotoScan_$timeStamp"
                 val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
                 val destPdfFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
@@ -312,7 +310,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
                 val docsDir = File(context.filesDir, "scanned_documents").apply { if (!exists()) mkdirs() }
                 val thumbsDir = File(docsDir, "thumbnails").apply { if (!exists()) mkdirs() }
 
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
                 val title = customTitle?.ifBlank { null } ?: "Scan_$timeStamp"
                 val sanitizedTitle = title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
                 val destPdfFile = File(docsDir, "${sanitizedTitle}_$timeStamp.pdf")
@@ -431,7 +429,7 @@ class DocumentScannerViewModel(application: Application) : AndroidViewModel(appl
             }
 
             if (text.isNotBlank() && docxPath.isBlank()) {
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                val timeStamp = DateTimeFormatUtils.formatFileTimestamp()
                 val docxDir = File(docsDir, "docx").apply { if (!exists()) mkdirs() }
                 val docxFile = File(docxDir, "${document.title.replace("[^a-zA-Z0-9._-]".toRegex(), "_")}_$timeStamp.docx")
                 val success = DocxExporter.createDocxFile(docxFile, document.title, text)

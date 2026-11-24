@@ -145,7 +145,7 @@
     <string name="centralized_sync_desc">أي تغيير في الدولة أو اللغة أو الكاشير يُطبق فوراً في جميع الشاشات.</string>
     <string name="gross_sales">إجمالي المبيعات</string>
     <string name="net_drawer_cash">صافي نقد الدرج</string>
-    <string name="card_digital">البطاقة / مدى</string>
+    <string name="card_digital">البطاقة / الرقمية</string>
     <string name="deductions">الخصومات والمصروفات</string>
     <string name="section_cashier_shift">١. الكاشير وجلسة الوردية</string>
     <string name="employee_cashier_name">اسم الموظف / الكاشير</string>
@@ -159,7 +159,7 @@
     <string name="shift_morning_option">صباحي</string>
     <string name="section_revenue_sales">٢. الإيرادات ومقبوضات المبيعات</string>
     <string name="gross_cash_receipts">إجمالي المقبوضات النقدية</string>
-    <string name="card_mada_payments">مدفوعات مدى / البطاقات</string>
+    <string name="card_mada_payments">مدفوعات البنك / البطاقة</string>
     <string name="cash_label">نقداً</string>
     <string name="card_label">بطاقة</string>
     <string name="section_expenses_meals">٣. المصاريف التشغيلية ووجبات الموظفين</string>
@@ -241,7 +241,7 @@
     <string name="checkout">إتمام الشراء</string>
     <string name="select_payment_method">اختر طريقة الدفع:</string>
     <string name="cash_payment_opt">نقداً</string>
-    <string name="card_payment_opt">مدى / بطاقة مصرفية</string>
+    <string name="card_payment_opt">بنك / بطاقة</string>
     <string name="digital_payment_opt">دفع إلكتروني (Apple/STC Pay)</string>
     <string name="customer">العميل</string>
     <string name="select_customer">اختر العميل</string>
@@ -252,7 +252,7 @@
     <string name="subtotal">المجموع الفرعي</string>
     <string name="total_amount">الإجمالي</string>
     <string name="cash">نقداً</string>
-    <string name="card">بطاقة / مدى</string>
+    <string name="card">بنك / بطاقة</string>
     <string name="split_payment">دفع مجزأ</string>
     <string name="tendered_amount">المبلغ المدفوع</string>
     <string name="change_due">المتبقي للعميل</string>
@@ -315,7 +315,7 @@
     <string name="date">التاريخ</string>
     <string name="financial_inputs">المدخلات المالية</string>
     <string name="gross_cash">إجمالي النقد (كاش)</string>
-    <string name="mada_payments">مدفوعات مدى / البطاقات</string>
+    <string name="mada_payments">مدفوعات البنك / البطاقة</string>
     <string name="digital_wallet">المحفظة الرقمية / STC Pay</string>
     <string name="staff_meals_count">عدد وجبات الموظفين</string>
     <string name="total_expenses">إجمالي المصروفات</string>
@@ -325,7 +325,7 @@
     <string name="shift_history">سجل وتقارير الورديات</string>
     <string name="no_reports_yet">لا توجد تقارير ورديات مسجلة حتى الآن</string>
     <string name="gross_cash_required">إجمالي النقد مطلوب</string>
-    <string name="mada_required">مبلغ مدفوعات مدى مطلوب</string>
+    <string name="mada_required">مبلغ مدفوعات البنك / البطاقة مطلوب</string>
     <string name="wallet_required">مبلغ المحفظة الرقمية مطلوب</string>
     <string name="expenses_required">إجمالي المصروفات مطلوب</string>
     <string name="tab_report_entry">إدخال التقرير</string>
@@ -349,7 +349,7 @@
     <string name="clean_data">مسح البيانات</string>
     <string name="confirm_clean_data">هل أنت متأكد من رغبتك في مسح كافة البيانات؟</string>
     <string name="yes">نعم</string>
-    <string name="net_mada_bank">صافي مدى / بنك</string>
+    <string name="net_mada_bank">صافي البنك / البطاقة</string>
     <string name="live_summary">ملخص مباشر</string>
     <string name="no_transactions_yet">لم يتم تسجيل أي معاملات بعد</string>
     <string name="cash_sales">مبيعات نقدية</string>
@@ -357,7 +357,7 @@
     <string name="op_expenses">مصروفات تشغيلية</string>
     <string name="new_due">دين جديد</string>
     <string name="due_collected_cash">تحصيل نقدي</string>
-    <string name="due_collected_bank">تحصيل بنكي / مدى</string>
+    <string name="due_collected_bank">تحصيل مستحقات (بنك)</string>
     <string name="employer_cash">سلفيات نقدية</string>
     <string name="employer_bank">سلفيات بنكية</string>
     <string name="receipt_number">رقم الفاتورة / الإيصال</string>
@@ -423,7 +423,7 @@
     <string name="remove">حذف</string>
     <string name="people_count">%d أشخاص</string>
     <string name="pcs_at_price" formatted="false">%d قطعة @ %.2f ريال • %s</string>
-    <string name="mada_bank">مدى / بنك</string>
+    <string name="mada_bank">بنك / بطاقة</string>
     <string name="save">حفظ</string>
     <string name="cancel">إلغاء</string>
     <string name="confirm">تأكيد</string>
@@ -554,7 +554,7 @@
     <string name="msg_2f_s_13" formatted="false">%.2f %s</string>
     <string name="msg_5week_distribution">توزيع 5 أسابيع</string>
     <string name="msg_2f_s_d" formatted="false">%.2f %s (%d%%)</string>
-    <string name="cash_0f_mada_0f" formatted="false">نقداً: %.0f | مدى: %.0f</string>
+    <string name="cash_0f_mada_0f" formatted="false">نقداً: %.0f | بنك / بطاقة: %.0f</string>
     <string name="msg_2f_s_14" formatted="false">%.2f %s</string>
     <string name="select_target_role_to">حدد الدور لمحاكاة صلاحيات الموظفين:</string>
     <string name="administrator">مسؤول النظام</string>
@@ -696,7 +696,7 @@
     <string name="cashier_5">كاشير</string>
     <string name="shift_1">الوردية</string>
     <string name="cash_1">نقد</string>
-    <string name="madacard">مدى / بطاقة</string>
+    <string name="madacard">بنك / بطاقة</string>
     <string name="expenses">المصروفات</string>
     <string name="msg_0f">%.0f</string>
     <string name="msg_0f_1">%.0f</string>
@@ -742,7 +742,7 @@
     <string name="pdf_total_currency">المجموع (%1$s)</string>
     <string name="pdf_more_entries">... وتم تسجيل %1$d إدخال إضافي في قاعدة البيانات.</string>
     <string name="pdf_operational_metrics">المقاييس التشغيلية: وجبات الموظفين: %1$d | معسل: %2$d</string>
-    <string name="pdf_payment_split">تقسيم الدفع: نقدي %1$d%% | مدى/بطاقات %2$d%% | محفظة %3$d%%</string>
+    <string name="pdf_payment_split">تقسيم الدفع: نقدي %1$d%% | بنك / بطاقة %2$d%% | محفظة %3$d%%</string>
     <string name="pdf_vat_reg_no_tel">رقم الضريبة: %1$s | هاتف: %2$s</string>
     <string name="pdf_vat_id_tel">معرف الضريبة: %1$s | هاتف: %2$s</string>
     <string name="pdf_invoice_number">رقم الفاتورة: %1$s</string>
@@ -826,13 +826,13 @@
     <string name="search_products">ابحث عن المنتجات أو امسح الباركود...</string>
     <string name="monthly_sales_shift_summary_report">تقرير المبيعات الشهرية وملخص الورديات</string>
     <string name="total_revenue_label">إجمالي الإيرادات</string>
-    <string name="mada_cards_label">مدى والبطاقات</string>
+    <string name="mada_cards_label">البنك والبطاقات</string>
     <string name="net_cash_in_drawer_label">صافي النقد في الدرج</string>
     <string name="scan_data_label">مسح البيانات</string>
     <string name="default_business_name">متجر ومقهى لوجيا</string>
     <string name="shift_closing_revenue_cert">تقرير إغلاق الوردية والإيرادات</string>
     <string name="gross_cash_received">إجمالي النقد المقبوض</string>
-    <string name="mada_bank_cards">مدى وبطاقات البنك</string>
+    <string name="mada_bank_cards">البنك والبطاقات</string>
     <string name="digital_wallet_applepay">المحفظة الرقمية / أبل باي</string>
     <string name="total_expenses_dash">مصروفات الوردية (-)</string>
     <string name="due_sales_credit_entries">المبيعات الآجلة (الديون)</string>
@@ -892,7 +892,7 @@
     <string name="shift_report_title_fmt">تقرير الوردية - %s</string>
     <string name="payment_success">تم الدفع بنجاح</string>
     <string name="auto_calculated_financial_summary">تقرير تلقائي للمبيعات، التدفقات النقدية والبنكية، الديون، المصروفات ومشتريات المنتجات</string>
-    <string name="bank_mada_fmt">البنك / مدى: %1$s %2$s</string>
+    <string name="bank_mada_fmt">بنك / بطاقة: %1$s %2$s</string>
     <string name="due_collected_fmt">المحصل من الديون: %1$s %2$s</string>
     <string name="staff_advances_fmt">سلف الموظفين: %1$s %2$s</string>
     <string name="product_purchases">مشتريات المنتجات</string>
@@ -942,12 +942,12 @@
     <string name="pdf_date">التاريخ</string>
     <string name="pdf_financial_breakdown">تفاصيل الإيرادات المالية</string>
     <string name="pdf_gross_cash">إجمالي النقد المقبوض</string>
-    <string name="pdf_mada_bank">مدفوعات مدى والبطاقات البنكية</string>
+    <string name="pdf_mada_bank">مدفوعات البنك والبطاقات</string>
     <string name="pdf_digital_wallet">المحفظة الرقمية / أبل باي</string>
     <string name="pdf_gross_total_sales">إجمالي المبيعات الكلي</string>
     <string name="pdf_expenses">مصروفات الوردية التشغيلية (-)</string>
     <string name="pdf_net_cash_in_drawer">صافي النقد في الدرج</string>
-    <string name="pdf_net_mada_bank">صافي مدى / البنك</string>
+    <string name="pdf_net_mada_bank">صافي البنك / البطاقة</string>
     <string name="pdf_due_sales">المبيعات الآجلة (الديون)</string>
     <string name="pdf_due_collection">تحصيل الديون (المستحقات السابقة)</string>
     <string name="pdf_employer_advances">سلفيات الموظفين</string>
@@ -1266,7 +1266,7 @@
     <string name="toast_admin_authenticated">تمت مصادقة المسؤول. تم إنشاء سجل التدقيق.</string>
     <string name="pdf_sales_summary_title">ملخص المبيعات</string>
     <string name="pdf_cash_sales_label">مبيعات نقدية</string>
-    <string name="pdf_card_mada_sales_label">مبيعات مدى / بطاقات</string>
+    <string name="pdf_card_mada_sales_label">مبيعات البنك / البطاقة</string>
     <string name="pdf_cash_reconciliation_title">مطابقة درج النقدية</string>
     <string name="pdf_starting_cash_label">النقد الافتتاحي (العُهدة)</string>
     <string name="pdf_cash_in_label">نقد داخل (إيداعات + تحصيل آجل)</string>
@@ -1437,7 +1437,7 @@
     <string name="zreport_cashier">الكاشير:</string>
     <string name="zreport_sec_sales">١. المبيعات حسب طريقة الدفع</string>
     <string name="zreport_cash_sales">مبيعات نقدية:</string>
-    <string name="zreport_card_mada">بطاقة / مدى:</string>
+    <string name="zreport_card_mada">بنك / بطاقة:</string>
     <string name="zreport_digital_wallet">محفظة إلكترونية:</string>
     <string name="zreport_total_revenue">إجمالي الإيرادات:</string>
     <string name="zreport_sec_cash_recon">٢. مطابقة النقدية</string>
@@ -2026,7 +2026,7 @@
     <string name="notify_channel_system_name">النظام والأمان</string>
     <string name="notify_channel_system_desc">تذكيرات النسخ الاحتياطي وإشعارات الأمان وحالة الأجهزة</string>
 
-    <string name="export_csv_header">معرف التقرير,اسم الكاشير,الوردية,التاريخ,إجمالي النقد (%1$s),مدى/بطاقة (%1$s),المحفظة الرقمية (%1$s),وجبات الموظفين,المصروفات (%1$s),صافي النقد (%1$s),إجمالي المبيعات (%1$s),ملاحظات</string>
+    <string name="export_csv_header">معرف التقرير,اسم الكاشير,الوردية,التاريخ,إجمالي النقد (%1$s),بنك / بطاقة (%1$s),المحفظة الرقمية (%1$s),وجبات الموظفين,المصروفات (%1$s),صافي النقد (%1$s),إجمالي المبيعات (%1$s),ملاحظات</string>
     <string name="export_csv_share_title">تصدير تقارير الورديات CSV</string>
     <string name="export_pdf_share_title">تقارير الورديات PDF</string>
 
@@ -2162,7 +2162,7 @@
     <string name="monthly_week_3_label">الأسبوع 3 (15-21)</string>
     <string name="monthly_week_4_label">الأسبوع 4 (22-28)</string>
     <string name="monthly_week_5_fmt">الأسبوع 5 (29-%1$d)</string>
-    <string name="monthly_mada_digital_settlements">تسويات مدى والمدفوعات الرقمية</string>
+    <string name="monthly_mada_digital_settlements">تسويات البنك / البطاقة والمدفوعات الرقمية</string>
     <string name="monthly_salary_advance_payouts">صرف سلف الرواتب</string>
     <string name="phone_hint_none_found">لم يتم العثور على رقم هاتف</string>
     <string name="phone_hint_error_fmt">خطأ: %1$s</string>
@@ -2292,4 +2292,7 @@
     <string name="home_close_shift_notes_label">ملاحظات الإغلاق (اختياري)</string>
     <string name="home_cd_shift_card">ملخص حالة الوردية</string>
     <string name="home_cd_chart_bar_fmt">%1$s: %2$s</string>
+
+    <!-- Stage 28A: International hardcode sweep -->
+    <string name="contrast_multiplier_fmt">%.1fx</string>
 </resources>

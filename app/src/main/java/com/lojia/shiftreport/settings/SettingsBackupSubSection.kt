@@ -44,6 +44,7 @@ import com.lojia.shiftreport.ui.common.*
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.BackupInfo
 import com.lojia.shiftreport.util.BackupSummary
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.DriveBackupItem
 import com.lojia.shiftreport.util.OfflineBackupManager
 import com.lojia.shiftreport.util.PdfShareUtils
@@ -54,7 +55,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 
 private sealed interface PendingPasswordRestoreTarget {
@@ -648,7 +648,6 @@ fun SettingsBackupSubSection(
     // 1. Local Files Dialog
     if (showLocalFilesDialog) {
         val backupFiles = remember { backupManager.localProvider.listBackupFiles() }
-        val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault()) }
 
         LojiaDialog(
             onDismissRequest = { showLocalFilesDialog = false }
@@ -693,7 +692,7 @@ fun SettingsBackupSubSection(
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
-                                            text = "${dateFormatter.format(Date(file.lastModified()))} • ${formatFileSize(context, file.length())}",
+                                            text = "${DateTimeFormatUtils.formatDateTime(file.lastModified())} • ${formatFileSize(context, file.length())}",
                                             fontSize = 10.sp,
                                             color = TextSecondaryLight
                                         )
@@ -1684,7 +1683,7 @@ private fun GoogleDriveStatusCard(
                     Column {
                         Text(stringResource(R.string.backup_loc_gdrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
                         Text(
-                            text = if (isConnected) (accountEmail ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
+                            text = if (isConnected) (accountEmail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
                             fontSize = 11.sp,
                             color = TextSecondaryLight
                         )
@@ -1857,7 +1856,7 @@ private fun OneDriveStatusCard(
                     Column {
                         Text(stringResource(R.string.backup_loc_onedrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
                         Text(
-                            text = if (isConnected) (accountEmail ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
+                            text = if (isConnected) (accountEmail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
                             fontSize = 11.sp,
                             color = TextSecondaryLight
                         )
@@ -1988,9 +1987,10 @@ private fun OneDriveStatusCard(
 private fun formatFileSize(context: Context, bytes: Long): String {
     if (bytes <= 0) return context.getString(R.string.backup_size_zero_bytes)
     val kb = bytes / 1024.0
-    if (kb < 1024) return String.format(Locale.US, context.getString(R.string.backup_size_kb_format), kb)
+    val appLocale = DateTimeFormatUtils.getAppLocale()
+    if (kb < 1024) return String.format(appLocale, context.getString(R.string.backup_size_kb_format), kb)
     val mb = kb / 1024.0
-    return String.format(Locale.US, context.getString(R.string.backup_size_mb_format), mb)
+    return String.format(appLocale, context.getString(R.string.backup_size_mb_format), mb)
 }
 
 private fun formatTimeAgo(context: Context, timeMs: Long): String {
@@ -2004,5 +2004,5 @@ private fun formatTimeAgo(context: Context, timeMs: Long): String {
     if (hours < 24) return context.getString(R.string.backup_time_hr_ago_format, hours)
     val days = hours / 24
     if (days < 7) return context.getString(R.string.backup_time_days_ago_format, days)
-    return SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(timeMs))
+    return DateTimeFormatUtils.formatDate(timeMs)
 }

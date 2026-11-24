@@ -68,7 +68,7 @@ fun countryCodeToFlagEmoji(countryCode: String): String {
  */
 fun getCurrencySymbol(currencyCode: String, locale: Locale = Locale.getDefault()): String {
     if (currencyCode.isBlank()) return AppConstants.DEFAULT_CURRENCY_SYMBOL
-    val upper = currencyCode.trim().uppercase(Locale.US)
+    val upper = currencyCode.trim().uppercase(Locale.ROOT)
     return try {
         Currency.getInstance(upper).getSymbol(locale).ifBlank { upper }
     } catch (_: Exception) {
@@ -90,7 +90,7 @@ private val COMMON_CURRENCY_ORDER = listOf(
 )
 
 private fun resolveIsoCurrencyInfo(code: String?, locale: Locale = Locale.getDefault()): IsoCurrencyInfo {
-    val upper = code?.trim()?.uppercase(Locale.US).orEmpty().ifEmpty { MoneyFormat.DEFAULT_CURRENCY_CODE }
+    val upper = code?.trim()?.uppercase(Locale.ROOT).orEmpty().ifEmpty { MoneyFormat.DEFAULT_CURRENCY_CODE }
     val digits = MoneyFormat.minorUnitDigits(upper)
     val symbol = getCurrencySymbol(upper, locale)
     val displayName = try {
@@ -110,7 +110,7 @@ private fun allIso4217Currencies(locale: Locale = Locale.getDefault()): List<Iso
     val nonCirculating = setOf("XXX", "XTS", "XBA", "XBB", "XBC", "XBD", "XAU", "XAG", "XPD", "XPT", "XSU", "XUA")
     val availableCodes = Currency.getAvailableCurrencies()
         .asSequence()
-        .map { it.currencyCode.uppercase(Locale.US) }
+        .map { it.currencyCode.uppercase(Locale.ROOT) }
         .filter { it.length == 3 && it.all { ch -> ch in 'A'..'Z' } && it !in nonCirculating }
         .toMutableSet()
     availableCodes.addAll(COMMON_CURRENCY_ORDER)

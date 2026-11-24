@@ -40,6 +40,12 @@ object OfflineBackupManager {
 
     const val BACKUP_FORMAT_VERSION = 2
 
+    /** Protocol owner ID fallback stored in backup JSON when no local user ID or username exists. */
+    const val DEFAULT_BACKUP_OWNER_ID = "anonymous"
+
+    /** Protocol role identifier assigned to restored cashiers when omitted in backup JSON. */
+    const val DEFAULT_CASHIER_ROLE = "CASHIER"
+
     suspend fun generateBackupJson(
         database: AppDatabase,
         isCloudBackup: Boolean = false,
@@ -69,7 +75,7 @@ object OfflineBackupManager {
         rootJson.put("timestamp", System.currentTimeMillis())
         rootJson.put("isCloudBackup", isCloudBackup)
 
-        val ownerId = currentUserId ?: userProfile?.id?.toString() ?: userProfile?.username ?: "anonymous"
+        val ownerId = currentUserId ?: userProfile?.id?.toString() ?: userProfile?.username ?: DEFAULT_BACKUP_OWNER_ID
         rootJson.put("ownerId", ownerId)
 
         // Business Profile
@@ -878,7 +884,7 @@ object OfflineBackupManager {
                     val obj = root.getJSONObject("businessProfile")
                     val normalizedCurrency = obj.optString("currency", AppConstants.DEFAULT_CURRENCY_CODE)
                         .trim()
-                        .uppercase(Locale.US)
+                        .uppercase(Locale.ROOT)
                     val bp = BusinessProfile(
                         id = obj.optInt("id", 1),
                         businessName = obj.optString("businessName", "My Store"),
@@ -987,7 +993,7 @@ object OfflineBackupManager {
                                 id = matchedLocalId ?: 0,
                                 name = name,
                                 pin = pinVal,
-                                role = obj.optString("role", existing?.role ?: "CASHIER"),
+                                role = obj.optString("role", existing?.role ?: DEFAULT_CASHIER_ROLE),
                                 isActive = resolvedIsActive,
                                 isArchived = obj.optBoolean("isArchived", existing?.isArchived ?: false),
                                 archivedAt = if (obj.has("archivedAt") && !obj.isNull("archivedAt")) obj.optLong("archivedAt") else existing?.archivedAt,

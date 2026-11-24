@@ -39,7 +39,7 @@ object MoneyFormat {
      */
     fun minorUnitDigits(currencyCode: String?): Int {
         if (currencyCode.isNullOrBlank()) return AppConstants.ISO_DEFAULT_MINOR_DIGITS
-        return when (val upper = currencyCode.trim().uppercase(Locale.US)) {
+        return when (val upper = currencyCode.trim().uppercase(Locale.ROOT)) {
             "KWD", "BHD", "OMR" -> 3
             "JPY" -> 0
             else -> try {
@@ -84,7 +84,7 @@ object MoneyFormat {
             return minorUnitDigits(trimmed)
         }
         return try {
-            val d = Currency.getInstance(trimmed.uppercase(Locale.US)).defaultFractionDigits
+            val d = Currency.getInstance(trimmed.uppercase(Locale.ROOT)).defaultFractionDigits
             if (d < 0) activeDigits else d
         } catch (_: Exception) {
             activeDigits
@@ -341,7 +341,7 @@ object MoneyFormat {
 
         // 2. Check Java ISO Currency
         return try {
-            val currency = Currency.getInstance(trimmed.uppercase(Locale.US))
+            val currency = Currency.getInstance(trimmed.uppercase(Locale.ROOT))
             currency.getSymbol(locale)
         } catch (_: Exception) {
             trimmed

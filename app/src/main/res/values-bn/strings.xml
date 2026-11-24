@@ -159,7 +159,7 @@
     <string name="shift_morning_option">সকাল</string>
     <string name="section_revenue_sales">২. বিক্রয় ও রাজস্ব রসিদ</string>
     <string name="gross_cash_receipts">মোট নগদ বিক্রয়</string>
-    <string name="card_mada_payments">কার্ড / মাদা পেমেন্ট</string>
+    <string name="card_mada_payments">ব্যাংক / কার্ড পেমেন্ট</string>
     <string name="cash_label">নগদ (ক্যাশ)</string>
     <string name="card_label">কার্ড</string>
     <string name="section_expenses_meals">৩. পরিচালনা খরচ ও স্টাফদের খাবার</string>
@@ -241,7 +241,7 @@
     <string name="checkout">চেকআউট</string>
     <string name="select_payment_method">পেমেন্ট পদ্ধতি নির্বাচন করুন:</string>
     <string name="cash_payment_opt">নগদ</string>
-    <string name="card_payment_opt">কার্ড / মাদা</string>
+    <string name="card_payment_opt">ব্যাংক / কার্ড</string>
     <string name="digital_payment_opt">ডিজিটাল পেমেন্ট (Apple/STC Pay)</string>
     <string name="customer">গ্রাহক</string>
     <string name="select_customer">গ্রাহক নির্বাচন</string>
@@ -252,7 +252,7 @@
     <string name="subtotal">সাবটোটাল</string>
     <string name="total_amount">সর্বমোট</string>
     <string name="cash">নগদ</string>
-    <string name="card">কার্ড / মাদা</string>
+    <string name="card">ব্যাংক / কার্ড</string>
     <string name="split_payment">স্প্লিট পেমেন্ট</string>
     <string name="tendered_amount">প্রদত্ত টাকা</string>
     <string name="change_due">ফেরত টাকা</string>
@@ -315,7 +315,7 @@
     <string name="date">তারিখ</string>
     <string name="financial_inputs">আর্থিক ইনপুট</string>
     <string name="gross_cash">মোট নগদ বিক্রয়</string>
-    <string name="mada_payments">মাদা / কার্ড পেমেন্ট</string>
+    <string name="mada_payments">ব্যাংক / কার্ড পেমেন্ট</string>
     <string name="digital_wallet">ডিজিটাল ওয়ালেট / এসটিসি পে</string>
     <string name="staff_meals_count">স্টাফ খাবার সংখ্যা</string>
     <string name="total_expenses">মোট খরচ</string>
@@ -325,7 +325,7 @@
     <string name="shift_history">শিফট ইতিহাস ও রেকর্ড</string>
     <string name="no_reports_yet">এখনও কোনো শিফট রিপোর্ট নেই</string>
     <string name="gross_cash_required">মোট নগদ টাকা লিখুন</string>
-    <string name="mada_required">মাদা পেমেন্ট পরিমাণ লিখুন</string>
+    <string name="mada_required">ব্যাংক / কার্ড পেমেন্টের পরিমাণ আবশ্যক</string>
     <string name="wallet_required">ডিজিটাল ওয়ালেট পরিমাণ লিখুন</string>
     <string name="expenses_required">মোট খরচ লিখুন</string>
     <string name="tab_report_entry">রিপোর্ট এন্ট্রি</string>
@@ -349,7 +349,7 @@
     <string name="clean_data">ডাটা পরিষ্কার করুন</string>
     <string name="confirm_clean_data">আপনি কি নিশ্চিতভাবে সব ডাটা মুছে ফেলতে চান?</string>
     <string name="yes">হ্যাঁ</string>
-    <string name="net_mada_bank">নেট মাদা / ব্যাংক</string>
+    <string name="net_mada_bank">নিট ব্যাংক / কার্ড</string>
     <string name="live_summary">লাইভ সারাংশ</string>
     <string name="no_transactions_yet">এখনও কোনো লেনদেন রেকর্ড করা হয়নি</string>
     <string name="cash_sales">নগদ বিক্রয়</string>
@@ -423,7 +423,7 @@
     <string name="remove">মুছুন</string>
     <string name="people_count">%d জন</string>
     <string name="pcs_at_price" formatted="false">%d পিস @ %.2f SAR • %s</string>
-    <string name="mada_bank">মাদা / ব্যাংক</string>
+    <string name="mada_bank">ব্যাংক / কার্ড</string>
     <string name="save">সংরক্ষণ করুন</string>
     <string name="cancel">বাতিল</string>
     <string name="confirm">নিশ্চিত করুন</string>
@@ -554,7 +554,7 @@
     <string name="msg_2f_s_13" formatted="false">%.2f %s</string>
     <string name="msg_5week_distribution">৫-সপ্তাহের বিতরণ</string>
     <string name="msg_2f_s_d" formatted="false">%.2f %s (%d%%)</string>
-    <string name="cash_0f_mada_0f" formatted="false">নগদ: %.0f | মাদা: %.0f</string>
+    <string name="cash_0f_mada_0f" formatted="false">নগদ: %.0f | ব্যাংক / কার্ড: %.0f</string>
     <string name="msg_2f_s_14" formatted="false">%.2f %s</string>
     <string name="select_target_role_to">স্টাফ অ্যাক্সেস দেখতে ভূমিকা নির্বাচন করুন:</string>
     <string name="administrator">অ্যাডমিনিস্ট্রেটর</string>
@@ -696,7 +696,7 @@
     <string name="cashier_5">ক্যাশিয়ার</string>
     <string name="shift_1">শিফট</string>
     <string name="cash_1">ক্যাশ</string>
-    <string name="madacard">মাদা / কার্ড</string>
+    <string name="madacard">ব্যাংক / কার্ড</string>
     <string name="expenses">খরচ</string>
     <string name="msg_0f">%.0f</string>
     <string name="msg_0f_1">%.0f</string>
@@ -742,7 +742,7 @@
     <string name="pdf_total_currency">মোট (%1$s)</string>
     <string name="pdf_more_entries">... এবং ডাটাবেসে %1$d আরও এন্ট্রি সংরক্ষিত।</string>
     <string name="pdf_operational_metrics">অপারেশনাল মেট্রিক্স: কর্মীদের খাবার: %1$d | শিশা/মুয়াসেল: %2$d</string>
-    <string name="pdf_payment_split">পেমেন্ট বিভাজন: নগদ %1$d%% | মাদা/কার্ড %2$d%% | ওয়ালেট %3$d%%</string>
+    <string name="pdf_payment_split">পেমেন্ট বিভাজন: নগদ %1$d%% | ব্যাংক / কার্ড %2$d%% | ওয়ালেট %3$d%%</string>
     <string name="pdf_vat_reg_no_tel">ভ্যাট রেজি: %1$s | ফোন: %2$s</string>
     <string name="pdf_vat_id_tel">ভ্যাট আইডি: %1$s | ফোন: %2$s</string>
     <string name="pdf_invoice_number">ইনভয়েস নম্বর: %1$s</string>
@@ -826,13 +826,13 @@
     <string name="search_products">পণ্য খুঁজুন বা বারকোড স্ক্যান করুন...</string>
     <string name="monthly_sales_shift_summary_report">মাসিক বিক্রয় ও শিফট সারসংক্ষেপ রিপোর্ট</string>
     <string name="total_revenue_label">মোট রাজস্ব</string>
-    <string name="mada_cards_label">মাদা ও কার্ড</string>
+    <string name="mada_cards_label">ব্যাংক ও কার্ড</string>
     <string name="net_cash_in_drawer_label">ড্রয়ারে নীট ক্যাশ</string>
     <string name="scan_data_label">স্ক্যান ডাটা</string>
     <string name="default_business_name">লোজিয়া সুপারস্টোর ও ক্যাফে</string>
     <string name="shift_closing_revenue_cert">শিফট ক্লোজিং ও রেভিনিউ রিপোর্ট</string>
     <string name="gross_cash_received">ক্যাশ বিক্রয় (নগদ)</string>
-    <string name="mada_bank_cards">মাদা ও ব্যাংক কার্ড</string>
+    <string name="mada_bank_cards">ব্যাংক ও কার্ড</string>
     <string name="digital_wallet_applepay">ডিজিটাল ওয়ালেট / অ্যাপল পে</string>
     <string name="total_expenses_dash">শিফট পরিচালন ব্যয় (-)</string>
     <string name="due_sales_credit_entries">বাকিতে বিক্রি (ডিউ সেলস)</string>
@@ -892,7 +892,7 @@
     <string name="shift_report_title_fmt">শিফট রিপোর্ট - %s</string>
     <string name="payment_success">পেমেন্ট সফল হয়েছে</string>
     <string name="auto_calculated_financial_summary">মাসিক বিক্রি, ক্যাশ, ব্যাংক জমার পরিমাণ, বকেয়া (ডিউ), খরচ ও পণ্য ক্রয়ের স্বয়ংক্রিয় মোট তথ্য</string>
-    <string name="bank_mada_fmt">ব্যাংক / মাদা জমা: %1$s %2$s</string>
+    <string name="bank_mada_fmt">ব্যাংক / কার্ড: %1$s %2$s</string>
     <string name="due_collected_fmt">বাকি আদায় (রিকভারি): %1$s %2$s</string>
     <string name="staff_advances_fmt">স্টাফ অ্যাডভান্স: %1$s %2$s</string>
     <string name="product_purchases">পণ্য কেনা খরচ (Purchases)</string>
@@ -942,12 +942,12 @@
     <string name="pdf_date">তারিখ</string>
     <string name="pdf_financial_breakdown">আর্থিক রাজস্ব বিবরণী</string>
     <string name="pdf_gross_cash">ক্যাশ বিক্রয় (নগদ)</string>
-    <string name="pdf_mada_bank">মাদা এবং ব্যাংক কার্ড</string>
+    <string name="pdf_mada_bank">ব্যাংক ও কার্ড পেমেন্ট</string>
     <string name="pdf_digital_wallet">ডিজিটাল ওয়ালেট / অ্যাপল পে</string>
     <string name="pdf_gross_total_sales">মোট ক্যাশ বিক্রয়</string>
     <string name="pdf_expenses">শিফট খরচ (-)</string>
     <string name="pdf_net_cash_in_drawer">ক্যাশ ড্রয়ারে নিট নগদ</string>
-    <string name="pdf_net_mada_bank">নিট মাদা / ব্যাংক</string>
+    <string name="pdf_net_mada_bank">নিট ব্যাংক / কার্ড</string>
     <string name="pdf_due_sales">বকেয়া বিক্রি</string>
     <string name="pdf_due_collection">বকেয়া আদায়</string>
     <string name="pdf_employer_advances">কর্মচারী অগ্রিম</string>
@@ -1266,7 +1266,7 @@
     <string name="toast_admin_authenticated">অ্যাডমিন প্রমাণীকরণ সফল। অডিট লগ তৈরি হয়েছে।</string>
     <string name="pdf_sales_summary_title">বিক্রয় সারাংশ</string>
     <string name="pdf_cash_sales_label">নগদ বিক্রয়</string>
-    <string name="pdf_card_mada_sales_label">কার্ড / মাদা বিক্রয়</string>
+    <string name="pdf_card_mada_sales_label">ব্যাংক / কার্ড বিক্রয়</string>
     <string name="pdf_cash_reconciliation_title">ক্যাশ ড্রয়ার সমন্বয়</string>
     <string name="pdf_starting_cash_label">প্রারম্ভিক নগদ (ওপেনিং ফ্লোট)</string>
     <string name="pdf_cash_in_label">নগদ জমা (পে-ইন + পূর্বের বাকি আদায়)</string>
@@ -1437,7 +1437,7 @@
     <string name="zreport_cashier">ক্যাশিয়ার:</string>
     <string name="zreport_sec_sales">১. মাধ্যমভিত্তিক বিক্রয়</string>
     <string name="zreport_cash_sales">নগদ বিক্রয়:</string>
-    <string name="zreport_card_mada">কার্ড / মাদা:</string>
+    <string name="zreport_card_mada">ব্যাংক / কার্ড:</string>
     <string name="zreport_digital_wallet">ডিজিটাল ওয়ালেট:</string>
     <string name="zreport_total_revenue">মোট আয়:</string>
     <string name="zreport_sec_cash_recon">২. ক্যাশ সমন্বয়</string>
@@ -2026,7 +2026,7 @@
     <string name="notify_channel_system_name">সিস্টেম ও নিরাপত্তা</string>
     <string name="notify_channel_system_desc">ব্যাকআপ রিমাইন্ডার, নিরাপত্তা বিজ্ঞপ্তি ও হার্ডওয়্যার অবস্থা</string>
 
-    <string name="export_csv_header">রিপোর্ট আইডি,ক্যাশিয়ার নাম,শিফট,তারিখ,মোট নগদ (%1$s),মাদা/কার্ড (%1$s),ডিজিটাল ওয়ালেট (%1$s),স্টাফ খাবার,খরচ (%1$s),নিট নগদ (%1$s),মোট বিক্রয় (%1$s),নোট</string>
+    <string name="export_csv_header">রিপোর্ট আইডি,ক্যাশিয়ার নাম,শিফট,তারিখ,মোট নগদ (%1$s),ব্যাংক / কার্ড (%1$s),ডিজিটাল ওয়ালেট (%1$s),স্টাফ খাবার,খরচ (%1$s),নিট নগদ (%1$s),মোট বিক্রয় (%1$s),নোট</string>
     <string name="export_csv_share_title">শিফট রিপোর্ট CSV এক্সপোর্ট</string>
     <string name="export_pdf_share_title">শিফট রিপোর্ট PDF</string>
 
@@ -2162,7 +2162,7 @@
     <string name="monthly_week_3_label">সপ্তাহ ৩ (১৫-২১)</string>
     <string name="monthly_week_4_label">সপ্তাহ ৪ (২২-২৮)</string>
     <string name="monthly_week_5_fmt">সপ্তাহ ৫ (২৯-%1$d)</string>
-    <string name="monthly_mada_digital_settlements">মাদা ও ডিজিটাল লেনদেন</string>
+    <string name="monthly_mada_digital_settlements">ব্যাংক / কার্ড ও ডিজিটাল লেনদেন</string>
     <string name="monthly_salary_advance_payouts">অগ্রিম বেতন প্রদান</string>
     <string name="phone_hint_none_found">কোনো ফোন নম্বর পাওয়া যায়নি</string>
     <string name="phone_hint_error_fmt">ত্রুটি: %1$s</string>
@@ -2292,4 +2292,7 @@
     <string name="home_close_shift_notes_label">সমাপনী নোট (ঐচ্ছিক)</string>
     <string name="home_cd_shift_card">শিফটের অবস্থার সারসংক্ষেপ</string>
     <string name="home_cd_chart_bar_fmt">%1$s: %2$s</string>
+
+    <!-- Stage 28A: International hardcode sweep -->
+    <string name="contrast_multiplier_fmt">%.1fx</string>
 </resources>

@@ -115,10 +115,9 @@ import androidx.compose.ui.unit.sp
 
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.ShiftReport
-
-
-import java.text.SimpleDateFormat
-
+import com.lojia.shiftreport.util.DateTimeFormatUtils
+import java.time.LocalDate
+import java.time.YearMonth
 import java.util.*
 
 import kotlin.math.max
@@ -166,11 +165,11 @@ fun MonthlySalesSummaryView(
     val daysInMonth = targetCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
 
     val activeLocale = remember(language) { Locale.forLanguageTag(language.code) }
-    val monthNameFormatter = remember(language) {
-        SimpleDateFormat("MMMM yyyy", activeLocale)
+    val currentYearMonth = remember(currentYear, currentMonth) {
+        YearMonth.of(currentYear, currentMonth + 1)
     }
-    val currentMonthDisplayName = remember(targetCalendar, language) {
-        monthNameFormatter.format(targetCalendar.time)
+    val currentMonthDisplayName = remember(currentYearMonth, activeLocale) {
+        DateTimeFormatUtils.formatMonthYear(currentYearMonth, activeLocale)
     }
 
     val isCurrentCalendarMonth = remember(calendarMonthOffset) { calendarMonthOffset == 0 }
@@ -180,13 +179,9 @@ fun MonthlySalesSummaryView(
     // Calculate aggregated daily data for the selected month
     val dailyDataList = remember(shiftReports, currentYear, currentMonth, daysInMonth, activeLocale, summaryDigits) {
         val list = mutableListOf<DaySalesData>()
-        val cal = Calendar.getInstance()
-        val dayNameFmt = SimpleDateFormat("EEE", activeLocale)
-        val dateFmt = SimpleDateFormat("MMM dd", activeLocale)
 
         for (day in 1..daysInMonth) {
-            cal.set(currentYear, currentMonth, day, 0, 0, 0)
-            cal.set(Calendar.MILLISECOND, 0)
+            val localDate = LocalDate.of(currentYear, currentMonth + 1, day)
 
             // Filter shifts falling in this day
             val shiftsOnDay = shiftReports.filter { report ->
@@ -203,12 +198,11 @@ fun MonthlySalesSummaryView(
             val mada = shiftsOnDay.sumOf { it.madaPayments }
             val wallet = shiftsOnDay.sumOf { it.digitalWallet }
 
-            cal.set(currentYear, currentMonth, day)
             list.add(
                 DaySalesData(
                     dayNumber = day,
-                    dateString = dateFmt.format(cal.time),
-                    dayName = dayNameFmt.format(cal.time),
+                    dateString = DateTimeFormatUtils.formatMonthDay(localDate, activeLocale),
+                    dayName = DateTimeFormatUtils.formatShortWeekday(localDate.dayOfWeek, activeLocale),
                     shiftSales = MoneyFormat.toMajorUnits(shiftTotal, summaryDigits),
                     posSales = 0.0,
                     totalRevenue = MoneyFormat.toMajorUnits(combined, summaryDigits),

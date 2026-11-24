@@ -37,7 +37,7 @@ object ExportHelper {
             writer.append(context.getString(R.string.export_csv_header, currency) + "\n")
 
             for (r in reports) {
-                val dateStr = DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US)
+                val dateStr = DateTimeFormatUtils.formatIsoDate(r.dateInMillis)
                 val sanitizedNotes = r.notes.replace("\"", "\"\"")
                 val grossCashStr = MoneyFormat.toPlainDecimal(r.grossCash, digits)
                 val madaStr = MoneyFormat.toPlainDecimal(r.madaPayments, digits)
@@ -229,7 +229,7 @@ object ExportHelper {
                 val cashierStr = if (r.cashierName.length > 18) r.cashierName.take(16) + ".." else r.cashierName
                 canvas.drawText(cashierStr, colCashier, textY, textPaint)
                 canvas.drawText(r.shift, colShift, textY, textPaint)
-                canvas.drawText(DateTimeFormatUtils.formatDateOnly(r.dateInMillis, Locale.US), colDate, textY, textSecondaryPaint)
+                canvas.drawText(DateTimeFormatUtils.formatDateOnly(r.dateInMillis, DateTimeFormatUtils.getAppLocale()), colDate, textY, textSecondaryPaint)
 
                 val netStr = "${MoneyFormat.toPlainDecimal(r.netCash, digits)} $currency"
                 val netW = textPaint.measureText(netStr)

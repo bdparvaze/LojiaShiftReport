@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.lojia.shiftreport.R
@@ -25,9 +26,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.calculateInSampleSize
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
@@ -209,15 +210,17 @@ fun ScannedDocumentItemCard(
     onRenameClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val dateStr = remember(document.createdAtMillis) {
-        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(document.createdAtMillis))
+        DateTimeFormatUtils.formatDateTime(document.createdAtMillis)
     }
-    val sizeStr = remember(document.fileSizeBytes) {
+    val sizeStr = remember(document.fileSizeBytes, context) {
         val kb = document.fileSizeBytes / 1024.0
+        val appLocale = DateTimeFormatUtils.getAppLocale()
         if (kb > 1024) {
-            String.format(Locale.US, "%.1f MB", kb / 1024.0)
+            String.format(appLocale, context.getString(R.string.backup_size_mb_format), kb / 1024.0)
         } else {
-            String.format(Locale.US, "%.0f KB", kb)
+            String.format(appLocale, context.getString(R.string.backup_size_kb_format), kb)
         }
     }
 

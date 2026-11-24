@@ -61,12 +61,12 @@ import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.common.EmployerAdvanceStatementPreviewDialog
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.MoneyFormat
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
 import com.lojia.shiftreport.util.normalizeReceiptNumber
 import com.lojia.shiftreport.util.summarizeDueMinor
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -162,7 +162,6 @@ fun DueLedgerTab(
     currency: String = MoneyFormat.DEFAULT_CURRENCY_CODE
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
     val salesList = remember(reports) { parseDueSales(reports) }
     val collectionsList = remember(reports) { parseDueCollections(reports) }
@@ -635,7 +634,7 @@ fun DueLedgerTab(
                                 )
                                 Spacer(Modifier.width(Dimens.SpacingSm))
                                 Text(
-                                    text = dateFormat.format(Date(matchedEntry.dateInMillis)),
+                                    text = DateTimeFormatUtils.formatDate(matchedEntry.dateInMillis),
                                     fontSize = DepthTypeTokens.RegisterLabelSize,
                                     color = OnSurfaceVariantLight,
                                     maxLines = 1

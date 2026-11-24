@@ -41,12 +41,11 @@ import com.lojia.shiftreport.util.advancesInMonthMinor
 import com.lojia.shiftreport.util.balanceMinor
 import com.lojia.shiftreport.util.classifyMoneyInput
 import com.lojia.shiftreport.util.currentMonthRange
+import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.isUnspecifiedReceipt
 import com.lojia.shiftreport.util.normalizeReceiptNumber
 import com.lojia.shiftreport.util.normalizeRestoreName
-import java.text.SimpleDateFormat
 import java.time.ZoneId
-import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -209,7 +208,7 @@ fun ReportEntryTab(
     }
 
     val dateLabel = remember(dateMillis) {
-        SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date(dateMillis))
+        DateTimeFormatUtils.formatDateShort(dateMillis)
     }
 
     val scrollState = rememberScrollState()
