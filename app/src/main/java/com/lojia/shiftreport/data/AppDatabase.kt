@@ -702,7 +702,7 @@ abstract class AppDatabase : RoomDatabase() {
                 reportDao.saveBusinessProfile(
                     BusinessProfile(
                         id = 1,
-                        businessName = "My Store",
+                        businessName = "",
                         vatNumber = "",
                         phone = "",
                         email = "",

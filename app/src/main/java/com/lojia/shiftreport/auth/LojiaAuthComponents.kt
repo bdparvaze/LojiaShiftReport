@@ -618,7 +618,11 @@ fun LojiaCountryPickerDialog(
         }
     }
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Large,
+        contentPadding = PaddingValues(Dimens.SpacingNone)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

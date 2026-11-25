@@ -80,7 +80,7 @@ class Stage31ReleaseReadinessUnitTest {
         assertFalse("pdf_default_phone must be removed from values-ar", arKeys.contains("pdf_default_phone"))
         assertEquals(enKeys, bnKeys)
         assertEquals(enKeys, arKeys)
-        assertEquals(2246, enKeys.size)
+        assertEquals(2248, enKeys.size)
     }
 
     @Test

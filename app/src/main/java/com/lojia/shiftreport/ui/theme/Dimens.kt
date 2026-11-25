@@ -73,13 +73,24 @@ object Dimens {
     // =========================================================================
     // DIALOG SIZING RULES
     // =========================================================================
-    val DialogMaxWidth: Dp = 400.dp
-    val DialogSmallMaxWidth: Dp = 340.dp
+    val DialogWidthSmall: Dp = 320.dp
+    val DialogWidthMedium: Dp = 360.dp
+    val DialogWidthLarge: Dp = 400.dp
+    val DialogScreenMargin: Dp = 24.dp
+    val DialogContentPadding: Dp = 20.dp
     val DialogMaxHeight: Dp = 520.dp
-    val DialogPadding: Dp = 16.dp
-    val DialogPaddingComfortable: Dp = 20.dp
     val DialogCornerRadius: Dp = 22.dp
     val DialogElevation: Dp = 10.dp
+
+    // Verification dialog & shared PIN cells
+    val VerifyIconCircleSize: Dp = 44.dp
+    val VerifyIconSize: Dp = 22.dp
+    val VerifyInputSlotMinHeight: Dp = TextFieldHeightStandard
+    val PinCellMax: Dp = 40.dp
+    val PinCellMin: Dp = 32.dp
+    val PinDotSize: Dp = 10.dp
+    val PinCursorWidth: Dp = 2.dp
+    val PinCursorHeight: Dp = 18.dp
 
     // =========================================================================
     // ICON SIZES

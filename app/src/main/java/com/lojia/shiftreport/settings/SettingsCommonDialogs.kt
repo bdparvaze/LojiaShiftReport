@@ -120,14 +120,14 @@ fun SettingsCommonDialogs(
                 enteredPin = ""
                 pinError = false
                 onDismissAdminPin()
-            }
+            },
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .imePadding()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
@@ -165,18 +165,15 @@ fun SettingsCommonDialogs(
                     Column {
                         Text(stringResource(R.string.msg_admin_pin_required), style = MaterialTheme.typography.labelSmall)
                         Spacer(modifier = Modifier.height(8.dp))
-                        LojiaTextField(
+                        PinCells(
                             value = enteredPin,
                             onValueChange = {
-                                if (it.length <= 6) {
-                                    enteredPin = it
-                                    pinError = false
-                                }
+                                enteredPin = it
+                                pinError = false
                             },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                            visualTransformation = PasswordVisualTransformation(),
-                            singleLine = true,
-                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            masked = true,
+                            state = if (pinError) PinCellsState.Error else PinCellsState.Normal,
+                            autoFocus = true,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("admin_pin_input")
@@ -259,11 +256,13 @@ fun SettingsCommonDialogs(
 
     // Terms & Conditions Dialog
     if (showTermsDialog) {
-        LojiaDialog(onDismissRequest = onDismissTerms) {
+        LojiaDialog(
+            onDismissRequest = onDismissTerms,
+            size = DialogSize.Small
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
@@ -325,11 +324,13 @@ fun SettingsCommonDialogs(
 
     // Privacy Policy Dialog
     if (showPrivacyDialog) {
-        LojiaDialog(onDismissRequest = onDismissPrivacy) {
+        LojiaDialog(
+            onDismissRequest = onDismissPrivacy,
+            size = DialogSize.Small
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
@@ -395,13 +396,15 @@ fun SettingsCommonDialogs(
         var details by remember { mutableStateOf("") }
         var ticketSubmitted by remember { mutableStateOf(false) }
 
-        LojiaDialog(onDismissRequest = onDismissSupportTicket) {
+        LojiaDialog(
+            onDismissRequest = onDismissSupportTicket,
+            size = DialogSize.Medium
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .imePadding()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
@@ -576,13 +579,15 @@ fun ChangeQuickPinDialog(
         else -> stringResource(R.string.settings_pin_step3_desc)
     }
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = DialogSize.Small
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .imePadding()
-                .padding(Dimens.DialogPaddingComfortable),
+                .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
@@ -635,9 +640,9 @@ fun ChangeQuickPinDialog(
 
                 when (step) {
                     1 -> {
-                        SixDigitPinInput(
-                            pin = oldPin,
-                            onPinChange = {
+                        PinCells(
+                            value = oldPin,
+                            onValueChange = {
                                 oldPin = it
                                 errorMessage = null
                                 isError = false
@@ -652,14 +657,16 @@ fun ChangeQuickPinDialog(
                                     }
                                 }
                             },
-                            isError = isError,
+                            masked = true,
+                            state = if (isError) PinCellsState.Error else PinCellsState.Normal,
+                            autoFocus = true,
                             modifier = Modifier.fillMaxWidth().testTag("pin_step1_input")
                         )
                     }
                     2 -> {
-                        SixDigitPinInput(
-                            pin = newPin,
-                            onPinChange = {
+                        PinCells(
+                            value = newPin,
+                            onValueChange = {
                                 newPin = it
                                 errorMessage = null
                                 isError = false
@@ -669,14 +676,16 @@ fun ChangeQuickPinDialog(
                                     isError = false
                                 }
                             },
-                            isError = isError,
+                            masked = true,
+                            state = if (isError) PinCellsState.Error else PinCellsState.Normal,
+                            autoFocus = true,
                             modifier = Modifier.fillMaxWidth().testTag("pin_step2_input")
                         )
                     }
                     3 -> {
-                        SixDigitPinInput(
-                            pin = confirmPin,
-                            onPinChange = {
+                        PinCells(
+                            value = confirmPin,
+                            onValueChange = {
                                 confirmPin = it
                                 errorMessage = null
                                 isError = false
@@ -692,7 +701,9 @@ fun ChangeQuickPinDialog(
                                     }
                                 }
                             },
-                            isError = isError,
+                            masked = true,
+                            state = if (isError) PinCellsState.Error else PinCellsState.Normal,
+                            autoFocus = true,
                             modifier = Modifier.fillMaxWidth().testTag("pin_step3_input")
                         )
                     }
@@ -820,13 +831,15 @@ fun ChangePasswordDialog(
     val hasDigit = newPassword.any { it.isDigit() }
     val hasUpper = newPassword.any { it.isUpperCase() }
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = DialogSize.Medium
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .imePadding()
-                .padding(Dimens.DialogPaddingComfortable),
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
@@ -1028,13 +1041,15 @@ fun ChangeEmailDialog(
 
     val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = DialogSize.Medium
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .imePadding()
-                .padding(Dimens.DialogPaddingComfortable),
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(

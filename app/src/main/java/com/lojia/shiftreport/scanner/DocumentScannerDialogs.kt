@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
+import com.lojia.shiftreport.ui.common.DialogSize
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
@@ -33,13 +34,12 @@ fun SaveDocumentTitleDialog(
     val style = LocalDepthStyle.current
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = DialogSize.Small
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(
@@ -116,12 +116,11 @@ fun ScannerFallbackPromptDialog(
     val style = LocalDepthStyle.current
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = DialogSize.Small
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
@@ -207,12 +206,11 @@ fun RenameDocumentDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = DialogSize.Small
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(
@@ -287,12 +285,11 @@ fun DeleteDocumentConfirmDialog(
     val style = LocalDepthStyle.current
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = DialogSize.Small
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
@@ -366,12 +363,11 @@ fun BatchDeleteConfirmDialog(
     val style = LocalDepthStyle.current
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = DialogSize.Small
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
@@ -448,12 +444,11 @@ fun OcrTextPreviewDialog(
     val style = LocalDepthStyle.current
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = DialogSize.Large
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(
@@ -614,13 +609,12 @@ fun PasswordProtectDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = DialogSize.Small
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(

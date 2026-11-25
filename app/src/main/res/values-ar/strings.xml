@@ -2279,4 +2279,8 @@
 
     <!-- Stage 28A: International hardcode sweep -->
     <string name="contrast_multiplier_fmt">%.1fx</string>
+
+    <!-- Stage 33: Dialogs, PinCells & Blank Business Name -->
+    <string name="pin_cells_cd_fmt">رمز PIN، تم إدخال %1$d من %2$d أرقام</string>
+    <string name="business_name_not_set">لم يتم تعيين اسم النشاط التجاري</string>
 </resources>

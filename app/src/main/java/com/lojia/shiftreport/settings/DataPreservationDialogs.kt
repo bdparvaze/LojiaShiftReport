@@ -41,16 +41,15 @@ import java.io.File
 fun DataPreservationSetupDialog(
     onChoice: (preserve: Boolean) -> Unit
 ) {
-    LojiaDialog(
+    com.lojia.shiftreport.ui.common.LojiaDialog(
         onDismissRequest = { /* Modal must be chosen by user */ },
-        maxWidth = Dimens.DialogSmallMaxWidth,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Small,
         shape = RoundedCornerShape(Dimens.DialogCornerRadius)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -178,16 +177,15 @@ fun DataRecoveryDialog(
     onStartFresh: () -> Unit,
     onDismiss: () -> Unit = {}
 ) {
-    LojiaDialog(
+    com.lojia.shiftreport.ui.common.LojiaDialog(
         onDismissRequest = {}, // Non-dismissible
-        maxWidth = Dimens.DialogSmallMaxWidth,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Small,
         shape = RoundedCornerShape(Dimens.DialogCornerRadius)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

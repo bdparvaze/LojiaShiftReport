@@ -649,12 +649,12 @@ fun CashierManagementSection(
     cashierCannotDeleteWithHistory?.let { target ->
         LojiaDialog(
             onDismissRequest = { cashierCannotDeleteWithHistory = null },
+            size = com.lojia.shiftreport.ui.common.DialogSize.Small,
             content = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(Dimens.DialogPaddingComfortable),
+                        .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {
@@ -752,12 +752,12 @@ fun CashierManagementSection(
 
         LojiaDialog(
             onDismissRequest = { cashierPermanentDeleteConfirm = null },
+            size = com.lojia.shiftreport.ui.common.DialogSize.Small,
             content = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(Dimens.DialogPaddingComfortable),
+                        .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {

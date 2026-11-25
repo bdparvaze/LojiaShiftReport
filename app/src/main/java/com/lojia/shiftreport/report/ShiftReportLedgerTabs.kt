@@ -936,7 +936,11 @@ private fun AdvanceStatementPeriodDialog(
         AdvanceStatementPeriodOption.CUSTOM_RANGE to stringResource(R.string.statement_period_custom_range)
     )
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium,
+        contentPadding = PaddingValues(Dimens.SpacingNone)
+    ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.statement_select_period_title),
@@ -946,9 +950,9 @@ private fun AdvanceStatementPeriodDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = Dimens.DialogPaddingComfortable,
-                        top = Dimens.DialogPaddingComfortable,
-                        end = Dimens.DialogPaddingComfortable,
+                        start = Dimens.DialogContentPadding,
+                        top = Dimens.DialogContentPadding,
+                        end = Dimens.DialogContentPadding,
                         bottom = Dimens.SpacingSm
                     )
             )
@@ -959,7 +963,7 @@ private fun AdvanceStatementPeriodDialog(
                     .fillMaxWidth()
                     .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .padding(Dimens.DialogContentPadding),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Column(
@@ -1081,7 +1085,7 @@ private fun AdvanceStatementPeriodDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .padding(Dimens.DialogContentPadding),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

@@ -784,13 +784,12 @@ private fun EditFullNameDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -912,13 +911,12 @@ private fun EditEmailDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1039,13 +1037,12 @@ private fun EditPhoneDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
@@ -1196,13 +1193,12 @@ private fun EditRecoveryQuestionDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1376,13 +1372,12 @@ private fun ProfileChangePasswordDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable)
                 .imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

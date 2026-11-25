@@ -994,14 +994,14 @@ fun SettingsReportSection(
             else -> {
                 var tempVal by remember(fieldName) { mutableStateOf(fieldVal) }
                 LojiaDialog(
-                    onDismissRequest = { editFieldDialog = null }
+                    onDismissRequest = { editFieldDialog = null },
+                    size = com.lojia.shiftreport.ui.common.DialogSize.Medium
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .imePadding()
-                            .padding(Dimens.DialogPaddingComfortable),
+                            .imePadding(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
@@ -1111,11 +1111,12 @@ fun SettingsReportSection(
 
     // Terms Modal
     if (showTermsModal) {
-        LojiaDialog(onDismissRequest = { showTermsModal = false }) {
+        LojiaDialog(
+            onDismissRequest = { showTermsModal = false },
+            size = com.lojia.shiftreport.ui.common.DialogSize.Small
+        ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
@@ -1152,11 +1153,12 @@ fun SettingsReportSection(
 
     // Privacy Modal
     if (showPrivacyModal) {
-        LojiaDialog(onDismissRequest = { showPrivacyModal = false }) {
+        LojiaDialog(
+            onDismissRequest = { showPrivacyModal = false },
+            size = com.lojia.shiftreport.ui.common.DialogSize.Small
+        ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(

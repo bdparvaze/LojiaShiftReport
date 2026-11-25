@@ -184,13 +184,13 @@ fun BackupPasswordSetupDialog(
                 clearInputs()
                 onDismiss()
             }
-        }
+        },
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
@@ -474,12 +474,10 @@ fun BackupPasswordRequiredDialog(
 ) {
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth
+        size = com.lojia.shiftreport.ui.common.DialogSize.Small
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -581,12 +579,11 @@ fun BackupRestorePasswordDialog(
                 passwordVisible = false
                 onDismiss()
             }
-        }
+        },
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(

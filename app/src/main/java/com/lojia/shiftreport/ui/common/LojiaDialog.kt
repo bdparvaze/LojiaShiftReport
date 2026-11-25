@@ -34,16 +34,39 @@ import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 import com.lojia.shiftreport.ui.theme.depthSemanticCard
 
 /**
+ * Standard width presets for [LojiaDialog].
+ */
+enum class DialogSize {
+    Small,
+    Medium,
+    Large
+}
+
+internal fun DialogSize.maxWidthDp(): Dp = when (this) {
+    DialogSize.Small -> Dimens.DialogWidthSmall
+    DialogSize.Medium -> Dimens.DialogWidthMedium
+    DialogSize.Large -> Dimens.DialogWidthLarge
+}
+
+/**
+ * Computes responsive modal dialog width from [screenWidth] and [size] preset,
+ * preserving at least [Dimens.DialogScreenMargin] total horizontal gutter.
+ */
+fun calculateDialogWidth(screenWidth: Dp, size: DialogSize): Dp =
+    minOf((screenWidth - Dimens.DialogScreenMargin).coerceAtLeast(Dimens.SpacingNone), size.maxWidthDp())
+
+/**
  * Standard reusable modal dialog container for Lojia Shift Report.
- * - Sized for mobile phones: constrained by [maxWidth] (default [Dimens.DialogMaxWidth]) and [Dimens.DialogMaxHeight].
- * - Screen-height aware: bounded by 85% of screen height to ensure usability across all devices.
- * - Supports scrollable content when needed.
+ * - Sized centrally via [size] ([DialogSize.Small], [DialogSize.Medium], [DialogSize.Large]).
+ * - Applies standard [contentPadding] (default [Dimens.DialogContentPadding]) centrally on its inner column.
+ * - Screen-height aware: bounded by 85% of screen height.
  */
 @Composable
 fun LojiaDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    maxWidth: Dp = Dimens.DialogMaxWidth,
+    size: DialogSize = DialogSize.Medium,
+    contentPadding: PaddingValues = PaddingValues(Dimens.DialogContentPadding),
     shape: Shape = RoundedCornerShape(Dimens.DialogCornerRadius),
     containerColor: Color = MaterialTheme.colorScheme.surface,
     border: BorderStroke? = null,
@@ -51,6 +74,10 @@ fun LojiaDialog(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val configuration = LocalConfiguration.current
+    val targetWidth = calculateDialogWidth(
+        screenWidth = configuration.screenWidthDp.dp,
+        size = size
+    )
     val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
     val usesStandardSurface = containerColor == MaterialTheme.colorScheme.surface ||
         containerColor == SurfaceLight ||
@@ -73,11 +100,9 @@ fun LojiaDialog(
             shape = shape,
             color = Color.Transparent,
             border = border,
-            shadowElevation = 0.dp,
+            shadowElevation = Dimens.SpacingNone,
             modifier = modifier
-                .padding(horizontal = Dimens.SpacingLg)
-                .widthIn(max = maxWidth)
-                .fillMaxWidth()
+                .width(targetWidth)
                 .heightIn(max = maxDialogHeight)
                 .wrapContentHeight()
                 .then(cardDepthModifier)
@@ -86,6 +111,7 @@ fun LojiaDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
+                    .padding(contentPadding)
             ) {
                 content()
             }
@@ -117,15 +143,14 @@ fun LojiaConfirmDialog(
 
     LojiaDialog(
         onDismissRequest = onDismissRequest,
-        maxWidth = Dimens.DialogSmallMaxWidth,
+        size = DialogSize.Small,
         modifier = modifier
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = maxDialogHeight)
-                .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
@@ -233,7 +258,7 @@ fun LojiaConfirmDialog(
 
 /**
  * Standard reusable modal form dialog for dialogs with input fields.
- * - Sized for mobile phones: constrained by [maxWidth] (default [Dimens.DialogMaxWidth]) and 85% screen height.
+ * - Sized for mobile phones via [size] (default [DialogSize.Medium]) and 85% screen height.
  * - Structure: Fixed title header row, verticalScroll-able body content, and fixed bottom action row.
  */
 @Composable
@@ -248,7 +273,7 @@ fun LojiaFormDialog(
     isDestructive: Boolean = false,
     confirmTestTag: String = "btn_form_dialog_confirm",
     dismissTestTag: String = "btn_form_dialog_dismiss",
-    maxWidth: Dp = Dimens.DialogMaxWidth,
+    size: DialogSize = DialogSize.Medium,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val configuration = LocalConfiguration.current
@@ -256,7 +281,8 @@ fun LojiaFormDialog(
 
     LojiaDialog(
         onDismissRequest = onDismissRequest,
-        maxWidth = maxWidth,
+        size = size,
+        contentPadding = PaddingValues(Dimens.SpacingNone),
         modifier = modifier
     ) {
         Column(
@@ -269,9 +295,9 @@ fun LojiaFormDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = Dimens.DialogPaddingComfortable,
-                        top = Dimens.DialogPaddingComfortable,
-                        end = Dimens.DialogPaddingComfortable,
+                        start = Dimens.DialogContentPadding,
+                        top = Dimens.DialogContentPadding,
+                        end = Dimens.DialogContentPadding,
                         bottom = Dimens.SpacingSm
                     ),
                 verticalAlignment = Alignment.CenterVertically,
@@ -288,7 +314,7 @@ fun LojiaFormDialog(
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
+                thickness = Dimens.FlatBorderWidth
             )
 
             // 2. Scrollable Body Content
@@ -297,7 +323,7 @@ fun LojiaFormDialog(
                     .fillMaxWidth()
                     .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .padding(Dimens.DialogContentPadding),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 content()
@@ -305,14 +331,14 @@ fun LojiaFormDialog(
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
+                thickness = Dimens.FlatBorderWidth
             )
 
             // 3. Fixed Bottom Action Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .padding(Dimens.DialogContentPadding),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

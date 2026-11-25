@@ -42,11 +42,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
-import com.lojia.shiftreport.auth.SixDigitPinInput
 import com.lojia.shiftreport.data.Cashier
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.common.DialogSize
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.common.PinCells
 import com.lojia.shiftreport.ui.theme.*
 
 /**
@@ -70,12 +71,12 @@ fun AddCashierDialog(
 
     LojiaDialog(
         onDismissRequest = onDismissRequest,
+        size = DialogSize.Medium,
         content = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Row(
@@ -217,10 +218,11 @@ fun AddCashierDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    SixDigitPinInput(
-                        pin = pinInput,
-                        onPinChange = { pinInput = it },
-                        isMasked = true,
+                    PinCells(
+                        value = pinInput,
+                        onValueChange = { pinInput = it },
+                        masked = true,
+                        autoFocus = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("cashier_six_digit_pin_input")

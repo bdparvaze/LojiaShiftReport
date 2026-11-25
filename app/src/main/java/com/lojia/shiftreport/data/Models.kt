@@ -453,7 +453,7 @@ data class AuditLog(
 @Entity(tableName = "business_profile")
 data class BusinessProfile(
     @PrimaryKey val id: Int = 1,
-    val businessName: String = "My Store",
+    val businessName: String = "",
     val vatNumber: String = "",
     val phone: String = "",
     val email: String = "",

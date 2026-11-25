@@ -4,14 +4,23 @@ import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -20,18 +29,31 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -42,14 +64,33 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppDatabase
-import com.lojia.shiftreport.ui.theme.*
+import com.lojia.shiftreport.ui.common.DialogSize
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.common.PinCells
+import com.lojia.shiftreport.ui.common.PinCellsState
+import com.lojia.shiftreport.ui.theme.AuthSuccessMint
+import com.lojia.shiftreport.ui.theme.DepthTypeTokens
+import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.ErrorRedLight
+import com.lojia.shiftreport.ui.theme.NegativeBannerBorder
+import com.lojia.shiftreport.ui.theme.NegativeBannerSurface
+import com.lojia.shiftreport.ui.theme.OnSurfaceLight
+import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
+import com.lojia.shiftreport.ui.theme.PrimaryBlueLight
+import com.lojia.shiftreport.ui.theme.PrimaryContainerLight
+import com.lojia.shiftreport.ui.theme.PrimaryIndigoLight
+import com.lojia.shiftreport.ui.theme.PureWhite
+import com.lojia.shiftreport.ui.theme.SuccessContainer
+import com.lojia.shiftreport.ui.theme.SuccessGreen
+import com.lojia.shiftreport.ui.theme.SuccessTextDark
+import com.lojia.shiftreport.ui.theme.depthRaisedButton
+import com.lojia.shiftreport.ui.theme.depthSecondaryButton
+import com.lojia.shiftreport.ui.theme.depthSemanticCard
 import com.lojia.shiftreport.util.SecurityUtils
 import com.lojia.shiftreport.util.isPinUsable
 import kotlinx.coroutines.delay
@@ -193,481 +234,412 @@ fun AdminAuthDialog(
         isSuccess || if (isPasswordMode) isPasswordValid else isPinComplete
         )
 
-    Dialog(
+    LojiaDialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
+        size = DialogSize.Small
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(OverlayScrim)
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onDismissRequest
-                ),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Surface(
-                shape = RoundedCornerShape(Dimens.DialogCornerRadius),
-                color = Color.Transparent,
-                shadowElevation = 0.dp,
+            // Top Lock Icon Circle
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .widthIn(max = 420.dp)
-                    .wrapContentHeight()
-                    .depthCard(shape = RoundedCornerShape(Dimens.DialogCornerRadius), cornerRadius = Dimens.DialogCornerRadius)
-                    .verticalScroll(rememberScrollState())
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    )
+                    .size(Dimens.VerifyIconCircleSize)
+                    .clip(CircleShape)
+                    .background(PrimaryContainerLight),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                        .imePadding(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Top Shield + Lock Icon
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryContainerLight),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = null,
-                            tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = PrimaryIndigoLight,
+                    modifier = Modifier.size(Dimens.VerifyIconSize)
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
-                    // Title
-                    Text(
-                        text = title,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OnSurfaceLight,
-                        textAlign = TextAlign.Center
-                    )
+            // Title
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceLight,
+                textAlign = TextAlign.Center
+            )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
-                    // Dynamic Subtitle
-                    Text(
-                        text = subtitle,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PrimaryIndigoLight,
-                        textAlign = TextAlign.Center
-                    )
+            // Dynamic Subtitle (max 2 lines)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = PrimaryIndigoLight,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
-                    // Info Card
-                    Box(
+            // Fixed-height input container holding either PinCells or Admin Password LojiaTextField
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.VerifyInputSlotMinHeight),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!isPasswordMode) {
+                    PinCells(
+                        value = pin,
+                        onValueChange = { digits ->
+                            if (lockoutSeconds == 0 && !isVerifying && !isSuccess) {
+                                pin = digits
+                                if (digits.isNotEmpty()) {
+                                    errorMessage = null
+                                    isError = false
+                                }
+                            }
+                        },
+                        masked = true,
+                        state = when {
+                            isSuccess -> PinCellsState.Success
+                            isError -> PinCellsState.Error
+                            lockoutSeconds > 0 || isVerifying -> PinCellsState.Locked
+                            else -> PinCellsState.Normal
+                        },
+                        autoFocus = true,
+                        focusRequester = pinFocusRequester,
+                        onDone = {
+                            if (pin.length == AuthPinConstants.PIN_LENGTH) {
+                                coroutineScope.launch {
+                                    performVerification(pin, passwordMode = false)
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .depthSemanticCard(
-                                backgroundColor = DepthTokens.CardAccentGradientStart,
-                                borderColor = PrimaryContainerLight,
-                                shape = RoundedCornerShape(Dimens.RadiusMd)
-                            )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Security,
-                                contentDescription = null,
-                                tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.auth_info_banner),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = OnSurfaceVariantLight
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    if (!isPasswordMode) {
-                        // 6-Digit Hidden OTP-style PIN Boxes
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset { IntOffset(shakeAnim.value.roundToInt(), 0) }
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    runCatching { pinFocusRequester.requestFocus() }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            BasicTextField(
-                                value = pin,
-                                onValueChange = { newValue ->
-                                    if (lockoutSeconds == 0 && !isVerifying && !isSuccess) {
-                                        val digits = newValue.filter { it.isDigit() }
-                                            .take(AuthPinConstants.PIN_LENGTH)
-                                        pin = digits
-                                        if (digits.isNotEmpty()) {
-                                            errorMessage = null
-                                            isError = false
-                                        }
-                                    }
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.NumberPassword,
-                                    imeAction = ImeAction.Done
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        if (pin.length == AuthPinConstants.PIN_LENGTH) {
-                                            coroutineScope.launch {
-                                                performVerification(pin, passwordMode = false)
-                                            }
-                                        }
-                                    }
-                                ),
-                                cursorBrush = SolidColor(Color.Transparent),
-                                modifier = Modifier
-                                    .size(1.dp)
-                                    .focusRequester(pinFocusRequester)
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            .offset { IntOffset(shakeAnim.value.roundToInt(), 0) }
+                    )
+                } else {
+                    val adminPasswordLabel = stringResource(R.string.admin_password_label)
+                    LojiaTextField(
+                        value = password,
+                        onValueChange = {
+                            if (lockoutSeconds == 0 && !isVerifying && !isSuccess) {
+                                password = it
+                                if (it.isNotEmpty()) {
+                                    errorMessage = null
+                                    isError = false
+                                }
+                            }
+                        },
+                        label = { Text(adminPasswordLabel) },
+                        contentDescription = adminPasswordLabel,
+                        singleLine = true,
+                        isError = isError,
+                        visualTransformation = if (passwordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { passwordVisible = !passwordVisible },
+                                modifier = Modifier.size(Dimens.MinTouchTarget)
                             ) {
-                                repeat(AuthPinConstants.PIN_LENGTH) { index ->
-                                    val isFilled = pin.length > index
-                                    val isFocused = index == pin.length && lockoutSeconds == 0
-                                    val boxShape = RoundedCornerShape(Dimens.RadiusMd)
-
-                                    Box(
-                                        modifier = Modifier
-                                            .size(width = 44.dp, height = 56.dp)
-                                            .depthInset(
-                                                enabled = lockoutSeconds == 0,
-                                                isError = isError && !isSuccess,
-                                                isFocused = isFilled || isFocused,
-                                                shape = boxShape,
-                                                cornerRadius = Dimens.RadiusMd,
-                                                borderColorOverride = if (isSuccess) SuccessGreen else null
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (isFilled) {
-                                            Text(
-                                                text = "●",
-                                                fontSize = 20.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = when {
-                                                    isSuccess -> SuccessTextDark
-                                                    isError -> ErrorRedLight
-                                                    else -> OnSurfaceLight
-                                                }
-                                            )
-                                        }
+                                Icon(
+                                    imageVector = if (passwordVisible) {
+                                        Icons.Default.VisibilityOff
+                                    } else {
+                                        Icons.Default.Visibility
+                                    },
+                                    contentDescription = if (passwordVisible) {
+                                        stringResource(R.string.cd_hide_password)
+                                    } else {
+                                        stringResource(R.string.cd_show_password)
+                                    }
+                                )
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (password.length >= AuthPinConstants.MIN_PASSWORD_LENGTH) {
+                                    coroutineScope.launch {
+                                        performVerification(password, passwordMode = true)
                                     }
                                 }
                             }
-                        }
-                    } else {
-                        // Admin Password Field
-                        val adminPasswordLabel = stringResource(R.string.admin_password_label)
-                        com.lojia.shiftreport.ui.common.LojiaTextField(
-                            value = password,
-                            onValueChange = {
-                                if (lockoutSeconds == 0 && !isVerifying && !isSuccess) {
-                                    password = it
-                                    if (it.isNotEmpty()) {
-                                        errorMessage = null
-                                        isError = false
-                                    }
-                                }
-                            },
-                            label = { Text(adminPasswordLabel) },
-                            contentDescription = adminPasswordLabel,
-                            singleLine = true,
-                            isError = isError,
-                            visualTransformation = if (passwordVisible) {
-                                VisualTransformation.None
-                            } else {
-                                PasswordVisualTransformation()
-                            },
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = { passwordVisible = !passwordVisible },
-                                    modifier = Modifier.size(Dimens.MinTouchTarget)
-                                ) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) {
-                                            Icons.Default.VisibilityOff
-                                        } else {
-                                            Icons.Default.Visibility
-                                        },
-                                        contentDescription = if (passwordVisible) {
-                                            stringResource(R.string.cd_hide_password)
-                                        } else {
-                                            stringResource(R.string.cd_show_password)
-                                        }
-                                    )
-                                }
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    if (password.length >= AuthPinConstants.MIN_PASSWORD_LENGTH) {
-                                        coroutineScope.launch {
-                                            performVerification(password, passwordMode = true)
-                                        }
-                                    }
-                                }
-                            ),
-                            shape = RoundedCornerShape(Dimens.RadiusMd),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset { IntOffset(shakeAnim.value.roundToInt(), 0) }
+                        ),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset { IntOffset(shakeAnim.value.roundToInt(), 0) }
+                    )
+                }
+            }
+
+            // Helper Text
+            Text(
+                text = if (isPasswordMode) {
+                    stringResource(R.string.auth_enter_admin_password_hint)
+                } else {
+                    stringResource(R.string.auth_enter_admin_pin_hint)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isError) ErrorRedLight else OnSurfaceVariantLight,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = Dimens.SpacingSm)
+            )
+
+            // Compact Plain Info Note below field
+            Text(
+                text = stringResource(R.string.auth_info_banner),
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceVariantLight,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = Dimens.SpacingXs)
+            )
+
+            // Instant Green Success Card
+            if (isSuccess) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.SpacingMd)
+                        .depthSemanticCard(
+                            backgroundColor = SuccessContainer,
+                            borderColor = AuthSuccessMint,
+                            shape = RoundedCornerShape(Dimens.RadiusSm)
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(Dimens.SpacingMd),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = SuccessTextDark,
+                            modifier = Modifier.size(Dimens.IconXs)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                        Text(
+                            text = stringResource(R.string.auth_pin_access_granted),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SuccessTextDark,
+                            fontWeight = FontWeight.Bold
                         )
                     }
+                }
+            }
 
-                    // Helper / Attempts Indicator
-                    Text(
-                        text = if (isPasswordMode) {
-                            stringResource(R.string.auth_enter_admin_password_hint)
-                        } else {
-                            stringResource(R.string.auth_enter_admin_pin_hint)
-                        },
-                        fontSize = 12.sp,
-                        color = if (isError) ErrorRedLight else OnSurfaceVariantLight,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-
-                    // Instant Green Success Card
-                    if (isSuccess) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 12.dp)
-                                .depthSemanticCard(
-                                    backgroundColor = SuccessContainer,
-                                    borderColor = AuthSuccessMint,
-                                    shape = RoundedCornerShape(Dimens.RadiusSm)
-                                )
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = SuccessTextDark,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = stringResource(R.string.auth_pin_access_granted),
-                                    color = SuccessTextDark,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    // Instant Red Error Card
-                    val displayError = if (lockoutSeconds > 0) {
-                        stringResource(R.string.auth_too_many_attempts_format, lockoutSeconds)
-                    } else {
-                        errorMessage
-                    }
-                    if (displayError != null && !isSuccess) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 12.dp)
-                                .depthSemanticCard(
-                                    backgroundColor = NegativeBannerSurface,
-                                    borderColor = NegativeBannerBorder,
-                                    shape = RoundedCornerShape(Dimens.RadiusSm)
-                                )
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Error,
-                                    contentDescription = null,
-                                    tint = ErrorRedLight,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = displayError,
-                                    color = ErrorRedLight,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Toggle between 6-digit PIN and Admin Password
-                    TextButton(
-                        onClick = {
-                            isPasswordMode = !isPasswordMode
-                            errorMessage = null
-                            isError = false
-                        },
-                        modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget)
+            // Instant Red Error Card
+            val displayError = if (lockoutSeconds > 0) {
+                stringResource(R.string.auth_too_many_attempts_format, lockoutSeconds)
+            } else {
+                errorMessage
+            }
+            if (displayError != null && !isSuccess) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.SpacingMd)
+                        .depthSemanticCard(
+                            backgroundColor = NegativeBannerSurface,
+                            borderColor = NegativeBannerBorder,
+                            shape = RoundedCornerShape(Dimens.RadiusSm)
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(Dimens.SpacingMd),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            tint = ErrorRedLight,
+                            modifier = Modifier.size(Dimens.IconXs)
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(
-                            text = if (isPasswordMode) {
-                                stringResource(R.string.auth_use_admin_pin_toggle)
-                            } else {
-                                stringResource(R.string.auth_use_admin_password_toggle)
-                            },
-                            color = PrimaryIndigoLight,
-                            fontSize = 13.sp,
+                            text = displayError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ErrorRedLight,
                             fontWeight = FontWeight.Medium
                         )
                     }
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
-                    // Bottom Action Buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedButton(
-                            onClick = onDismissRequest,
-                            shape = RoundedCornerShape(Dimens.RadiusMd),
-                            border = null,
-                            elevation = null,
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = PrimaryBlueLight
-                            ),
-                            modifier = Modifier
-                                .heightIn(min = Dimens.ButtonHeightPrimary)
-                                .depthSecondaryButton(
-                                    cornerRadius = Dimens.RadiusMd,
-                                    minHeight = Dimens.ButtonHeightPrimary
+            // Toggle between 6-digit PIN and Admin Password
+            TextButton(
+                onClick = {
+                    isPasswordMode = !isPasswordMode
+                    errorMessage = null
+                    isError = false
+                },
+                modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget)
+            ) {
+                Text(
+                    text = if (isPasswordMode) {
+                        stringResource(R.string.auth_use_admin_pin_toggle)
+                    } else {
+                        stringResource(R.string.auth_use_admin_password_toggle)
+                    },
+                    color = PrimaryIndigoLight,
+                    fontSize = DepthTypeTokens.AuthFooterTextSize,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
+
+            // Bottom Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onDismissRequest,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    border = null,
+                    elevation = null,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = PrimaryBlueLight
+                    ),
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .heightIn(min = Dimens.ButtonHeightStandard)
+                        .depthSecondaryButton(
+                            cornerRadius = Dimens.RadiusMd,
+                            minHeight = Dimens.ButtonHeightStandard
+                        )
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        fontSize = DepthTypeTokens.SecondaryButtonTextSize,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                val buttonActive = isSuccess || isError || isVerifying || isConfirmEnabled
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            val input = if (isPasswordMode) password else pin
+                            performVerification(input, passwordMode = isPasswordMode)
+                        }
+                    },
+                    enabled = isConfirmEnabled,
+                    elevation = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSuccess) SuccessGreen else Color.Transparent,
+                        contentColor = if (buttonActive) PureWhite else OnSurfaceVariantLight,
+                        disabledContainerColor = if (isSuccess) SuccessGreen else Color.Transparent,
+                        disabledContentColor = if (isVerifying || isSuccess) PureWhite else OnSurfaceVariantLight
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .minimumInteractiveComponentSize()
+                        .heightIn(min = Dimens.ButtonHeightStandard)
+                        .then(
+                            if (isSuccess) {
+                                Modifier.depthSemanticCard(
+                                    backgroundColor = SuccessGreen,
+                                    borderColor = SuccessTextDark,
+                                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                                    cornerRadius = Dimens.RadiusMd
                                 )
-                        ) {
+                            } else {
+                                Modifier.depthRaisedButton(
+                                    enabled = isConfirmEnabled || isVerifying,
+                                    isDestructive = isError,
+                                    cornerRadius = Dimens.RadiusMd,
+                                    minHeight = Dimens.ButtonHeightStandard
+                                )
+                            }
+                        )
+                ) {
+                    when {
+                        isVerifying -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(Dimens.IconXs),
+                                strokeWidth = Dimens.PinCursorWidth,
+                                color = PureWhite
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
-                                text = stringResource(R.string.cancel),
-                                fontSize = DepthTypeTokens.SecondaryButtonTextSize,
-                                fontWeight = FontWeight.SemiBold
+                                text = stringResource(R.string.verifying_label),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-
-                        val buttonActive = isSuccess || isError || isVerifying || isConfirmEnabled
-                        Button(
-                            onClick = {
-                                coroutineScope.launch {
-                                    val input = if (isPasswordMode) password else pin
-                                    performVerification(input, passwordMode = isPasswordMode)
-                                }
-                            },
-                            enabled = isConfirmEnabled,
-                            elevation = null,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isSuccess) SuccessGreen else Color.Transparent,
-                                contentColor = if (buttonActive) PureWhite else OnSurfaceVariantLight,
-                                disabledContainerColor = if (isSuccess) SuccessGreen else Color.Transparent,
-                                disabledContentColor = if (isVerifying || isSuccess) PureWhite else OnSurfaceVariantLight
-                            ),
-                            shape = RoundedCornerShape(Dimens.RadiusMd),
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = Dimens.ButtonHeightPrimary)
-                                .then(
-                                    if (isSuccess) {
-                                        Modifier.depthSemanticCard(
-                                            backgroundColor = SuccessGreen,
-                                            borderColor = SuccessTextDark,
-                                            shape = RoundedCornerShape(Dimens.RadiusMd),
-                                            cornerRadius = Dimens.RadiusMd
-                                        )
-                                    } else {
-                                        Modifier.depthRaisedButton(
-                                            enabled = isConfirmEnabled || isVerifying,
-                                            isDestructive = isError,
-                                            cornerRadius = Dimens.RadiusMd,
-                                            minHeight = Dimens.ButtonHeightPrimary
-                                        )
-                                    }
-                                )
-                        ) {
-                            when {
-                                isVerifying -> {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(16.dp),
-                                        strokeWidth = 2.dp,
-                                        color = PureWhite
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(stringResource(R.string.verifying_label), fontWeight = FontWeight.Bold)
-                                }
-                                isSuccess -> {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(stringResource(R.string.confirmed_label), fontWeight = FontWeight.Bold)
-                                }
-                                isError -> {
-                                    Icon(
-                                        imageVector = Icons.Default.Error,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(stringResource(R.string.retry_label), fontWeight = FontWeight.Bold)
-                                }
-                                isPasswordMode || isPinComplete -> {
-                                    Text(stringResource(R.string.confirm), fontWeight = FontWeight.Bold)
-                                }
-                                else -> {
-                                    Text(
-                                        text = stringResource(R.string.auth_enter_more_format, AuthPinConstants.PIN_LENGTH - pin.length),
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.sp
-                                    )
-                                }
-                            }
+                        isSuccess -> {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(Dimens.IconSm)
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                            Text(
+                                text = stringResource(R.string.confirmed_label),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        isError -> {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                modifier = Modifier.size(Dimens.IconSm)
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                            Text(
+                                text = stringResource(R.string.retry_label),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        isPasswordMode || isPinComplete -> {
+                            Text(
+                                text = stringResource(R.string.confirm),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = stringResource(R.string.auth_enter_more_format, AuthPinConstants.PIN_LENGTH - pin.length),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }

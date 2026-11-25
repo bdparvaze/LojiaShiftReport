@@ -375,7 +375,8 @@ object PdfReportGenerator {
         currency: String,
         language: AppLanguage = AppLanguage.fromCode(LanguagePreferences.getLanguage(context))
     ): String {
-        val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
+        val bizName = businessProfile?.businessName?.ifBlank { context.getString(R.string.business_name_not_set) }
+            ?: context.getString(R.string.business_name_not_set)
         val vatNo = vatNumberForPrint(businessProfile?.vatNumber)
         val pStr = getPdfStrings(context, language)
         val digits = MoneyFormat.minorUnitDigits(currency)
@@ -546,7 +547,8 @@ object PdfReportGenerator {
 
         val margin = 36f
         var currentY = margin
-        val bizName = businessProfile?.businessName ?: context.getString(R.string.default_business_name)
+        val bizName = businessProfile?.businessName?.ifBlank { context.getString(R.string.business_name_not_set) }
+            ?: context.getString(R.string.business_name_not_set)
         val vatNo = vatNumberForPrint(businessProfile?.vatNumber)
         val phone = businessProfile?.phone.orEmpty()
 
@@ -994,8 +996,8 @@ object PdfReportGenerator {
         val headerRect = RectF(margin, currentY, PAGE_WIDTH - margin, currentY + headerHeight)
         canvas.drawRoundRect(headerRect, 8f, 8f, primaryPaint)
 
-        val bizName = businessProfile?.businessName?.ifBlank { context.getString(R.string.default_business_name) }
-            ?: context.getString(R.string.default_business_name)
+        val bizName = businessProfile?.businessName?.ifBlank { context.getString(R.string.business_name_not_set) }
+            ?: context.getString(R.string.business_name_not_set)
         val vatLines = vatHeaderLines(businessProfile?.vatNumber)
         val phone = businessProfile?.phone.orEmpty()
         val address = businessProfile?.address.orEmpty()

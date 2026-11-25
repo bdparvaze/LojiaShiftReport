@@ -88,11 +88,14 @@ class Stage26EParityUnitTest {
         }
 
         val adminDialogSrc = File(appDir, "src/main/java/com/lojia/shiftreport/auth/AdminAuthDialog.kt").readText()
-        val scrimIndex = adminDialogSrc.indexOf(".background(OverlayScrim)")
-        val statusPadIndex = adminDialogSrc.indexOf(".statusBarsPadding()")
         assertTrue(
-            "AdminAuthDialog must paint OverlayScrim before statusBarsPadding for edge-to-edge backdrop",
-            scrimIndex in 0 until statusPadIndex
+            "AdminAuthDialog must delegate dialog presentation to LojiaDialog with DialogSize.Small",
+            adminDialogSrc.contains("LojiaDialog(") &&
+                adminDialogSrc.contains("size = DialogSize.Small")
+        )
+        assertFalse(
+            "AdminAuthDialog must not use a custom OverlayScrim backdrop",
+            adminDialogSrc.contains("OverlayScrim")
         )
     }
 

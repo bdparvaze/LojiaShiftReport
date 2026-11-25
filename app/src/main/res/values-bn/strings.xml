@@ -2279,4 +2279,8 @@
 
     <!-- Stage 28A: International hardcode sweep -->
     <string name="contrast_multiplier_fmt">%.1fx</string>
+
+    <!-- Stage 33: Dialogs, PinCells & Blank Business Name -->
+    <string name="pin_cells_cd_fmt">পিন, %2$d সংখ্যার মধ্যে %1$dটি দেওয়া হয়েছে</string>
+    <string name="business_name_not_set">ব্যবসার নাম সেট করা হয়নি</string>
 </resources>

@@ -145,14 +145,12 @@ fun SettingsScreen(
     if (showRoleSwitchDialog) {
         var roleTarget by remember { mutableStateOf(if (isAdmin) "CASHIER" else "ADMIN") }
 
-        LojiaDialog(
+        com.lojia.shiftreport.ui.common.LojiaDialog(
             onDismissRequest = { showRoleSwitchDialog = false },
-            maxWidth = Dimens.DialogSmallMaxWidth
+            size = com.lojia.shiftreport.ui.common.DialogSize.Small
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(

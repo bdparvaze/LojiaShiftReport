@@ -290,7 +290,7 @@ class Stage23QFullLocalizationUnitTest {
             "src/main/java/com/lojia/shiftreport/ui/common/LojiaComponents.kt",
             "src/main/java/com/lojia/shiftreport/ui/common/LojiaDialog.kt",
             "src/main/java/com/lojia/shiftreport/ui/common/LojiaTextField.kt",
-            "src/main/java/com/lojia/shiftreport/ui/common/OtpInputField.kt",
+            "src/main/java/com/lojia/shiftreport/ui/common/PinCells.kt",
             "src/main/java/com/lojia/shiftreport/ui/common/PhoneNumberHint.kt",
             "src/main/java/com/lojia/shiftreport/ui/common/PdfPreviewDialog.kt",
             "src/main/java/com/lojia/shiftreport/util/PdfShareUtils.kt",

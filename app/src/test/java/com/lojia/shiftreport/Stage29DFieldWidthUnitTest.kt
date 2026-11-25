@@ -100,17 +100,17 @@ class Stage29DFieldWidthUnitTest {
     fun otherFieldComponents_doNotWrapFullWidthChildrenInUnconstrainedBox() {
         val appDir = resolveAppModuleDir()
 
-        val otpSrc = File(appDir, "src/main/java/com/lojia/shiftreport/ui/common/OtpInputField.kt").readText()
-        val otpDecBox = otpSrc.substringAfter("decorationBox = {").trimStart()
+        val pinCellsSrc = File(appDir, "src/main/java/com/lojia/shiftreport/ui/common/PinCells.kt").readText()
         assertTrue(
-            "OtpInputField decorationBox root must be Row with fillMaxWidth",
-            otpDecBox.startsWith("Row(") && otpDecBox.contains("fillMaxWidth()")
+            "PinCells must lay out cells inside BoxWithConstraints(fillMaxWidth())",
+            pinCellsSrc.contains("BoxWithConstraints(") &&
+                pinCellsSrc.substringAfter("BoxWithConstraints(").contains(".fillMaxWidth()")
         )
 
         val pinSrc = File(appDir, "src/main/java/com/lojia/shiftreport/auth/SixDigitPinInput.kt").readText()
         assertTrue(
-            "SixDigitPinInput must lay out digit boxes inside Row(fillMaxWidth())",
-            pinSrc.contains("Row(") && pinSrc.substringAfter("Row(").contains(".fillMaxWidth()")
+            "SixDigitPinInput must forward to shared PinCells",
+            pinSrc.contains("PinCells(")
         )
 
         val authCompSrc = File(appDir, "src/main/java/com/lojia/shiftreport/auth/LojiaAuthComponents.kt").readText()

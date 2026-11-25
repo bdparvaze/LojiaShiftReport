@@ -648,12 +648,12 @@ fun SettingsBackupSubSection(
         val backupFiles = remember { backupManager.localProvider.listBackupFiles() }
 
         LojiaDialog(
-            onDismissRequest = { showLocalFilesDialog = false }
+            onDismissRequest = { showLocalFilesDialog = false },
+            size = DialogSize.Large
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(stringResource(R.string.backup_local_archives_title), fontWeight = FontWeight.Bold, fontSize = 17.sp, color = OnBackgroundLight)
@@ -790,13 +790,13 @@ fun SettingsBackupSubSection(
         var isSimulatingToken by remember { mutableStateOf(false) }
 
         LojiaDialog(
-            onDismissRequest = { showOneDriveConnectDialog = false }
+            onDismissRequest = { showOneDriveConnectDialog = false },
+            size = DialogSize.Medium
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -879,12 +879,12 @@ fun SettingsBackupSubSection(
     // 3. Google Drive Backups Picker Dialog
     if (showDriveBackupsPicker) {
         LojiaDialog(
-            onDismissRequest = { showDriveBackupsPicker = false }
+            onDismissRequest = { showDriveBackupsPicker = false },
+            size = DialogSize.Large
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(stringResource(R.string.restore_from_drive_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
@@ -982,13 +982,13 @@ fun SettingsBackupSubSection(
                 pendingRestoreUri = null
                 pendingRestoreFile = null
                 pendingRestoreRequiresPassword = false
-            }
+            },
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
@@ -1184,13 +1184,13 @@ fun SettingsBackupSubSection(
         val isConfirmed = typedConfirmation.trim().equals("DELETE", ignoreCase = false)
 
         LojiaDialog(
-            onDismissRequest = { showDangerZoneDialog = false }
+            onDismissRequest = { showDangerZoneDialog = false },
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {

@@ -642,14 +642,16 @@ private fun AddEditEmployeeDialog(
 
     val depthStyle = LocalDepthStyle.current
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .navigationBarsPadding()
-                .imePadding()
-                .padding(Dimens.DialogPaddingComfortable),
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(

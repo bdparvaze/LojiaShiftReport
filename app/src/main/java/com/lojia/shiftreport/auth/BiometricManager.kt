@@ -871,12 +871,14 @@ fun LojiaPasswordRecoveryDialog(
         .ifBlank { prefs.getRecoveryAnswerHash().trim() }
     val recoveryConfigured = SecurityRecoveryVerifier.isRecoveryConfigured(question, storedAnswer)
 
-    com.lojia.shiftreport.ui.common.LojiaDialog(onDismissRequest = onDismiss) {
+    com.lojia.shiftreport.ui.common.LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(Dimens.DialogPaddingComfortable),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(

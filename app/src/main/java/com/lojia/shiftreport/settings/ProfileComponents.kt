@@ -293,12 +293,11 @@ fun CountryCodePickerDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Large,
         modifier = Modifier.testTag("dialog_select_country_code")
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

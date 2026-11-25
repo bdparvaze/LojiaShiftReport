@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.lojia.shiftreport.ui.common.DialogSize
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.util.DateTimeFormatUtils
@@ -647,12 +648,11 @@ fun DocumentEditorScreen(
         val style = LocalDepthStyle.current
         LojiaDialog(
             onDismissRequest = { isEditingTitle = false },
-            maxWidth = Dimens.DialogSmallMaxWidth
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(

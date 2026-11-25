@@ -89,7 +89,9 @@ fun AddEntryDialog(
             focusManager.clearFocus()
             keyboardController?.hide()
             onDismiss()
-        }
+        },
+        size = com.lojia.shiftreport.ui.common.DialogSize.Medium,
+        contentPadding = PaddingValues(Dimens.SpacingNone)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -100,9 +102,9 @@ fun AddEntryDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = Dimens.DialogPaddingComfortable,
-                        top = Dimens.DialogPaddingComfortable,
-                        end = Dimens.DialogPaddingComfortable,
+                        start = Dimens.DialogContentPadding,
+                        top = Dimens.DialogContentPadding,
+                        end = Dimens.DialogContentPadding,
                         bottom = Dimens.SpacingSm
                     )
             )
@@ -115,7 +117,7 @@ fun AddEntryDialog(
                     .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
                     .imePadding()
-                    .padding(Dimens.DialogPaddingComfortable)
+                    .padding(Dimens.DialogContentPadding)
             ) {
                 when (type) {
                     ModalType.CREDIT -> {
@@ -508,7 +510,7 @@ fun AddEntryDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                    .padding(Dimens.DialogContentPadding),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

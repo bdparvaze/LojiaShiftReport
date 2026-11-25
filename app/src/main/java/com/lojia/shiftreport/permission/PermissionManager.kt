@@ -277,15 +277,13 @@ fun PermissionRationaleDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LojiaDialog(
+    com.lojia.shiftreport.ui.common.LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogSmallMaxWidth,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Small,
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPaddingComfortable),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {

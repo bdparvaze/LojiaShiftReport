@@ -157,7 +157,10 @@ fun BusinessLogoPickerCard(
 
     // Change photo options dialog
     if (showOptionSheet) {
-        LojiaDialog(onDismissRequest = { showOptionSheet = false }) {
+        LojiaDialog(
+            onDismissRequest = { showOptionSheet = false },
+            size = com.lojia.shiftreport.ui.common.DialogSize.Small
+        ) {
             // Keep dismiss action before sheet title in source order per baseline contract
             val dismissAction = @Composable {
                 OutlinedButton(
@@ -178,9 +181,7 @@ fun BusinessLogoPickerCard(
             }
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Dimens.DialogPaddingComfortable),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
@@ -642,11 +643,12 @@ fun PresetLogoPickerDialog(
 ) {
     val primaryBrand = PrimaryIndigoLight
 
-    LojiaDialog(onDismissRequest = onDismiss) {
+    LojiaDialog(
+        onDismissRequest = onDismiss,
+        size = com.lojia.shiftreport.ui.common.DialogSize.Large
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(

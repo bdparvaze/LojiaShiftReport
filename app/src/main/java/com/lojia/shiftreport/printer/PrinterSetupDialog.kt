@@ -1,9 +1,11 @@
 package com.lojia.shiftreport.printer
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.DialogProperties
+import com.lojia.shiftreport.ui.common.DialogSize
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.Dimens
 
@@ -18,7 +20,8 @@ fun PrinterSetupDialog(
 ) {
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth,
+        size = DialogSize.Large,
+        contentPadding = PaddingValues(Dimens.SpacingNone),
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             dismissOnBackPress = true,

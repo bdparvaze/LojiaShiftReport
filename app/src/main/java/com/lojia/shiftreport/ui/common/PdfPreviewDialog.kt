@@ -103,20 +103,18 @@ fun ShiftReportPreviewDialog(
     )
     val variance = actualCashCount?.let { MoneyFormat.calculateVarianceMinor(it, expectedCashInDrawer) }
 
-    val defaultBizName = stringResource(R.string.default_business_name)
-    val businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName
+    val missingBizName = stringResource(R.string.business_name_not_set)
+    val businessName = businessProfile?.businessName?.ifBlank { missingBizName } ?: missingBizName
     val cleanNotes = PdfReportGenerator.cleanDisplayNotes(report.notes)
 
     val style = LocalDepthStyle.current
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        maxWidth = Dimens.DialogMaxWidth
+        size = DialogSize.Large
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPadding),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             Row(
@@ -462,7 +460,7 @@ fun ShiftReportPreviewDialog(
                                 scope.launch {
                                     try {
                                         val zReportText = printerManager.buildZReportText(
-                                            businessName = businessProfile?.businessName?.ifBlank { defaultBizName } ?: defaultBizName,
+                                            businessName = businessProfile?.businessName?.ifBlank { missingBizName } ?: missingBizName,
                                             businessAddress = businessProfile?.address ?: "",
                                             businessPhone = businessProfile?.phone ?: "",
                                             vatNumber = businessProfile?.vatNumber ?: "",
@@ -898,13 +896,11 @@ fun EmployerAdvanceStatementPreviewDialog(
 
     LojiaDialog(
         onDismissRequest = closeAndCleanup,
-        maxWidth = Dimens.DialogMaxWidth,
+        size = DialogSize.Large,
         modifier = Modifier.testTag("employer_statement_preview_dialog")
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.DialogPadding),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             Row(
