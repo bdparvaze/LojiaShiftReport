@@ -26,7 +26,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.aistudio.shiftreport.lojia"
+        applicationId = "com.lojia.shiftreport"
         minSdk = 24
         targetSdk = 35
         versionCode = 2
