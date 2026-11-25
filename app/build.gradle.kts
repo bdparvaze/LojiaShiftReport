@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -18,6 +20,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Disabled. Known gaps before enabling: lastUpdated uses the shift date, no deletion propagation, no WorkManager retry on soft failure. See docs/SYNC_NOTES.md.
         buildConfigField("boolean", "CLOUD_SYNC_ENABLED", "false")
+
+        val localProps = Properties().apply {
+            val lpFile = rootProject.file("local.properties")
+            if (lpFile.isFile) {
+                lpFile.inputStream().use { stream -> load(stream) }
+            }
+        }
+        fun resolveConfigString(propKey: String): String {
+            val raw = localProps.getProperty(propKey)
+                ?: providers.gradleProperty(propKey).orNull
+                ?: ""
+            return raw.trim()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+        }
+        buildConfigField("String", "SUPPORT_PHONE", "\"${resolveConfigString("support.phone")}\"")
+        buildConfigField("String", "SUPPORT_WHATSAPP", "\"${resolveConfigString("support.whatsapp")}\"")
     }
 
     signingConfigs {

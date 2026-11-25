@@ -17,39 +17,31 @@ object CountryDetector {
      * 3. Device System Default Locale country
      */
     fun detectCountryIso(context: Context): String {
+        var simCountry: String? = null
+        var netCountry: String? = null
         try {
             val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-
-            // 1. SIM Country ISO
-            val simCountry = tm?.simCountryIso?.trim()?.uppercase(Locale.ROOT)
-            if (!simCountry.isNullOrEmpty() && simCountry.length == 2) {
-                return simCountry
-            }
-
-            // 2. Network Country ISO
-            val netCountry = tm?.networkCountryIso?.trim()?.uppercase(Locale.ROOT)
-            if (!netCountry.isNullOrEmpty() && netCountry.length == 2) {
-                return netCountry
-            }
+            simCountry = tm?.simCountryIso
+            netCountry = tm?.networkCountryIso
         } catch (_: Exception) {}
 
-        // 3. System Locale Fallback
-        try {
-            val localeCountry = Locale.getDefault().country?.trim()?.uppercase(Locale.ROOT)
-            if (!localeCountry.isNullOrEmpty() && localeCountry.length == 2) {
-                return localeCountry
+        val localeCountry = try {
+            val defaultLocaleCountry = Locale.getDefault().country
+            if (!defaultLocaleCountry.isNullOrBlank() && defaultLocaleCountry.trim().length == 2) {
+                defaultLocaleCountry
+            } else {
+                context.resources.configuration.locales[0]?.country
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+            null
+        }
 
-        // Fallback to primary locale configuration
-        try {
-            val configCountry = context.resources.configuration.locales[0]?.country?.trim()?.uppercase(Locale.ROOT)
-            if (!configCountry.isNullOrEmpty() && configCountry.length == 2) {
-                return configCountry
-            }
-        } catch (_: Exception) {}
-
-        return AppConstants.DEFAULT_COUNTRY_CODE
+        return resolveCountryIso(
+            simIso = simCountry,
+            networkIso = netCountry,
+            localeIso = localeCountry,
+            fallbackIso = AppConstants.DEFAULT_COUNTRY_CODE
+        )
     }
 
     /**

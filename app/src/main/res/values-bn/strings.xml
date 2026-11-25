@@ -1900,7 +1900,8 @@
     <string name="profile_email_verification_note">নতুন ঠিকানায় একটি যাচাইকরণ ইমেইল পাঠানো হবে।</string>
     <string name="profile_edit_phone_title">ফোন নম্বর সম্পাদনা</string>
     <string name="profile_phone_required_label">ফোন নম্বর *</string>
-    <string name="profile_phone_digits_error">১০ থেকে ১৫টি সংখ্যা লিখুন</string>
+    <string name="profile_phone_mobile_hint">মোবাইল নম্বর</string>
+    <string name="profile_phone_invalid">একটি বৈধ মোবাইল নম্বর লিখুন</string>
     <string name="profile_edit_recovery_title">পুনরুদ্ধার প্রশ্ন সম্পাদনা</string>
     <string name="profile_answer_label">উত্তর * (সর্বনিম্ন ৩ অক্ষর)</string>
     <string name="profile_recovery_info">পাসওয়ার্ড ভুলে গেলে আপনার অ্যাকাউন্ট পুনরুদ্ধার করতে এটি ব্যবহার করা হবে। এটি নিরাপদ রাখুন।</string>

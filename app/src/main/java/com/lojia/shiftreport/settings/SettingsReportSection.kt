@@ -444,20 +444,22 @@ fun SettingsReportSection(
                             onClick = { onNavigateToSection("about") }
                         )
 
-                        HorizontalDivider(
-                            thickness = Dimens.RowDividerWidth,
-                            color = depthStyle.listDividerColor,
-                            modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
-                        )
+                        if (SupportContact.isSupportConfigured()) {
+                            HorizontalDivider(
+                                thickness = Dimens.RowDividerWidth,
+                                color = depthStyle.listDividerColor,
+                                modifier = Modifier.padding(horizontal = Dimens.ReportCardInnerPadding)
+                            )
 
-                        LoyverseMenuItemRow(
-                            icon = Icons.Outlined.HeadsetMic,
-                            title = stringResource(R.string.nav_support),
-                            subtitle = stringResource(R.string.support_subtitle),
-                            tileColors = listOf(PureWhite, SectionRoseGradientEnd),
-                            iconTint = ErrorRedLight,
-                            onClick = { onNavigateToSection("support") }
-                        )
+                            LoyverseMenuItemRow(
+                                icon = Icons.Outlined.HeadsetMic,
+                                title = stringResource(R.string.nav_support),
+                                subtitle = stringResource(R.string.support_subtitle),
+                                tileColors = listOf(PureWhite, SectionRoseGradientEnd),
+                                iconTint = ErrorRedLight,
+                                onClick = { onNavigateToSection("support") }
+                            )
+                        }
                     }
                 }
             }
@@ -882,56 +884,68 @@ fun SettingsReportSection(
             // 6. SUPPORT
             // =================================================================
             "support" -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
-                ) {
-                    LojiaSectionHeader(stringResource(R.string.settings_section_contact_support))
+                if (SupportContact.isSupportConfigured()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
+                    ) {
+                        LojiaSectionHeader(stringResource(R.string.settings_section_contact_support))
 
-                    LojiaSettingRow(
-                        icon = Icons.Outlined.HeadsetMic,
-                        title = stringResource(R.string.title_24_7_helpline),
-                        subtitle = "+880 1700-000000",
-                        tileColors = listOf(PureWhite, BadgeBlueBg),
-                        iconTint = PrimaryBlueLight,
-                        trailing = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(Dimens.IconField)
+                        if (SupportContact.SUPPORT_PHONE.isNotBlank()) {
+                            LojiaSettingRow(
+                                icon = Icons.Outlined.HeadsetMic,
+                                title = stringResource(R.string.title_24_7_helpline),
+                                subtitle = SupportContact.SUPPORT_PHONE,
+                                tileColors = listOf(PureWhite, BadgeBlueBg),
+                                iconTint = PrimaryBlueLight,
+                                trailing = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(Dimens.IconField)
+                                    )
+                                },
+                                onClick = {
+                                    val uri = SupportContact.buildDialUri(SupportContact.SUPPORT_PHONE)
+                                    if (uri.isNotBlank()) {
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse(uri)).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                }
                             )
-                        },
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+8801700000000")).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            context.startActivity(intent)
                         }
-                    )
 
-                    LojiaSettingRow(
-                        icon = Icons.Outlined.Chat,
-                        title = stringResource(R.string.title_whatsapp_support),
-                        subtitle = stringResource(R.string.desc_whatsapp_support),
-                        tileColors = listOf(PureWhite, BadgeGreenBg),
-                        iconTint = BadgeGreenText,
-                        trailing = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(Dimens.IconField)
+                        if (SupportContact.SUPPORT_WHATSAPP.isNotBlank()) {
+                            LojiaSettingRow(
+                                icon = Icons.Outlined.Chat,
+                                title = stringResource(R.string.title_whatsapp_support),
+                                subtitle = stringResource(R.string.desc_whatsapp_support),
+                                tileColors = listOf(PureWhite, BadgeGreenBg),
+                                iconTint = BadgeGreenText,
+                                trailing = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = OnSurfaceVariantLight,
+                                        modifier = Modifier.size(Dimens.IconField)
+                                    )
+                                },
+                                onClick = {
+                                    val uri = SupportContact.buildWhatsAppUri(SupportContact.SUPPORT_WHATSAPP)
+                                    if (uri.isNotBlank()) {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                }
                             )
-                        },
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/8801700000000")).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            context.startActivity(intent)
                         }
-                    )
+                    }
                 }
             }
 

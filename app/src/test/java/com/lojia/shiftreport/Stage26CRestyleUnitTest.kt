@@ -120,10 +120,34 @@ class Stage26CRestyleUnitTest {
 
             val relPath = line.substring(0, colonIdx).trim()
             val expectedRaw = line.substring(colonIdx + 1).trim()
-            val expected = if (expectedRaw.isEmpty()) {
+            val rawExpected = if (expectedRaw.isEmpty()) {
                 emptyList()
             } else {
                 expectedRaw.split(',').map { it.trim() }
+            }
+            val expected = if (relPath == "settings/ProfileScreen.kt") {
+                val oldEditPhoneSlice = listOf(
+                    "R.string.profile_edit_phone_title",
+                    "R.string.profile_phone_required_label",
+                    "R.string.profile_phone_digits_error",
+                    "R.string.cancel",
+                    "R.string.save"
+                )
+                val newEditPhoneSlice = listOf(
+                    "R.string.profile_edit_phone_title",
+                    "R.string.auth_select_country_code",
+                    "R.string.profile_phone_mobile_hint",
+                    "testTag(\"btn_profile_phone_country_code\")",
+                    "testTag(\"input_profile_phone_local\")",
+                    "R.string.profile_phone_invalid",
+                    "R.string.cancel",
+                    "R.string.save"
+                )
+                val idx = java.util.Collections.indexOfSubList(rawExpected, oldEditPhoneSlice)
+                assertTrue("Expected Stage 26C EditPhoneDialog slice in ProfileScreen baseline", idx >= 0)
+                rawExpected.subList(0, idx) + newEditPhoneSlice + rawExpected.subList(idx + oldEditPhoneSlice.size, rawExpected.size)
+            } else {
+                rawExpected
             }
 
             val sourceFile = File(appDir, "src/main/java/com/lojia/shiftreport/$relPath")

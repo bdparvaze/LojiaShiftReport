@@ -248,25 +248,23 @@ fun parsePhoneNumberWithCountry(rawPhone: String, defaultCountry: AppCountry): P
     val clean = rawPhone.trim()
     if (clean.isBlank()) return Pair(defaultCountry, "")
 
-    // 1. Check exact country dial code prefix (e.g. "+880", "+966", "+1")
-    for (country in AppCountry.entries) {
-        if (clean.startsWith(country.dialCode)) {
-            val local = clean.removePrefix(country.dialCode).trim()
-            return Pair(country, local)
-        }
-    }
-    // 2. Check if starts with "+" then digits
+    val orderedCountries = AppCountry.entries.sortedWith(
+        compareByDescending<AppCountry> { it.dialCode.length }
+            .thenByDescending { it == defaultCountry }
+    )
+
     if (clean.startsWith("+")) {
-        val digits = clean.removePrefix("+")
-        for (country in AppCountry.entries) {
-            val countryDigits = country.dialCode.removePrefix("+")
-            if (digits.startsWith(countryDigits)) {
-                val local = digits.removePrefix(countryDigits).trim()
-                return Pair(country, local)
+        val digits = clean.filter { it.isDigit() }
+        for (country in orderedCountries) {
+            val countryDigits = country.dialCode.filter { it.isDigit() }
+            if (countryDigits.isNotEmpty() && digits.startsWith(countryDigits)) {
+                return Pair(country, digits.removePrefix(countryDigits))
             }
         }
+        return Pair(defaultCountry, digits)
     }
-    return Pair(defaultCountry, clean)
+
+    return Pair(defaultCountry, clean.filter { it.isDigit() })
 }
 
 /**

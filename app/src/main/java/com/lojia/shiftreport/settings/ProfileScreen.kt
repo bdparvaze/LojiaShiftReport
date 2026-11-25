@@ -68,13 +68,17 @@ import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.settings.ProfileImageCropper.ProfileImageCropperDialog
+import androidx.compose.ui.platform.testTag
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.common.lojiaDefaultTextFieldColors
 import com.lojia.shiftreport.ui.theme.BackgroundLight
 import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.ErrorContainerLight
 import com.lojia.shiftreport.ui.theme.ErrorRedLight
+import com.lojia.shiftreport.ui.theme.LocalDepthStyle
 import com.lojia.shiftreport.ui.theme.OnBackgroundLight
+import com.lojia.shiftreport.ui.theme.OnSurfaceLight
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
 import com.lojia.shiftreport.ui.theme.OutlineLight
 import com.lojia.shiftreport.ui.theme.PrimaryBlueDark
@@ -92,7 +96,11 @@ import com.lojia.shiftreport.ui.theme.depthCard
 import com.lojia.shiftreport.ui.theme.depthRaisedButton
 import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 import com.lojia.shiftreport.ui.theme.depthSemanticCard
+import com.lojia.shiftreport.util.CountryDetector
 import com.lojia.shiftreport.util.SecurityUtils
+import com.lojia.shiftreport.util.buildE164Phone
+import com.lojia.shiftreport.util.isValidPhone
+import com.lojia.shiftreport.util.normalizeLocalInput
 
 @Composable
 private fun recoveryQuestionOptions(): List<String> = listOf(
@@ -1010,9 +1018,24 @@ private fun EditPhoneDialog(
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
-    var phone by remember { mutableStateOf(currentPhone) }
-    val digitsCount = phone.count { it.isDigit() }
-    val isValid = digitsCount in 10..15
+    val context = LocalContext.current
+    val detectedCountry = remember(context) { CountryDetector.detectDefaultAppCountry(context) }
+    val initialPair = remember(currentPhone, detectedCountry) {
+        if (currentPhone.isNotBlank()) {
+            val (parsedCountry, parsedLocal) = parsePhoneNumberWithCountry(currentPhone, detectedCountry)
+            parsedCountry to normalizeLocalInput(parsedLocal, parsedCountry)
+        } else {
+            detectedCountry to ""
+        }
+    }
+    var selectedCountry by remember { mutableStateOf(initialPair.first) }
+    var localNumber by remember { mutableStateOf(initialPair.second) }
+    var showCountryPicker by remember { mutableStateOf(false) }
+
+    val isValid = localNumber.isNotBlank() && isValidPhone(selectedCountry, localNumber)
+    val showError = localNumber.isNotBlank() && !isValid
+    val depthStyle = LocalDepthStyle.current
+    val fieldColors = lojiaDefaultTextFieldColors().copy(disabledTextColor = OnSurfaceLight)
 
     LojiaDialog(
         onDismissRequest = onDismiss,
@@ -1024,37 +1047,85 @@ private fun EditPhoneDialog(
                 .verticalScroll(rememberScrollState())
                 .padding(Dimens.DialogPaddingComfortable)
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(Dimens.EmployeeAvatarTileSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.Phone, contentDescription = null, tint = PrimaryBlueLight)
                 }
-                Text(stringResource(R.string.profile_edit_phone_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+                Text(
+                    text = stringResource(R.string.profile_edit_phone_title),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnBackgroundLight
+                )
             }
 
-            val phoneRequiredLabel = stringResource(R.string.profile_phone_required_label)
-            LojiaTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text(phoneRequiredLabel) },
-                contentDescription = phoneRequiredLabel,
-                placeholder = { Text("+966 50 000 0000") },
-                singleLine = true,
-                isError = phone.isNotBlank() && !isValid,
-                supportingText = if (phone.isNotBlank() && !isValid) {
-                    { Text(stringResource(R.string.profile_phone_digits_error), color = ErrorRedLight) }
-                } else null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                shape = RoundedCornerShape(Dimens.RadiusMd),
-                modifier = Modifier.fillMaxWidth()
-            )
+            val countryCodeCd = stringResource(R.string.auth_select_country_code)
+            val mobileHint = stringResource(R.string.profile_phone_mobile_hint)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(Dimens.DialCodeFieldWidth)
+                        .heightIn(min = Dimens.MinTouchTarget)
+                        .clickable { showCountryPicker = true }
+                        .testTag("btn_profile_phone_country_code")
+                ) {
+                    LojiaTextField(
+                        value = selectedCountry.dialCode,
+                        onValueChange = {},
+                        readOnly = true,
+                        enabled = false,
+                        contentDescription = countryCodeCd,
+                        singleLine = true,
+                        colors = fieldColors,
+                        disabledTextColor = OnSurfaceLight,
+                        disabledBackgroundOverride = depthStyle.insetBackground,
+                        disabledBorderColorOverride = depthStyle.insetBorderColor.copy(alpha = depthStyle.insetBorderAlpha),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                LojiaTextField(
+                    value = localNumber,
+                    onValueChange = { raw ->
+                        localNumber = normalizeLocalInput(raw, selectedCountry)
+                    },
+                    placeholder = { Text(mobileHint) },
+                    contentDescription = mobileHint,
+                    singleLine = true,
+                    isError = showError,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    colors = fieldColors,
+                    shape = RoundedCornerShape(Dimens.RadiusMd),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("input_profile_phone_local")
+                )
+            }
+
+            if (showError) {
+                Text(
+                    text = stringResource(R.string.profile_phone_invalid),
+                    color = ErrorRedLight,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1078,7 +1149,7 @@ private fun EditPhoneDialog(
                     Text(stringResource(R.string.cancel), color = OnSurfaceVariantLight)
                 }
                 Button(
-                    onClick = { onSave(phone.trim()) },
+                    onClick = { onSave(buildE164Phone(selectedCountry, localNumber)) },
                     enabled = isValid,
                     elevation = null,
                     colors = ButtonDefaults.buttonColors(
@@ -1097,6 +1168,17 @@ private fun EditPhoneDialog(
                 }
             }
         }
+    }
+
+    if (showCountryPicker) {
+        CountryCodePickerDialog(
+            selectedCountry = selectedCountry,
+            onCountrySelected = { country ->
+                selectedCountry = country
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false }
+        )
     }
 }
 

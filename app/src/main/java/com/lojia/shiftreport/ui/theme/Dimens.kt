@@ -237,6 +237,8 @@ object Dimens {
     /** Width and height for Register dial-code picker button (78.dp x 46.dp). */
     val DialButtonWidth: Dp = 78.dp
     val DialButtonHeight: Dp = 46.dp
+    /** Width for read-only country dial-code selector field (96.dp). */
+    val DialCodeFieldWidth: Dp = 96.dp
     /** Bottom lip removed in Stage 29A flat UI (0.dp). */
     val DialButtonLipHeight: Dp = 0.dp
     /** Asymmetric start/end content padding for Register dial-code button (10.dp / 8.dp). */

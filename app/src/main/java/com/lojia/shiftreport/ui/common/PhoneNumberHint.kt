@@ -59,7 +59,8 @@ fun rememberPhoneNumberHint(
 
 fun splitPhoneNumber(
     fullPhone: String,
-    availableDialCodes: List<String>
+    availableDialCodes: List<String>,
+    defaultDialCode: String
 ): Pair<String, String> {
     val sorted = availableDialCodes
         .filter { it.isNotBlank() }
@@ -69,5 +70,5 @@ fun splitPhoneNumber(
             return code to fullPhone.removePrefix(code)
         }
     }
-    return "+966" to fullPhone
+    return defaultDialCode to fullPhone
 }

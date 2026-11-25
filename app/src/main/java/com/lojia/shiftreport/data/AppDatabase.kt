@@ -142,7 +142,7 @@ abstract class AppDatabase : RoomDatabase() {
                         `phone` TEXT NOT NULL DEFAULT '',
                         `alternatePhone` TEXT NOT NULL DEFAULT '',
                         `countryCode` TEXT NOT NULL DEFAULT 'SA',
-                        `dialCode` TEXT NOT NULL DEFAULT '+966',
+                        `dialCode` TEXT NOT NULL DEFAULT '',
                         `addressLine` TEXT NOT NULL DEFAULT '',
                         `arabicAddressLine` TEXT NOT NULL DEFAULT '',
                         `aptSuite` TEXT NOT NULL DEFAULT '',

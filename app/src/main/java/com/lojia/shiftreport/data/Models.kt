@@ -491,8 +491,8 @@ data class SavedAddress(
     val lastName: String = "",
     val phone: String = "",
     val alternatePhone: String = "",
-    val countryCode: String = "SA",
-    val dialCode: String = "+966",
+    val countryCode: String = "",
+    val dialCode: String = "",
     val addressLine: String = "",
     val arabicAddressLine: String = "",
     val aptSuite: String = "",
@@ -513,7 +513,7 @@ enum class AppCountry(
     @StringRes val nameRes: Int,
     val currencyCode: String,
     val currencySymbol: String,
-    val dialCode: String = "+880"
+    val dialCode: String
 ) {
     BANGLADESH("BD", "Bangladesh", R.string.country_bangladesh, "BDT", "BDT", "+880"),
     SAUDI_ARABIA("SA", "Saudi Arabia", R.string.country_saudi_arabia, "SAR", "SAR", "+966"),

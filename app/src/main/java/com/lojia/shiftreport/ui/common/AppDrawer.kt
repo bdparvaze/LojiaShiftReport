@@ -320,17 +320,19 @@ fun MainAppDrawer(
             )
 
             // 8. Support
-            DrawerMenuItem(
-                title = stringResource(R.string.nav_support),
-                icon = Icons.Outlined.HeadsetMic,
-                activeColor = PrimaryIndigoLight,
-                isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "support",
-                onClick = {
-                    onOpenReportMenu("support")
-                    onNavigate(AppNavState.ShiftReportState.SettingsDetail("support"))
-                    onCloseDrawer()
-                }
-            )
+            if (com.lojia.shiftreport.util.SupportContact.isSupportConfigured()) {
+                DrawerMenuItem(
+                    title = stringResource(R.string.nav_support),
+                    icon = Icons.Outlined.HeadsetMic,
+                    activeColor = PrimaryIndigoLight,
+                    isSelected = navState is AppNavState.ShiftReportState.SettingsDetail && navState.section == "support",
+                    onClick = {
+                        onOpenReportMenu("support")
+                        onNavigate(AppNavState.ShiftReportState.SettingsDetail("support"))
+                        onCloseDrawer()
+                    }
+                )
+            }
 
             // 9. About
             DrawerMenuItem(

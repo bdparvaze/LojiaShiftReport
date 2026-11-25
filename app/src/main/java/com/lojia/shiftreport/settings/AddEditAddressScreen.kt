@@ -64,6 +64,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
@@ -99,6 +100,7 @@ import com.lojia.shiftreport.ui.theme.cardRise
 import com.lojia.shiftreport.ui.theme.depthCard
 import com.lojia.shiftreport.ui.theme.depthRaisedButton
 import com.lojia.shiftreport.ui.theme.depthSemanticCard
+import com.lojia.shiftreport.util.CountryDetector
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -112,12 +114,13 @@ fun AddEditAddressScreen(
 ) {
     BackHandler { onBack() }
 
-    val currentAppCountry by viewModel.currentCountry.collectAsState()
+    val context = LocalContext.current
+    val detectedCountry = remember(context) { CountryDetector.detectDefaultAppCountry(context) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    var selectedCountry by remember { mutableStateOf(currentAppCountry) }
-    var dialCode by remember { mutableStateOf("+966") }
+    var selectedCountry by remember { mutableStateOf(detectedCountry) }
+    var dialCode by remember { mutableStateOf(detectedCountry.dialCode) }
     var mobileNumber by remember { mutableStateOf("") }
     var alternatePhone by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
@@ -135,16 +138,21 @@ fun AddEditAddressScreen(
     var showMapPicker by remember { mutableStateOf(false) }
     var pendingAddressToSave by remember { mutableStateOf<SavedAddress?>(null) }
 
-    // Sync initial dial code with current app country when adding a new address
+    // Sync initial country & dial code from device detector for a new address, or saved values when editing
     LaunchedEffect(addressId) {
         if (addressId != null) {
             val existing = viewModel.getSavedAddressById(addressId)
             if (existing != null) {
-                selectedCountry = AppCountry.fromCode(existing.countryCode)
-                dialCode = existing.dialCode.ifBlank { selectedCountry.dialCode }
+                val resolvedCountry = if (existing.countryCode.isNotBlank()) {
+                    AppCountry.fromCode(existing.countryCode)
+                } else {
+                    detectedCountry
+                }
+                selectedCountry = resolvedCountry
+                dialCode = existing.dialCode.ifBlank { resolvedCountry.dialCode }
                 val codes = AppCountry.entries.mapNotNull { it.dialCode.takeIf { c -> c.isNotBlank() } }
                 val (_, strippedMobile) = if (existing.phone.startsWith("+")) {
-                    splitPhoneNumber(existing.phone, codes)
+                    splitPhoneNumber(existing.phone, codes, dialCode)
                 } else {
                     dialCode to existing.phone
                 }
@@ -162,15 +170,19 @@ fun AddEditAddressScreen(
                 createdAt = existing.createdAt
             }
         } else {
-            selectedCountry = currentAppCountry
-            dialCode = currentAppCountry.dialCode.ifBlank { "+966" }
+            selectedCountry = detectedCountry
+            dialCode = detectedCountry.dialCode
         }
     }
 
     val requestPhoneHint = rememberPhoneNumberHint(
         onPhoneSelected = { phone ->
             val codes = AppCountry.entries.mapNotNull { it.dialCode.takeIf { c -> c.isNotBlank() } }
-            val (code, number) = splitPhoneNumber(phone, codes)
+            val (code, number) = splitPhoneNumber(
+                fullPhone = phone,
+                availableDialCodes = codes,
+                defaultDialCode = dialCode.ifBlank { detectedCountry.dialCode }
+            )
             dialCode = code
             mobileNumber = number
             AppCountry.entries.find { it.dialCode == code }?.let { matched ->
@@ -825,7 +837,7 @@ fun AddEditAddressScreen(
                                 .depthCard(accent = isSelected, shape = RoundedCornerShape(Dimens.RadiusMd))
                                 .clickable {
                                     selectedCountry = country
-                                    dialCode = country.dialCode.ifBlank { "+966" }
+                                    dialCode = country.dialCode.ifBlank { detectedCountry.dialCode }
                                     showCountrySheet = false
                                 }
                         ) {

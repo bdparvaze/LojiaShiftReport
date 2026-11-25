@@ -284,9 +284,11 @@ class Stage23OFinalLocalizationUnitTest {
             "profile_cropped.jpg",
             "btn_save_crop",
 
-            // ProfileScreen.kt internal MIME type & route key
+            // ProfileScreen.kt internal MIME type, route key, and Compose testTags
             "image/*",
             "saved_addresses",
+            "btn_profile_phone_country_code",
+            "input_profile_phone_local",
 
             // SettingsBackupSubSection.kt internal keys, testTags, date formats, fallback/token internals
             "root",
@@ -427,7 +429,8 @@ class Stage23OFinalLocalizationUnitTest {
             "profile_email_verification_note",
             "profile_edit_phone_title",
             "profile_phone_required_label",
-            "profile_phone_digits_error",
+            "profile_phone_mobile_hint",
+            "profile_phone_invalid",
             "profile_edit_recovery_title",
             "profile_answer_label",
             "profile_recovery_info",

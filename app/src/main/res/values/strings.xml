@@ -1900,7 +1900,8 @@
     <string name="profile_email_verification_note">Verification email will be sent to new address.</string>
     <string name="profile_edit_phone_title">Edit Phone Number</string>
     <string name="profile_phone_required_label">Phone Number *</string>
-    <string name="profile_phone_digits_error">Enter 10 to 15 digits</string>
+    <string name="profile_phone_mobile_hint">Mobile number</string>
+    <string name="profile_phone_invalid">Enter a valid mobile number</string>
     <string name="profile_edit_recovery_title">Edit Recovery Question</string>
     <string name="profile_answer_label">Answer * (min 3 chars)</string>
     <string name="profile_recovery_info">This will be used to recover your account if you forget password. Keep it secure.</string>

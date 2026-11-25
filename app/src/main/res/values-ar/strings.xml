@@ -1900,7 +1900,8 @@
     <string name="profile_email_verification_note">سيتم إرسال رسالة تحقق إلى العنوان الجديد.</string>
     <string name="profile_edit_phone_title">تعديل رقم الهاتف</string>
     <string name="profile_phone_required_label">رقم الهاتف *</string>
-    <string name="profile_phone_digits_error">أدخل من 10 إلى 15 رقماً</string>
+    <string name="profile_phone_mobile_hint">رقم الجوال</string>
+    <string name="profile_phone_invalid">أدخل رقم جوال صحيحاً</string>
     <string name="profile_edit_recovery_title">تعديل سؤال الاسترداد</string>
     <string name="profile_answer_label">الإجابة * (3 أحرف على الأقل)</string>
     <string name="profile_recovery_info">سيُستخدم هذا لاسترداد حسابك إذا نسيت كلمة المرور. احتفظ به بأمان.</string>
