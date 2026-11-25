@@ -753,7 +753,6 @@
     <string name="pdf_default_address">العليا، الرياض، السعودية</string>
     <string name="pdf_default_location">الرياض، المملكة العربية السعودية</string>
     <string name="pdf_default_business">مقهى لوجيا</string>
-    <string name="pdf_default_phone">+966 54 123 4567</string>
     <string name="notif_low_stock">المخزون المتبقي %1$d %2$s (الحد: %3$d %4$s). يرجى إعادة الطلب.</string>
     <string name="notif_drawer_closed">تم إغلاق الدرج. فرق النقد: %1$s</string>
     <string name="export_generated_on">تم الإنشاء في: %1$s</string>

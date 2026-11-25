@@ -141,7 +141,7 @@ abstract class AppDatabase : RoomDatabase() {
                         `lastName` TEXT NOT NULL DEFAULT '',
                         `phone` TEXT NOT NULL DEFAULT '',
                         `alternatePhone` TEXT NOT NULL DEFAULT '',
-                        `countryCode` TEXT NOT NULL DEFAULT 'SA',
+                        `countryCode` TEXT NOT NULL DEFAULT '',
                         `dialCode` TEXT NOT NULL DEFAULT '',
                         `addressLine` TEXT NOT NULL DEFAULT '',
                         `arabicAddressLine` TEXT NOT NULL DEFAULT '',
@@ -645,21 +645,23 @@ abstract class AppDatabase : RoomDatabase() {
                     e
                 )
             }
-            scope.launch(Dispatchers.IO) {
-                val database = databaseProvider() ?: INSTANCE
-                database?.let {
-                    val dao = it.reportDao()
-                    val existing = dao.getUserProfileOnce()
-                    if (existing == null || !existing.isRegistered || existing.username.isBlank() || existing.username == "123456") {
-                        dao.saveUserProfile(
-                            (existing ?: UserProfile(id = 1, fullName = "Store Owner")).copy(
-                                username = "admin",
-                                passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
-                                pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
-                                currentRole = "ADMIN",
-                                isRegistered = true
+            if (com.lojia.shiftreport.BuildConfig.DEBUG) {
+                scope.launch(Dispatchers.IO) {
+                    val database = databaseProvider() ?: INSTANCE
+                    database?.let {
+                        val dao = it.reportDao()
+                        val existing = dao.getUserProfileOnce()
+                        if (existing == null || !existing.isRegistered || existing.username.isBlank() || existing.username == "123456") {
+                            dao.saveUserProfile(
+                                (existing ?: UserProfile(id = 1, fullName = "Store Owner")).copy(
+                                    username = "admin",
+                                    passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
+                                    pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
+                                    currentRole = "ADMIN",
+                                    isRegistered = true
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -670,31 +672,33 @@ abstract class AppDatabase : RoomDatabase() {
                 reportDao.getAllShiftSessionsList().isEmpty() &&
                 reportDao.getBusinessProfileOnce() == null
             if (databaseIsEmpty) {
-                reportDao.saveUserProfile(
-                    UserProfile(
-                        id = 1,
-                        fullName = "",
-                        username = "admin",
-                        email = "",
-                        passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
-                        securityQuestion = "",
-                        securityAnswer = "",
-                        phone = "",
-                        designation = "",
-                        nationalIdOrPassport = "",
-                        address = "",
-                        profilePictureUri = "",
-                        avatarIndex = 0,
-                        dateOfBirthOrJoin = "",
-                        emergencyContact = "",
-                        pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
-                        isBiometricEnabled = false,
-                        autoLockMinutes = 5,
-                        currentRole = "ADMIN",
-                        registeredAt = System.currentTimeMillis(),
-                        isRegistered = true
+                if (com.lojia.shiftreport.BuildConfig.DEBUG) {
+                    reportDao.saveUserProfile(
+                        UserProfile(
+                            id = 1,
+                            fullName = "",
+                            username = "admin",
+                            email = "",
+                            passwordHash = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
+                            securityQuestion = "",
+                            securityAnswer = "",
+                            phone = "",
+                            designation = "",
+                            nationalIdOrPassport = "",
+                            address = "",
+                            profilePictureUri = "",
+                            avatarIndex = 0,
+                            dateOfBirthOrJoin = "",
+                            emergencyContact = "",
+                            pin = com.lojia.shiftreport.util.SecurityUtils.hashSecret("123456"),
+                            isBiometricEnabled = false,
+                            autoLockMinutes = 5,
+                            currentRole = "ADMIN",
+                            registeredAt = System.currentTimeMillis(),
+                            isRegistered = true
+                        )
                     )
-                )
+                }
                 reportDao.saveBusinessProfile(
                     BusinessProfile(
                         id = 1,

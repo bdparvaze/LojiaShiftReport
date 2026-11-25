@@ -126,7 +126,7 @@ object PdfQrCodeGenerator {
 
             bmp
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfQrCodeGenerator", "Failed to generate QR bitmap", e)
             null
         }
     }

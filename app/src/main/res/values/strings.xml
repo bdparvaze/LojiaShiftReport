@@ -753,7 +753,6 @@
     <string name="pdf_default_address">Olaya, Riyadh, KSA</string>
     <string name="pdf_default_location">Riyadh, Saudi Arabia</string>
     <string name="pdf_default_business">Lojia Cafe</string>
-    <string name="pdf_default_phone">+966 54 123 4567</string>
     <string name="notif_low_stock">Remaining stock is only %1$d %2$s (Threshold: %3$d %4$s). Please reorder.</string>
     <string name="notif_drawer_closed">Drawer closed. Cash variance: %1$s</string>
     <string name="export_generated_on">Generated on: %1$s</string>

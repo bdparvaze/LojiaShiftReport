@@ -53,7 +53,7 @@ class OneDriveBackupProvider(private val context: Context) : BackupProvider {
             .putString(BackupPreferences.KEY_ONEDRIVE_ACCOUNT, email)
             .putString("onedrive_access_token", token)
             .apply()
-        AppLogger.i(TAG, "OneDrive account connected: $email")
+        AppLogger.i(TAG, "OneDrive account connected.")
     }
 
     fun disconnect() {

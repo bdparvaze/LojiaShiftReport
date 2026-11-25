@@ -65,7 +65,8 @@ object FirebaseCloudSyncManager {
     private const val KEY_CUSTOM_FIREBASE_URL = "firebase_custom_url"
     private const val KEY_PROJECT_ID = "firebase_project_id"
 
-    const val DEFAULT_PROJECT_ID = "gen-lang-client-0290392339"
+    val DEFAULT_PROJECT_ID: String
+        get() = com.lojia.shiftreport.BuildConfig.FIREBASE_PROJECT_ID
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -580,7 +581,10 @@ object FirebaseCloudSyncManager {
         val uid = getAuthUserUid() ?: return Pair(null, false)
 
         val customUrl = getCustomFirebaseUrl(context).trim()
-        val projectId = getFirebaseProjectId(context)
+        val projectId = getFirebaseProjectId(context).trim()
+        if (customUrl.isEmpty() && projectId.isEmpty()) {
+            return Pair(loadLocalCloudBuffer(context), false)
+        }
 
         val targetUrl = if (customUrl.isNotEmpty()) {
             val trimmed = customUrl.trimEnd('/')
@@ -644,7 +648,10 @@ object FirebaseCloudSyncManager {
         saveLocalCloudBuffer(context, payload)
 
         val customUrl = getCustomFirebaseUrl(context).trim()
-        val projectId = getFirebaseProjectId(context)
+        val projectId = getFirebaseProjectId(context).trim()
+        if (customUrl.isEmpty() && projectId.isEmpty()) {
+            return false
+        }
 
         val targetUrl = if (customUrl.isNotEmpty()) {
             val trimmed = customUrl.trimEnd('/')

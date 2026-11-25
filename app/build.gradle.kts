@@ -10,6 +10,21 @@ android {
     namespace = "com.lojia.shiftreport"
     compileSdk = 35
 
+    val localProps = Properties().apply {
+        val lpFile = rootProject.file("local.properties")
+        if (lpFile.isFile) {
+            lpFile.inputStream().use { stream -> load(stream) }
+        }
+    }
+    fun resolveConfigString(propKey: String): String {
+        val raw = localProps.getProperty(propKey)
+            ?: providers.gradleProperty(propKey).orNull
+            ?: ""
+        return raw.trim()
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+    }
+
     defaultConfig {
         applicationId = "com.aistudio.shiftreport.lojia"
         minSdk = 24
@@ -21,23 +36,33 @@ android {
         // Disabled. Known gaps before enabling: lastUpdated uses the shift date, no deletion propagation, no WorkManager retry on soft failure. See docs/SYNC_NOTES.md.
         buildConfigField("boolean", "CLOUD_SYNC_ENABLED", "false")
 
-        val localProps = Properties().apply {
-            val lpFile = rootProject.file("local.properties")
-            if (lpFile.isFile) {
-                lpFile.inputStream().use { stream -> load(stream) }
-            }
-        }
-        fun resolveConfigString(propKey: String): String {
-            val raw = localProps.getProperty(propKey)
-                ?: providers.gradleProperty(propKey).orNull
-                ?: ""
-            return raw.trim()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-        }
         buildConfigField("String", "SUPPORT_PHONE", "\"${resolveConfigString("support.phone")}\"")
         buildConfigField("String", "SUPPORT_WHATSAPP", "\"${resolveConfigString("support.whatsapp")}\"")
+        buildConfigField("String", "GOOGLE_DRIVE_CLIENT_ID", "\"${resolveConfigString("google.drive.client.id")}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${resolveConfigString("firebase.project.id")}\"")
     }
+
+    /*
+     * Release signing configuration (optional at build time):
+     * Provide the following properties in local.properties (never committed to git)
+     * pointing to an external release keystore stored outside this repository:
+     *   release.keystore.path=/absolute/or/project-relative/path/to/release.jks
+     *   release.keystore.password=...
+     *   release.key.alias=...
+     *   release.key.password=...
+     * When any property is blank or the keystore file does not exist, release builds
+     * remain unsigned.
+     */
+    val releaseKeystorePath = localProps.getProperty("release.keystore.path")?.trim().orEmpty()
+    val releaseKeystorePassword = localProps.getProperty("release.keystore.password")?.trim().orEmpty()
+    val releaseKeyAlias = localProps.getProperty("release.key.alias")?.trim().orEmpty()
+    val releaseKeyPassword = localProps.getProperty("release.key.password")?.trim().orEmpty()
+    val releaseKeystoreFile = if (releaseKeystorePath.isNotEmpty()) rootProject.file(releaseKeystorePath) else null
+    val hasReleaseSigning = releaseKeystoreFile != null &&
+        releaseKeystoreFile.isFile &&
+        releaseKeystorePassword.isNotEmpty() &&
+        releaseKeyAlias.isNotEmpty() &&
+        releaseKeyPassword.isNotEmpty()
 
     signingConfigs {
         create("debugConfig") {
@@ -46,12 +71,26 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseKeystoreFile
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = null
+                logger.warn("WARNING: Release signing is not configured; release APK will be built unsigned.")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

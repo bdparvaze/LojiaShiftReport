@@ -48,8 +48,9 @@ object GoogleDriveManager {
     private const val KEY_CODE_VERIFIER = "drive_code_verifier"
     private const val KEY_OAUTH_STATE = "oauth_state"
 
-    // OAuth configuration
-    const val CLIENT_ID = "654989706304-6knvt1b4gravtsu1a59snfg1acgjre74.apps.googleusercontent.com"
+    // OAuth configuration (externalized via local.properties -> BuildConfig)
+    val CLIENT_ID: String
+        get() = com.lojia.shiftreport.BuildConfig.GOOGLE_DRIVE_CLIENT_ID
     const val REDIRECT_URI = "com.lojia.shiftreport:/oauth2callback"
     private const val SCOPES = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email"
 
@@ -190,6 +191,7 @@ object GoogleDriveManager {
     }
 
     fun launchAuthorization(context: Context) {
+        if (CLIENT_ID.isBlank()) return
         val url = buildAuthUrl(context)
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -198,6 +200,12 @@ object GoogleDriveManager {
     }
 
     suspend fun handleOAuthCallback(context: Context, code: String, state: String? = null): Result<DriveAccountInfo> = withContext(Dispatchers.IO) {
+        if (CLIENT_ID.isBlank()) {
+            clearOAuthState(context)
+            return@withContext Result.failure(
+                IllegalStateException("Google Drive client ID is not configured.")
+            )
+        }
         val encPrefs = getEncryptedPrefs(context)
         val expectedState = encPrefs.getString(KEY_OAUTH_STATE, null)
 
@@ -321,7 +329,7 @@ object GoogleDriveManager {
         val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, null)
 
         // If token expires in less than 2 minutes, refresh it if refresh_token exists
-        if (System.currentTimeMillis() > (expiry - 120_000) && !refreshToken.isNullOrEmpty()) {
+        if (System.currentTimeMillis() > (expiry - 120_000) && !refreshToken.isNullOrEmpty() && CLIENT_ID.isNotBlank()) {
             try {
                 val tokenUrl = URL("https://oauth2.googleapis.com/token")
                 val conn = tokenUrl.openConnection() as HttpURLConnection

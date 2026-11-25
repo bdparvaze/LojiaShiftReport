@@ -107,7 +107,7 @@ object PdfReportGenerator {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfReportGenerator", "Failed to parse due credit entries", e)
         }
         return list
     }
@@ -151,7 +151,7 @@ object PdfReportGenerator {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfReportGenerator", "Failed to parse due collection entries", e)
         }
         return list
     }
@@ -172,7 +172,7 @@ object PdfReportGenerator {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfReportGenerator", "Failed to parse staff advance entries", e)
         }
         return list
     }
@@ -192,7 +192,7 @@ object PdfReportGenerator {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfReportGenerator", "Failed to parse walkout entries", e)
         }
         return list
     }
@@ -214,7 +214,7 @@ object PdfReportGenerator {
                 )
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfReportGenerator", "Failed to parse purchased items", e)
         }
         return list
     }
@@ -1497,7 +1497,7 @@ object PdfReportGenerator {
                 displayPath = displayPath
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLogger.e("PdfReportGenerator", "Failed to export PDF report", e)
             try {
                 pdfDocument.close()
             } catch (_: Exception) {}

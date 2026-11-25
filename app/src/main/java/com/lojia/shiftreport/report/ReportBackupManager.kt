@@ -82,6 +82,12 @@ class ReportBackupManager(
     }
 
     fun connectGoogleDrive(activityContext: Context) {
+        if (GoogleDriveManager.CLIENT_ID.isBlank()) {
+            scope.launch {
+                emitUiMessage(UiText.StringResource(R.string.drive_auth_failed))
+            }
+            return
+        }
         val authUrl = GoogleDriveManager.buildAuthUrl(activityContext)
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

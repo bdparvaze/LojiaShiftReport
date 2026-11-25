@@ -753,7 +753,6 @@
     <string name="pdf_default_address">ওলায়া, রিয়াদ, কেএসএ</string>
     <string name="pdf_default_location">রিয়াদ, সৌদি আরব</string>
     <string name="pdf_default_business">লজিয়া ক্যাফে</string>
-    <string name="pdf_default_phone">+৯৬৬ ৫৪ ১২৩ ৪৫৬৭</string>
     <string name="notif_low_stock">স্টক মাত্র %1$d %2$s আছে (সীমা: %3$d %4$s)। রিঅর্ডার করুন।</string>
     <string name="notif_drawer_closed">ড্রয়ার বন্ধ। নগদ পার্থক্য: %1$s</string>
     <string name="export_generated_on">তৈরি হয়েছে: %1$s</string>
