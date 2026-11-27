@@ -292,7 +292,6 @@ class Stage23OFinalLocalizationUnitTest {
 
             // SettingsBackupSubSection.kt internal keys, testTags, date formats, fallback/token internals
             "root",
-            "btn_backup_back",
             "daily",
             "weekly",
             "manual",

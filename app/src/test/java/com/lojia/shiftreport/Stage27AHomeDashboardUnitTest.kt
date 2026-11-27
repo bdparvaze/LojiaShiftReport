@@ -500,18 +500,20 @@ class Stage27AHomeDashboardUnitTest {
             appDir,
             "src/main/java/com/lojia/shiftreport/settings/SettingsBackupSubSection.kt"
         ).readText()
-        assertTrue(backupSrc.contains("testTag(\"btn_backup_back\")"))
-        assertTrue(backupSrc.contains("R.string.back"))
-        assertTrue(backupSrc.contains("R.string.backup_settings"))
-        assertTrue(backupSrc.contains("R.string.backup_subtitle"))
+        assertFalse(backupSrc.contains("testTag(\"btn_backup_back\")"))
+        assertFalse(backupSrc.contains("ArrowBack"))
+        assertFalse(backupSrc.contains("BackHandler"))
+        assertFalse(Regex("""\bR\.string\.back\b""").containsMatchIn(backupSrc))
+        assertFalse(backupSrc.contains("R.string.backup_settings"))
+        assertFalse(backupSrc.contains("R.string.backup_subtitle"))
 
         val baselineLine = File(appDir, "src/test/resources/stage26c_ui_baseline.txt")
             .readLines()
             .firstOrNull { it.startsWith("settings/SettingsBackupSubSection.kt:") }
             .orEmpty()
-        assertTrue(baselineLine.contains("testTag(\"btn_backup_back\")"))
-        assertTrue(baselineLine.contains("R.string.back"))
-        assertTrue(baselineLine.contains("R.string.backup_settings"))
-        assertTrue(baselineLine.contains("R.string.backup_subtitle"))
+        assertFalse(baselineLine.contains("testTag(\"btn_backup_back\")"))
+        assertFalse(Regex("""\bR\.string\.back\b""").containsMatchIn(baselineLine))
+        assertFalse(baselineLine.contains("R.string.backup_settings"))
+        assertFalse(baselineLine.contains("R.string.backup_subtitle"))
     }
 }

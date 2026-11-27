@@ -3,7 +3,6 @@ package com.lojia.shiftreport.settings
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -15,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.*
@@ -76,11 +74,6 @@ fun SettingsBackupSubSection(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val backupManager = remember { BackupManager.getInstance(context) }
-
-    // Intercept back button to return to Settings root
-    BackHandler {
-        onNavigateBack()
-    }
 
     // Multi-cloud location state
     var selectedLocation by remember { mutableStateOf(backupManager.getSelectedLocation()) }
@@ -197,41 +190,6 @@ fun SettingsBackupSubSection(
             .fillMaxWidth()
             .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
     ) {
-        // Top Back Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimens.SpacingSm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier
-                    .minimumInteractiveComponentSize()
-                    .testTag("btn_backup_back")
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back),
-                    tint = TextPrimaryReport
-                )
-            }
-            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.backup_settings),
-                    fontSize = DepthTypeTokens.SectionTitleSize,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimaryReport
-                )
-                Text(
-                    text = stringResource(R.string.backup_subtitle),
-                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
-                    color = OnSurfaceVariantLight
-                )
-            }
-        }
-
         // ==========================================
         // 0. BACKUP ENCRYPTION PASSWORD (ADMIN-GATED)
         // ==========================================
