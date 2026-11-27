@@ -2283,4 +2283,7 @@
     <!-- Stage 33: Dialogs, PinCells & Blank Business Name -->
     <string name="pin_cells_cd_fmt">পিন, %2$d সংখ্যার মধ্যে %1$dটি দেওয়া হয়েছে</string>
     <string name="business_name_not_set">ব্যবসার নাম সেট করা হয়নি</string>
+
+    <!-- Stage 34A: Compact Profile Avatar -->
+    <string name="profile_add_picture_cd">প্রোফাইল ছবি যোগ করুন</string>
 </resources>

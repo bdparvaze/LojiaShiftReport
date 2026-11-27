@@ -2,126 +2,158 @@ package com.lojia.shiftreport.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.lojia.shiftreport.R
 
 /**
- * Poppins font family definition.
- * Note: Only a single weight (poppins.ttf - Normal) is currently in res/font.
+ * Extra line-height multiplier applied to Bengali ("bn") and Arabic ("ar")
+ * to prevent vertical diacritic / ascender clipping while staying compact.
  */
-val PoppinsFontFamily = FontFamily(
-    Font(R.font.poppins, FontWeight.Normal)
-)
+const val LineHeightFactorBnAr: Float = 1.15f
+
+private fun resolvedLanguageCode(languageTag: String): String =
+    languageTag.lowercase().substringBefore('-').ifEmpty { "en" }
+
+private fun isExtendedLineHeightLanguage(languageTag: String): Boolean {
+    val lang = resolvedLanguageCode(languageTag)
+    return lang == "bn" || lang == "ar"
+}
 
 /**
- * Returns Typography tailored for the given language tag.
- * - For "bn" (Bengali) and "ar" (Arabic): uses [FontFamily.Default] (system font with full Bengali & Arabic glyph support).
- * - For "en" (English) and Latin scripts: uses [PoppinsFontFamily].
+ * Returns compact Material 3 Typography for the given [languageTag].
+ * All languages (en, bn, ar) use the device system font ([FontFamily.Default]).
  */
 fun typographyFor(languageTag: String): Typography {
-    val lang = languageTag.lowercase().substringBefore('-').ifEmpty { "en" }
-    val family = if (lang == "bn" || lang == "ar") {
-        FontFamily.Default
-    } else {
-        PoppinsFontFamily
-    }
+    val factor = if (isExtendedLineHeightLanguage(languageTag)) LineHeightFactorBnAr else 1f
+    fun lh(baseSp: Float) = (baseSp * factor).sp
 
     return Typography(
         displayLarge = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            lineHeight = 36.sp,
+            fontSize = 20.sp,
+            lineHeight = lh(26f),
             letterSpacing = (-0.2).sp
         ),
         displayMedium = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            lineHeight = 32.sp,
+            fontSize = 18.sp,
+            lineHeight = lh(24f),
             letterSpacing = (-0.1).sp
         ),
-        headlineMedium = TextStyle(
-            fontFamily = family,
+        displaySmall = TextStyle(
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
-            lineHeight = 28.sp,
+            fontSize = 16.sp,
+            lineHeight = lh(22f),
+            letterSpacing = 0.sp
+        ),
+        headlineLarge = TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 18.sp,
+            lineHeight = lh(24f),
+            letterSpacing = 0.sp
+        ),
+        headlineMedium = TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            lineHeight = lh(22f),
             letterSpacing = 0.sp
         ),
         headlineSmall = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
-            lineHeight = 26.sp,
+            fontSize = 16.sp,
+            lineHeight = lh(22f),
             letterSpacing = 0.sp
         ),
         titleLarge = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 17.sp,
-            lineHeight = 24.sp,
+            fontSize = 15.sp,
+            lineHeight = lh(20f),
             letterSpacing = 0.sp
         ),
         titleMedium = TextStyle(
-            fontFamily = family,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
-            lineHeight = 22.sp,
-            letterSpacing = 0.1.sp
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            lineHeight = lh(18f),
+            letterSpacing = 0.sp
         ),
         titleSmall = TextStyle(
-            fontFamily = family,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            letterSpacing = 0.1.sp
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            lineHeight = lh(16f),
+            letterSpacing = 0.2.sp
         ),
         bodyLarge = TextStyle(
-            fontFamily = family,
-            fontWeight = FontWeight.Normal,
-            fontSize = 15.sp,
-            lineHeight = 22.sp,
-            letterSpacing = 0.2.sp
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            lineHeight = lh(20f),
+            letterSpacing = 0.sp
         ),
         bodyMedium = TextStyle(
-            fontFamily = family,
-            fontWeight = FontWeight.Normal,
-            fontSize = 13.5.sp,
-            lineHeight = 20.sp,
-            letterSpacing = 0.2.sp
-        ),
-        bodySmall = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
-            lineHeight = 18.sp,
-            letterSpacing = 0.3.sp
+            lineHeight = lh(17f),
+            letterSpacing = 0.1.sp
+        ),
+        bodySmall = TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 11.sp,
+            lineHeight = lh(15f),
+            letterSpacing = 0.2.sp
         ),
         labelLarge = TextStyle(
-            fontFamily = family,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.5.sp,
-            lineHeight = 20.sp,
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            lineHeight = lh(18f),
             letterSpacing = 0.1.sp
         ),
         labelMedium = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
+            fontSize = 11.sp,
+            lineHeight = lh(15f),
             letterSpacing = 0.2.sp
         ),
         labelSmall = TextStyle(
-            fontFamily = family,
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Medium,
             fontSize = 11.sp,
-            lineHeight = 15.sp,
-            letterSpacing = 0.3.sp
+            lineHeight = lh(15f),
+            letterSpacing = 0.2.sp
         )
     )
 }
+
+/**
+ * Dedicated KPI figure text style (20/26sp Bold, tabular figures `tnum`).
+ */
+fun kpiValueTextStyle(languageTag: String = "en"): TextStyle {
+    val factor = if (isExtendedLineHeightLanguage(languageTag)) LineHeightFactorBnAr else 1f
+    return TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp,
+        lineHeight = (26f * factor).sp,
+        fontFeatureSettings = "tnum"
+    )
+}
+
+/**
+ * Applies tabular numerals (`tnum`) to a text style used for money amounts and KPIs.
+ */
+fun TextStyle.asMoneyTabular(): TextStyle = copy(fontFeatureSettings = "tnum")
 
 val Typography = typographyFor("en")

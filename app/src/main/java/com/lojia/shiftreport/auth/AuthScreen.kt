@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -217,7 +218,7 @@ fun AuthScreenLoginTab(
             label = {
                 Text(
                     text = usernameLabel,
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = 13.sp
                 )
             },
@@ -225,7 +226,7 @@ fun AuthScreenLoginTab(
             placeholder = {
                 Text(
                     text = stringResource(R.string.auth_username_or_email),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.InsetPlaceholderSize,
                     color = hintGray
                 )
@@ -248,7 +249,7 @@ fun AuthScreenLoginTab(
             ),
             textStyle = TextStyle(
                 color = charcoalText,
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal
             ),
@@ -270,7 +271,7 @@ fun AuthScreenLoginTab(
             label = {
                 Text(
                     text = passwordLabel,
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = 13.sp
                 )
             },
@@ -278,7 +279,7 @@ fun AuthScreenLoginTab(
             placeholder = {
                 Text(
                     text = stringResource(R.string.auth_password),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.InsetPlaceholderSize,
                     color = hintGray
                 )
@@ -315,7 +316,7 @@ fun AuthScreenLoginTab(
             ),
             textStyle = TextStyle(
                 color = charcoalText,
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal
             ),
@@ -377,7 +378,7 @@ fun AuthScreenLoginTab(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.auth_remember_me),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.AuthRowLinkTextSize,
                     fontWeight = FontWeight.Medium,
                     color = mediumGray,
@@ -393,7 +394,7 @@ fun AuthScreenLoginTab(
             ) {
                 Text(
                     text = stringResource(R.string.auth_forgot_password),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.AuthRowLinkTextSize,
                     fontWeight = FontWeight.SemiBold,
                     color = primaryIndigo
@@ -415,7 +416,7 @@ fun AuthScreenLoginTab(
             ) {
                 Text(
                     text = msg,
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = 12.sp,
                     color = errorRed,
                     modifier = Modifier
@@ -459,7 +460,7 @@ fun AuthScreenLoginTab(
             } else {
                 Text(
                     text = stringResource(R.string.auth_sign_in_btn),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.PrimaryButtonTextSize,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -476,7 +477,7 @@ fun AuthScreenLoginTab(
         ) {
             Text(
                 text = stringResource(R.string.auth_no_account) + " ",
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.AuthFooterTextSize,
                 color = mediumGray
             )
@@ -490,7 +491,7 @@ fun AuthScreenLoginTab(
             ) {
                 Text(
                     text = stringResource(R.string.auth_register_here),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.AuthFooterTextSize,
                     fontWeight = FontWeight.Bold,
                     color = primaryIndigo

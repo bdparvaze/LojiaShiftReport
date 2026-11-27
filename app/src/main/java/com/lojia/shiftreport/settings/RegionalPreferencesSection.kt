@@ -30,8 +30,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppCountry
@@ -319,7 +317,7 @@ fun RegionalPreferencesDetailView(
     ) {
         Column(
             modifier = Modifier
-                .widthIn(max = 600.dp)
+                .widthIn(max = Dimens.MaxContentWidth)
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingLg),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
@@ -407,7 +405,7 @@ fun RegionalPreferencesDetailView(
                         )
                         Text(
                             text = stringResource(R.string.currency_locked_message),
-                            fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = WarningText
                         )
                     }
@@ -447,22 +445,21 @@ fun RegionalPreferencesDetailView(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 520.dp)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp)
+                    .heightIn(max = Dimens.BottomSheetMaxHeight)
+                    .padding(horizontal = Dimens.SpacingLg)
+                    .padding(bottom = Dimens.SpacingXl)
             ) {
                 // Sheet Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = Dimens.SpacingMd),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.regional_select_country),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = OnSurfaceLight
                     )
                     IconButton(
@@ -473,7 +470,7 @@ fun RegionalPreferencesDetailView(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
@@ -485,7 +482,7 @@ fun RegionalPreferencesDetailView(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.search_country_hint),
-                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            style = MaterialTheme.typography.titleMedium,
                             color = depthStyle.reportFieldPlaceholderColor
                         )
                     },
@@ -525,7 +522,7 @@ fun RegionalPreferencesDetailView(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     items(filteredCountries, key = { it.code }) { country ->
                         val isSelected = country == currentCountry
@@ -548,24 +545,27 @@ fun RegionalPreferencesDetailView(
                                         activeSheet = null
                                     }
                                 }
-                                .padding(horizontal = 12.dp, vertical = 14.dp)
+                                .padding(
+                                    horizontal = Dimens.ListRowPaddingHorizontal,
+                                    vertical = Dimens.ListRowPaddingVertical
+                                )
                                 .testTag("option_country_${country.code}"),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
                                     text = flag,
-                                    fontSize = 22.sp,
+                                    style = MaterialTheme.typography.headlineSmall,
                                     color = OnSurfaceLight
                                 )
                                 Text(
                                     text = countryName,
-                                    fontSize = 15.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight,
                                     maxLines = 1,
@@ -578,7 +578,7 @@ fun RegionalPreferencesDetailView(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = stringResource(R.string.cd_selected),
                                     tint = PrimaryIndigoLight,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
                             }
                         }
@@ -606,22 +606,21 @@ fun RegionalPreferencesDetailView(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                    .padding(horizontal = Dimens.SpacingLg)
+                    .padding(bottom = Dimens.SpacingXl),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 // Sheet Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 6.dp),
+                        .padding(bottom = Dimens.SpacingXs),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.regional_select_language),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = OnSurfaceLight
                     )
                     IconButton(
@@ -632,7 +631,7 @@ fun RegionalPreferencesDetailView(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
@@ -653,24 +652,27 @@ fun RegionalPreferencesDetailView(
                                 reportViewModel.setLanguage(lang)
                                 activeSheet = null
                             }
-                            .padding(horizontal = 12.dp, vertical = 14.dp)
+                            .padding(
+                                horizontal = Dimens.ListRowPaddingHorizontal,
+                                vertical = Dimens.ListRowPaddingVertical
+                            )
                             .testTag("option_language_${lang.code}"),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 text = info.flag,
-                                fontSize = 22.sp,
+                                style = MaterialTheme.typography.headlineSmall,
                                 color = OnSurfaceLight
                             )
                             Text(
                                 text = stringResource(info.nativeLabelRes),
-                                fontSize = 15.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                 color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
                             )
@@ -681,7 +683,7 @@ fun RegionalPreferencesDetailView(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = stringResource(R.string.cd_selected),
                                 tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(Dimens.IconMd)
                             )
                         }
                     }
@@ -720,22 +722,21 @@ fun RegionalPreferencesDetailView(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 520.dp)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp)
+                    .heightIn(max = Dimens.BottomSheetMaxHeight)
+                    .padding(horizontal = Dimens.SpacingLg)
+                    .padding(bottom = Dimens.SpacingXl)
             ) {
                 // Sheet Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = Dimens.SpacingMd),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = stringResource(R.string.regional_select_currency),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = OnSurfaceLight
                     )
                     IconButton(
@@ -746,7 +747,7 @@ fun RegionalPreferencesDetailView(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.cd_close),
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
@@ -758,7 +759,7 @@ fun RegionalPreferencesDetailView(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.regional_search_currency_hint),
-                            fontSize = DepthTypeTokens.ListRowTitleSize,
+                            style = MaterialTheme.typography.titleMedium,
                             color = depthStyle.reportFieldPlaceholderColor
                         )
                     },
@@ -798,7 +799,7 @@ fun RegionalPreferencesDetailView(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     items(filteredCurrencies, key = { it.code }) { currency ->
                         val isSelected = currency.code.equals(activeCurrency.code, ignoreCase = true)
@@ -818,23 +819,26 @@ fun RegionalPreferencesDetailView(
                                         activeSheet = null
                                     }
                                 }
-                                .padding(horizontal = 12.dp, vertical = 12.dp)
+                                .padding(
+                                    horizontal = Dimens.ListRowPaddingHorizontal,
+                                    vertical = Dimens.ListRowPaddingVertical
+                                )
                                 .testTag("option_currency_${currency.code}"),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(Dimens.CurrencyCircleSize)
                                         .clip(CircleShape)
                                         .background(if (isSelected) SurfaceLight else SurfaceVariantLight)
                                         .border(
-                                            1.dp,
+                                            Dimens.BorderThin,
                                             if (isSelected) PrimaryIndigoLight else OutlineVariantLight,
                                             CircleShape
                                         ),
@@ -842,7 +846,7 @@ fun RegionalPreferencesDetailView(
                                 ) {
                                     Text(
                                         text = currency.symbol,
-                                        fontSize = 14.sp,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
                                     )
@@ -851,13 +855,13 @@ fun RegionalPreferencesDetailView(
                                 Column {
                                     Text(
                                         text = currency.code,
-                                        fontSize = 15.sp,
+                                        style = MaterialTheme.typography.titleMedium,
                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                         color = if (isSelected) PrimaryIndigoLight else OnSurfaceLight
                                     )
                                     Text(
                                         text = currency.fullName,
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = OnSurfaceVariantLight,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -870,7 +874,7 @@ fun RegionalPreferencesDetailView(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = stringResource(R.string.cd_selected),
                                     tint = PrimaryIndigoLight,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
                             }
                         }
@@ -932,7 +936,7 @@ private fun SimpleRegionalSelectorRow(
             }
             Text(
                 text = label,
-                fontSize = DepthTypeTokens.ListRowTitleSize,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (enabled) TextPrimaryReport else TextDisabledColor
             )
@@ -944,7 +948,7 @@ private fun SimpleRegionalSelectorRow(
         ) {
             Text(
                 text = valueText,
-                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = if (enabled) OnSurfaceVariantLight else TextDisabledColor,
                 maxLines = 1,

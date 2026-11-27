@@ -2283,4 +2283,7 @@
     <!-- Stage 33: Dialogs, PinCells & Blank Business Name -->
     <string name="pin_cells_cd_fmt">رمز PIN، تم إدخال %1$d من %2$d أرقام</string>
     <string name="business_name_not_set">لم يتم تعيين اسم النشاط التجاري</string>
+
+    <!-- Stage 34A: Compact Profile Avatar -->
+    <string name="profile_add_picture_cd">إضافة صورة الملف الشخصي</string>
 </resources>

@@ -427,7 +427,7 @@ fun PrinterSetupScreen(
             // Top Tabs: WIFI | BLUETOOTH
             Surface(
                 color = Color.Transparent,
-                shadowElevation = 2.dp,
+                shadowElevation = Dimens.SpacingNone,
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
@@ -445,7 +445,7 @@ fun PrinterSetupScreen(
                             Box(
                                 modifier = Modifier
                                     .tabIndicatorOffset(tabPositions[selectedTabIndex])
-                                    .height(3.dp)
+                                    .height(Dimens.TabIndicatorHeight)
                                     .padding(horizontal = Dimens.SpacingLg)
                                     .clip(RoundedCornerShape(topStart = Dimens.RadiusXs, topEnd = Dimens.RadiusXs))
                                     .background(
@@ -464,8 +464,13 @@ fun PrinterSetupScreen(
                         selectedContentColor = PrimaryIndigoDark,
                         unselectedContentColor = OnSurfaceVariantLight,
                         modifier = Modifier.heightIn(min = Dimens.TabBarMinHeight),
-                        text = { Text(stringResource(R.string.printer_tab_wifi), fontWeight = FontWeight.SemiBold) },
-                        icon = { Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                        text = {
+                            Text(
+                                text = stringResource(R.string.printer_tab_wifi),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        },
+                        icon = { Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(Dimens.IconField)) }
                     )
                     Tab(
                         selected = selectedTabIndex == 1,
@@ -476,8 +481,13 @@ fun PrinterSetupScreen(
                         selectedContentColor = PrimaryIndigoDark,
                         unselectedContentColor = OnSurfaceVariantLight,
                         modifier = Modifier.heightIn(min = Dimens.TabBarMinHeight),
-                        text = { Text(stringResource(R.string.printer_tab_bluetooth), fontWeight = FontWeight.SemiBold) },
-                        icon = { Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                        text = {
+                            Text(
+                                text = stringResource(R.string.printer_tab_bluetooth),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        },
+                        icon = { Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(Dimens.IconField)) }
                     )
                 }
             }

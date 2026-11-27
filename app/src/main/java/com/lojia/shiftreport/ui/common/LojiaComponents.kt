@@ -1,8 +1,11 @@
 package com.lojia.shiftreport.ui.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +22,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,9 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import com.lojia.shiftreport.ui.theme.BadgeBlueBg
-import com.lojia.shiftreport.ui.theme.DepthTypeTokens
 import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
 import com.lojia.shiftreport.ui.theme.PrimaryBlueLight
@@ -41,42 +45,95 @@ import com.lojia.shiftreport.ui.theme.depthRaisedButton
 import com.lojia.shiftreport.ui.theme.depthRaisedIconTile
 import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 
-// ---- LojiaDimens (as an object) ----
+// ---- LojiaDimens (mapped to central Dimens tokens) ----
 object LojiaDimens {
     val ScreenPadding       = Dimens.SpacingLg
     val ScreenTopPadding    = Dimens.SpacingLg
     val ScreenBottomPadding = Dimens.SpacingHuge
-    val SectionSpacing      = Dimens.SpacingXxl
+    val SectionSpacing      = Dimens.SpacingXl
     val CardSpacing         = Dimens.SpacingSm
-    val CardPadding         = Dimens.ReportCardInnerPadding
+    val CardPadding         = Dimens.CardPadding
     val IconTextGap         = Dimens.SettingsIconTitleGap
     val CardRadius          = Dimens.CardCornerRadius
     val ButtonRadius        = Dimens.RadiusMd
     val InputRadius         = Dimens.RadiusInputRegister
     val ChipRadius          = Dimens.RadiusFull
     val DrawerHeaderRadius  = Dimens.RadiusPill
-    val DrawerItemHeight    = 52.dp
-    val DrawerHeaderHeight  = 180.dp
-    val IconSize            = 24.dp
-    val AvatarSmall         = 48.dp
-    val AvatarLarge         = 96.dp
-    val FabSize             = 56.dp
+    val DrawerItemHeight    = Dimens.DrawerItemHeight
+    val DrawerHeaderHeight  = Dimens.DrawerHeaderHeight
+    val IconSize            = Dimens.IconLg
+    val AvatarSmall         = Dimens.MinTouchTarget
+    val AvatarLarge         = Dimens.ProfileAvatarSize
+    val FabSize             = Dimens.FabSize
     val MinTouchTarget      = Dimens.MinTouchTarget
 }
 
-// ---- Section header ----
+// ---- Shared grouped card wrapper ----
 @Composable
-fun LojiaSectionHeader(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text.uppercase(),
+fun LojiaCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    accent: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues(Dimens.CardPadding),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val cardShape = RoundedCornerShape(Dimens.CardCornerRadius)
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = Dimens.SpacingLg, bottom = Dimens.SpacingSm),
-        fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
-        color = OnSurfaceVariantLight
-    )
+            .depthCard(accent = accent, shape = cardShape, cornerRadius = Dimens.CardCornerRadius)
+            .then(
+                if (onClick != null) {
+                    Modifier
+                        .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                        .clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
+        shape = cardShape,
+        color = Color.Transparent,
+        shadowElevation = Dimens.SpacingNone
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(contentPadding),
+            content = content
+        )
+    }
+}
+
+// ---- Section header with compact primary accent bar ----
+@Composable
+fun LojiaSectionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    uppercase: Boolean = false
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = Dimens.SpacingMd, bottom = Dimens.SpacingXs),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = Dimens.AccentBarWidth, height = Dimens.AccentBarHeight)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(Dimens.AccentBarCorner)
+                )
+        )
+        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+        Text(
+            text = if (uppercase) text.uppercase() else text,
+            style = MaterialTheme.typography.titleSmall,
+            color = OnSurfaceVariantLight,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }
 
 // ---- Settings card wrapper ----
@@ -90,7 +147,7 @@ fun LojiaSettingsCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = Dimens.ReportGridGap)
+            .padding(bottom = Dimens.SpacingSm)
             .defaultMinSize(minHeight = Dimens.MinTouchTarget)
             .depthCard(shape = cardShape, cornerRadius = LojiaDimens.CardRadius)
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
@@ -102,7 +159,7 @@ fun LojiaSettingsCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Dimens.ReportCardInnerPadding),
+                .padding(Dimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically,
             content = content
         )
@@ -140,16 +197,15 @@ fun LojiaSettingRow(
         Spacer(Modifier.width(Dimens.SettingsIconTitleGap))
         Column(Modifier.weight(1f)) {
             Text(
-                title,
-                fontSize = DepthTypeTokens.ListRowTitleSize,
-                fontWeight = FontWeight.SemiBold,
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
                 color = TextPrimaryReport
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(Dimens.SpacingXxs))
                 Text(
-                    subtitle,
-                    fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = OnSurfaceVariantLight
                 )
             }
@@ -184,8 +240,8 @@ fun LojiaPrimaryButton(
         )
     ) {
         Text(
-            text,
-            fontSize = DepthTypeTokens.PrimaryButtonTextSize,
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold
         )
     }
@@ -218,8 +274,8 @@ fun LojiaOutlinedButton(
         )
     ) {
         Text(
-            text,
-            fontSize = DepthTypeTokens.SecondaryButtonTextSize,
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold
         )
     }

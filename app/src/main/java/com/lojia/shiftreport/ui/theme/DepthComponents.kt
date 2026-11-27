@@ -510,7 +510,7 @@ fun Modifier.depthLogoTile(): Modifier = composed {
 fun LojiaGradientHeader(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(bottomStart = Dimens.RadiusXl, bottomEnd = Dimens.RadiusXl),
-    cornerRadiusForShadow: Dp = 0.dp,
+    cornerRadiusForShadow: Dp = Dimens.SpacingNone,
     showDropShadow: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = Dimens.SpacingLg,

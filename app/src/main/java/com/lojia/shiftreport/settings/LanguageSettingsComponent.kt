@@ -29,6 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.lojia.shiftreport.data.AppLanguage
+import com.lojia.shiftreport.ui.common.LojiaDimens
+import com.lojia.shiftreport.ui.common.LojiaSectionHeader
+import com.lojia.shiftreport.ui.common.LojiaSettingsCard
 import com.lojia.shiftreport.util.LanguagePreferenceData
 import com.lojia.shiftreport.util.LanguagePreferences
 import kotlinx.coroutines.launch
@@ -175,8 +178,8 @@ private fun LanguageOptionRow(
                         }
                         Text(
                             text = nativeName,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = DepthTypeTokens.ListRowTitleSize,
                             color = if (isSelected) BadgeBlueText else TextPrimaryReport,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -188,7 +191,7 @@ private fun LanguageOptionRow(
                             ) {
                                 Text(
                                     text = stringResource(R.string.lang_rtl_badge),
-                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = BadgeAmberTextDark,
                                     modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXxs)
@@ -199,7 +202,7 @@ private fun LanguageOptionRow(
                     Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                     Text(
                         text = "${stringResource(language.titleRes)} (${language.code.uppercase()})",
-                        fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = OnSurfaceVariantLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -272,14 +275,14 @@ fun LanguageToggleSettingsCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.lang_display_language),
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = DepthTypeTokens.ListRowTitleSize,
                 color = TextPrimaryReport
             )
             Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
             Text(
                 text = stringResource(R.string.lang_datastore_value_fmt, stringResource(currentLang.titleRes)),
-                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                style = MaterialTheme.typography.bodyMedium,
                 color = OnSurfaceVariantLight
             )
         }

@@ -114,12 +114,12 @@ class Stage26GSpecGapsUnitTest {
         assertEquals(4.dp, Dimens.RecoveryTileShadowBlur)
 
         // Gap 4: Report read-only well geometry (Stage 29A flat UI)
-        assertEquals(52.dp, Dimens.TextFieldHeightReport)
-        assertEquals(14.dp, Dimens.RadiusReportInput)
-        assertEquals(14.dp, Dimens.InsetFieldPaddingHorizontal)
+        assertEquals(44.dp, Dimens.TextFieldHeightReport)
+        assertEquals(8.dp, Dimens.RadiusReportInput)
+        assertEquals(12.dp, Dimens.InsetFieldPaddingHorizontal)
         assertEquals(0.dp, Dimens.ReportReadOnlyShadowOffsetY)
         assertEquals(0.dp, Dimens.ReportReadOnlyShadowBlur)
-        assertEquals(16.sp, DepthTypeTokens.ReportFieldTextSize)
+        assertEquals(14.sp, DepthTypeTokens.ReportFieldTextSize)
     }
 
     @Test

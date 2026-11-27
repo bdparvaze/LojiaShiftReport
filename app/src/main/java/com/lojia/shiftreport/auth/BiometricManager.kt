@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -609,14 +610,14 @@ private fun LojiaPasswordLoginContent(
         label = {
             Text(
                 text = stringResource(R.string.auth_username_or_email),
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.AuthFooterTextSize
             )
         },
         placeholder = {
             Text(
                 text = stringResource(R.string.auth_username_or_email),
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.InsetPlaceholderSize,
                 color = hintGray
             )
@@ -639,7 +640,7 @@ private fun LojiaPasswordLoginContent(
         ),
         textStyle = TextStyle(
             color = charcoalText,
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
@@ -656,14 +657,14 @@ private fun LojiaPasswordLoginContent(
         label = {
             Text(
                 text = stringResource(R.string.password),
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.AuthFooterTextSize
             )
         },
         placeholder = {
             Text(
                 text = stringResource(R.string.password),
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.InsetPlaceholderSize,
                 color = hintGray
             )
@@ -702,7 +703,7 @@ private fun LojiaPasswordLoginContent(
         ),
         textStyle = TextStyle(
             color = charcoalText,
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
@@ -750,7 +751,7 @@ private fun LojiaPasswordLoginContent(
             Spacer(modifier = Modifier.width(7.dp))
             Text(
                 text = stringResource(R.string.auth_remember_me),
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.AuthRowLinkTextSize,
                 fontWeight = FontWeight.Medium,
                 color = mediumGray,
@@ -761,7 +762,7 @@ private fun LojiaPasswordLoginContent(
 
         Text(
             text = stringResource(R.string.auth_forgot_password),
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = DepthTypeTokens.AuthRowLinkTextSize,
             fontWeight = FontWeight.SemiBold,
             color = primaryIndigo,
@@ -794,7 +795,7 @@ private fun LojiaPasswordLoginContent(
             Text(
                 text = loginErrorMessage,
                 color = errorRed,
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
@@ -819,7 +820,7 @@ private fun LojiaPasswordLoginContent(
     ) {
         Text(
             text = stringResource(R.string.auth_no_account) + " ",
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = DepthTypeTokens.AuthFooterTextSize,
             color = mediumGray,
             maxLines = 1,
@@ -827,7 +828,7 @@ private fun LojiaPasswordLoginContent(
         )
         Text(
             text = stringResource(R.string.auth_register_here),
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = DepthTypeTokens.AuthFooterTextSize,
             fontWeight = FontWeight.Bold,
             color = primaryIndigo,

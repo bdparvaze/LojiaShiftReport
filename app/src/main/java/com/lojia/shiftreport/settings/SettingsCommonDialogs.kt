@@ -3,6 +3,9 @@ package com.lojia.shiftreport.settings
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.lojia.shiftreport.ui.common.DialogSize
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaMultilineTextField
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.*
@@ -81,14 +84,6 @@ import androidx.compose.ui.text.input.KeyboardType
 
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 
-
-import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.ui.unit.sp
-
-
-
 import com.lojia.shiftreport.util.ExportHelper
 import com.lojia.shiftreport.util.NotificationHelper
 import com.lojia.shiftreport.util.SecurityUtils
@@ -128,15 +123,15 @@ fun SettingsCommonDialogs(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
@@ -144,13 +139,13 @@ fun SettingsCommonDialogs(
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                     Text(
                         text = stringResource(R.string.admin_authorization_required),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = OnSurfaceLight
                     )
                 }
@@ -158,13 +153,13 @@ fun SettingsCommonDialogs(
                 Column {
                     Text(
                         stringResource(R.string.this_setting_is_protected),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondaryLight
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingLg))
                     Column {
-                        Text(stringResource(R.string.msg_admin_pin_required), style = MaterialTheme.typography.labelSmall)
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(stringResource(R.string.msg_admin_pin_required), style = MaterialTheme.typography.labelMedium)
+                        Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                         PinCells(
                             value = enteredPin,
                             onValueChange = {
@@ -183,7 +178,7 @@ fun SettingsCommonDialogs(
                         Text(
                             stringResource(R.string.incorrect_pin_try_again),
                             color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -243,7 +238,7 @@ fun SettingsCommonDialogs(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
+                        .padding(top = Dimens.SpacingXs),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -263,15 +258,15 @@ fun SettingsCommonDialogs(
             Column(
                 modifier = Modifier
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
@@ -279,27 +274,26 @@ fun SettingsCommonDialogs(
                         Icon(
                             imageVector = Icons.Default.Gavel,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                     Text(
                         text = stringResource(R.string.terms_conditions_1),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = OnSurfaceLight
                     )
                 }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 320.dp)
+                        .heightIn(max = Dimens.DialogListMaxHeight)
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
                         text = stringResource(R.string.msg_1_license_usagenlojia_system),
-                        fontSize = 13.sp,
-                        color = TextPrimaryLight,
-                        lineHeight = 18.sp
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextPrimaryLight
                     )
                 }
                 Button(
@@ -331,15 +325,15 @@ fun SettingsCommonDialogs(
             Column(
                 modifier = Modifier
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
@@ -347,27 +341,26 @@ fun SettingsCommonDialogs(
                         Icon(
                             imageVector = Icons.Default.Security,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                     Text(
                         text = stringResource(R.string.privacy_policy_2),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = OnSurfaceLight
                     )
                 }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 320.dp)
+                        .heightIn(max = Dimens.DialogListMaxHeight)
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
                         text = stringResource(R.string.msg_1_data_collectionnlojia_system),
-                        fontSize = 13.sp,
-                        color = TextPrimaryLight,
-                        lineHeight = 18.sp
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextPrimaryLight
                     )
                 }
                 Button(
@@ -405,29 +398,44 @@ fun SettingsCommonDialogs(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(
                     text = stringResource(R.string.submit_support_ticket),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = OnSurfaceLight
                 )
                 if (ticketSubmitted) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(Dimens.SpacingLg),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(48.dp))
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(stringResource(R.string.ticket_tk8892_created), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text(stringResource(R.string.our_technical_support_team), fontSize = 13.sp, color = TextSecondaryLight)
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = SuccessGreen,
+                            modifier = Modifier.size(Dimens.PinDialogIconSize)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.SpacingMd))
+                        Text(
+                            stringResource(R.string.ticket_tk8892_created),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            stringResource(R.string.our_technical_support_team),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondaryLight
+                        )
                     }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(stringResource(R.string.need_help_with_pos), fontSize = 13.sp, color = TextSecondaryLight)
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
+                        Text(
+                            stringResource(R.string.need_help_with_pos),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondaryLight
+                        )
                         val subjectLabel = stringResource(R.string.subject_eg_printer_setup)
                         LojiaTextField(
                             value = subject,
@@ -445,7 +453,7 @@ fun SettingsCommonDialogs(
                             contentDescription = issueDetailsLabel,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 100.dp)
+                                .heightIn(min = Dimens.MultilineFieldMinHeight)
                         )
                     }
                 }
@@ -519,7 +527,7 @@ fun SettingsCommonDialogs(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
+                        .padding(top = Dimens.SpacingXs),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -593,28 +601,27 @@ fun ChangeQuickPinDialog(
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(Dimens.PinDialogIconSize)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Outlined.Pin,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(Dimens.IconLg)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = stepTitle,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                 Text(
                     text = stringResource(R.string.settings_step_of_format, displayStep, totalSteps),
                     style = MaterialTheme.typography.labelMedium,
@@ -623,7 +630,7 @@ fun ChangeQuickPinDialog(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -636,7 +643,7 @@ fun ChangeQuickPinDialog(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXl))
 
                 when (step) {
                     1 -> {
@@ -710,7 +717,7 @@ fun ChangeQuickPinDialog(
                 }
 
                 if (errorMessage != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                     Text(
                         text = errorMessage ?: "",
                         color = MaterialTheme.colorScheme.error,
@@ -720,7 +727,7 @@ fun ChangeQuickPinDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             val confirmAction = @Composable {
                 Button(
@@ -840,30 +847,29 @@ fun ChangePasswordDialog(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(Dimens.DialogHeaderBadgeSize)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.Lock,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
                 Text(
                     text = stringResource(R.string.change_password_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineSmall
                 )
             }
 
@@ -905,8 +911,8 @@ fun ChangePasswordDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .depthInset(shape = RoundedCornerShape(Dimens.RadiusSm))
-                    .padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(Dimens.SpacingSm),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
             ) {
                 PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_length), isMet = hasMinLength)
                 PasswordRuleItem(text = stringResource(R.string.settings_pw_rule_digit), isMet = hasDigit)
@@ -993,7 +999,7 @@ fun ChangePasswordDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1008,13 +1014,13 @@ fun ChangePasswordDialog(
 private fun PasswordRuleItem(text: String, isMet: Boolean) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
     ) {
         Icon(
             imageVector = if (isMet) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
             contentDescription = null,
             tint = if (isMet) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(Dimens.IconXs)
         )
         Text(
             text = text,
@@ -1050,30 +1056,29 @@ fun ChangeEmailDialog(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(Dimens.DialogHeaderBadgeSize)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.Email,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
                 Text(
                     text = stringResource(R.string.settings_change_email_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineSmall
                 )
             }
 
@@ -1193,7 +1198,7 @@ fun ChangeEmailDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

@@ -172,7 +172,7 @@ fun LojiaTextField(
                 colors = colors,
                 contentPadding = PaddingValues(
                     horizontal = Dimens.InsetFieldPaddingHorizontal,
-                    vertical = Dimens.SpacingMd
+                    vertical = Dimens.SpacingSm
                 ),
                 container = {
                     val resolvedBorderOverride = when {

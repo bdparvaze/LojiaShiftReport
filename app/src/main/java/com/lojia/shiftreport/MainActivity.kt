@@ -422,7 +422,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
                                             LojiaGradientHeader(
                                                 shape = RectangleShape,
-                                                contentPadding = PaddingValues(0.dp)
+                                                contentPadding = PaddingValues(Dimens.SpacingNone)
                                             ) {
                                                 Column(
                                                     modifier = Modifier
@@ -457,8 +457,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                                             Text(
                                                                 text = screenTitle,
                                                                 color = PureWhite,
-                                                                fontWeight = FontWeight.SemiBold,
-                                                                fontSize = DepthTypeTokens.TopBarTitleSize,
+                                                                style = MaterialTheme.typography.headlineSmall,
                                                                 maxLines = 1,
                                                                 modifier = Modifier.weight(1f, fill = false)
                                                             )

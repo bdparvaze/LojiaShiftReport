@@ -1,12 +1,12 @@
 package com.lojia.shiftreport.settings
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,14 +16,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
@@ -33,17 +29,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -52,25 +43,20 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
-import com.lojia.shiftreport.util.calculateInSampleSize
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.report.ReportViewModel
 import com.lojia.shiftreport.settings.ProfileImageCropper.ProfileImageCropperDialog
-import androidx.compose.ui.platform.testTag
+import com.lojia.shiftreport.ui.common.DialogSize
+import com.lojia.shiftreport.ui.common.LojiaCard
 import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaInfoRow
+import com.lojia.shiftreport.ui.common.LojiaSectionHeader
 import com.lojia.shiftreport.ui.common.LojiaTextField
+import com.lojia.shiftreport.ui.common.ProfileAvatar
 import com.lojia.shiftreport.ui.common.lojiaDefaultTextFieldColors
 import com.lojia.shiftreport.ui.theme.BackgroundLight
 import com.lojia.shiftreport.ui.theme.Dimens
@@ -87,18 +73,17 @@ import com.lojia.shiftreport.ui.theme.PrimaryContainerLight
 import com.lojia.shiftreport.ui.theme.PureWhite
 import com.lojia.shiftreport.ui.theme.SuccessGreen
 import com.lojia.shiftreport.ui.theme.SurfaceVariantLight
-import com.lojia.shiftreport.ui.theme.TextHintColor
 import com.lojia.shiftreport.ui.theme.WarningContainer
 import com.lojia.shiftreport.ui.theme.WarningOrange
 import com.lojia.shiftreport.ui.theme.WarningText
 import com.lojia.shiftreport.ui.theme.cardRise
-import com.lojia.shiftreport.ui.theme.depthCard
 import com.lojia.shiftreport.ui.theme.depthRaisedButton
 import com.lojia.shiftreport.ui.theme.depthSecondaryButton
 import com.lojia.shiftreport.ui.theme.depthSemanticCard
 import com.lojia.shiftreport.util.CountryDetector
 import com.lojia.shiftreport.util.SecurityUtils
 import com.lojia.shiftreport.util.buildE164Phone
+import com.lojia.shiftreport.util.calculateInSampleSize
 import com.lojia.shiftreport.util.isValidPhone
 import com.lojia.shiftreport.util.normalizeLocalInput
 
@@ -181,8 +166,8 @@ fun ProfileScreen(
         modifier = modifier
             .fillMaxWidth()
             .background(BackgroundLight)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(Dimens.SpacingLg),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
     ) {
         // TOP: Profile Photo Section - Center (6-Step WhatsApp/Foodics Flow)
         var profileImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -233,69 +218,19 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = Dimens.SpacingSm),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .shadow(Dimens.CardElevation, CircleShape)
-                    .clip(CircleShape)
-                    .clickable { imagePickerLauncher.launch("image/*") }
-                    .border(3.dp, PureWhite, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                if (profileBitmap != null) {
-                    Image(
-                        bitmap = profileBitmap!!,
-                        contentDescription = stringResource(R.string.profile_picture),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(PrimaryContainerLight),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = displayFullName.trim().firstOrNull()?.uppercaseChar()?.toString()
-                                ?: storeOwnerLabel.first().uppercaseChar().toString(),
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlueLight
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryBlueLight)
-                        .border(2.dp, PureWhite, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.profile_edit_picture_cd),
-                        tint = PureWhite,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
+            ProfileAvatar(
+                bitmap = profileBitmap,
+                onClick = { imagePickerLauncher.launch("image/*") }
+            )
 
             Text(
                 text = displayFullName,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall,
                 color = OnBackgroundLight,
-                modifier = Modifier.padding(top = 12.dp)
+                modifier = Modifier.padding(top = Dimens.SpacingSm)
             )
         }
 
@@ -317,232 +252,131 @@ fun ProfileScreen(
         }
 
         // SECTION 1: PERSONAL INFORMATION
-        ProfileSectionTitle(stringResource(R.string.profile_section_personal))
+        LojiaSectionHeader(stringResource(R.string.profile_section_personal))
 
         // 1. Full Name
-        ProfileItemCard(
-            icon = Icons.Default.Person,
-            title = stringResource(R.string.profile_full_name_label),
-            value = displayFullName,
-            riseIndex = 0,
-            onClick = { showEditNameDialog = true }
-        )
+        LojiaCard(
+            modifier = Modifier.cardRise(0),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
+        ) {
+            LojiaInfoRow(
+                icon = Icons.Default.Person,
+                title = stringResource(R.string.profile_full_name_label),
+                value = displayFullName,
+                onClick = { showEditNameDialog = true }
+            )
+        }
 
         // 2. User ID (READ-ONLY)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .cardRise(1)
-                .depthSemanticCard(
-                    backgroundColor = BackgroundLight,
-                    borderColor = OutlineLight,
-                    shape = RoundedCornerShape(Dimens.RadiusLg)
-                )
-                .drawBehind {
-                    drawRoundRect(
-                        color = OutlineLight,
-                        style = Stroke(
-                            width = 1.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)
-                        ),
-                        cornerRadius = CornerRadius(16.dp.toPx())
-                    )
-                }
-                .heightIn(min = Dimens.MinTouchTarget)
-                .clickable {
-                    clipboardManager.setText(AnnotatedString(displayUsername))
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.profile_userid_permanent_toast),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        val copyUserIdAction = {
+            clipboardManager.setText(AnnotatedString(displayUsername))
+            Toast.makeText(
+                context,
+                context.getString(R.string.profile_userid_permanent_toast),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        LojiaCard(
+            modifier = Modifier.cardRise(1),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(SurfaceVariantLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Badge,
-                        contentDescription = null,
-                        tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp, end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.profile_userid_label),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OnBackgroundLight
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(SurfaceVariantLight)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.profile_cannot_be_changed),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = OnSurfaceVariantLight
-                            )
-                        }
-                    }
-                    Text(
-                        text = displayUsername,
-                        fontSize = 13.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = OnSurfaceVariantLight,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = stringResource(R.string.profile_locked_cd),
-                    tint = TextHintColor,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = stringResource(R.string.profile_copy_userid_cd),
-                    tint = PrimaryBlueLight,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            LojiaInfoRow(
+                icon = Icons.Default.Badge,
+                iconTint = OnSurfaceVariantLight,
+                iconContainerColor = SurfaceVariantLight,
+                title = stringResource(R.string.profile_userid_label),
+                value = displayUsername,
+                valueFontFamily = FontFamily.Monospace,
+                locked = true,
+                lockedLabel = stringResource(R.string.profile_cannot_be_changed),
+                lockedContentDescription = stringResource(R.string.profile_locked_cd),
+                onCopy = copyUserIdAction,
+                copyContentDescription = stringResource(R.string.profile_copy_userid_cd),
+                onClick = copyUserIdAction
+            )
         }
 
         // 3. Email Address
-        ProfileItemCard(
-            icon = Icons.Default.Email,
-            title = stringResource(R.string.profile_email_label),
-            value = displayEmail,
-            riseIndex = 2,
-            onClick = { showEditEmailDialog = true }
-        )
-
-        // 4. Phone Number
-        ProfileItemCard(
-            icon = Icons.Default.Phone,
-            title = stringResource(R.string.profile_phone_label),
-            value = displayPhone,
-            riseIndex = 3,
-            onClick = { showEditPhoneDialog = true }
-        )
-
-        // 5. Address
-        ProfileItemCard(
-            icon = Icons.Default.LocationOn,
-            title = stringResource(R.string.profile_address_label),
-            value = if (addressCount > 0) {
-                stringResource(R.string.saved_addresses_count_format, addressCount)
-            } else {
-                stringResource(R.string.profile_add_address_hint)
-            },
-            riseIndex = 4,
-            onClick = {
-                reportViewModel.selectReportSettingsMenu("saved_addresses")
-            }
-        )
-
-        // SECTION 2: SECURITY & RECOVERY
-        ProfileSectionTitle(stringResource(R.string.profile_section_security))
-
-        // 6. Recovery Question
-        ProfileItemCard(
-            icon = Icons.Default.HelpOutline,
-            title = stringResource(R.string.profile_recovery_question_label),
-            value = if (displayRecoveryQuestion.isNotBlank()) {
-                "$displayRecoveryQuestion ••••"
-            } else {
-                stringResource(R.string.profile_set_recovery_hint)
-            },
-            riseIndex = 5,
-            onClick = { showEditRecoveryDialog = true }
-        )
-
-        // 7. Password
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .cardRise(6)
-                .depthCard()
-                .heightIn(min = Dimens.MinTouchTarget)
-                .clickable { showProfileChangePasswordDialog = true }
+        LojiaCard(
+            modifier = Modifier.cardRise(2),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(ErrorContainerLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Key,
-                        contentDescription = null,
-                        tint = ErrorRedLight,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp, end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.password),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OnBackgroundLight
-                    )
-                    Text(
-                        text = "•••••••• • ${stringResource(R.string.change_password_desc)}",
-                        fontSize = 13.sp,
-                        color = OnSurfaceVariantLight,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = TextHintColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            LojiaInfoRow(
+                icon = Icons.Default.Email,
+                title = stringResource(R.string.profile_email_label),
+                value = displayEmail,
+                onClick = { showEditEmailDialog = true }
+            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // 4. Phone Number
+        LojiaCard(
+            modifier = Modifier.cardRise(3),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
+        ) {
+            LojiaInfoRow(
+                icon = Icons.Default.Phone,
+                title = stringResource(R.string.profile_phone_label),
+                value = displayPhone,
+                onClick = { showEditPhoneDialog = true }
+            )
+        }
+
+        // 5. Address
+        LojiaCard(
+            modifier = Modifier.cardRise(4),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
+        ) {
+            LojiaInfoRow(
+                icon = Icons.Default.LocationOn,
+                title = stringResource(R.string.profile_address_label),
+                value = if (addressCount > 0) {
+                    stringResource(R.string.saved_addresses_count_format, addressCount)
+                } else {
+                    stringResource(R.string.profile_add_address_hint)
+                },
+                onClick = {
+                    reportViewModel.selectReportSettingsMenu("saved_addresses")
+                }
+            )
+        }
+
+        // SECTION 2: SECURITY & RECOVERY
+        LojiaSectionHeader(stringResource(R.string.profile_section_security))
+
+        // 6. Recovery Question
+        LojiaCard(
+            modifier = Modifier.cardRise(5),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
+        ) {
+            LojiaInfoRow(
+                icon = Icons.Default.HelpOutline,
+                title = stringResource(R.string.profile_recovery_question_label),
+                value = if (displayRecoveryQuestion.isNotBlank()) {
+                    "$displayRecoveryQuestion ••••"
+                } else {
+                    stringResource(R.string.profile_set_recovery_hint)
+                },
+                onClick = { showEditRecoveryDialog = true }
+            )
+        }
+
+        // 7. Password
+        LojiaCard(
+            modifier = Modifier.cardRise(6),
+            contentPadding = PaddingValues(Dimens.SpacingNone)
+        ) {
+            LojiaInfoRow(
+                icon = Icons.Default.Key,
+                iconTint = ErrorRedLight,
+                iconContainerColor = ErrorContainerLight,
+                title = stringResource(R.string.password),
+                value = "•••••••• • ${stringResource(R.string.change_password_desc)}",
+                onClick = { showProfileChangePasswordDialog = true }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
     }
 
     // A. Edit Full Name Dialog
@@ -683,95 +517,6 @@ fun EnterpriseProfileScreen(
 }
 
 @Composable
-private fun ProfileSectionTitle(title: String) {
-    Text(
-        text = title,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        color = PrimaryBlueLight,
-        modifier = Modifier
-            .padding(top = 12.dp, bottom = 4.dp)
-            .drawBehind {
-                drawLine(
-                    color = PrimaryBlueLight,
-                    start = Offset(0f, 0f),
-                    end = Offset(0f, size.height),
-                    strokeWidth = 3.dp.toPx()
-                )
-            }
-            .padding(start = 8.dp)
-    )
-}
-
-@Composable
-private fun ProfileItemCard(
-    icon: ImageVector,
-    title: String,
-    value: String,
-    riseIndex: Int = 0,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .cardRise(riseIndex)
-            .depthCard()
-            .heightIn(min = Dimens.MinTouchTarget)
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryContainerLight),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = PrimaryBlueLight,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp, end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnBackgroundLight
-                )
-                Text(
-                    text = value,
-                    fontSize = 13.sp,
-                    color = OnSurfaceVariantLight,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = TextHintColor,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
 private fun EditFullNameDialog(
     initialFirst: String,
     initialLast: String,
@@ -784,26 +529,38 @@ private fun EditFullNameDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+        size = DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlueLight)
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PrimaryBlueLight,
+                        modifier = Modifier.size(Dimens.IconMd)
+                    )
                 }
-                Text(stringResource(R.string.profile_edit_full_name_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+                Text(
+                    text = stringResource(R.string.profile_edit_full_name_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = OnBackgroundLight
+                )
             }
 
             val firstNameLabel = stringResource(R.string.profile_first_name_label)
@@ -849,9 +606,9 @@ private fun EditFullNameDialog(
             ) {
                 Text(
                     text = stringResource(R.string.profile_full_name_info),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryBlueDark,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(Dimens.CardPadding)
                 )
             }
 
@@ -911,26 +668,38 @@ private fun EditEmailDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+        size = DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryBlueLight)
+                    Icon(
+                        Icons.Default.Email,
+                        contentDescription = null,
+                        tint = PrimaryBlueLight,
+                        modifier = Modifier.size(Dimens.IconMd)
+                    )
                 }
-                Text(stringResource(R.string.profile_edit_email_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+                Text(
+                    text = stringResource(R.string.profile_edit_email_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = OnBackgroundLight
+                )
             }
 
             val emailRequiredLabel = stringResource(R.string.profile_email_required_label)
@@ -960,9 +729,9 @@ private fun EditEmailDialog(
             ) {
                 Text(
                     text = stringResource(R.string.profile_email_verification_note),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryBlueDark,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(Dimens.CardPadding)
                 )
             }
 
@@ -1037,7 +806,7 @@ private fun EditPhoneDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+        size = DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
@@ -1052,17 +821,21 @@ private fun EditPhoneDialog(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(Dimens.EmployeeAvatarTileSize)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Phone, contentDescription = null, tint = PrimaryBlueLight)
+                    Icon(
+                        Icons.Default.Phone,
+                        contentDescription = null,
+                        tint = PrimaryBlueLight,
+                        modifier = Modifier.size(Dimens.IconMd)
+                    )
                 }
                 Text(
                     text = stringResource(R.string.profile_edit_phone_title),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = OnBackgroundLight
                 )
             }
@@ -1193,26 +966,38 @@ private fun EditRecoveryQuestionDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+        size = DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.HelpOutline, contentDescription = null, tint = PrimaryBlueLight)
+                    Icon(
+                        Icons.Default.HelpOutline,
+                        contentDescription = null,
+                        tint = PrimaryBlueLight,
+                        modifier = Modifier.size(Dimens.IconMd)
+                    )
                 }
-                Text(stringResource(R.string.profile_edit_recovery_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+                Text(
+                    text = stringResource(R.string.profile_edit_recovery_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = OnBackgroundLight
+                )
             }
 
             val recoveryQuestions = recoveryQuestionOptions()
@@ -1283,9 +1068,9 @@ private fun EditRecoveryQuestionDialog(
             ) {
                 Text(
                     text = stringResource(R.string.profile_recovery_info),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = WarningText,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(Dimens.CardPadding)
                 )
             }
 
@@ -1372,26 +1157,38 @@ private fun ProfileChangePasswordDialog(
 
     LojiaDialog(
         onDismissRequest = onDismiss,
-        size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+        size = DialogSize.Medium
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(ErrorContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Key, contentDescription = null, tint = ErrorRedLight)
+                    Icon(
+                        Icons.Default.Key,
+                        contentDescription = null,
+                        tint = ErrorRedLight,
+                        modifier = Modifier.size(Dimens.IconMd)
+                    )
                 }
-                Text(stringResource(R.string.change_password_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = OnBackgroundLight)
+                Text(
+                    text = stringResource(R.string.change_password_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = OnBackgroundLight
+                )
             }
 
             val currentPasswordLabel = stringResource(R.string.profile_current_password_label)
@@ -1437,7 +1234,7 @@ private fun ProfileChangePasswordDialog(
             if (newPass.isNotEmpty()) {
                 Text(
                     text = stringResource(R.string.profile_password_strength_format, strengthLabel),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = strengthColor
                 )
@@ -1468,7 +1265,7 @@ private fun ProfileChangePasswordDialog(
                 Text(
                     text = errorText!!,
                     color = ErrorRedLight,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
             }

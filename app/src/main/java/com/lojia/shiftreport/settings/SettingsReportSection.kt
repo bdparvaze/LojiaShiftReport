@@ -72,12 +72,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 
 
-import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.ui.unit.sp
-
-
+import com.lojia.shiftreport.ui.common.DialogSize
+import com.lojia.shiftreport.ui.common.LojiaDialog
+import com.lojia.shiftreport.ui.common.LojiaSectionHeader
+import com.lojia.shiftreport.ui.common.LojiaSettingRow
+import com.lojia.shiftreport.ui.common.LojiaSettingsCard
 import java.util.*
 import androidx.compose.ui.res.stringResource
 
@@ -215,13 +214,13 @@ fun SettingsReportSection(
                         Column {
                             Text(
                                 stringResource(R.string.daily_shift_report),
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = DepthTypeTokens.ListRowTitleSize,
                                 color = TextPrimaryReport
                             )
                             Text(
                                 stringResource(R.string.audit_drawer_cash_create),
-                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = OnSurfaceVariantLight
                             )
                         }
@@ -247,7 +246,7 @@ fun SettingsReportSection(
                     ) {
                         Text(
                             stringResource(R.string.open_2),
-                            fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -260,18 +259,10 @@ fun SettingsReportSection(
             // 0. ROOT / ALL SETTINGS HUB (Overview of all Shift Report Settings)
             // =================================================================
             "root", "all", "overview" -> {
-                Text(
-                    text = stringResource(R.string.staff_admin_section).uppercase(),
-                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
-                    color = OnSurfaceVariantLight,
-                    modifier = Modifier.padding(
-                        start = Dimens.SpacingXl,
-                        end = Dimens.SpacingXl,
-                        top = Dimens.SpacingSm,
-                        bottom = Dimens.SpacingSm
-                    )
+                LojiaSectionHeader(
+                    text = stringResource(R.string.staff_admin_section),
+                    uppercase = true,
+                    modifier = Modifier.padding(horizontal = Dimens.SpacingLg)
                 )
 
                 Box(
@@ -323,18 +314,10 @@ fun SettingsReportSection(
                     }
                 }
 
-                Text(
-                    text = stringResource(R.string.security_data_section).uppercase(),
-                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
-                    color = OnSurfaceVariantLight,
-                    modifier = Modifier.padding(
-                        start = Dimens.SpacingXl,
-                        end = Dimens.SpacingXl,
-                        top = Dimens.SpacingLg,
-                        bottom = Dimens.SpacingSm
-                    )
+                LojiaSectionHeader(
+                    text = stringResource(R.string.security_data_section),
+                    uppercase = true,
+                    modifier = Modifier.padding(horizontal = Dimens.SpacingLg)
                 )
 
                 Box(
@@ -386,18 +369,10 @@ fun SettingsReportSection(
                     }
                 }
 
-                Text(
-                    text = stringResource(R.string.regional_interface_section).uppercase(),
-                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
-                    color = OnSurfaceVariantLight,
-                    modifier = Modifier.padding(
-                        start = Dimens.SpacingXl,
-                        end = Dimens.SpacingXl,
-                        top = Dimens.SpacingLg,
-                        bottom = Dimens.SpacingSm
-                    )
+                LojiaSectionHeader(
+                    text = stringResource(R.string.regional_interface_section),
+                    uppercase = true,
+                    modifier = Modifier.padding(horizontal = Dimens.SpacingLg)
                 )
 
                 RegionalPreferencesCard(
@@ -413,18 +388,10 @@ fun SettingsReportSection(
                         .cardRise(3)
                 )
 
-                Text(
-                    text = stringResource(R.string.system_support_section).uppercase(),
-                    fontSize = DepthTypeTokens.SettingsSectionHeaderSize,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking,
-                    color = OnSurfaceVariantLight,
-                    modifier = Modifier.padding(
-                        start = Dimens.SpacingXl,
-                        end = Dimens.SpacingXl,
-                        top = Dimens.SpacingLg,
-                        bottom = Dimens.SpacingSm
-                    )
+                LojiaSectionHeader(
+                    text = stringResource(R.string.system_support_section),
+                    uppercase = true,
+                    modifier = Modifier.padding(horizontal = Dimens.SpacingLg)
                 )
 
                 Box(
@@ -503,7 +470,7 @@ fun SettingsReportSection(
                                 ) {
                                     Text(
                                         stringResource(R.string.launch_1),
-                                        fontSize = DepthTypeTokens.PrimaryCtaSmallSize,
+                                        style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -586,14 +553,14 @@ fun SettingsReportSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.cd_quick_login_pin),
-                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextPrimaryReport
                             )
                             Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = stringResource(R.string.settings_unlock_pos_pin_desc),
-                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = OnSurfaceVariantLight
                             )
                         }
@@ -657,14 +624,14 @@ fun SettingsReportSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.cd_change_pin),
-                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextPrimaryReport
                             )
                             Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = stringResource(R.string.settings_tap_update_pin_desc),
-                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = OnSurfaceVariantLight
                             )
                         }
@@ -700,14 +667,14 @@ fun SettingsReportSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.biometric_login),
-                                fontSize = DepthTypeTokens.ListRowTitleSize,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextPrimaryReport
                             )
                             Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = stringResource(R.string.settings_fingerprint_face_id),
-                                fontSize = DepthTypeTokens.ListRowSubtitleSize,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = OnSurfaceVariantLight
                             )
                         }
@@ -995,19 +962,18 @@ fun SettingsReportSection(
                 var tempVal by remember(fieldName) { mutableStateOf(fieldVal) }
                 LojiaDialog(
                     onDismissRequest = { editFieldDialog = null },
-                    size = com.lojia.shiftreport.ui.common.DialogSize.Medium
+                    size = DialogSize.Medium
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
                             .imePadding(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                     ) {
                         Text(
                             text = stringResource(R.string.edit_field_title, fieldName),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineSmall,
                             color = OnSurfaceLight
                         )
 
@@ -1068,7 +1034,7 @@ fun SettingsReportSection(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp),
+                                .padding(top = Dimens.SpacingXs),
                             horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -1113,23 +1079,21 @@ fun SettingsReportSection(
     if (showTermsModal) {
         LojiaDialog(
             onDismissRequest = { showTermsModal = false },
-            size = com.lojia.shiftreport.ui.common.DialogSize.Small
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(
                     text = stringResource(R.string.terms_of_service),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = OnSurfaceLight
                 )
                 Text(
                     text = stringResource(R.string.by_using_lojia_shift),
-                    fontSize = 13.sp,
-                    color = OnSurfaceVariantLight,
-                    lineHeight = 18.sp
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurfaceVariantLight
                 )
                 Button(
                     onClick = { showTermsModal = false },
@@ -1155,23 +1119,21 @@ fun SettingsReportSection(
     if (showPrivacyModal) {
         LojiaDialog(
             onDismissRequest = { showPrivacyModal = false },
-            size = com.lojia.shiftreport.ui.common.DialogSize.Small
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(
                     text = stringResource(R.string.privacy_policy_2),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = OnSurfaceLight
                 )
                 Text(
                     text = stringResource(R.string.your_financial_data_shift),
-                    fontSize = 13.sp,
-                    color = OnSurfaceVariantLight,
-                    lineHeight = 18.sp
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurfaceVariantLight
                 )
                 Button(
                     onClick = { showPrivacyModal = false },

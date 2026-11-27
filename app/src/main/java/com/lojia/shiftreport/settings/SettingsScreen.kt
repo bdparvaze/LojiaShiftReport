@@ -12,55 +12,23 @@ import com.lojia.shiftreport.settings.*
 
 
 import androidx.compose.foundation.background
-
-
 import androidx.compose.foundation.layout.*
-
-
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-
-
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.*
-
-
 import androidx.compose.material.icons.outlined.*
-
-
 import androidx.compose.material3.*
-
-
 import androidx.compose.runtime.*
-
-
 import androidx.compose.ui.Alignment
-
-
 import androidx.compose.ui.Modifier
-
-
 import androidx.compose.ui.graphics.Color
-
-
 import androidx.compose.ui.platform.LocalContext
-
-
 import androidx.compose.ui.platform.testTag
-
-
-import androidx.compose.ui.text.font.FontWeight
-
-
-import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.ui.unit.sp
-
-
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import com.lojia.shiftreport.ui.common.DialogSize
+import com.lojia.shiftreport.ui.common.LojiaDialog
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +104,7 @@ fun SettingsScreen(
                 )
 
                 // Bottom Spacing
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXl))
             }
         }
     }
@@ -145,28 +113,27 @@ fun SettingsScreen(
     if (showRoleSwitchDialog) {
         var roleTarget by remember { mutableStateOf(if (isAdmin) "CASHIER" else "ADMIN") }
 
-        com.lojia.shiftreport.ui.common.LojiaDialog(
+        LojiaDialog(
             onDismissRequest = { showRoleSwitchDialog = false },
-            size = com.lojia.shiftreport.ui.common.DialogSize.Small
+            size = DialogSize.Small
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(
                     text = stringResource(R.string.switch_role),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = OnSurfaceLight
                 )
                 Text(
                     text = stringResource(R.string.select_target_role_to),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondaryLight
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     FilterChip(
                         selected = roleTarget == "ADMIN",
@@ -238,7 +205,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
+                        .padding(top = Dimens.SpacingXs),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

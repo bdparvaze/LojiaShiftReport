@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
@@ -174,7 +175,7 @@ fun QuickPinScreen(
         ) {
             Text(
                 text = titleText,
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.QuickPinTitleSize,
                 fontWeight = FontWeight.Bold,
                 color = OnBackgroundLight,
@@ -185,7 +186,7 @@ fun QuickPinScreen(
 
             Text(
                 text = subtitleText,
-                fontFamily = PoppinsFontFamily,
+                fontFamily = FontFamily.Default,
                 fontSize = DepthTypeTokens.QuickPinSubtitleSize,
                 color = OnSurfaceVariantLight,
                 textAlign = TextAlign.Center
@@ -352,7 +353,7 @@ fun QuickPinScreen(
                                         ) {
                                             Text(
                                                 text = item,
-                                                fontFamily = PoppinsFontFamily,
+                                                fontFamily = FontFamily.Default,
                                                 fontSize = DepthTypeTokens.KeypadDigitSize,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = if (isLockedOut) OnSurfaceVariantLight else OnBackgroundLight,
@@ -377,7 +378,7 @@ fun QuickPinScreen(
             ) {
                 Text(
                     text = stringResource(R.string.quick_pin_use_password),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     color = PrimaryBlueLight,
                     fontSize = DepthTypeTokens.QuickPinFallbackTextSize,
                     fontWeight = FontWeight.SemiBold

@@ -2283,4 +2283,7 @@
     <!-- Stage 33: Dialogs, PinCells & Blank Business Name -->
     <string name="pin_cells_cd_fmt">PIN, %1$d of %2$d digits entered</string>
     <string name="business_name_not_set">Business name not set</string>
+
+    <!-- Stage 34A: Compact Profile Avatar -->
+    <string name="profile_add_picture_cd">Add profile picture</string>
 </resources>

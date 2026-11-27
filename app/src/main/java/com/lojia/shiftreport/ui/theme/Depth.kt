@@ -462,21 +462,21 @@ object DepthTypeTokens {
     val KeypadDeleteTextSize: TextUnit = 16.sp
     val QuickPinFallbackTextSize: TextUnit = 14.sp
 
-    val TopBarTitleSize: TextUnit = 20.sp
-    val TabLabelSize: TextUnit = 15.sp
-    val ReportFieldLabelSize: TextUnit = 13.sp
-    val ReportFieldTextSize: TextUnit = 16.sp
-    val SectionTitleSize: TextUnit = 16.sp
-    val HeroAmountSize: TextUnit = 24.sp
+    val TopBarTitleSize: TextUnit = 16.sp
+    val TabLabelSize: TextUnit = 13.sp
+    val ReportFieldLabelSize: TextUnit = 12.sp
+    val ReportFieldTextSize: TextUnit = 14.sp
+    val SectionTitleSize: TextUnit = 13.sp
+    val HeroAmountSize: TextUnit = 20.sp
 
     val SettingsSectionHeaderSize: TextUnit = 12.sp
     val SettingsSectionHeaderTracking: TextUnit = 0.48.sp
-    val ListRowTitleSize: TextUnit = 14.sp
+    val ListRowTitleSize: TextUnit = 13.sp
     val ListRowSubtitleSize: TextUnit = 12.sp
-    val CardSectionHeadingSize: TextUnit = 15.sp
-    val PrimaryCtaSmallSize: TextUnit = 14.sp
-    val ChipLabelSize: TextUnit = 12.sp
-    val SegmentedChipTextSize: TextUnit = 13.sp
+    val CardSectionHeadingSize: TextUnit = 13.sp
+    val PrimaryCtaSmallSize: TextUnit = 13.sp
+    val ChipLabelSize: TextUnit = 11.sp
+    val SegmentedChipTextSize: TextUnit = 12.sp
     val StatCountSize: TextUnit = 18.sp
     val EmptyStateTitleSize: TextUnit = 16.sp
     /** Register dial-code button text size (13.5.sp). */

@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import java.util.Locale
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -79,7 +80,7 @@ fun LojiaHeader(
 
         Text(
             text = stringResource(R.string.app_name),
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = DepthTypeTokens.LogoTitleSize,
             fontWeight = FontWeight.ExtraBold,
             color = PrimaryBlueLight,
@@ -90,7 +91,7 @@ fun LojiaHeader(
 
         Text(
             text = stringResource(R.string.auth_tagline),
-            fontFamily = PoppinsFontFamily,
+            fontFamily = FontFamily.Default,
             fontSize = DepthTypeTokens.LogoSubtitleSize,
             fontWeight = FontWeight.SemiBold,
             color = OnSurfaceVariantLight,
@@ -156,7 +157,7 @@ fun LojiaSectionHeader(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 13.5.sp,
+                    fontFamily = FontFamily.Default, fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = LojiaColors.N900,
                     maxLines = 1,
@@ -164,7 +165,7 @@ fun LojiaSectionHeader(
                 )
                 Text(
                     text = subtitle,
-                    fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 10.8.sp,
+                    fontFamily = FontFamily.Default, fontSize = 10.8.sp,
                     color = LojiaColors.N500,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -217,7 +218,7 @@ fun LojiaInputField(
             ) {
                 Text(
                     text = label,
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.RegisterLabelSize,
                     fontWeight = FontWeight.SemiBold,
                     color = OnSurfaceVariantLight
@@ -225,7 +226,7 @@ fun LojiaInputField(
                 if (isRequired) {
                     Text(
                         text = " *",
-                        fontFamily = PoppinsFontFamily,
+                        fontFamily = FontFamily.Default,
                         fontSize = DepthTypeTokens.RegisterLabelSize,
                         fontWeight = FontWeight.Bold,
                         color = if (isValid) SuccessGreen else RequiredStarRed
@@ -243,7 +244,7 @@ fun LojiaInputField(
                     ) {
                         Text(
                             text = "?",
-                            fontFamily = PoppinsFontFamily,
+                            fontFamily = FontFamily.Default,
                             fontSize = 8.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceVariantLight
@@ -264,7 +265,7 @@ fun LojiaInputField(
             ) {
                 Text(
                     text = infoTooltip,
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = 10.sp,
                     color = PureWhite,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -319,7 +320,7 @@ fun LojiaInputField(
                         Text(
                             text = placeholder,
                             color = DepthTokens.RegisterPlaceholderColor,
-                            fontFamily = PoppinsFontFamily,
+                            fontFamily = FontFamily.Default,
                             fontSize = DepthTypeTokens.RegisterPlaceholderSize,
                             lineHeight = 18.sp
                         )
@@ -334,7 +335,7 @@ fun LojiaInputField(
                         keyboardActions = keyboardActions,
                         textStyle = TextStyle(
                             color = OnSurfaceLight,
-                            fontFamily = PoppinsFontFamily,
+                            fontFamily = FontFamily.Default,
                             fontSize = DepthTypeTokens.RegisterPlaceholderSize,
                             lineHeight = 18.sp,
                             fontWeight = FontWeight.Normal
@@ -360,21 +361,21 @@ fun LojiaInputField(
             Text(
                 text = errorMessage,
                 color = LojiaColors.R500,
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
+                fontFamily = FontFamily.Default, fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 2.dp)
             )
         } else if (validationState == FieldValidationState.SUCCESS && !successMessage.isNullOrBlank()) {
             Text(
                 text = successMessage,
                 color = LojiaColors.G500,
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
+                fontFamily = FontFamily.Default, fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 2.dp)
             )
         } else if (!hintMessage.isNullOrBlank()) {
             Text(
                 text = hintMessage,
                 color = LojiaColors.N600,
-                fontFamily = com.lojia.shiftreport.ui.theme.PoppinsFontFamily, fontSize = 11.sp,
+                fontFamily = FontFamily.Default, fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 2.dp)
             )
         }
@@ -427,7 +428,7 @@ fun LojiaGradientButton(
                     Text(
                         text = text,
                         color = PureWhite,
-                        fontFamily = PoppinsFontFamily,
+                        fontFamily = FontFamily.Default,
                         fontSize = DepthTypeTokens.PrimaryButtonTextSize,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -436,7 +437,7 @@ fun LojiaGradientButton(
                 Text(
                     text = text,
                     color = contentTint,
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = DepthTypeTokens.PrimaryButtonTextSize,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -638,7 +639,7 @@ fun LojiaCountryPickerDialog(
             ) {
                 Text(
                     text = stringResource(R.string.auth_select_country_code),
-                    fontFamily = PoppinsFontFamily,
+                    fontFamily = FontFamily.Default,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
@@ -674,7 +675,7 @@ fun LojiaCountryPickerDialog(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         singleLine = true,
-                        textStyle = TextStyle(color = OnSurfaceLight, fontFamily = PoppinsFontFamily, fontSize = 13.sp),
+                        textStyle = TextStyle(color = OnSurfaceLight, fontFamily = FontFamily.Default, fontSize = 13.sp),
                         cursorBrush = SolidColor(PrimaryIndigoLight),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -707,7 +708,7 @@ fun LojiaCountryPickerDialog(
                     ) {
                         Text(
                             text = country.dial,
-                            fontFamily = PoppinsFontFamily,
+                            fontFamily = FontFamily.Default,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceLight,
@@ -715,7 +716,7 @@ fun LojiaCountryPickerDialog(
                         )
                         Text(
                             text = displayName,
-                            fontFamily = PoppinsFontFamily,
+                            fontFamily = FontFamily.Default,
                             fontSize = 13.sp,
                             color = OnSurfaceLight,
                             maxLines = 1,
