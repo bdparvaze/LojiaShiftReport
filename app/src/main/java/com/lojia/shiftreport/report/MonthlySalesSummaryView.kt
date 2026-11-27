@@ -107,12 +107,6 @@ import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.text.style.TextAlign
 
-
-import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.ui.unit.sp
-
 import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.util.DateTimeFormatUtils
@@ -352,22 +346,22 @@ fun MonthlySalesSummaryView(
         modifier = modifier
             .fillMaxWidth()
             .testTag("monthly_sales_summary_view"),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
     ) {
-        // 1. Month Navigator Card (~56dp, 14dp radius, depth card)
+        // 1. Month Navigator Card (~56dp, 10dp radius, depth card)
         Surface(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.CardCornerRadius),
             color = Color.Transparent,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp)
+                .heightIn(min = Dimens.TopBarHeight)
                 .cardRise(0)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -379,8 +373,8 @@ fun MonthlySalesSummaryView(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(Dimens.AvatarBadgeSize)
+                            .clip(RoundedCornerShape(Dimens.RadiusLg))
                             .background(SurfaceVariantLight),
                         contentAlignment = Alignment.Center
                     ) {
@@ -388,7 +382,7 @@ fun MonthlySalesSummaryView(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.cd_previous_month),
                             tint = OnBackgroundLight,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
@@ -398,41 +392,40 @@ fun MonthlySalesSummaryView(
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .heightIn(min = Dimens.MinTouchTarget)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(Dimens.RadiusMd))
                         .clickable { calendarMonthOffset = 0 }
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                 ) {
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = null,
                         tint = PrimaryBlue,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Text(
                         text = currentMonthDisplayName,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
                             color = OnBackgroundLight
                         )
                     )
                     if (isCurrentCalendarMonth) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusPill),
                             color = PositiveBannerSurface,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, PositiveBannerBorder)
+                            border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, PositiveBannerBorder)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                modifier = Modifier.padding(horizontal = Dimens.SpacingXs, vertical = Dimens.SpacingXxs),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 LojiaLiveDot()
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = stringResource(R.string.current_month),
-                                    fontSize = 10.5.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = PositiveBannerTextDark
                                 )
@@ -449,8 +442,8 @@ fun MonthlySalesSummaryView(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(Dimens.AvatarBadgeSize)
+                            .clip(RoundedCornerShape(Dimens.RadiusLg))
                             .background(SurfaceVariantLight),
                         contentAlignment = Alignment.Center
                     ) {
@@ -458,7 +451,7 @@ fun MonthlySalesSummaryView(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = stringResource(R.string.cd_next_month),
                             tint = OnBackgroundLight,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                 }
@@ -468,7 +461,7 @@ fun MonthlySalesSummaryView(
         // 2. Primary KPI Highlights Grid (4 Cards in 2x2 Grid)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             MonthlyKpiCard(
                 title = stringResource(R.string.total_revenue),
@@ -490,7 +483,7 @@ fun MonthlySalesSummaryView(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             MonthlyKpiCard(
                 title = stringResource(R.string.peak_sales_day),
@@ -515,47 +508,45 @@ fun MonthlySalesSummaryView(
             )
         }
 
-        // 3. Chart Hero Card (14dp radius, 14dp padding, depth card)
+        // 3. Chart Hero Card (10dp radius, 12dp padding, depth card)
         Surface(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.CardCornerRadius),
             color = Color.Transparent,
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(3)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(Dimens.CardPadding)) {
                 // Chart Title & Toggle Bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                    Column(modifier = Modifier.weight(1f).padding(end = Dimens.SpacingSm)) {
                         Text(
                             text = stringResource(R.string.monthly_revenue_trend),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.5.sp,
                                 color = OnBackgroundLight
                             )
                         )
                         Text(
                             text = stringResource(R.string.interactive_curve_with_tooltips),
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = TextSecondaryLight,
-                                fontSize = 11.sp
+                                color = TextSecondaryLight
                             )
                         )
                     }
 
                     // Chart Mode Selector (Area Curve vs Bar Chart)
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         color = Color.Transparent,
-                        modifier = Modifier.depthInset(shape = RoundedCornerShape(8.dp))
+                        modifier = Modifier.depthInset(shape = RoundedCornerShape(Dimens.RadiusMd))
                     ) {
-                        Row(modifier = Modifier.padding(2.dp)) {
+                        Row(modifier = Modifier.padding(Dimens.SpacingXxs)) {
                             IconButton(
                                 onClick = { selectedChartType = ChartType.AREA_TREND },
                                 modifier = Modifier
@@ -564,8 +555,8 @@ fun MonthlySalesSummaryView(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .size(Dimens.IconTile)
+                                        .clip(RoundedCornerShape(Dimens.RadiusSm))
                                         .background(if (selectedChartType == ChartType.AREA_TREND) PureWhite else Color.Transparent),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -573,7 +564,7 @@ fun MonthlySalesSummaryView(
                                         imageVector = Icons.Default.ShowChart,
                                         contentDescription = stringResource(R.string.cd_area_trend),
                                         tint = if (selectedChartType == ChartType.AREA_TREND) PrimaryBlue else TextSecondaryLight,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(Dimens.IconSm)
                                     )
                                 }
                             }
@@ -585,8 +576,8 @@ fun MonthlySalesSummaryView(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .size(Dimens.IconTile)
+                                        .clip(RoundedCornerShape(Dimens.RadiusSm))
                                         .background(if (selectedChartType == ChartType.BAR_CHART) PureWhite else Color.Transparent),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -594,7 +585,7 @@ fun MonthlySalesSummaryView(
                                         imageVector = Icons.Default.BarChart,
                                         contentDescription = stringResource(R.string.cd_bar_chart),
                                         tint = if (selectedChartType == ChartType.BAR_CHART) PrimaryBlue else TextSecondaryLight,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(Dimens.IconSm)
                                     )
                                 }
                             }
@@ -602,12 +593,12 @@ fun MonthlySalesSummaryView(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                 // Stream Breakdown Toggles / Legend
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     LegendItem(
@@ -624,7 +615,7 @@ fun MonthlySalesSummaryView(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 val hasSalesData = dailyDataList.any { it.totalRevenue > 0 }
 
@@ -632,7 +623,7 @@ fun MonthlySalesSummaryView(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp)
+                        .height(Dimens.MonthlyChartHeight)
                         .testTag("recharts_canvas_box"),
                     contentAlignment = Alignment.Center
                 ) {
@@ -643,7 +634,7 @@ fun MonthlySalesSummaryView(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(44.dp)
+                                    .size(Dimens.PresetLogoCircleSize)
                                     .clip(CircleShape)
                                     .background(SurfaceVariantLight),
                                 contentAlignment = Alignment.Center
@@ -652,16 +643,15 @@ fun MonthlySalesSummaryView(
                                     imageVector = Icons.Default.BarChart,
                                     contentDescription = null,
                                     tint = TextDisabledColor,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(Dimens.IconLg)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                             Text(
                                 text = stringResource(R.string.no_data_available),
-                                style = MaterialTheme.typography.bodySmall.copy(
+                                style = MaterialTheme.typography.bodyMedium.copy(
                                     color = TextSecondaryLight,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp
+                                    fontWeight = FontWeight.Medium
                                 )
                             )
                         }
@@ -687,16 +677,16 @@ fun MonthlySalesSummaryView(
                 hoveredDayIndex?.let { index ->
                     if (index in dailyDataList.indices) {
                         val d = dailyDataList[index]
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusLg),
                             color = OnBackgroundLight,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -705,17 +695,17 @@ fun MonthlySalesSummaryView(
                                         text = "${d.dateString} (${d.dayName})",
                                         fontWeight = FontWeight.Bold,
                                         color = PureWhite,
-                                        fontSize = 13.sp
+                                        style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
                                         text = stringResource(R.string.day_x_of_y_fmt, d.dayNumber, daysInMonth),
                                         color = TextDisabledColor,
-                                        fontSize = 11.sp
+                                        style = MaterialTheme.typography.bodySmall
                                     )
                                 }
 
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     if (showShiftBreakdown && d.shiftSales > 0) {
@@ -723,32 +713,32 @@ fun MonthlySalesSummaryView(
                                             Text(
                                                 text = "${stringResource(R.string.shift_2)}: ${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(d.shiftSales, summaryDigits), summaryDigits)}",
                                                 color = AccentGold,
-                                                fontSize = 11.5.sp,
+                                                style = MaterialTheme.typography.bodyMedium.asMoneyTabular(),
                                                 fontWeight = FontWeight.SemiBold
                                             )
                                         }
                                     }
 
                                     Surface(
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = RoundedCornerShape(Dimens.RadiusMd),
                                         color = PrimaryBlue.copy(alpha = 0.25f),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryBlue.copy(alpha = 0.6f))
+                                        border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, PrimaryBlue.copy(alpha = 0.6f))
                                     ) {
                                         Column(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                            modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.total_revenue_1),
                                                 color = PrimaryLight,
-                                                fontSize = 10.sp,
+                                                style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Medium
                                             )
                                             Text(
                                                 text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(d.totalRevenue, summaryDigits), summaryDigits)} $currency",
                                                 color = PureWhite,
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 13.sp
+                                                style = MaterialTheme.typography.titleMedium.asMoneyTabular()
                                             )
                                         }
                                     }
@@ -762,18 +752,18 @@ fun MonthlySalesSummaryView(
 
         // 4. Automated Full Monthly Financial Breakdown Section
         Surface(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(Dimens.CardCornerRadius),
             color = Color.Transparent,
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(4)
-                .depthCard(shape = RoundedCornerShape(14.dp))
+                .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(Dimens.CardPadding)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(Dimens.IconTile)
                             .clip(CircleShape)
                             .background(PrimaryBlue.copy(alpha = 0.10f)),
                         contentAlignment = Alignment.Center
@@ -782,28 +772,27 @@ fun MonthlySalesSummaryView(
                             imageVector = Icons.Default.Calculate,
                             contentDescription = null,
                             tint = PrimaryBlue,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Column {
                         Text(
                             text = stringResource(R.string.auto_monthly_financial_breakdown_fmt, currentMonthDisplayName),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.5.sp,
                                 color = OnBackgroundLight
                             )
                         )
                         Text(
                             text = stringResource(R.string.auto_calculated_financial_summary),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryLight
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 // Row 1: Cash Inflow
                 MonthlyFinancialRowItem(
@@ -814,7 +803,7 @@ fun MonthlySalesSummaryView(
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalCashIn, summaryDigits), summaryDigits)} $currency",
                     amountColor = PosCashGreen
                 )
-                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+                HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.RowDividerWidth)
 
                 // Row 2: Digital / Bank Card
                 MonthlyFinancialRowItem(
@@ -825,7 +814,7 @@ fun MonthlySalesSummaryView(
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalBankIn, summaryDigits), summaryDigits)} $currency",
                     amountColor = PosCardBlue
                 )
-                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+                HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.RowDividerWidth)
 
                 // Row 3: Due Credit Issued & Collected
                 MonthlyFinancialRowItem(
@@ -836,7 +825,7 @@ fun MonthlySalesSummaryView(
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalIssuedDue, summaryDigits), summaryDigits)} $currency",
                     amountColor = PosDueOrange
                 )
-                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+                HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.RowDividerWidth)
 
                 // Row 4: Expenses
                 MonthlyFinancialRowItem(
@@ -847,7 +836,7 @@ fun MonthlySalesSummaryView(
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalExpenses, summaryDigits), summaryDigits)} $currency",
                     amountColor = PosExpenseRed
                 )
-                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+                HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.RowDividerWidth)
 
                 // Row 5: Product Purchases
                 MonthlyFinancialRowItem(
@@ -858,7 +847,7 @@ fun MonthlySalesSummaryView(
                     amount = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthTotalPurchases, summaryDigits), summaryDigits)} $currency",
                     amountColor = ChartPurple
                 )
-                HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+                HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.RowDividerWidth)
 
                 // Row 6: Staff Advances
                 MonthlyFinancialRowItem(
@@ -870,45 +859,45 @@ fun MonthlySalesSummaryView(
                     amountColor = WarningOrange
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 // Net Monthly Cashflow Card
                 val isNetPositive = monthNetCashflow >= 0
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
                     color = if (isNetPositive) PositiveBannerSurface else NegativeBannerSurface,
                     border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
+                        Dimens.FlatBorderWidth,
                         if (isNetPositive) PositiveBannerBorder else NegativeBannerBorder
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 48.dp)
+                        .heightIn(min = Dimens.MinTouchTarget)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = stringResource(R.string.net_monthly_financial_cashflow),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isNetPositive) PositiveBannerText else NegativeBannerText
                             )
                             Text(
                                 text = stringResource(R.string.net_cashflow_formula),
-                                fontSize = 10.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = if (isNetPositive) PositiveBannerText.copy(alpha = 0.85f) else NegativeBannerText.copy(alpha = 0.85f)
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(
                             text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(monthNetCashflow, summaryDigits), summaryDigits)} $currency",
-                            fontSize = 16.sp,
+                            style = MaterialTheme.typography.headlineSmall.asMoneyTabular(),
                             fontWeight = FontWeight.ExtraBold,
                             color = if (isNetPositive) PositiveBannerText else NegativeBannerText
                         )
@@ -944,8 +933,8 @@ private fun MonthlyFinancialRowItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 40.dp)
-            .padding(vertical = 6.dp),
+            .heightIn(min = Dimens.FinancialRowMinHeight)
+            .padding(vertical = Dimens.SpacingXs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -955,7 +944,7 @@ private fun MonthlyFinancialRowItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(Dimens.FinancialIconCircleSize)
                     .clip(CircleShape)
                     .background(iconTint.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center
@@ -964,20 +953,20 @@ private fun MonthlyFinancialRowItem(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(15.dp)
+                    modifier = Modifier.size(Dimens.IconXs)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
             Column {
                 Text(
                     text = label,
-                    fontSize = 12.5.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = OnBackgroundLight
                 )
                 Text(
                     text = detail,
-                    fontSize = 10.5.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TextSecondaryLight
                 )
             }
@@ -985,7 +974,7 @@ private fun MonthlyFinancialRowItem(
 
         Text(
             text = amount,
-            fontSize = 13.5.sp,
+            style = MaterialTheme.typography.titleMedium.asMoneyTabular(),
             fontWeight = FontWeight.Bold,
             color = amountColor
         )

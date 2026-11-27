@@ -21,8 +21,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.common.LojiaTextField
@@ -97,7 +95,7 @@ fun AddEntryDialog(
             Text(
                 text = title,
                 color = OnSurfaceLight,
-                fontSize = 18.sp,
+                style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -291,15 +289,15 @@ fun AddEntryDialog(
                                 .fillMaxWidth()
                                 .testTag("paid_out_item_name_input")
                         )
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXs))
                         Text(
                             text = stringResource(R.string.add_entry_item_desc_hint),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextHintColor,
-                            modifier = Modifier.padding(start = 4.dp)
+                            modifier = Modifier.padding(start = Dimens.SpacingXs)
                         )
 
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(Dimens.SpacingMd))
 
                         // 2. Total Amount (Currency) * (Required — source of truth)
                         LojiaTextField(
@@ -340,42 +338,42 @@ fun AddEntryDialog(
                                 .testTag("paid_out_total_amount_input")
                         )
                         if (isAmountInvalid) {
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = invalidAmountError,
                                 color = ErrorRedLight,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(start = 4.dp)
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
                             )
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXs))
                         Text(
                             text = stringResource(R.string.add_entry_bill_amount_support),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextHintColor,
-                            modifier = Modifier.padding(start = 4.dp)
+                            modifier = Modifier.padding(start = Dimens.SpacingXs)
                         )
 
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(Dimens.SpacingMd))
                         PayTypeSelector(payType) { payType = it }
 
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(Dimens.SpacingMd))
 
                         // Optional details section divider & collapsible toggle
-                        HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+                        HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.FlatBorderWidth)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = Dimens.MinTouchTarget)
                                 .clickable { showOptionalDetails = !showOptionalDetails }
-                                .padding(vertical = 10.dp)
+                                .padding(vertical = Dimens.SpacingSm)
                                 .testTag("paid_out_optional_toggle"),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = stringResource(R.string.optional_details_label),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = PrimaryIndigoLight
                             )
@@ -383,13 +381,13 @@ fun AddEntryDialog(
                                 imageVector = if (showOptionalDetails) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                 contentDescription = if (showOptionalDetails) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                                 tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconMd)
                             )
                         }
-                        HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+                        HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.FlatBorderWidth)
 
                         if (showOptionalDetails) {
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(Dimens.SpacingMd))
 
                             // 3. Quantity (Optional)
                             LojiaTextField(
@@ -430,15 +428,15 @@ fun AddEntryDialog(
                                     .fillMaxWidth()
                                     .testTag("paid_out_quantity_input")
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.add_entry_quantity_hint),
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = TextHintColor,
-                                modifier = Modifier.padding(start = 4.dp)
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
                             )
 
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(Dimens.SpacingMd))
 
                             // 4. Unit Price (Optional, auto-calculated)
                             LojiaTextField(
@@ -479,32 +477,32 @@ fun AddEntryDialog(
                                     .testTag("paid_out_unit_price_input")
                             )
                             if (isUnitPriceInvalid) {
-                                Spacer(Modifier.height(4.dp))
+                                Spacer(Modifier.height(Dimens.SpacingXs))
                                 Text(
                                     text = invalidAmountError,
                                     color = ErrorRedLight,
-                                    fontSize = 11.sp,
-                                    modifier = Modifier.padding(start = 4.dp)
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(start = Dimens.SpacingXs)
                                 )
                             }
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.add_entry_auto_filled_arrow),
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = TextHintColor,
-                                modifier = Modifier.padding(start = 4.dp)
+                                modifier = Modifier.padding(start = Dimens.SpacingXs)
                             )
                         }
                     }
                     ModalType.NONE -> {}
                 }
                 error?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(it, color = ErrorRedLight, fontSize = 12.sp)
+                    Spacer(Modifier.height(Dimens.SpacingSm))
+                    Text(it, color = ErrorRedLight, style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
-            HorizontalDivider(color = OutlineVariantLight, thickness = 1.dp)
+            HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.FlatBorderWidth)
 
             val confirmEnabled = !isAmountInvalid && !isUnitPriceInvalid
             Row(
@@ -602,7 +600,7 @@ fun AddEntryDialog(
                     Text(
                         text = stringResource(if (type == ModalType.ITEM) R.string.add_entry_btn else R.string.add),
                         color = if (confirmEnabled) PureWhite else OnSurfaceVariantLight,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

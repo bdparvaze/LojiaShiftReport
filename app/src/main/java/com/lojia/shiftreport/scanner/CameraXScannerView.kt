@@ -43,8 +43,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,8 +51,6 @@ import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
-
-import com.lojia.shiftreport.ui.theme.*
 
 private val ScannerEmerald = PosCashGreenFill
 private val ScannerDark = PureBlack
@@ -261,13 +257,13 @@ fun CameraXScannerView(
                         color = Color.White.copy(alpha = 0.22f),
                         start = Offset(left + i * stepX, top),
                         end = Offset(left + i * stepX, top + targetH),
-                        strokeWidth = 1.dp.toPx()
+                        strokeWidth = Dimens.FlatBorderWidth.toPx()
                     )
                     drawLine(
                         color = Color.White.copy(alpha = 0.22f),
                         start = Offset(left, top + i * stepY),
                         end = Offset(left + targetW, top + i * stepY),
-                        strokeWidth = 1.dp.toPx()
+                        strokeWidth = Dimens.FlatBorderWidth.toPx()
                     )
                 }
             }
@@ -277,13 +273,13 @@ fun CameraXScannerView(
                 color = if (isAutoDetectEnabled) ScannerEmerald.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.6f),
                 topLeft = Offset(left, top),
                 size = Size(targetW, targetH),
-                cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
-                style = Stroke(width = 1.8.dp.toPx())
+                cornerRadius = CornerRadius(Dimens.RadiusXl.toPx(), Dimens.RadiusXl.toPx()),
+                style = Stroke(width = Dimens.ScannerFrameStrokeWidth.toPx())
             )
 
             // High-Contrast Corner Brackets
-            val bracketLength = 26.dp.toPx()
-            val bracketStroke = 4.dp.toPx()
+            val bracketLength = Dimens.ScannerBracketLength.toPx()
+            val bracketStroke = Dimens.TopAccentStripHeight.toPx()
             val bracketColor = if (isAutoDetectEnabled) ScannerEmerald else Color.White
 
             // Top-Left
@@ -331,18 +327,18 @@ fun CameraXScannerView(
                 drawPath(
                     path = polyPath,
                     color = ScannerEmerald,
-                    style = Stroke(width = 3.dp.toPx())
+                    style = Stroke(width = Dimens.ChartStrokeMedium.toPx())
                 )
 
                 uiPoints.forEach { cornerOffset ->
                     drawCircle(
                         color = Color.White,
-                        radius = 8.dp.toPx(),
+                        radius = Dimens.SpacingSm.toPx(),
                         center = cornerOffset
                     )
                     drawCircle(
                         color = ScannerEmerald,
-                        radius = 5.dp.toPx(),
+                        radius = Dimens.RememberCheckboxRadius.toPx(),
                         center = cornerOffset
                     )
                 }
@@ -357,7 +353,7 @@ fun CameraXScannerView(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -365,7 +361,8 @@ fun CameraXScannerView(
             IconButton(
                 onClick = onClose,
                 modifier = Modifier
-                    .size(44.dp)
+                    .minimumInteractiveComponentSize()
+                    .size(Dimens.ButtonHeightPrimary)
                     .background(Color.Black.copy(alpha = 0.45f), CircleShape)
             ) {
                 Icon(
@@ -376,7 +373,7 @@ fun CameraXScannerView(
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.DrawerAccentGap),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Flash / Torch Toggle
@@ -391,7 +388,8 @@ fun CameraXScannerView(
                         camera?.cameraControl?.enableTorch(next == TorchState.ON)
                     },
                     modifier = Modifier
-                        .size(44.dp)
+                        .minimumInteractiveComponentSize()
+                        .size(Dimens.ButtonHeightPrimary)
                         .background(Color.Black.copy(alpha = 0.45f), CircleShape)
                 ) {
                     Icon(
@@ -405,24 +403,25 @@ fun CameraXScannerView(
                 Surface(
                     onClick = { isAutoDetectEnabled = !isAutoDetectEnabled },
                     color = if (isAutoDetectEnabled) ScannerEmerald.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.45f),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.height(38.dp)
+                    shape = RoundedCornerShape(Dimens.RadiusPill),
+                    modifier = Modifier
+                        .height(Dimens.ScannerToggleChipHeight)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp),
+                        modifier = Modifier.padding(horizontal = Dimens.SpacingMd),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CropFree,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
                         Text(
                             text = if (isAutoDetectEnabled) stringResource(R.string.camera_crop_on) else stringResource(R.string.camera_crop_off),
                             color = Color.White,
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -432,7 +431,8 @@ fun CameraXScannerView(
                 IconButton(
                     onClick = { showGrid = !showGrid },
                     modifier = Modifier
-                        .size(44.dp)
+                        .minimumInteractiveComponentSize()
+                        .size(Dimens.ButtonHeightPrimary)
                         .background(Color.Black.copy(alpha = 0.45f), CircleShape)
                 ) {
                     Icon(
@@ -455,54 +455,66 @@ fun CameraXScannerView(
                 .fillMaxWidth()
                 .background(ScannerControlBg)
                 .navigationBarsPadding()
-                .padding(bottom = 20.dp, top = 14.dp),
+                .padding(bottom = Dimens.DialogContentPadding, top = Dimens.SpacingMd),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Mode Selector: "Single" vs "Batch" Scan Modes
             Row(
                 modifier = Modifier
-                    .padding(bottom = 18.dp)
-                    .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    .padding(bottom = Dimens.SpacingLg)
+                    .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(Dimens.RadiusPill))
+                    .padding(Dimens.SpacingXs),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Single Mode Tab
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (captureMode == ScanCaptureMode.SINGLE) ScannerEmerald else Color.Transparent)
+                        .minimumInteractiveComponentSize()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { captureMode = ScanCaptureMode.SINGLE }
-                        .padding(horizontal = 18.dp, vertical = 6.dp)
+                        ) { captureMode = ScanCaptureMode.SINGLE },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(R.string.camera_mode_single),
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = if (captureMode == ScanCaptureMode.SINGLE) FontWeight.Bold else FontWeight.Normal
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(Dimens.RadiusXl))
+                            .background(if (captureMode == ScanCaptureMode.SINGLE) ScannerEmerald else Color.Transparent)
+                            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.camera_mode_single),
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (captureMode == ScanCaptureMode.SINGLE) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
                 }
 
                 // Batch Mode Tab
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (captureMode == ScanCaptureMode.BATCH) ScannerEmerald else Color.Transparent)
+                        .minimumInteractiveComponentSize()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { captureMode = ScanCaptureMode.BATCH }
-                        .padding(horizontal = 18.dp, vertical = 6.dp)
+                        ) { captureMode = ScanCaptureMode.BATCH },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(R.string.camera_mode_batch),
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = if (captureMode == ScanCaptureMode.BATCH) FontWeight.Bold else FontWeight.Normal
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(Dimens.RadiusXl))
+                            .background(if (captureMode == ScanCaptureMode.BATCH) ScannerEmerald else Color.Transparent)
+                            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.camera_mode_batch),
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (captureMode == ScanCaptureMode.BATCH) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
                 }
             }
 
@@ -510,7 +522,7 @@ fun CameraXScannerView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 28.dp),
+                    .padding(horizontal = Dimens.SpacingXl),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -518,24 +530,24 @@ fun CameraXScannerView(
                 IconButton(
                     onClick = onGalleryPick,
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(Dimens.BadgeMinWidth)
                         .background(Color.White.copy(alpha = 0.12f), CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PhotoLibrary,
                         contentDescription = stringResource(R.string.cd_gallery_import),
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(Dimens.IconLg)
                     )
                 }
 
                 // Center: Prominent Circular Shutter Button
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(Dimens.ScannerShutterOuterSize)
                         .scale(shutterScale)
-                        .shadow(12.dp, CircleShape)
-                        .border(4.dp, ScannerEmerald, CircleShape)
+                        .shadow(Dimens.ScannerShutterShadowBlur, CircleShape)
+                        .border(Dimens.TopAccentStripHeight, ScannerEmerald, CircleShape)
                         .background(Color.Transparent, CircleShape)
                         .clickable(enabled = !isCapturing) {
                             view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
@@ -592,7 +604,7 @@ fun CameraXScannerView(
                     // Inner shutter circle
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
+                            .size(Dimens.ScannerShutterInnerSize)
                             .background(Color.White, CircleShape)
                     )
                 }
@@ -601,7 +613,7 @@ fun CameraXScannerView(
                 if (captureMode == ScanCaptureMode.BATCH) {
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(Dimens.BadgeMinWidth)
                             .clip(CircleShape)
                             .background(if (batchList.isNotEmpty()) ScannerEmerald else Color.White.copy(alpha = 0.12f))
                             .clickable(enabled = batchList.isNotEmpty()) {
@@ -614,13 +626,13 @@ fun CameraXScannerView(
                                 Text(
                                     text = "${batchList.size}",
                                     color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = stringResource(R.string.done),
                                     color = Color.White,
-                                    fontSize = 9.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -629,7 +641,7 @@ fun CameraXScannerView(
                                 imageVector = Icons.Outlined.Layers,
                                 contentDescription = stringResource(R.string.cd_batch_mode),
                                 tint = Color.White.copy(alpha = 0.5f),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(Dimens.IconLg)
                             )
                         }
                     }
@@ -637,14 +649,14 @@ fun CameraXScannerView(
                     // Placeholder for visual symmetry
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(Dimens.BadgeMinWidth)
                             .background(Color.Transparent, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.camera_auto),
                             color = ScannerEmerald,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                     }

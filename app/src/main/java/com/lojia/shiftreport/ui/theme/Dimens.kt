@@ -343,4 +343,124 @@ object Dimens {
     val HomeDraftBannerShadowBlur: Dp = FlatCardShadowBlur
     val HomeChartTodayGlowOffsetY: Dp = 0.dp
     val HomeChartTodayGlowBlur: Dp = 0.dp
+
+    // =========================================================================
+    // BATCH A: SETTINGS, MAPS, CROPPER, LOGO PICKER, CASHIERS & EMPLOYEES
+    // =========================================================================
+    val IconAction: Dp = 20.dp
+    val ProgressIndicatorSmSize: Dp = 16.dp
+    val ShadowXs: Dp = 2.dp
+
+    val EmptyStateIconBgSize: Dp = 64.dp
+    val EmptyStateIconSize: Dp = 32.dp
+
+    val EmployeeStatCardMinHeight: Dp = 80.dp
+    val CashierListBottomClearance: Dp = 88.dp
+    val StatusDotSize: Dp = 6.dp
+    val SkeletonLineHeightTitle: Dp = 14.dp
+    val SkeletonLineHeightSubtitle: Dp = 10.dp
+
+    val BusinessLogoCircleSize: Dp = 104.dp
+    val PresetLogoGridMaxHeight: Dp = 380.dp
+    val PresetLogoTileHeight: Dp = 104.dp
+    val PresetLogoCircleSize: Dp = 44.dp
+    val ProfileDetailDividerInsetStart: Dp = 64.dp
+
+    val AddressMapThumbSize: Dp = 88.dp
+
+    val CropperViewportHeight: Dp = 340.dp
+    val CropperStrokeWidth: Dp = 2.5.dp
+
+    val DialogListCompactMaxHeight: Dp = 300.dp
+
+    val MapReticleSize: Dp = 80.dp
+    val MapGroundAnchorRadius: Dp = 6.dp
+    val MapPinSize: Dp = 44.dp
+    val MapPinLiftOffset: Dp = 20.dp
+    val MapPinDragLift: Dp = 24.dp
+    val MapPinStemWidth: Dp = 14.dp
+    val MapPinStemHeight: Dp = 8.dp
+    val MapPinDragShadow: Dp = 12.dp
+    val MapBadgeOffsetY: Dp = 52.dp
+    val SheetDragHandleWidth: Dp = 36.dp
+
+    // =========================================================================
+    // BATCH B: REPORTS, CHARTS & RECONCILIATION TOKENS
+    // =========================================================================
+    val ReportMaxContentWidth: Dp = 680.dp
+    val ReportEntryBottomSpacerHeight: Dp = 80.dp
+    val SnackbarBottomOffset: Dp = 76.dp
+    val MonthlyKpiCardMinHeight: Dp = 96.dp
+    val MonthlyChartHeight: Dp = 180.dp
+    val MonthlyDatePickerHeight: Dp = 440.dp
+    val ChartStrokeMedium: Dp = 3.dp
+    val ChartHighlightHaloRadius: Dp = 8.dp
+    val ChartHighlightDotRadius: Dp = 4.5.dp
+    val ChartHighlightCenterRadius: Dp = 3.dp
+    val ChartBarMinWidth: Dp = 4.dp
+    val ChartBarMaxWidth: Dp = 18.dp
+    val ChartAxisDotRadius: Dp = 2.dp
+    val ProgressBarHeight: Dp = 7.dp
+    val RankBadgeSize: Dp = 26.dp
+    val FinancialRowMinHeight: Dp = 40.dp
+    val FinancialIconCircleSize: Dp = 28.dp
+    val LedgerEmptyCircleSize: Dp = 68.dp
+    val LedgerEmptyIconSize: Dp = 34.dp
+
+    // =========================================================================
+    // BATCH C: DRAWER, PRINTER & DOCUMENT SCANNER TOKENS
+    // =========================================================================
+    val DrawerWidth: Dp = 304.dp
+    val DrawerHeaderCompactHeight: Dp = 140.dp
+    val DrawerChipHeight: Dp = 28.dp
+    val DrawerAccentGap: Dp = 10.dp
+    val DrawerUnselectedIndent: Dp = 13.dp
+
+    val ScannerFrameStrokeWidth: Dp = 1.8.dp
+    val ScannerBracketLength: Dp = 26.dp
+    val ScannerToggleChipHeight: Dp = 38.dp
+    val ScannerShutterOuterSize: Dp = 80.dp
+    val ScannerShutterInnerSize: Dp = 64.dp
+    val ScannerShutterShadowBlur: Dp = 12.dp
+    val ScannerCropHandleHitRadius: Dp = 36.dp
+    val ScannerCropHandleActiveRadius: Dp = 16.dp
+    val ScannerCropHandleIdleRadius: Dp = 12.dp
+    val ScannerCropHandleInnerInset: Dp = 3.5.dp
+    val ScannerFilterItemWidth: Dp = 74.dp
+    val ScannerFilterThumbSize: Dp = 64.dp
+    val ScannerSliderLabelWidth: Dp = 76.dp
+    val ScannerOcrBoxHeight: Dp = 140.dp
+    val ScannerOcrScrollMaxHeight: Dp = 280.dp
+    val ScannerProcessingOverlaySize: Dp = 60.dp
+    val ScannerOcrDialogMaxHeight: Dp = 350.dp
+    val ScannerOcrLoadingHeight: Dp = 150.dp
+
+    // =========================================================================
+    // BATCH D: AUTH, REGISTER, PASSWORD RECOVERY & QUICK PIN PARITY TOKENS
+    // =========================================================================
+    val AuthFieldGap: Dp = 10.dp
+    val AuthSectionGap: Dp = 14.dp
+    val AuthCompactGap: Dp = 6.dp
+    val AuthSmallGap: Dp = 5.dp
+    val AuthTinyGap: Dp = 3.dp
+    val AuthCheckboxTextGap: Dp = 7.dp
+    val AuthCheckIconSize: Dp = 12.dp
+    val AuthSectionHeaderBottomGap: Dp = 15.dp
+    val AuthSectionHeaderRowBottomGap: Dp = 13.dp
+    val AuthSectionTileSize: Dp = 30.dp
+    val AuthSectionTileRadius: Dp = 7.dp
+    val AuthSectionIconSize: Dp = 15.dp
+    val AuthSectionTileGap: Dp = 9.dp
+    val AuthInfoDotSize: Dp = 13.dp
+    val AuthSuccessBadgeSize: Dp = 80.dp
+    val AuthSuccessIconSize: Dp = 40.dp
+    val AuthSuccessSpacerGap: Dp = 20.dp
+    val QuickPinHeaderBottomGap: Dp = 28.dp
 }
+
+/**
+ * Converts a dynamic integer dp count (e.g., `LocalConfiguration.current.screenWidthDp`)
+ * into a [Dp] value without requiring `androidx.compose.ui.unit.dp` in screen files.
+ */
+fun Int.dpToken(): Dp = this.dp
+

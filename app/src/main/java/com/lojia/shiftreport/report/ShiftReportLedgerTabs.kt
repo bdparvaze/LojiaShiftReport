@@ -43,8 +43,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import com.lojia.shiftreport.R
@@ -263,7 +261,7 @@ fun DueLedgerTab(
                     ),
                 shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
             ) {
                 Row(
                     modifier = Modifier
@@ -291,16 +289,15 @@ fun DueLedgerTab(
                     Column {
                         Text(
                             text = stringResource(R.string.total_issued_due),
-                            fontSize = DepthTypeTokens.LogoSubtitleSize,
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = TextSlate700,
-                            letterSpacing = 0.4.sp,
                             maxLines = 1
                         )
                         Spacer(Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = MoneyFormat.formatMinor(totalIssuedDue, currency),
-                            fontSize = DepthTypeTokens.SectionTitleSize,
+                            style = MaterialTheme.typography.titleMedium.asMoneyTabular(),
                             fontWeight = FontWeight.Bold,
                             color = ErrorRedLight,
                             maxLines = 1
@@ -321,7 +318,7 @@ fun DueLedgerTab(
                     ),
                 shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
             ) {
                 Row(
                     modifier = Modifier
@@ -349,16 +346,15 @@ fun DueLedgerTab(
                     Column {
                         Text(
                             text = stringResource(R.string.total_collected),
-                            fontSize = DepthTypeTokens.LogoSubtitleSize,
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = TextSlate700,
-                            letterSpacing = 0.4.sp,
                             maxLines = 1
                         )
                         Spacer(Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = MoneyFormat.formatMinor(totalCollectedDue, currency),
-                            fontSize = DepthTypeTokens.SectionTitleSize,
+                            style = MaterialTheme.typography.titleMedium.asMoneyTabular(),
                             fontWeight = FontWeight.Bold,
                             color = BadgeGreenText,
                             maxLines = 1
@@ -381,7 +377,7 @@ fun DueLedgerTab(
                 ),
             shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
         ) {
             Column(
                 modifier = Modifier
@@ -412,16 +408,15 @@ fun DueLedgerTab(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.net_outstanding_due),
-                            fontSize = DepthTypeTokens.RegisterLabelSize,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = BadgeAmberTextDark,
-                            letterSpacing = 0.3.sp,
                             maxLines = 1
                         )
                         Spacer(Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = stringResource(R.string.deduct_auto_hint),
-                            fontSize = DepthTypeTokens.LogoSubtitleSize,
+                            style = MaterialTheme.typography.bodySmall,
                             color = BadgeAmberTextDark,
                             maxLines = 2
                         )
@@ -430,7 +425,7 @@ fun DueLedgerTab(
                     // Value — never wraps
                     Text(
                         text = MoneyFormat.formatMinor(netOutstandingDue, currency),
-                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.headlineLarge.asMoneyTabular(),
                         fontWeight = FontWeight.Bold,
                         color = BadgeAmberAccent,
                         maxLines = 1,
@@ -439,7 +434,7 @@ fun DueLedgerTab(
                 }
                 if (extraCollectedDue > 0L) {
                     Spacer(Modifier.height(Dimens.ReportGridGap))
-                    HorizontalDivider(thickness = 0.5.dp, color = SectionAmberBorder)
+                    HorizontalDivider(thickness = Dimens.RowDividerWidth, color = SectionAmberBorder)
                     Spacer(Modifier.height(Dimens.SpacingSm))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -448,14 +443,14 @@ fun DueLedgerTab(
                     ) {
                         Text(
                             text = stringResource(R.string.due_extra_collected_label),
-                            fontSize = DepthTypeTokens.RegisterLabelSize,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = BadgeGreenText,
                             maxLines = 1
                         )
                         Text(
                             text = MoneyFormat.formatMinor(extraCollectedDue, currency),
-                            fontSize = DepthTypeTokens.SecondaryButtonTextSize,
+                            style = MaterialTheme.typography.bodyLarge.asMoneyTabular(),
                             fontWeight = FontWeight.Bold,
                             color = BadgeGreenText,
                             maxLines = 1,
@@ -500,12 +495,12 @@ fun DueLedgerTab(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 40.dp, horizontal = Dimens.SpacingXxl),
+                    .padding(vertical = Dimens.SpacingHuge, horizontal = Dimens.SpacingXxl),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(Dimens.ReportEntryBottomSpacerHeight)
                         .clip(CircleShape)
                         .background(SurfaceVariantLight),
                     contentAlignment = Alignment.Center
@@ -514,23 +509,22 @@ fun DueLedgerTab(
                         imageVector = Icons.Outlined.ReceiptLong,
                         contentDescription = null,
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(Dimens.ButtonHeightStandard)
                     )
                 }
                 Spacer(Modifier.height(Dimens.SpacingXl))
                 Text(
                     text = stringResource(R.string.empty_due_title),
-                    fontSize = DepthTypeTokens.ReportFieldTextSize,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = TextPrimaryReport
                 )
                 Spacer(Modifier.height(Dimens.SpacingXs))
                 Text(
                     text = stringResource(R.string.empty_due_hint),
-                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = OnSurfaceVariantLight,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
+                    textAlign = TextAlign.Center
                 )
             }
         } else {
@@ -557,7 +551,7 @@ fun DueLedgerTab(
                         ),
                     shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
                 ) {
                     Column(modifier = Modifier.padding(Dimens.InsetFieldPaddingHorizontal)) {
                         // Header row: receipt # + status chip
@@ -593,7 +587,7 @@ fun DueLedgerTab(
                             ) {
                                 Text(
                                     text = statusText,
-                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = statusFg,
                                     modifier = Modifier.padding(horizontal = Dimens.ReportGridGap, vertical = Dimens.SpacingXs)
@@ -638,7 +632,7 @@ fun DueLedgerTab(
 
                         Spacer(Modifier.height(Dimens.ReportGridGap))
                         // Divider
-                        HorizontalDivider(thickness = 0.5.dp, color = DepthCardBorder)
+                        HorizontalDivider(thickness = Dimens.RowDividerWidth, color = DepthCardBorder)
                         Spacer(Modifier.height(Dimens.ReportGridGap))
 
                         // 3-column amount breakdown
@@ -647,14 +641,14 @@ fun DueLedgerTab(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.issued_due),
-                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Medium,
                                     color = OnSurfaceVariantLight
                                 )
                                 Spacer(Modifier.height(Dimens.SpacingXxs))
                                 Text(
                                     text = MoneyFormat.formatMinor(item.initialDueMinor, currency),
-                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
+                                    style = MaterialTheme.typography.bodyMedium.asMoneyTabular(),
                                     fontWeight = FontWeight.Bold,
                                     color = ErrorRedLight,
                                     maxLines = 1
@@ -668,14 +662,14 @@ fun DueLedgerTab(
                             ) {
                                 Text(
                                     text = stringResource(R.string.collected_minus),
-                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Medium,
                                     color = OnSurfaceVariantLight
                                 )
                                 Spacer(Modifier.height(Dimens.SpacingXxs))
                                 Text(
                                     text = MoneyFormat.formatMinor(item.totalCollectedMinor, currency),
-                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
+                                    style = MaterialTheme.typography.bodyMedium.asMoneyTabular(),
                                     fontWeight = FontWeight.Bold,
                                     color = BadgeGreenText,
                                     maxLines = 1
@@ -689,14 +683,14 @@ fun DueLedgerTab(
                             ) {
                                 Text(
                                     text = stringResource(R.string.net_remaining),
-                                    fontSize = DepthTypeTokens.LogoSubtitleSize,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Medium,
                                     color = OnSurfaceVariantLight
                                 )
                                 Spacer(Modifier.height(Dimens.SpacingXxs))
                                 Text(
                                     text = MoneyFormat.formatMinor(item.remainingDueMinor, currency),
-                                    fontSize = DepthTypeTokens.ReportFieldLabelSize,
+                                    style = MaterialTheme.typography.bodyMedium.asMoneyTabular(),
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimaryReport,
                                     maxLines = 1
@@ -1206,7 +1200,7 @@ private fun AdvanceStatementPeriodDialog(
                         }
                         showDateRangePicker = false
                     },
-                    modifier = Modifier.heightIn(min = 48.dp)
+                    modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                 ) {
                     Text(
                         text = stringResource(R.string.ok),
@@ -1218,7 +1212,7 @@ private fun AdvanceStatementPeriodDialog(
             dismissButton = {
                 TextButton(
                     onClick = { showDateRangePicker = false },
-                    modifier = Modifier.heightIn(min = 48.dp)
+                    modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                 ) {
                     Text(
                         text = stringResource(R.string.cancel),
@@ -1241,7 +1235,7 @@ private fun AdvanceStatementPeriodDialog(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(440.dp)
+                    .height(Dimens.MonthlyDatePickerHeight)
             )
         }
     }
@@ -1330,7 +1324,7 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                     .testTag("employer_period_summary_card"),
                 shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
             ) {
                 Column(
                     modifier = Modifier
@@ -1453,18 +1447,18 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                         ),
                     shape = RoundedCornerShape(Dimens.RadiusKpiCard),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 36.dp, horizontal = Dimens.SpacingXxl),
+                            .padding(vertical = Dimens.SpacingHuge, horizontal = Dimens.SpacingXxl),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(68.dp)
+                                .size(Dimens.LedgerEmptyCircleSize)
                                 .clip(CircleShape)
                                 .background(SurfaceVariantLight),
                             contentAlignment = Alignment.Center
@@ -1473,7 +1467,7 @@ private fun EmployerAdvanceSummaryAndProfilesView(
                                 imageVector = Icons.Outlined.AccountBalanceWallet,
                                 contentDescription = null,
                                 tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(34.dp)
+                                modifier = Modifier.size(Dimens.LedgerEmptyIconSize)
                             )
                         }
                         Spacer(Modifier.height(Dimens.SpacingXs))
@@ -1594,7 +1588,7 @@ private fun EmployerEmployeeProfileCard(
             .testTag("employer_profile_card_${profile.employeeId}"),
         shape = RoundedCornerShape(Dimens.RadiusKpiCard),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
     ) {
         Column(
             modifier = Modifier
@@ -1692,7 +1686,7 @@ private fun EmployerOtherBucketCard(
             .testTag("employer_profile_other_card"),
         shape = RoundedCornerShape(Dimens.RadiusKpiCard),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
     ) {
         Column(
             modifier = Modifier
@@ -1881,7 +1875,7 @@ private fun EmployerEmployeeHistoryView(
                     .testTag("employer_history_header_card"),
                 shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
             ) {
                 Column(
                     modifier = Modifier
@@ -2002,7 +1996,7 @@ private fun EmployerOtherHistoryView(
                     .testTag("employer_other_history_header_card"),
                 shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
             ) {
                 Column(
                     modifier = Modifier
@@ -2153,7 +2147,7 @@ private fun EmployerAdvanceHistoryRowCard(
             .testTag("employer_history_row_${entry.serialNumber}"),
         shape = RoundedCornerShape(Dimens.RadiusLg),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone)
     ) {
         Row(
             modifier = Modifier

@@ -31,8 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppDatabase
@@ -197,7 +195,7 @@ fun SettingsBackupSubSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = LojiaDimens.ScreenPadding, vertical = LojiaDimens.ScreenTopPadding)
+            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
     ) {
         // Top Back Header
         Row(
@@ -252,30 +250,29 @@ fun SettingsBackupSubSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = Dimens.SpacingLg)
                 .cardRise(0)
                 .depthCard()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(Dimens.CardPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Text(
                     text = stringResource(R.string.backup_select_location_title),
-                    fontSize = 15.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
                 )
                 Text(
                     text = stringResource(R.string.backup_select_location_desc),
-                    fontSize = 12.sp,
-                    color = TextSecondaryLight,
-                    lineHeight = 16.sp
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondaryLight
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
                 // Location Option 1: Device Storage (Local)
                 BackupLocationOptionCard(
@@ -366,7 +363,7 @@ fun SettingsBackupSubSection(
                     restoreFileLauncher.launch("*/*")
                 }
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
         }
 
         // 2B. GOOGLE DRIVE STATUS CARD
@@ -405,7 +402,7 @@ fun SettingsBackupSubSection(
                     refreshStatus()
                 }
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
         }
 
         // 2C. ONEDRIVE STATUS CARD
@@ -469,7 +466,7 @@ fun SettingsBackupSubSection(
                     Toast.makeText(context, context.getString(R.string.backup_onedrive_disconnected_toast), Toast.LENGTH_SHORT).show()
                 }
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
         }
 
         // ==========================================
@@ -480,15 +477,15 @@ fun SettingsBackupSubSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = Dimens.SpacingLg)
                 .cardRise(2)
                 .depthCard()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(Dimens.CardPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -498,14 +495,14 @@ fun SettingsBackupSubSection(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.auto_backups),
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceLight
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = stringResource(R.string.backup_auto_desc),
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = TextSecondaryLight
                         )
                     }
@@ -528,14 +525,14 @@ fun SettingsBackupSubSection(
 
                     Text(
                         text = stringResource(R.string.backup_frequency_title),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         listOf(
                             "daily" to stringResource(R.string.backup_freq_daily_3am),
@@ -549,9 +546,9 @@ fun SettingsBackupSubSection(
                                     autoBackupFreq = freqKey
                                     backupManager.setAutoBackupFrequency(freqKey)
                                 },
-                                label = { Text(freqLabel, fontSize = 12.sp) },
+                                label = { Text(freqLabel, style = MaterialTheme.typography.bodyMedium) },
                                 leadingIcon = if (isSelected) {
-                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(Dimens.IconSm)) }
                                 } else null,
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = PrimaryContainerLight,
@@ -573,7 +570,7 @@ fun SettingsBackupSubSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp)
+                .padding(bottom = Dimens.SpacingHuge)
                 .cardRise(3)
                 .depthSemanticCard(
                     backgroundColor = NegativeBannerSurface,
@@ -583,22 +580,22 @@ fun SettingsBackupSubSection(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(Dimens.CardPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.WarningAmber,
                         contentDescription = null,
                         tint = ErrorRedLight,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                     Text(
                         text = stringResource(R.string.clear_all_data_title),
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = ErrorRedLight
                     )
@@ -606,9 +603,8 @@ fun SettingsBackupSubSection(
 
                 Text(
                     text = stringResource(R.string.clear_all_data_desc),
-                    fontSize = 12.sp,
-                    color = OnSurfaceLight,
-                    lineHeight = 16.sp
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurfaceLight
                 )
 
                 Button(
@@ -631,8 +627,8 @@ fun SettingsBackupSubSection(
                         )
                         .testTag("btn_danger_clear_all")
                 ) {
-                    Icon(Icons.Outlined.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Outlined.DeleteForever, contentDescription = null, modifier = Modifier.size(Dimens.IconMd))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Text(stringResource(R.string.btn_delete_everything), fontWeight = FontWeight.Bold)
                 }
             }
@@ -656,17 +652,17 @@ fun SettingsBackupSubSection(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
-                Text(stringResource(R.string.backup_local_archives_title), fontWeight = FontWeight.Bold, fontSize = 17.sp, color = OnBackgroundLight)
+                Text(stringResource(R.string.backup_local_archives_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall, color = OnBackgroundLight)
 
                 if (backupFiles.isEmpty()) {
-                    Text(stringResource(R.string.backup_local_none_found), fontSize = 13.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_local_none_found), style = MaterialTheme.typography.titleMedium, color = TextSecondaryLight)
                 } else {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 350.dp)
+                            .heightIn(max = Dimens.DialogListMaxHeight)
                             .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         backupFiles.forEach { file ->
                             Box(
@@ -677,21 +673,21 @@ fun SettingsBackupSubSection(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(10.dp),
+                                        .padding(Dimens.SpacingSm),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = file.name,
-                                            fontSize = 12.sp,
+                                            style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
                                             text = "${DateTimeFormatUtils.formatDateTime(file.lastModified())} • ${formatFileSize(context, file.length())}",
-                                            fontSize = 10.sp,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = TextSecondaryLight
                                         )
                                     }
@@ -799,14 +795,14 @@ fun SettingsBackupSubSection(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
                     Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = OneDriveBlue)
-                    Text(stringResource(R.string.backup_connect_onedrive), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
+                    Text(stringResource(R.string.backup_connect_onedrive), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall, color = OnBackgroundLight)
                 }
 
                 Text(
                     text = stringResource(R.string.backup_onedrive_connect_desc),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondaryLight
                 )
 
@@ -887,17 +883,17 @@ fun SettingsBackupSubSection(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
-                Text(stringResource(R.string.restore_from_drive_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = OnBackgroundLight)
+                Text(stringResource(R.string.restore_from_drive_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall, color = OnBackgroundLight)
 
                 if (driveBackupsList.isEmpty()) {
-                    Text(stringResource(R.string.backup_gdrive_none_found), fontSize = 13.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_gdrive_none_found), style = MaterialTheme.typography.titleMedium, color = TextSecondaryLight)
                 } else {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 300.dp)
+                            .heightIn(max = Dimens.DialogListCompactMaxHeight)
                             .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         driveBackupsList.forEach { item ->
                             Box(
@@ -938,13 +934,13 @@ fun SettingsBackupSubSection(
                                     }
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(12.dp),
+                                    modifier = Modifier.padding(Dimens.CardPadding),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(item.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                        Text(item.modifiedTime, fontSize = 10.sp, color = TextSecondaryLight)
+                                        Text(item.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                        Text(item.modifiedTime, style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
                                     }
                                     Icon(Icons.Outlined.Download, contentDescription = null, tint = PrimaryIndigoLight)
                                 }
@@ -994,18 +990,18 @@ fun SettingsBackupSubSection(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(Dimens.MinTouchTarget)
+                        .size(Dimens.PinDialogIconSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Outlined.Restore, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.Restore, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(Dimens.IconLg))
                 }
 
                 Text(
                     text = stringResource(R.string.restore_confirm_title),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = OnBackgroundLight,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -1013,7 +1009,7 @@ fun SettingsBackupSubSection(
 
                 Text(
                     text = stringResource(R.string.restore_confirm_message),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     color = TextSecondaryLight,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -1030,19 +1026,19 @@ fun SettingsBackupSubSection(
                             )
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(Dimens.CardPadding),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Lock,
                                 contentDescription = null,
                                 tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconMd)
                             )
                             Text(
                                 text = stringResource(R.string.backup_pw_encrypted_badge),
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = PrimaryIndigoDark
                             )
@@ -1058,16 +1054,16 @@ fun SettingsBackupSubSection(
                                 shape = RoundedCornerShape(Dimens.RadiusSm)
                             )
                     ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.CardPadding), verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
                             Text(
                                 text = stringResource(R.string.backup_restore_shifts_count_format, summary.shiftReportsCount),
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryIndigoDark
                             )
                             Text(
                                 text = stringResource(R.string.backup_restore_summary_format, summary.totalRecords, summary.exportDate),
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = OnSurfaceLight
                             )
                         }
@@ -1196,18 +1192,18 @@ fun SettingsBackupSubSection(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(Dimens.MinTouchTarget)
+                        .size(Dimens.PinDialogIconSize)
                         .clip(CircleShape)
                         .background(ErrorContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = ErrorRedLight, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = ErrorRedLight, modifier = Modifier.size(Dimens.IconLg))
                 }
 
                 Text(
                     text = stringResource(R.string.backup_delete_dialog_title),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.headlineSmall,
                     color = ErrorRedLight,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -1215,13 +1211,13 @@ fun SettingsBackupSubSection(
 
                 Text(
                     text = stringResource(R.string.backup_delete_dialog_warning),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     color = OnSurfaceLight
                 )
 
                 Text(
                     text = stringResource(R.string.backup_delete_dialog_instruction),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = ErrorRedLight
                 )
@@ -1454,9 +1450,9 @@ private fun BackupLocationOptionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(Dimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             RadioButton(
                 selected = isSelected,
@@ -1466,24 +1462,24 @@ private fun BackupLocationOptionCard(
 
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(Dimens.DialogHeaderBadgeSize)
                     .clip(CircleShape)
                     .background(iconTint.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+                Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(Dimens.IconAction))
             }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
                 )
                 Text(
                     text = subtitle,
-                    fontSize = 11.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TextSecondaryLight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1512,8 +1508,8 @@ private fun LocalBackupStatusCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(Dimens.CardPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1522,33 +1518,33 @@ private fun LocalBackupStatusCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(PrimaryIndigoLight.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.Folder, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Folder, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(Dimens.IconAction))
                     }
                     Column {
-                        Text(stringResource(R.string.backup_device_storage_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
-                        Text(stringResource(R.string.backup_local_folder_path), fontSize = 11.sp, color = TextSecondaryLight)
+                        Text(stringResource(R.string.backup_device_storage_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(stringResource(R.string.backup_local_folder_path), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
                     }
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
                     color = if (lastBackupTime > 0L) SuccessContainer else WarningContainer
                 ) {
                     Text(
                         text = stringResource(if (lastBackupTime > 0L) R.string.backup_status_protected else R.string.backup_status_no_backup),
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (lastBackupTime > 0L) SuccessTextDark else WarningText,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                     )
                 }
             }
@@ -1560,19 +1556,19 @@ private fun LocalBackupStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(stringResource(R.string.last_backup), fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.last_backup), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
                     Text(
                         text = if (lastBackupTime > 0L) formatTimeAgo(context, lastBackupTime) else stringResource(R.string.lock_never),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(stringResource(R.string.backup_total_archives_size), fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_total_archives_size), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
                     Text(
                         text = formatFileSize(context, totalSize),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
@@ -1581,7 +1577,7 @@ private fun LocalBackupStatusCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Button(
                     onClick = onBackupNow,
@@ -1600,13 +1596,13 @@ private fun LocalBackupStatusCard(
                         .depthRaisedButton(enabled = !isBackingUp, cornerRadius = Dimens.RadiusMd)
                 ) {
                     if (isBackingUp) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = OnSurfaceVariantLight, strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.backup_backing_up), fontSize = 12.sp)
+                        CircularProgressIndicator(modifier = Modifier.size(Dimens.ProgressIndicatorSmSize), color = OnSurfaceVariantLight, strokeWidth = Dimens.ProgressStrokeWidth)
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                        Text(stringResource(R.string.backup_backing_up), style = MaterialTheme.typography.titleSmall)
                     } else {
-                        Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.backup_now_label), fontSize = 12.sp)
+                        Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                        Text(stringResource(R.string.backup_now_label), style = MaterialTheme.typography.titleSmall)
                     }
                 }
 
@@ -1627,9 +1623,9 @@ private fun LocalBackupStatusCard(
                             cornerRadius = Dimens.RadiusMd
                         )
                 ) {
-                    Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.backup_view_files), fontSize = 12.sp)
+                    Icon(Icons.Outlined.FolderOpen, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                    Text(stringResource(R.string.backup_view_files), style = MaterialTheme.typography.titleSmall)
                 }
             }
         }
@@ -1657,8 +1653,8 @@ private fun GoogleDriveStatusCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(Dimens.CardPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1667,38 +1663,38 @@ private fun GoogleDriveStatusCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(GoogleDriveBlue.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = GoogleDriveBlue, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.CloudQueue, contentDescription = null, tint = GoogleDriveBlue, modifier = Modifier.size(Dimens.IconAction))
                     }
                     Column {
-                        Text(stringResource(R.string.backup_loc_gdrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(stringResource(R.string.backup_loc_gdrive_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
                         Text(
                             text = if (isConnected) (accountEmail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryLight
                         )
                     }
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
                     color = if (isConnected) SuccessContainer else BackgroundLight,
-                    border = BorderStroke(1.dp, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
+                    border = BorderStroke(Dimens.BorderThin, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
                 ) {
                     Text(
                         text = stringResource(if (isConnected) R.string.backup_status_connected else R.string.backup_status_disconnected),
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isConnected) SuccessTextDark else TextSecondaryLight,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                     )
                 }
             }
@@ -1710,17 +1706,17 @@ private fun GoogleDriveStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(stringResource(R.string.backup_last_cloud_sync), fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_last_cloud_sync), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
                     Text(
                         text = if (lastSyncTime > 0L) formatTimeAgo(context, lastSyncTime) else stringResource(R.string.lock_never),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(stringResource(R.string.backup_target_folder), fontSize = 11.sp, color = TextSecondaryLight)
-                    Text(stringResource(R.string.backup_appdata_space), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
+                    Text(stringResource(R.string.backup_target_folder), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_appdata_space), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
                 }
             }
 
@@ -1738,14 +1734,14 @@ private fun GoogleDriveStatusCard(
                         .heightIn(min = Dimens.MinTouchTarget)
                         .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                 ) {
-                    Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.backup_connect_gdrive), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                    Text(stringResource(R.string.backup_connect_gdrive), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
@@ -1765,13 +1761,13 @@ private fun GoogleDriveStatusCard(
                             .depthRaisedButton(enabled = !isUploading, cornerRadius = Dimens.RadiusMd)
                     ) {
                         if (isUploading) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = OnSurfaceVariantLight, strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.backup_uploading), fontSize = 12.sp)
+                            CircularProgressIndicator(modifier = Modifier.size(Dimens.ProgressIndicatorSmSize), color = OnSurfaceVariantLight, strokeWidth = Dimens.ProgressStrokeWidth)
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                            Text(stringResource(R.string.backup_uploading), style = MaterialTheme.typography.titleSmall)
                         } else {
-                            Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.backup_now_label), fontSize = 12.sp)
+                            Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                            Text(stringResource(R.string.backup_now_label), style = MaterialTheme.typography.titleSmall)
                         }
                     }
 
@@ -1792,9 +1788,9 @@ private fun GoogleDriveStatusCard(
                                 cornerRadius = Dimens.RadiusMd
                             )
                     ) {
-                        Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.action_unarchive), fontSize = 12.sp)
+                        Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                        Text(stringResource(R.string.action_unarchive), style = MaterialTheme.typography.titleSmall)
                     }
 
                     IconButton(
@@ -1830,8 +1826,8 @@ private fun OneDriveStatusCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(Dimens.CardPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1840,38 +1836,38 @@ private fun OneDriveStatusCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(OneDriveBlue.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = OneDriveBlue, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = OneDriveBlue, modifier = Modifier.size(Dimens.IconAction))
                     }
                     Column {
-                        Text(stringResource(R.string.backup_loc_onedrive_title), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
+                        Text(stringResource(R.string.backup_loc_onedrive_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = OnSurfaceLight)
                         Text(
                             text = if (isConnected) (accountEmail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.backup_status_connected)) else stringResource(R.string.backup_status_not_connected),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryLight
                         )
                     }
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
                     color = if (isConnected) SuccessContainer else BackgroundLight,
-                    border = BorderStroke(1.dp, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
+                    border = BorderStroke(Dimens.BorderThin, if (isConnected) SuccessGreen.copy(alpha = 0.4f) else OutlineLight)
                 ) {
                     Text(
                         text = stringResource(if (isConnected) R.string.backup_status_connected else R.string.backup_status_disconnected),
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isConnected) SuccessTextDark else TextSecondaryLight,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                     )
                 }
             }
@@ -1883,17 +1879,17 @@ private fun OneDriveStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(stringResource(R.string.backup_last_cloud_sync), fontSize = 11.sp, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_last_cloud_sync), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
                     Text(
                         text = if (lastSyncTime > 0L) formatTimeAgo(context, lastSyncTime) else stringResource(R.string.lock_never),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(stringResource(R.string.backup_target_folder), fontSize = 11.sp, color = TextSecondaryLight)
-                    Text(stringResource(R.string.backup_onedrive_folder_path), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
+                    Text(stringResource(R.string.backup_target_folder), style = MaterialTheme.typography.bodySmall, color = TextSecondaryLight)
+                    Text(stringResource(R.string.backup_onedrive_folder_path), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = OnSurfaceLight)
                 }
             }
 
@@ -1911,14 +1907,14 @@ private fun OneDriveStatusCard(
                         .heightIn(min = Dimens.MinTouchTarget)
                         .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                 ) {
-                    Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.backup_connect_onedrive), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                    Text(stringResource(R.string.backup_connect_onedrive), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
@@ -1938,13 +1934,13 @@ private fun OneDriveStatusCard(
                             .depthRaisedButton(enabled = !isUploading, cornerRadius = Dimens.RadiusMd)
                     ) {
                         if (isUploading) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = OnSurfaceVariantLight, strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.backup_uploading), fontSize = 12.sp)
+                            CircularProgressIndicator(modifier = Modifier.size(Dimens.ProgressIndicatorSmSize), color = OnSurfaceVariantLight, strokeWidth = Dimens.ProgressStrokeWidth)
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                            Text(stringResource(R.string.backup_uploading), style = MaterialTheme.typography.titleSmall)
                         } else {
-                            Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.backup_now_label), fontSize = 12.sp)
+                            Icon(Icons.Outlined.CloudUpload, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                            Text(stringResource(R.string.backup_now_label), style = MaterialTheme.typography.titleSmall)
                         }
                     }
 
@@ -1965,9 +1961,9 @@ private fun OneDriveStatusCard(
                                 cornerRadius = Dimens.RadiusMd
                             )
                     ) {
-                        Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.action_unarchive), fontSize = 12.sp)
+                        Icon(Icons.Outlined.CloudDownload, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                        Text(stringResource(R.string.action_unarchive), style = MaterialTheme.typography.titleSmall)
                     }
 
                     IconButton(

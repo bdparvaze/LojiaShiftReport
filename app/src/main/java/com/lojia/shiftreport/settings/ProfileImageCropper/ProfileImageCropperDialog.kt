@@ -22,8 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.*
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +76,7 @@ fun ProfileImageCropperDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .padding(bottom = Dimens.SpacingXl)
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -86,15 +84,14 @@ fun ProfileImageCropperDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = stringResource(R.string.crop_profile_photo_title),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
                     )
                 )
                 IconButton(
@@ -110,13 +107,13 @@ fun ProfileImageCropperDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
             // Cropper Preview Viewport
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(340.dp)
+                    .height(Dimens.CropperViewportHeight)
                     .background(Color.Black),
                 contentAlignment = Alignment.Center
             ) {
@@ -147,15 +144,15 @@ fun ProfileImageCropperDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                    .padding(horizontal = Dimens.SpacingXl, vertical = Dimens.SpacingMd),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Icon(
                     imageVector = Icons.Default.ZoomOut,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconAction)
                 )
                 Slider(
                     value = zoom,
@@ -173,19 +170,18 @@ fun ProfileImageCropperDialog(
                     imageVector = Icons.Default.ZoomIn,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconAction)
                 )
             }
 
             Text(
                 text = stringResource(R.string.crop_instructions),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             // Action Buttons (Cancel / Save)
             val style = LocalDepthStyle.current
@@ -193,8 +189,8 @@ fun ProfileImageCropperDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = Dimens.SpacingLg),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 OutlinedButton(
                     onClick = onDismiss,
@@ -280,16 +276,16 @@ fun ProfileImageCropperDialog(
                     if (isSaving) {
                         CircularProgressIndicator(
                             color = PureWhite,
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
+                            modifier = Modifier.size(Dimens.ProgressIndicatorSize),
+                            strokeWidth = Dimens.ProgressStrokeWidth
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(stringResource(R.string.save_photo_label), fontWeight = FontWeight.Bold)
                     }
                 }

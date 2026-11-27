@@ -46,8 +46,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun LojiaHeader(
@@ -112,7 +110,7 @@ fun LojiaCard(
             .depthCard(shape = cardShape, cornerRadius = Dimens.CardCornerRadius),
         shape = cardShape,
         color = Color.Transparent,
-        shadowElevation = 0.dp
+        shadowElevation = Dimens.SpacingNone
     ) {
         Column(
             modifier = Modifier.padding(Dimens.CardPaddingAuth),
@@ -131,18 +129,18 @@ fun LojiaSectionHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 15.dp)
+            .padding(bottom = Dimens.AuthSectionHeaderBottomGap)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 13.dp)
+                .padding(bottom = Dimens.AuthSectionHeaderRowBottomGap)
         ) {
             Box(
                 modifier = Modifier
-                    .size(30.dp)
-                    .clip(RoundedCornerShape(7.dp))
+                    .size(Dimens.AuthSectionTileSize)
+                    .clip(RoundedCornerShape(Dimens.AuthSectionTileRadius))
                     .background(LojiaColors.P100),
                 contentAlignment = Alignment.Center
             ) {
@@ -150,14 +148,15 @@ fun LojiaSectionHeader(
                     imageVector = icon,
                     contentDescription = null,
                     tint = LojiaColors.P500,
-                    modifier = Modifier.size(15.dp)
+                    modifier = Modifier.size(Dimens.AuthSectionIconSize)
                 )
             }
-            Spacer(modifier = Modifier.width(9.dp))
+            Spacer(modifier = Modifier.width(Dimens.AuthSectionTileGap))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    fontFamily = FontFamily.Default, fontSize = 13.5.sp,
+                    fontFamily = FontFamily.Default,
+                    fontSize = DepthTypeTokens.AuthSectionHeaderTitleSize,
                     fontWeight = FontWeight.Bold,
                     color = LojiaColors.N900,
                     maxLines = 1,
@@ -165,11 +164,12 @@ fun LojiaSectionHeader(
                 )
                 Text(
                     text = subtitle,
-                    fontFamily = FontFamily.Default, fontSize = 10.8.sp,
+                    fontFamily = FontFamily.Default,
+                    fontSize = DepthTypeTokens.AuthSectionHeaderSubtitleSize,
                     color = LojiaColors.N500,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 1.dp)
+                    modifier = Modifier.padding(top = Dimens.FlatBorderWidth)
                 )
             }
         }
@@ -177,7 +177,7 @@ fun LojiaSectionHeader(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(1.dp)
+                .height(Dimens.FlatBorderWidth)
                 .background(LojiaColors.N100)
         )
     }
@@ -214,7 +214,7 @@ fun LojiaInputField(
         if (label.isNotBlank()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 5.dp, start = 2.dp)
+                modifier = Modifier.padding(bottom = Dimens.AuthSmallGap, start = Dimens.SpacingXxs)
             ) {
                 Text(
                     text = label,
@@ -233,10 +233,10 @@ fun LojiaInputField(
                     )
                 }
                 if (!infoTooltip.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Box(
                         modifier = Modifier
-                            .size(13.dp)
+                            .size(Dimens.AuthInfoDotSize)
                             .clip(CircleShape)
                             .background(LojiaColors.N200)
                             .clickable { showTooltip = !showTooltip },
@@ -245,7 +245,7 @@ fun LojiaInputField(
                         Text(
                             text = "?",
                             fontFamily = FontFamily.Default,
-                            fontSize = 8.5.sp,
+                            fontSize = DepthTypeTokens.AuthInfoDotTextSize,
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceVariantLight
                         )
@@ -257,18 +257,18 @@ fun LojiaInputField(
         // Info Tooltip Box
         if (showTooltip && !infoTooltip.isNullOrBlank()) {
             Surface(
-                shape = RoundedCornerShape(5.dp),
+                shape = RoundedCornerShape(Dimens.AuthSmallGap),
                 color = LojiaColors.N900,
                 modifier = Modifier
-                    .padding(bottom = 5.dp)
+                    .padding(bottom = Dimens.AuthSmallGap)
                     .clickable { showTooltip = false }
             ) {
                 Text(
                     text = infoTooltip,
                     fontFamily = FontFamily.Default,
-                    fontSize = 10.sp,
+                    fontSize = DepthTypeTokens.AuthTooltipTextSize,
                     color = PureWhite,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                 )
             }
         }
@@ -322,7 +322,7 @@ fun LojiaInputField(
                             color = DepthTokens.RegisterPlaceholderColor,
                             fontFamily = FontFamily.Default,
                             fontSize = DepthTypeTokens.RegisterPlaceholderSize,
-                            lineHeight = 18.sp
+                            lineHeight = DepthTypeTokens.AuthInputLineHeight
                         )
                     }
                     BasicTextField(
@@ -337,7 +337,7 @@ fun LojiaInputField(
                             color = OnSurfaceLight,
                             fontFamily = FontFamily.Default,
                             fontSize = DepthTypeTokens.RegisterPlaceholderSize,
-                            lineHeight = 18.sp,
+                            lineHeight = DepthTypeTokens.AuthInputLineHeight,
                             fontWeight = FontWeight.Normal
                         ),
                         cursorBrush = SolidColor(PrimaryBlueLight),
@@ -350,7 +350,7 @@ fun LojiaInputField(
                 }
 
                 if (trailingIcon != null) {
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(Dimens.AuthCompactGap))
                     trailingIcon()
                 }
             }
@@ -361,22 +361,25 @@ fun LojiaInputField(
             Text(
                 text = errorMessage,
                 color = LojiaColors.R500,
-                fontFamily = FontFamily.Default, fontSize = 11.sp,
-                modifier = Modifier.padding(top = 3.dp, start = 2.dp)
+                fontFamily = FontFamily.Default,
+                fontSize = DepthTypeTokens.AuthValidationTextSize,
+                modifier = Modifier.padding(top = Dimens.AuthTinyGap, start = Dimens.SpacingXxs)
             )
         } else if (validationState == FieldValidationState.SUCCESS && !successMessage.isNullOrBlank()) {
             Text(
                 text = successMessage,
                 color = LojiaColors.G500,
-                fontFamily = FontFamily.Default, fontSize = 11.sp,
-                modifier = Modifier.padding(top = 3.dp, start = 2.dp)
+                fontFamily = FontFamily.Default,
+                fontSize = DepthTypeTokens.AuthValidationTextSize,
+                modifier = Modifier.padding(top = Dimens.AuthTinyGap, start = Dimens.SpacingXxs)
             )
         } else if (!hintMessage.isNullOrBlank()) {
             Text(
                 text = hintMessage,
                 color = LojiaColors.N600,
-                fontFamily = FontFamily.Default, fontSize = 11.sp,
-                modifier = Modifier.padding(top = 3.dp, start = 2.dp)
+                fontFamily = FontFamily.Default,
+                fontSize = DepthTypeTokens.AuthValidationTextSize,
+                modifier = Modifier.padding(top = Dimens.AuthTinyGap, start = Dimens.SpacingXxs)
             )
         }
     }
@@ -400,7 +403,7 @@ fun LojiaGradientButton(
         enabled = isInteractive,
         shape = buttonShape,
         color = Color.Transparent,
-        shadowElevation = 0.dp,
+        shadowElevation = Dimens.SpacingNone,
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = Dimens.ButtonHeightPrimary)
@@ -421,10 +424,10 @@ fun LojiaGradientButton(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(
                         color = PureWhite,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(18.dp)
+                        strokeWidth = Dimens.ProgressStrokeWidth,
+                        modifier = Modifier.size(Dimens.IconMd)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(Dimens.AuthFieldGap))
                     Text(
                         text = text,
                         color = PureWhite,
@@ -473,16 +476,16 @@ fun LojiaPasswordStrengthMeter(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 5.dp, bottom = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(top = Dimens.AuthSmallGap, bottom = Dimens.SpacingXxs),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs),
         verticalAlignment = Alignment.CenterVertically
     ) {
         for (i in 1..3) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(99.dp))
+                    .height(Dimens.AuthTinyGap)
+                    .clip(RoundedCornerShape(Dimens.RadiusFull))
                     .background(if (i <= strengthLevel) activeColor else LojiaColors.N200)
             )
         }
@@ -554,7 +557,7 @@ fun LojiaPasswordField(
                         imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                         contentDescription = stringResource(if (isPasswordVisible) R.string.cd_hide_password else R.string.cd_show_password),
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                 }
             }
@@ -633,14 +636,14 @@ fun LojiaCountryPickerDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.AuthFieldGap),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = stringResource(R.string.auth_select_country_code),
                     fontFamily = FontFamily.Default,
-                    fontSize = 15.sp,
+                    fontSize = DepthTypeTokens.AuthCountryHeaderSize,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight
                 )
@@ -657,10 +660,10 @@ fun LojiaCountryPickerDialog(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs)
                     .defaultMinSize(minHeight = Dimens.TextFieldHeightCompact)
                     .depthInset(shape = RoundedCornerShape(Dimens.RadiusMd))
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                    .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.AuthFieldGap),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -668,14 +671,18 @@ fun LojiaCountryPickerDialog(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     BasicTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         singleLine = true,
-                        textStyle = TextStyle(color = OnSurfaceLight, fontFamily = FontFamily.Default, fontSize = 13.sp),
+                        textStyle = TextStyle(
+                            color = OnSurfaceLight,
+                            fontFamily = FontFamily.Default,
+                            fontSize = DepthTypeTokens.AuthFooterTextSize
+                        ),
                         cursorBrush = SolidColor(PrimaryIndigoLight),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -684,14 +691,14 @@ fun LojiaCountryPickerDialog(
 
             HorizontalDivider(
                 color = OutlineVariantLight,
-                modifier = Modifier.padding(top = 10.dp)
+                modifier = Modifier.padding(top = Dimens.AuthFieldGap)
             )
 
             // List
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 360.dp)
+                    .heightIn(max = Dimens.DialogListMaxHeight)
             ) {
                 items(filtered, key = { (c, _) -> c.code + c.dial }) { (country, displayName) ->
                     val isSelected = country.dial == selectedDial
@@ -703,21 +710,21 @@ fun LojiaCountryPickerDialog(
                                 onSelectCountry(country)
                             }
                             .background(if (isSelected) PrimaryContainerLight else Color.Transparent)
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.AuthFieldGap),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = country.dial,
                             fontFamily = FontFamily.Default,
-                            fontSize = 13.sp,
+                            fontSize = DepthTypeTokens.AuthFooterTextSize,
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceLight,
-                            modifier = Modifier.width(52.dp)
+                            modifier = Modifier.width(Dimens.BadgeMinWidth)
                         )
                         Text(
                             text = displayName,
                             fontFamily = FontFamily.Default,
-                            fontSize = 13.sp,
+                            fontSize = DepthTypeTokens.AuthFooterTextSize,
                             color = OnSurfaceLight,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -728,11 +735,11 @@ fun LojiaCountryPickerDialog(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
                                 tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(Dimens.IconSm)
                             )
                         }
                     }
-                    HorizontalDivider(color = OutlineVariantLight, thickness = 0.5.dp)
+                    HorizontalDivider(color = OutlineVariantLight, thickness = Dimens.RowDividerWidth)
                 }
             }
         }

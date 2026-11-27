@@ -33,8 +33,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -219,13 +217,13 @@ fun DocumentEditorScreen(
                 topBar = {
                     Surface(
                         color = ScannerCardBg,
-                        shadowElevation = 6.dp
+                        shadowElevation = Dimens.FlatCardShadowBlur
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .statusBarsPadding()
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -242,25 +240,26 @@ fun DocumentEditorScreen(
                             Row(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(horizontal = 8.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .padding(horizontal = Dimens.SpacingSm)
+                                    .clip(RoundedCornerShape(Dimens.RadiusMd))
+                                    .minimumInteractiveComponentSize()
                                     .clickable { isEditingTitle = true }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = documentTitle,
-                                    fontSize = 15.sp,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
                                     maxLines = 1
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
                                     contentDescription = stringResource(R.string.cd_rename),
                                     tint = TextDisabledColor,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(Dimens.IconXs)
                                 )
                             }
 
@@ -300,13 +299,14 @@ fun DocumentEditorScreen(
                                 },
                                 enabled = !isSaving,
                                 colors = ButtonDefaults.buttonColors(containerColor = ScannerEmerald),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                                shape = RoundedCornerShape(Dimens.RadiusLg),
+                                contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
+                                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                             ) {
                                 if (isSaving) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
-                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(Dimens.IconMd),
+                                        strokeWidth = Dimens.ProgressStrokeWidth,
                                         color = Color.White
                                     )
                                 } else {
@@ -314,13 +314,13 @@ fun DocumentEditorScreen(
                                         imageVector = Icons.Outlined.Check,
                                         contentDescription = stringResource(R.string.cd_save),
                                         tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(Dimens.IconMd)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.done),
+                                        style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
                                         color = Color.White
                                     )
                                 }
@@ -331,27 +331,27 @@ fun DocumentEditorScreen(
                 bottomBar = {
                     Surface(
                         color = ScannerCardBg,
-                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                        shadowElevation = 12.dp,
+                        shape = RoundedCornerShape(topStart = Dimens.BottomSheetCornerRadius, topEnd = Dimens.BottomSheetCornerRadius),
+                        shadowElevation = Dimens.FlatCardShadowBlur,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .navigationBarsPadding()
-                                .padding(vertical = 12.dp)
+                                .padding(vertical = Dimens.SpacingMd)
                         ) {
                             // Section Header with Adjust Toggle
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
                                     text = if (showAdjustSliders) stringResource(R.string.manual_fine_tuning) else stringResource(R.string.enhancement_filters),
-                                    fontSize = 12.sp,
+                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = TextDisabledColor
                                 )
@@ -362,17 +362,18 @@ fun DocumentEditorScreen(
                                     colors = ButtonDefaults.textButtonColors(
                                         contentColor = if (showAdjustSliders) ScannerEmerald else Color.White
                                     ),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                    contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXxs),
+                                    modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Tune,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(Dimens.IconSm)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = if (showAdjustSliders) stringResource(R.string.btn_filters) else stringResource(R.string.btn_adjust),
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -387,7 +388,7 @@ fun DocumentEditorScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
                                 ) {
                                     // Brightness Slider
                                     Row(
@@ -396,9 +397,9 @@ fun DocumentEditorScreen(
                                     ) {
                                         Text(
                                             text = stringResource(R.string.brightness_label),
-                                            fontSize = 12.sp,
+                                            style = MaterialTheme.typography.bodyMedium,
                                             color = Color.White,
-                                            modifier = Modifier.width(76.dp)
+                                            modifier = Modifier.width(Dimens.ScannerSliderLabelWidth)
                                         )
                                         Slider(
                                             value = adjustments.brightness,
@@ -417,9 +418,9 @@ fun DocumentEditorScreen(
                                         )
                                         Text(
                                             text = "${adjustments.brightness.toInt()}",
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.labelMedium,
                                             color = TextDisabledColor,
-                                            modifier = Modifier.width(32.dp)
+                                            modifier = Modifier.width(Dimens.IconXl)
                                         )
                                     }
 
@@ -430,9 +431,9 @@ fun DocumentEditorScreen(
                                     ) {
                                         Text(
                                             text = stringResource(R.string.contrast_label),
-                                            fontSize = 12.sp,
+                                            style = MaterialTheme.typography.bodyMedium,
                                             color = Color.White,
-                                            modifier = Modifier.width(76.dp)
+                                            modifier = Modifier.width(Dimens.ScannerSliderLabelWidth)
                                         )
                                         Slider(
                                             value = adjustments.contrast,
@@ -451,9 +452,9 @@ fun DocumentEditorScreen(
                                         )
                                         Text(
                                             text = String.format(DateTimeFormatUtils.getAppLocale(), context.getString(R.string.contrast_multiplier_fmt), adjustments.contrast),
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.labelMedium,
                                             color = TextDisabledColor,
-                                            modifier = Modifier.width(32.dp)
+                                            modifier = Modifier.width(Dimens.IconXl)
                                         )
                                     }
 
@@ -464,9 +465,9 @@ fun DocumentEditorScreen(
                                     ) {
                                         Text(
                                             text = stringResource(R.string.detail_label),
-                                            fontSize = 12.sp,
+                                            style = MaterialTheme.typography.bodyMedium,
                                             color = Color.White,
-                                            modifier = Modifier.width(76.dp)
+                                            modifier = Modifier.width(Dimens.ScannerSliderLabelWidth)
                                         )
                                         Slider(
                                             value = adjustments.detail,
@@ -485,9 +486,9 @@ fun DocumentEditorScreen(
                                         )
                                         Text(
                                             text = "${(adjustments.detail * 100).toInt()}%",
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.labelMedium,
                                             color = TextDisabledColor,
-                                            modifier = Modifier.width(32.dp)
+                                            modifier = Modifier.width(Dimens.IconXl)
                                         )
                                     }
 
@@ -501,9 +502,14 @@ fun DocumentEditorScreen(
                                                 adjustments = FilterAdjustments()
                                                 val base = croppedBitmap ?: return@TextButton
                                                 updatePreview(base, selectedFilter, adjustments)
-                                            }
+                                            },
+                                            modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                                         ) {
-                                            Text(stringResource(R.string.btn_reset), color = TextDisabledColor, fontSize = 12.sp)
+                                            Text(
+                                                text = stringResource(R.string.btn_reset),
+                                                color = TextDisabledColor,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
                                         }
                                     }
                                 }
@@ -515,8 +521,8 @@ fun DocumentEditorScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .horizontalScroll(rememberScrollState())
-                                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                             ) {
                                 ScannerFilterType.entries.forEach { filter ->
                                     val isSelected = selectedFilter == filter
@@ -525,7 +531,8 @@ fun DocumentEditorScreen(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
-                                            .width(74.dp)
+                                            .width(Dimens.ScannerFilterItemWidth)
+                                            .minimumInteractiveComponentSize()
                                             .clickable {
                                                 if (selectedFilter != filter) {
                                                     selectedFilter = filter
@@ -536,13 +543,13 @@ fun DocumentEditorScreen(
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .size(64.dp)
-                                                .clip(RoundedCornerShape(12.dp))
+                                                .size(Dimens.ScannerFilterThumbSize)
+                                                .clip(RoundedCornerShape(Dimens.RadiusLg))
                                                 .background(OnSurfaceVariantLight)
                                                 .border(
-                                                    width = if (isSelected) 2.5.dp else 1.dp,
+                                                    width = if (isSelected) Dimens.CropperStrokeWidth else Dimens.FlatBorderWidth,
                                                     color = if (isSelected) ScannerEmerald else Color.White.copy(alpha = 0.15f),
-                                                    shape = RoundedCornerShape(12.dp)
+                                                    shape = RoundedCornerShape(Dimens.RadiusLg)
                                                 ),
                                             contentAlignment = Alignment.Center
                                         ) {
@@ -555,8 +562,8 @@ fun DocumentEditorScreen(
                                                 )
                                             } else {
                                                 CircularProgressIndicator(
-                                                    modifier = Modifier.size(16.dp),
-                                                    strokeWidth = 2.dp,
+                                                    modifier = Modifier.size(Dimens.IconSm),
+                                                    strokeWidth = Dimens.ProgressStrokeWidth,
                                                     color = ScannerEmerald
                                                 )
                                             }
@@ -565,8 +572,8 @@ fun DocumentEditorScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .align(Alignment.TopEnd)
-                                                        .padding(4.dp)
-                                                        .size(16.dp)
+                                                        .padding(Dimens.SpacingXs)
+                                                        .size(Dimens.IconSm)
                                                         .background(ScannerEmerald, CircleShape),
                                                     contentAlignment = Alignment.Center
                                                 ) {
@@ -574,17 +581,17 @@ fun DocumentEditorScreen(
                                                         imageVector = Icons.Outlined.Check,
                                                         contentDescription = null,
                                                         tint = Color.White,
-                                                        modifier = Modifier.size(12.dp)
+                                                        modifier = Modifier.size(Dimens.SpacingMd)
                                                     )
                                                 }
                                             }
                                         }
 
-                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
                                         Text(
                                             text = stringResource(filter.titleRes),
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.labelMedium,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                             color = if (isSelected) ScannerEmerald else OutlineLight,
                                             maxLines = 1
@@ -600,19 +607,19 @@ fun DocumentEditorScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
-                        .padding(16.dp),
+                        .padding(Dimens.SpacingLg),
                     contentAlignment = Alignment.Center
                 ) {
                     val previewBitmap = displayBitmap ?: croppedBitmap
                     if (previewBitmap != null) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            shadowElevation = 8.dp,
+                            shape = RoundedCornerShape(Dimens.RadiusLg),
+                            shadowElevation = Dimens.FlatCardShadowBlur,
                             color = Color.Black,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(Dimens.RadiusLg))
                         ) {
                             Image(
                                 bitmap = previewBitmap.asImageBitmap(),
@@ -626,14 +633,14 @@ fun DocumentEditorScreen(
                     if (isFilterProcessing) {
                         Box(
                             modifier = Modifier
-                                .size(60.dp)
+                                .size(Dimens.ScannerProcessingOverlaySize)
                                 .background(Color.Black.copy(alpha = 0.65f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
                                 color = ScannerEmerald,
-                                strokeWidth = 3.dp,
-                                modifier = Modifier.size(28.dp)
+                                strokeWidth = Dimens.ChartStrokeMedium,
+                                modifier = Modifier.size(Dimens.SectionIconTileSize)
                             )
                         }
                     }
@@ -657,8 +664,8 @@ fun DocumentEditorScreen(
             ) {
                 Text(
                     text = stringResource(R.string.doc_rename_title),
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
                     color = OnSurfaceLight
                 )
                 LojiaTextField(
@@ -730,7 +737,7 @@ fun DocumentEditorScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(Dimens.SpacingLg)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -742,12 +749,12 @@ fun DocumentEditorScreen(
                             imageVector = Icons.Outlined.TextFields,
                             contentDescription = null,
                             tint = ScannerEmerald,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(Dimens.IconLg)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(
                             text = stringResource(R.string.cd_ocr_text),
-                            fontSize = 17.sp,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = OnBackgroundLight
                         )
@@ -768,56 +775,59 @@ fun DocumentEditorScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 if (isOcrRunning) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp),
+                            .height(Dimens.ScannerOcrBoxHeight),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = ScannerEmerald)
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(stringResource(R.string.extracting_text_progress), color = OnSurfaceVariantLight, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
+                            Text(
+                                text = stringResource(R.string.extracting_text_progress),
+                                color = OnSurfaceVariantLight,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
                     }
                 } else if (ocrExtractedText.isBlank()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp),
+                            .height(Dimens.ScannerOcrBoxHeight),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.no_readable_text_detected),
                             color = OnSurfaceVariantLight,
-                            fontSize = 14.sp
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 } else {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 280.dp)
+                            .heightIn(max = Dimens.ScannerOcrScrollMaxHeight)
                             .depthInset()
-                            .padding(14.dp)
+                            .padding(Dimens.SpacingMd)
                             .verticalScroll(rememberScrollState())
                     ) {
                         Text(
                             text = ocrExtractedText,
-                            fontSize = 14.sp,
-                            lineHeight = 20.sp,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = OnBackgroundLight
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         OutlinedButton(
                             onClick = {
@@ -842,8 +852,8 @@ fun DocumentEditorScreen(
                                     cornerRadius = Dimens.RadiusMd
                                 )
                         ) {
-                            Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(stringResource(R.string.btn_share_text), fontWeight = FontWeight.SemiBold)
                         }
 

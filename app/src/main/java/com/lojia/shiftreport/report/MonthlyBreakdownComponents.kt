@@ -15,8 +15,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.MoneyFormat
@@ -29,14 +27,14 @@ fun WeeklyBreakdownCard(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Dimens.CardCornerRadius),
         color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
             .cardRise(5)
-            .depthCard(shape = RoundedCornerShape(14.dp))
+            .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(Dimens.CardPadding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -47,9 +45,9 @@ fun WeeklyBreakdownCard(
                         imageVector = Icons.Default.ViewWeek,
                         contentDescription = null,
                         tint = PrimaryIndigo,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Text(
                         text = stringResource(R.string.weekly_breakdown),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
@@ -63,7 +61,7 @@ fun WeeklyBreakdownCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
             weeklyBreakdowns.forEach { (weekLabel, weekAmount) ->
                 val percentage = if (totalMonthRevenue > 0) (weekAmount / totalMonthRevenue * 100).toInt() else 0
@@ -71,7 +69,7 @@ fun WeeklyBreakdownCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = Dimens.SpacingXs)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -87,14 +85,14 @@ fun WeeklyBreakdownCard(
                         val amountStr = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(weekAmount, digits), digits)
                         Text(
                             text = "$amountStr $currency ($percentage%)",
-                            style = MaterialTheme.typography.bodyMedium.copy(
+                            style = MaterialTheme.typography.bodyMedium.asMoneyTabular().copy(
                                 fontWeight = FontWeight.Bold,
                                 color = if (weekAmount > 0) PrimaryIndigo else TextSecondaryLight
                             )
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
                     LinearProgressIndicator(
                         progress = { (percentage / 100f).coerceIn(0f, 1f) },
@@ -102,8 +100,8 @@ fun WeeklyBreakdownCard(
                         trackColor = BgLightGrey,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(7.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .height(Dimens.ProgressBarHeight)
+                            .clip(RoundedCornerShape(Dimens.RadiusXs))
                     )
                 }
             }
@@ -124,35 +122,35 @@ fun TopRevenueDaysCard(
     if (topDays.isEmpty()) return
 
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Dimens.CardCornerRadius),
         color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
             .cardRise(6)
-            .depthCard(shape = RoundedCornerShape(14.dp))
+            .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(Dimens.CardPadding)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Leaderboard,
                     contentDescription = null,
                     tint = AccentGold,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconAction)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                 Text(
                     text = stringResource(R.string.top_revenue_days),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
             topDays.forEachIndexed { rank, dayData ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = Dimens.SpacingXs),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -165,12 +163,12 @@ fun TopRevenueDaysCard(
                                 2 -> WarningContainer
                                 else -> BgLightGrey
                             },
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(Dimens.RankBadgeSize)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = "#${rank + 1}",
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = when (rank) {
                                         0 -> WarningOrange
@@ -182,18 +180,18 @@ fun TopRevenueDaysCard(
                             }
                         }
 
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
 
                         Column {
                             Text(
                                 text = "${dayData.dateString} (${dayData.dayName})",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.5.sp,
                                 color = TextPrimaryLight
                             )
                             Text(
                                 text = stringResource(R.string.cash_0f_mada_0f).format(dayData.cashAmount, dayData.madaAmount),
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall.asMoneyTabular(),
                                 color = TextSecondaryLight
                             )
                         }
@@ -202,13 +200,13 @@ fun TopRevenueDaysCard(
                     val dayDigits = MoneyFormat.minorUnitDigits(currency)
                     Text(
                         text = "${MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(dayData.totalRevenue, dayDigits), dayDigits)} $currency",
+                        style = MaterialTheme.typography.bodyLarge.asMoneyTabular(),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
                         color = AccentEmerald
                     )
                 }
                 if (rank < topDays.size - 1) {
-                    HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f), thickness = 0.5.dp)
+                    HorizontalDivider(color = OutlineLight.copy(alpha = 0.5f), thickness = Dimens.RowDividerWidth)
                 }
             }
         }

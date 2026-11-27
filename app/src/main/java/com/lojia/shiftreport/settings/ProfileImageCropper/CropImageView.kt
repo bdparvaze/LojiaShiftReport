@@ -20,7 +20,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
+import com.lojia.shiftreport.ui.theme.Dimens
 import com.lojia.shiftreport.ui.theme.PrimaryIndigo
 
 /**
@@ -41,7 +41,7 @@ fun CropImageView(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(340.dp)
+            .height(Dimens.CropperViewportHeight)
             .background(Color.Black)
             .pointerInput(Unit) {
                 detectTransformGestures { _, pan, gestureZoom, _ ->
@@ -108,13 +108,13 @@ fun CropImageView(
                 color = PrimaryIndigo,
                 radius = radius,
                 center = center,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5.dp.toPx())
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = Dimens.CropperStrokeWidth.toPx())
             )
 
             // Inner subtle rule-of-thirds grid lines
             val step = cropDiameter / 3f
             val linePaint = Color.White.copy(alpha = 0.35f)
-            val strokeW = 1.dp.toPx()
+            val strokeW = Dimens.BorderThin.toPx()
 
             clipPath(holePath) {
                 // Vertical grid lines

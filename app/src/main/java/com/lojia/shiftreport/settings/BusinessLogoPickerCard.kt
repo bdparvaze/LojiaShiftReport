@@ -61,8 +61,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.util.PdfReportGenerator
 import kotlinx.coroutines.Dispatchers
@@ -182,7 +180,7 @@ fun BusinessLogoPickerCard(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Text(
                     text = stringResource(R.string.cd_change_photo),
@@ -194,7 +192,7 @@ fun BusinessLogoPickerCard(
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     // Camera Option
                     Box(
@@ -208,22 +206,21 @@ fun BusinessLogoPickerCard(
                             }
                     ) {
                         Row(
-                            modifier = Modifier.padding(14.dp),
+                            modifier = Modifier.padding(Dimens.CardPadding),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PhotoCamera,
                                 contentDescription = null,
                                 tint = primaryBrand,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
                             Text(
                                 text = stringResource(R.string.logo_take_photo_camera),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    color = OnSurfaceLight,
-                                    fontSize = 15.sp
+                                    color = OnSurfaceLight
                                 )
                             )
                         }
@@ -247,22 +244,21 @@ fun BusinessLogoPickerCard(
                             }
                     ) {
                         Row(
-                            modifier = Modifier.padding(14.dp),
+                            modifier = Modifier.padding(Dimens.CardPadding),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.AddAPhoto,
                                 contentDescription = null,
                                 tint = primaryBrand,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
                             Text(
                                 text = stringResource(R.string.upload_logo),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    color = OnSurfaceLight,
-                                    fontSize = 15.sp
+                                    color = OnSurfaceLight
                                 )
                             )
                         }
@@ -280,22 +276,21 @@ fun BusinessLogoPickerCard(
                             }
                     ) {
                         Row(
-                            modifier = Modifier.padding(14.dp),
+                            modifier = Modifier.padding(Dimens.CardPadding),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PhotoLibrary,
                                 contentDescription = null,
                                 tint = primaryBrand,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
                             Text(
                                 text = stringResource(R.string.preset_logos),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    color = OnSurfaceLight,
-                                    fontSize = 15.sp
+                                    color = OnSurfaceLight
                                 )
                             )
                         }
@@ -319,22 +314,21 @@ fun BusinessLogoPickerCard(
                                 }
                         ) {
                             Row(
-                                modifier = Modifier.padding(14.dp),
+                                modifier = Modifier.padding(Dimens.CardPadding),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = null,
                                     tint = ErrorRedLight,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(Dimens.IconAction)
                                 )
                                 Text(
                                     text = stringResource(R.string.remove_logo),
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = FontWeight.SemiBold,
-                                        color = ErrorRedLight,
-                                        fontSize = 15.sp
+                                        color = ErrorRedLight
                                     )
                                 )
                             }
@@ -351,7 +345,7 @@ fun BusinessLogoPickerCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
+            .padding(vertical = Dimens.SpacingLg)
             .testTag("business_logo_card"),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -359,10 +353,10 @@ fun BusinessLogoPickerCard(
         // Large Round Avatar Circle
         Box(
             modifier = Modifier
-                .size(136.dp)
+                .size(Dimens.BusinessLogoCircleSize)
                 .clip(CircleShape)
                 .background(OutlineVariantLight)
-                .border(3.dp, primaryBrand, CircleShape)
+                .border(Dimens.AvatarBorderWidth, primaryBrand, CircleShape)
                 .clickable {
                     try {
                         photoPickerLauncher.launch(
@@ -396,7 +390,7 @@ fun BusinessLogoPickerCard(
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = PureWhite,
-                            fontSize = 46.sp
+                            fontSize = DepthTypeTokens.BusinessLogoInitialSize
                         )
                     )
                 }
@@ -413,25 +407,24 @@ fun BusinessLogoPickerCard(
                     imageVector = Icons.Filled.PhotoCamera,
                     contentDescription = stringResource(R.string.cd_change_photo),
                     tint = PureWhite,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(Dimens.IconXl)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
         // "Change photo" Label Link (Matching Image 1)
         Text(
             text = stringResource(R.string.cd_change_photo),
-            style = MaterialTheme.typography.titleMedium.copy(
+            style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color = primaryBrand,
-                fontSize = 18.sp
+                color = primaryBrand
             ),
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(Dimens.RadiusMd))
                 .clickable { showOptionSheet = true }
-                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs)
                 .testTag("btn_upload_logo")
         )
     }
@@ -486,20 +479,20 @@ fun ProfileGroupCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp)
+                .padding(vertical = Dimens.SpacingMd)
         ) {
             // Section Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(30.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .size(Dimens.SectionIconTileSize)
+                        .clip(RoundedCornerShape(Dimens.RadiusMd))
                         .background(iconTint.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -507,28 +500,27 @@ fun ProfileGroupCard(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
                 }
 
                 Text(
                     text = title.uppercase(),
-                    style = MaterialTheme.typography.labelMedium.copy(
+                    style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceVariantLight,
-                        letterSpacing = 0.8.sp,
-                        fontSize = 12.sp
+                        letterSpacing = DepthTypeTokens.SettingsSectionHeaderTracking
                     )
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
             HorizontalDivider(
                 color = OutlineVariantLight,
-                thickness = 1.dp,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                thickness = Dimens.BorderThin,
+                modifier = Modifier.padding(horizontal = Dimens.SpacingLg)
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
             content()
         }
@@ -552,34 +544,34 @@ fun ProfileDetailItemRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 56.dp)
+            .defaultMinSize(minHeight = Dimens.ListRowMinHeight)
             .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.ListRowPaddingVertical),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .size(Dimens.IconTile)
+                        .clip(RoundedCornerShape(Dimens.RadiusMd))
                         .background(BackgroundLight)
-                        .border(1.dp, OutlineLight, RoundedCornerShape(10.dp)),
+                        .border(Dimens.BorderThin, OutlineLight, RoundedCornerShape(Dimens.RadiusMd)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(Dimens.IconMd)
                     )
                 }
 
@@ -588,18 +580,16 @@ fun ProfileDetailItemRow(
                         text = label,
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = TextHintColor,
-                            fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                     Text(
                         text = displayValue,
-                        style = MaterialTheme.typography.bodyLarge.copy(
+                        style = MaterialTheme.typography.titleLarge.copy(
                             color = OnSurfaceLight,
-                            fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold
                         ),
                         maxLines = 1,
@@ -611,15 +601,15 @@ fun ProfileDetailItemRow(
             // Edit badge
             Surface(
                 color = SurfaceVariantLight,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.size(28.dp)
+                shape = RoundedCornerShape(Dimens.RadiusMd),
+                modifier = Modifier.size(Dimens.SectionIconTileSize)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(R.string.cd_edit),
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(Dimens.IconXs)
                     )
                 }
             }
@@ -628,8 +618,8 @@ fun ProfileDetailItemRow(
         if (!isLastItem) {
             HorizontalDivider(
                 color = OutlineVariantLight,
-                thickness = 0.8.dp,
-                modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                thickness = Dimens.RowDividerWidth,
+                modifier = Modifier.padding(start = Dimens.ProfileDetailDividerInsetStart, end = Dimens.SpacingLg)
             )
         }
     }
@@ -658,11 +648,11 @@ fun PresetLogoPickerDialog(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(Dimens.IconTile)
                             .clip(CircleShape)
                             .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
@@ -671,15 +661,14 @@ fun PresetLogoPickerDialog(
                             imageVector = Icons.Default.PhotoLibrary,
                             contentDescription = null,
                             tint = primaryBrand,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
                     Text(
                         text = stringResource(R.string.choose_preset_logo),
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = OnSurfaceLight,
-                            fontSize = 17.sp
+                            color = OnSurfaceLight
                         )
                     )
                 }
@@ -696,22 +685,22 @@ fun PresetLogoPickerDialog(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 380.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .heightIn(max = Dimens.PresetLogoGridMaxHeight),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 items(PRESET_LOGOS) { item ->
                     val isSelected = currentLogoKey == item.key
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(115.dp)
+                            .height(Dimens.PresetLogoTileHeight)
                             .depthCard(
                                 accent = isSelected,
                                 shape = RoundedCornerShape(Dimens.RadiusMd)
@@ -722,30 +711,29 @@ fun PresetLogoPickerDialog(
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(10.dp),
+                                    .padding(Dimens.SpacingSm),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(46.dp)
-                                        .shadow(3.dp, CircleShape)
+                                        .size(Dimens.PresetLogoCircleSize)
+                                        .shadow(Dimens.ShadowXs, CircleShape)
                                         .clip(CircleShape)
                                         .background(Brush.linearGradient(item.bgColors)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = item.iconEmoji,
-                                        fontSize = 22.sp
+                                        fontSize = DepthTypeTokens.PresetLogoEmojiSize
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                                 Text(
                                     text = stringResource(item.nameResId),
-                                    style = MaterialTheme.typography.labelMedium.copy(
+                                    style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) primaryBrand else OnSurfaceLight,
-                                        fontSize = 12.sp
+                                        color = if (isSelected) primaryBrand else OnSurfaceLight
                                     ),
                                     textAlign = TextAlign.Center,
                                     maxLines = 1,
@@ -757,8 +745,8 @@ fun PresetLogoPickerDialog(
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
-                                        .padding(6.dp)
-                                        .size(20.dp)
+                                        .padding(Dimens.SpacingXs)
+                                        .size(Dimens.IconAction)
                                         .clip(CircleShape)
                                         .background(primaryBrand),
                                     contentAlignment = Alignment.Center
@@ -767,7 +755,7 @@ fun PresetLogoPickerDialog(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
                                         tint = PureWhite,
-                                        modifier = Modifier.size(13.dp)
+                                        modifier = Modifier.size(Dimens.IconXs)
                                     )
                                 }
                             }

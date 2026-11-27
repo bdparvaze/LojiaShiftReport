@@ -26,8 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaDialog
 import com.lojia.shiftreport.ui.theme.*
@@ -51,47 +49,46 @@ fun DataPreservationSetupDialog(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingLg)
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(Dimens.PinDialogIconSize)
                     .clip(CircleShape)
                     .background(PrimaryContainerLight)
-                    .border(1.dp, OutlineLight, CircleShape),
+                    .border(Dimens.BorderThin, OutlineLight, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Security,
                     contentDescription = null,
                     tint = PrimaryIndigoLight,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(Dimens.IconLg)
                 )
             }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Text(
                     text = stringResource(R.string.preserve_data_dialog_title),
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = stringResource(R.string.preserve_data_dialog_desc),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     color = TextSecondaryLight,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
+                    textAlign = TextAlign.Center
                 )
             }
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Button(
                     onClick = { onChoice(true) },
@@ -110,17 +107,17 @@ fun DataPreservationSetupDialog(
                         .testTag("btn_keep_data")
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Save,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                         Text(
                             text = stringResource(R.string.btn_keep_data),
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -145,17 +142,17 @@ fun DataPreservationSetupDialog(
                         .testTag("btn_delete_everything")
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteForever,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                         Text(
                             text = stringResource(R.string.btn_delete_everything),
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -187,41 +184,40 @@ fun DataRecoveryDialog(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingLg)
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(Dimens.PinDialogIconSize)
                     .clip(CircleShape)
                     .background(PrimaryContainerLight)
-                    .border(1.dp, OutlineLight, CircleShape),
+                    .border(Dimens.BorderThin, OutlineLight, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Restore,
                     contentDescription = null,
                     tint = PrimaryIndigoLight,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(Dimens.IconLg)
                 )
             }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Text(
                     text = stringResource(R.string.restore_data_dialog_title),
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = OnSurfaceLight,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = stringResource(R.string.restore_data_dialog_desc),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     color = TextSecondaryLight,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
+                    textAlign = TextAlign.Center
                 )
 
                 if (backupFile != null) {
@@ -249,7 +245,7 @@ fun DataRecoveryDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 4.dp)
+                            .padding(top = Dimens.SpacingXs)
                             .depthSemanticCard(
                                 backgroundColor = BackgroundLight,
                                 borderColor = OutlineLight,
@@ -257,22 +253,22 @@ fun DataRecoveryDialog(
                             )
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            modifier = Modifier.padding(Dimens.CardPadding),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.History,
                                     contentDescription = null,
                                     tint = PrimaryIndigoLight,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(Dimens.IconSm)
                                 )
                                 Text(
                                     text = backupFile.name,
-                                    fontSize = 12.sp,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = OnSurfaceLight,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
@@ -281,7 +277,7 @@ fun DataRecoveryDialog(
                             }
                             Text(
                                 text = preview,
-                                fontSize = 11.5.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = PrimaryIndigoLight,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -292,7 +288,7 @@ fun DataRecoveryDialog(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 // 1. Primary: Restore from backup
                 if (backupFile != null) {
@@ -313,17 +309,17 @@ fun DataRecoveryDialog(
                             .testTag("btn_restore_from_backup")
                     ) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Restore,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconMd)
                             )
                             Text(
                                 text = stringResource(R.string.btn_restore_from_backup),
-                                fontSize = 14.sp,
+                                style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -351,17 +347,17 @@ fun DataRecoveryDialog(
                             .testTag("btn_browse_backups")
                     ) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.FolderOpen,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconMd)
                             )
                             Text(
                                 text = stringResource(R.string.btn_browse_backups),
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -378,7 +374,7 @@ fun DataRecoveryDialog(
                 ) {
                     Text(
                         text = stringResource(R.string.btn_start_fresh),
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = TextSecondaryLight
                     )

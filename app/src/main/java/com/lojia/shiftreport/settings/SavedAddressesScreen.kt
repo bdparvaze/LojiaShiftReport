@@ -36,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,8 +60,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.SavedAddress
@@ -109,13 +108,13 @@ fun SavedAddressesScreen(
                     bottomStart = Dimens.RadiusXl,
                     bottomEnd = Dimens.RadiusXl
                 ),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(Dimens.SpacingNone)
             ) {
                 TopAppBar(
                     title = {
                         Text(
                             text = stringResource(R.string.saved_addresses_title),
-                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
                         )
@@ -146,13 +145,13 @@ fun SavedAddressesScreen(
         bottomBar = {
             Surface(
                 color = SurfaceLight,
-                border = BorderStroke(0.5.dp, OutlineVariantLight),
+                border = BorderStroke(Dimens.RowDividerWidth, OutlineVariantLight),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
                 ) {
                     Button(
                         onClick = onAddNew,
@@ -165,13 +164,12 @@ fun SavedAddressesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = Dimens.MinTouchTarget)
-                            .height(52.dp)
                             .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusPill)
                             .testTag("btn_add_new_address")
                     ) {
                         Text(
                             text = stringResource(R.string.add_new_address),
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
                         )
@@ -201,17 +199,17 @@ fun SavedAddressesScreen(
                         .fillMaxWidth()
                         .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
                         tint = SuccessTextDark,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
                     Text(
                         text = stringResource(R.string.all_info_encrypted),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = SuccessTextDark
                     )
@@ -228,12 +226,12 @@ fun SavedAddressesScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(48.dp),
+                            .padding(Dimens.SpacingHuge),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(80.dp)
+                                .size(Dimens.EmptyStateIconBgSize)
                                 .clip(CircleShape)
                                 .background(SurfaceVariantLight),
                             contentAlignment = Alignment.Center
@@ -242,20 +240,20 @@ fun SavedAddressesScreen(
                                 imageVector = Icons.Filled.LocationOn,
                                 contentDescription = null,
                                 tint = TextHintColor,
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(Dimens.EmptyStateIconSize)
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingLg))
                         Text(
                             text = stringResource(R.string.no_addresses_yet),
-                            fontSize = 16.sp,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Medium,
                             color = OnSurfaceLight
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                         Text(
                             text = stringResource(R.string.add_first_address_desc),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = OnSurfaceVariantLight,
                             textAlign = TextAlign.Center
                         )
@@ -266,8 +264,8 @@ fun SavedAddressesScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(Dimens.SpacingLg),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {
                     itemsIndexed(addresses, key = { _, it -> it.id }) { index, address ->
                         AddressCard(
@@ -337,42 +335,41 @@ private fun AddressCard(
             .depthCard(accent = address.isDefault)
             .testTag("card_saved_address_${address.id}")
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Dimens.CardPadding)) {
             Text(
                 text = fullName,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = OnSurfaceLight
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
             Text(
                 text = displayPhone,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = PrimaryIndigoLight
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
             Text(
                 text = address.addressLine,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 color = OnSurfaceLight,
-                lineHeight = 20.sp,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
             if (address.arabicAddressLine.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                 Text(
                     text = address.arabicAddressLine,
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     color = OnSurfaceVariantLight,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
+            HorizontalDivider(thickness = Dimens.RowDividerWidth, color = OutlineVariantLight)
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -382,17 +379,17 @@ private fun AddressCard(
                 if (address.isDefault) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
                             contentDescription = stringResource(R.string.cd_default),
                             tint = PrimaryIndigoDark,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
                         Text(
                             text = stringResource(R.string.cd_default),
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = PrimaryIndigoDark
                         )
@@ -400,20 +397,20 @@ private fun AddressCard(
                 } else {
                     Text(
                         text = stringResource(R.string.set_as_permanent_address_btn),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryIndigoLight,
                         modifier = Modifier
                             .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                             .clickable { setAsDefault(address.id) }
                             .wrapContentHeight(Alignment.CenterVertically)
-                            .padding(horizontal = 4.dp)
+                            .padding(horizontal = Dimens.SpacingXs)
                             .testTag("btn_set_default_${address.id}")
                     )
                 }
 
                 // Right: Delete + Edit
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
                     IconButton(
                         onClick = { onDelete(address) },
                         modifier = Modifier
@@ -424,7 +421,7 @@ private fun AddressCard(
                             imageVector = Icons.Outlined.DeleteOutline,
                             contentDescription = stringResource(R.string.cd_delete),
                             tint = ErrorRedLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconAction)
                         )
                     }
                     IconButton(
@@ -437,7 +434,7 @@ private fun AddressCard(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = stringResource(R.string.cd_edit),
                             tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconAction)
                         )
                     }
                 }

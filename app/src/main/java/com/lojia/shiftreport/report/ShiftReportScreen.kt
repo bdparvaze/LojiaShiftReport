@@ -80,9 +80,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 
-import androidx.compose.ui.unit.dp
-
-
 import java.util.*
 
 
@@ -608,7 +605,7 @@ fun ShiftReportScreenContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(horizontal = 12.dp, vertical = 76.dp)
+                .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SnackbarBottomOffset)
         )
     }
 }

@@ -14,9 +14,9 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -52,8 +52,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
@@ -103,14 +101,14 @@ fun GoogleMapsLocationPickerModal(
     var geocodeJob by remember { mutableStateOf<Job?>(null) }
 
     // Pin lift bounce animation (lifts up on drag, lands on release)
-    val pinElevation = remember { Animatable(0f) }
-    LaunchedEffect(isDraggingMap) {
-        if (isDraggingMap) {
-            pinElevation.animateTo(-24f, tween(150, easing = FastOutSlowInEasing))
-        } else {
-            pinElevation.animateTo(0f, tween(250, easing = FastOutSlowInEasing))
-        }
-    }
+    val pinLift by animateDpAsState(
+        targetValue = if (isDraggingMap) -Dimens.MapPinDragLift else Dimens.SpacingNone,
+        animationSpec = tween(
+            durationMillis = if (isDraggingMap) 150 else 250,
+            easing = FastOutSlowInEasing
+        ),
+        label = "pinLift"
+    )
 
     // Ground pulse animation for GPS
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -441,7 +439,7 @@ fun GoogleMapsLocationPickerModal(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Canvas(modifier = Modifier.size(80.dp)) {
+                        Canvas(modifier = Modifier.size(Dimens.MapReticleSize)) {
                             // Accuracy pulse
                             drawCircle(
                                 color = PrimaryIndigoLight.copy(alpha = pulseAlpha),
@@ -450,19 +448,22 @@ fun GoogleMapsLocationPickerModal(
                             // Ground anchor circle
                             drawCircle(
                                 color = OverlayScrim,
-                                radius = 6.dp.toPx()
+                                radius = Dimens.MapGroundAnchorRadius.toPx()
                             )
                         }
 
                         // Floating Pin with bounce elevation
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.offset(y = pinElevation.value.dp - 20.dp)
+                            modifier = Modifier.offset(y = pinLift - Dimens.MapPinLiftOffset)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(46.dp)
-                                    .shadow(elevation = if (isDraggingMap) 12.dp else 4.dp, shape = CircleShape)
+                                    .size(Dimens.MapPinSize)
+                                    .shadow(
+                                        elevation = if (isDraggingMap) Dimens.MapPinDragShadow else Dimens.FlatCardShadowBlur,
+                                        shape = CircleShape
+                                    )
                                     .clip(CircleShape)
                                     .background(PrimaryIndigoLight),
                                 contentAlignment = Alignment.Center
@@ -471,11 +472,15 @@ fun GoogleMapsLocationPickerModal(
                                     imageVector = Icons.Outlined.Storefront,
                                     contentDescription = null,
                                     tint = PureWhite,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(Dimens.IconLg)
                                 )
                             }
                             // Pin pointer stem
-                            Canvas(modifier = Modifier.size(14.dp, 8.dp)) {
+                            Canvas(
+                                modifier = Modifier
+                                    .width(Dimens.MapPinStemWidth)
+                                    .height(Dimens.MapPinStemHeight)
+                            ) {
                                 val stem = Path().apply {
                                     moveTo(0f, 0f)
                                     lineTo(size.width, 0f)
@@ -494,22 +499,22 @@ fun GoogleMapsLocationPickerModal(
                             color = OnSurfaceLight.copy(alpha = 0.87f),
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .offset(y = 52.dp)
+                                .offset(y = Dimens.MapBadgeOffsetY)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                modifier = Modifier.padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                             ) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(12.dp),
-                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.size(Dimens.IconXs),
+                                    strokeWidth = Dimens.ProgressStrokeWidth,
                                     color = PureWhite
                                 )
                                 Text(
                                     text = stringResource(if (isDraggingMap) R.string.maps_release_to_pin else R.string.maps_resolving_address),
                                     color = PureWhite,
-                                    fontSize = 11.5.sp,
+                                    style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -524,8 +529,8 @@ fun GoogleMapsLocationPickerModal(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(Dimens.SpacingMd),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     // Header Bar with Google Maps Logo & Close Button
                     Box(
@@ -536,18 +541,18 @@ fun GoogleMapsLocationPickerModal(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(34.dp)
+                                        .size(Dimens.DialogHeaderBadgeSize)
                                         .clip(CircleShape)
                                         .background(PrimaryContainerLight),
                                     contentAlignment = Alignment.Center
@@ -556,34 +561,34 @@ fun GoogleMapsLocationPickerModal(
                                         imageVector = Icons.Outlined.LocationOn,
                                         contentDescription = null,
                                         tint = PrimaryIndigoLight,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(Dimens.IconAction)
                                     )
                                 }
 
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
                                         Text(
                                             text = stringResource(R.string.maps_google_maps_brand),
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 14.5.sp,
+                                            style = MaterialTheme.typography.titleLarge,
                                             color = OnSurfaceLight
                                         )
                                         Surface(
-                                            shape = RoundedCornerShape(4.dp),
+                                            shape = RoundedCornerShape(Dimens.RadiusXs),
                                             color = SuccessContainer
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.maps_live_badge),
                                                 color = SuccessTextDark,
-                                                fontSize = 9.sp,
+                                                style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.ExtraBold,
-                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                modifier = Modifier.padding(horizontal = Dimens.SpacingXs, vertical = Dimens.SpacingXxs)
                                             )
                                         }
                                     }
                                     Text(
                                         text = stringResource(R.string.maps_pin_permanent_subtitle),
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = OnSurfaceVariantLight,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -602,7 +607,7 @@ fun GoogleMapsLocationPickerModal(
                                     imageVector = Icons.Outlined.Close,
                                     contentDescription = stringResource(R.string.cd_close),
                                     tint = OnSurfaceVariantLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
                             }
                         }
@@ -617,23 +622,23 @@ fun GoogleMapsLocationPickerModal(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                                .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Search,
                                 contentDescription = null,
                                 tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                             LojiaTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
                                 placeholder = {
                                     Text(
                                         text = stringResource(R.string.search),
-                                        fontSize = 13.sp,
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = TextHintColor
                                     )
                                 },
@@ -648,17 +653,17 @@ fun GoogleMapsLocationPickerModal(
                                     onClick = { searchQuery = "" },
                                     modifier = Modifier.minimumInteractiveComponentSize()
                                 ) {
-                                    Icon(Icons.Outlined.Clear, contentDescription = stringResource(R.string.cd_clear), tint = TextHintColor, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Outlined.Clear, contentDescription = stringResource(R.string.cd_clear), tint = TextHintColor, modifier = Modifier.size(Dimens.IconSm))
                                 }
                             }
 
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
 
                             Button(
                                 onClick = { searchCoordinates(searchQuery) },
                                 shape = RoundedCornerShape(Dimens.RadiusSm),
                                 elevation = null,
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent,
                                     contentColor = PureWhite
@@ -667,7 +672,7 @@ fun GoogleMapsLocationPickerModal(
                                     .heightIn(min = Dimens.MinTouchTarget)
                                     .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusSm)
                             ) {
-                                Text(stringResource(R.string.search), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.search), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -675,21 +680,21 @@ fun GoogleMapsLocationPickerModal(
                     // Quick Location Suggestions Chips Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusLg),
                             color = PrimaryContainerLight,
-                            border = BorderStroke(1.dp, PrimaryIndigoLight),
+                            border = BorderStroke(Dimens.BorderThin, PrimaryIndigoLight),
                             modifier = Modifier.clickable { requestGpsWithPermission() }
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                             ) {
-                                Icon(Icons.Outlined.MyLocation, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(14.dp))
-                                Text(stringResource(R.string.btn_my_location), fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = PrimaryIndigoLight)
+                                Icon(Icons.Outlined.MyLocation, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(Dimens.IconXs))
+                                Text(stringResource(R.string.btn_my_location), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PrimaryIndigoLight)
                             }
                         }
 
@@ -702,9 +707,9 @@ fun GoogleMapsLocationPickerModal(
                         ).forEach { (cityQuery, cityNameRes) ->
                             val cityDisplayName = stringResource(cityNameRes)
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusLg),
                                 color = SurfaceLight,
-                                border = BorderStroke(1.dp, OutlineLight),
+                                border = BorderStroke(Dimens.BorderThin, OutlineLight),
                                 modifier = Modifier.clickable {
                                     searchQuery = cityDisplayName
                                     searchCoordinates(cityQuery)
@@ -712,10 +717,10 @@ fun GoogleMapsLocationPickerModal(
                             ) {
                                 Text(
                                     text = cityDisplayName,
-                                    fontSize = 11.5.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = OnSurfaceLight,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                    modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                                 )
                             }
                         }
@@ -728,8 +733,8 @@ fun GoogleMapsLocationPickerModal(
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .padding(end = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                        .padding(end = Dimens.SpacingMd),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // My Location (GPS) Fab
@@ -742,13 +747,13 @@ fun GoogleMapsLocationPickerModal(
                         contentAlignment = Alignment.Center
                     ) {
                         if (isDetectingGps) {
-                            CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp, color = PrimaryIndigoLight)
+                            CircularProgressIndicator(modifier = Modifier.size(Dimens.ProgressIndicatorSize), strokeWidth = Dimens.ProgressStrokeWidth, color = PrimaryIndigoLight)
                         } else {
                             Icon(
                                 imageVector = Icons.Outlined.MyLocation,
                                 contentDescription = stringResource(R.string.cd_my_gps_location),
                                 tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(Dimens.IconLg)
                             )
                         }
                     }
@@ -764,7 +769,7 @@ fun GoogleMapsLocationPickerModal(
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_zoom_in), tint = OnSurfaceLight)
                             }
-                            HorizontalDivider(color = OutlineLight, thickness = 1.dp)
+                            HorizontalDivider(color = OutlineLight, thickness = Dimens.BorderThin)
                             IconButton(
                                 onClick = { zoomLevel = (zoomLevel - 0.3f).coerceAtLeast(0.6f) },
                                 modifier = Modifier.size(Dimens.MinTouchTarget)
@@ -787,7 +792,7 @@ fun GoogleMapsLocationPickerModal(
                             imageVector = Icons.Outlined.OpenInNew,
                             contentDescription = stringResource(R.string.cd_open_google_maps),
                             tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconAction)
                         )
                     }
                 }
@@ -799,21 +804,21 @@ fun GoogleMapsLocationPickerModal(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .depthCard(shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .depthCard(shape = RoundedCornerShape(topStart = Dimens.BottomSheetCornerRadius, topEnd = Dimens.BottomSheetCornerRadius))
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         // Drag Handle
                         Box(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
-                                .width(36.dp)
-                                .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp))
+                                .width(Dimens.SheetDragHandleWidth)
+                                .height(Dimens.TopAccentStripHeight)
+                                .clip(RoundedCornerShape(Dimens.AccentBarCorner))
                                 .background(OutlineLight)
                         )
 
@@ -825,22 +830,22 @@ fun GoogleMapsLocationPickerModal(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(38.dp)
+                                        .size(Dimens.DialogHeaderBadgeSize)
                                         .clip(CircleShape)
                                         .background(PrimaryContainerLight)
-                                        .border(1.dp, OutlineLight, CircleShape),
+                                        .border(Dimens.BorderThin, OutlineLight, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Place,
                                         contentDescription = null,
                                         tint = PrimaryIndigoLight,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(Dimens.IconAction)
                                     )
                                 }
 
@@ -848,14 +853,14 @@ fun GoogleMapsLocationPickerModal(
                                     Text(
                                         text = areaTitle,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
+                                        style = MaterialTheme.typography.headlineSmall,
                                         color = OnSurfaceLight,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
                                         text = stringResource(R.string.maps_verified_location),
-                                        fontSize = 11.5.sp,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = SuccessGreen,
                                         fontWeight = FontWeight.Medium
                                     )
@@ -864,16 +869,16 @@ fun GoogleMapsLocationPickerModal(
 
                             // Coordinates Pill
                             Surface(
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusMd),
                                 color = SurfaceVariantLight,
-                                border = BorderStroke(1.dp, OutlineLight)
+                                border = BorderStroke(Dimens.BorderThin, OutlineLight)
                             ) {
                                 Text(
                                     text = String.format(com.lojia.shiftreport.util.DateTimeFormatUtils.getAppLocale(), "📍 %.4f, %.4f", currentLat, currentLng),
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = OnSurfaceLight,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                                 )
                             }
                         }
@@ -885,11 +890,11 @@ fun GoogleMapsLocationPickerModal(
                             label = { Text(stringResource(R.string.permanent_store_address_label)) },
                             placeholder = { Text(stringResource(R.string.permanent_store_address_placeholder)) },
                             leadingIcon = {
-                                Icon(Icons.Outlined.Business, contentDescription = null, tint = OnSurfaceVariantLight, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Outlined.Business, contentDescription = null, tint = OnSurfaceVariantLight, modifier = Modifier.size(Dimens.IconMd))
                             },
                             trailingIcon = {
                                 if (isGeocoding) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = PrimaryIndigoLight)
+                                    CircularProgressIndicator(modifier = Modifier.size(Dimens.IconMd), strokeWidth = Dimens.ProgressStrokeWidth, color = PrimaryIndigoLight)
                                 }
                             },
                             shape = RoundedCornerShape(Dimens.RadiusMd),
@@ -903,10 +908,10 @@ fun GoogleMapsLocationPickerModal(
                         // Address Category Type Pills
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(stringResource(R.string.tag_as_label), fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariantLight)
+                            Text(stringResource(R.string.tag_as_label), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariantLight)
 
                             listOf(
                                 "Store" to R.string.address_tag_store,
@@ -916,17 +921,17 @@ fun GoogleMapsLocationPickerModal(
                             ).forEach { (typeKey, tagRes) ->
                                 val isSelected = selectedAddressType == typeKey
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(Dimens.RadiusLg),
                                     color = if (isSelected) PrimaryContainerLight else SurfaceLight,
-                                    border = BorderStroke(1.dp, if (isSelected) PrimaryIndigoLight else OutlineLight),
+                                    border = BorderStroke(Dimens.BorderThin, if (isSelected) PrimaryIndigoLight else OutlineLight),
                                     modifier = Modifier.clickable { selectedAddressType = typeKey }
                                 ) {
                                     Text(
                                         text = stringResource(tagRes),
-                                        fontSize = 11.5.sp,
+                                        style = MaterialTheme.typography.labelMedium,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) PrimaryIndigoLight else OnSurfaceVariantLight,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                                     )
                                 }
                             }
@@ -936,8 +941,8 @@ fun GoogleMapsLocationPickerModal(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                .padding(top = Dimens.SpacingXs),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedButton(
@@ -980,9 +985,9 @@ fun GoogleMapsLocationPickerModal(
                                     .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                                     .testTag("btn_save_permanent_address")
                             ) {
-                                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = PureWhite, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(stringResource(R.string.set_as_permanent_address_btn), color = PureWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = PureWhite, modifier = Modifier.size(Dimens.IconMd))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                                Text(stringResource(R.string.set_as_permanent_address_btn), color = PureWhite, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                             }
                         }
                     }

@@ -19,8 +19,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.ui.theme.*
 
 private const val DEFAULT_CHART_MIN_REVENUE = 100.0
@@ -36,14 +34,14 @@ fun MonthlyKpiCard(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(Dimens.CardCornerRadius),
         color = Color.Transparent,
         modifier = modifier
-            .defaultMinSize(minHeight = 96.dp)
-            .depthCard(shape = RoundedCornerShape(14.dp))
+            .defaultMinSize(minHeight = Dimens.MonthlyKpiCardMinHeight)
+            .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(Dimens.CardPadding),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
@@ -55,15 +53,14 @@ fun MonthlyKpiCard(
                     text = title,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = TextSecondaryLight,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 11.5.sp
+                        fontWeight = FontWeight.Medium
                     ),
                     maxLines = 1,
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(Dimens.KpiIconTileSize)
                         .clip(CircleShape)
                         .background(accentColor.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
@@ -72,31 +69,29 @@ fun MonthlyKpiCard(
                         imageVector = icon,
                         contentDescription = null,
                         tint = accentColor,
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(Dimens.IconMd)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
             Column {
                 Text(
                     text = value,
-                    style = MaterialTheme.typography.titleLarge.copy(
+                    style = MaterialTheme.typography.headlineLarge.asMoneyTabular().copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
                         color = OnBackgroundLight
                     ),
                     maxLines = 1
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
 
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondaryLight,
-                        fontSize = 11.sp
+                        color = TextSecondaryLight
                     ),
                     maxLines = 1
                 )
@@ -116,20 +111,20 @@ fun LegendItem(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .heightIn(min = Dimens.MinTouchTarget)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(Dimens.RadiusSm))
             .clickable { onClick() }
-            .padding(horizontal = 6.dp, vertical = 4.dp)
+            .padding(horizontal = Dimens.SpacingXs, vertical = Dimens.SpacingXs)
     ) {
         Box(
             modifier = Modifier
-                .size(10.dp)
+                .size(Dimens.HomeBreakdownSwatchSize)
                 .clip(CircleShape)
                 .background(if (isActive) color else color.copy(alpha = 0.3f))
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
         Text(
             text = label,
-            fontSize = 11.sp,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
             color = if (isActive) TextPrimaryLight else TextSecondaryLight
         )
@@ -183,8 +178,8 @@ fun RechartsAreaTrendCanvas(
     ) {
         val width = size.width
         val height = size.height
-        val paddingBottom = 24.dp.toPx()
-        val paddingTop = 12.dp.toPx()
+        val paddingBottom = Dimens.SpacingXl.toPx()
+        val paddingTop = Dimens.SpacingMd.toPx()
         val chartHeight = height - paddingBottom - paddingTop
         val n = data.size
         val stepX = width / (n - 1).coerceAtLeast(1)
@@ -196,7 +191,7 @@ fun RechartsAreaTrendCanvas(
                 color = OutlineLight.copy(alpha = 0.8f),
                 start = Offset(0f, y),
                 end = Offset(width, y),
-                strokeWidth = 1.dp.toPx(),
+                strokeWidth = Dimens.FlatBorderWidth.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
             )
         }
@@ -216,7 +211,7 @@ fun RechartsAreaTrendCanvas(
             drawPath(
                 path = shiftPath,
                 color = AccentGold.copy(alpha = 0.5f),
-                style = Stroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f), 0f))
+                style = Stroke(width = Dimens.FlatFocusedBorderWidth.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f), 0f))
             )
         }
 
@@ -258,7 +253,7 @@ fun RechartsAreaTrendCanvas(
                 path = strokePath,
                 color = PrimaryBlue,
                 style = Stroke(
-                    width = 3.dp.toPx(),
+                    width = Dimens.ChartStrokeMedium.toPx(),
                     cap = StrokeCap.Round,
                     join = StrokeJoin.Round
                 )
@@ -270,8 +265,8 @@ fun RechartsAreaTrendCanvas(
                 val pt = getPoint(idx, 0.0)
                 drawCircle(
                     color = OutlineLight,
-                    radius = 2.dp.toPx(),
-                    center = Offset(pt.x, paddingTop + chartHeight + 4.dp.toPx())
+                    radius = Dimens.ChartAxisDotRadius.toPx(),
+                    center = Offset(pt.x, paddingTop + chartHeight + Dimens.SpacingXs.toPx())
                 )
             }
         }
@@ -284,24 +279,24 @@ fun RechartsAreaTrendCanvas(
                     color = PrimaryBlue.copy(alpha = 0.6f),
                     start = Offset(targetPt.x, paddingTop),
                     end = Offset(targetPt.x, paddingTop + chartHeight),
-                    strokeWidth = 1.5.dp.toPx(),
+                    strokeWidth = Dimens.FlatFocusedBorderWidth.toPx(),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
                 )
 
                 drawCircle(
                     color = PrimaryBlue.copy(alpha = 0.25f),
-                    radius = 8.dp.toPx(),
+                    radius = Dimens.ChartHighlightHaloRadius.toPx(),
                     center = targetPt
                 )
 
                 drawCircle(
                     color = PureWhite,
-                    radius = 4.5.dp.toPx(),
+                    radius = Dimens.ChartHighlightDotRadius.toPx(),
                     center = targetPt
                 )
                 drawCircle(
                     color = PrimaryBlue,
-                    radius = 3.dp.toPx(),
+                    radius = Dimens.ChartHighlightCenterRadius.toPx(),
                     center = targetPt
                 )
             }
@@ -355,12 +350,12 @@ fun RechartsBarChartCanvas(
     ) {
         val width = size.width
         val height = size.height
-        val paddingBottom = 20.dp.toPx()
-        val paddingTop = 12.dp.toPx()
+        val paddingBottom = Dimens.IconAction.toPx()
+        val paddingTop = Dimens.SpacingMd.toPx()
         val chartHeight = height - paddingBottom - paddingTop
         val n = data.size
         val barSlotWidth = width / n.toFloat()
-        val barWidth = (barSlotWidth * 0.65f).coerceIn(4.dp.toPx(), 18.dp.toPx())
+        val barWidth = (barSlotWidth * 0.65f).coerceIn(Dimens.ChartBarMinWidth.toPx(), Dimens.ChartBarMaxWidth.toPx())
 
         val gridLinesCount = 4
         for (i in 0 until gridLinesCount) {
@@ -369,13 +364,13 @@ fun RechartsBarChartCanvas(
                 color = OutlineLight.copy(alpha = 0.8f),
                 start = Offset(0f, y),
                 end = Offset(width, y),
-                strokeWidth = 1.dp.toPx(),
+                strokeWidth = Dimens.FlatBorderWidth.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
             )
         }
 
         data.forEachIndexed { idx, d ->
-            val barHeight = ((d.totalRevenue / maxRevenue).toFloat() * chartHeight).coerceAtLeast(3.dp.toPx())
+            val barHeight = ((d.totalRevenue / maxRevenue).toFloat() * chartHeight).coerceAtLeast(Dimens.ChartStrokeMedium.toPx())
             val centerX = idx * barSlotWidth + barSlotWidth / 2
             val left = centerX - barWidth / 2
             val top = paddingTop + chartHeight - barHeight
@@ -389,8 +384,8 @@ fun RechartsBarChartCanvas(
                         top = top,
                         right = left + barWidth,
                         bottom = paddingTop + chartHeight,
-                        radiusX = 4.dp.toPx(),
-                        radiusY = 4.dp.toPx()
+                        radiusX = Dimens.RadiusXs.toPx(),
+                        radiusY = Dimens.RadiusXs.toPx()
                     )
                 )
             }

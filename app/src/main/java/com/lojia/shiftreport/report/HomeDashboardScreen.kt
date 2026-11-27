@@ -62,7 +62,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppLanguage
@@ -202,7 +201,7 @@ fun HomeDashboardContent(
                 bottomEnd = Dimens.RadiusXl
             ),
             cornerRadiusForShadow = Dimens.RadiusXl,
-            contentPadding = PaddingValues(0.dp)
+            contentPadding = PaddingValues(Dimens.SpacingNone)
         ) {
             Row(
                 modifier = Modifier

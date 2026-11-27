@@ -22,8 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.CircleShape
@@ -132,12 +130,12 @@ fun ShiftReportPreviewDialog(
                         imageVector = Icons.Default.Receipt,
                         contentDescription = null,
                         tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Text(
                         text = stringResource(R.string.report_preview_title),
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight,
                         maxLines = 1,
@@ -152,7 +150,7 @@ fun ShiftReportPreviewDialog(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.close),
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                 }
             }
@@ -168,7 +166,7 @@ fun ShiftReportPreviewDialog(
                 // Company header block (depth gradient banner)
                 LojiaGradientHeader(
                     shape = RoundedCornerShape(Dimens.RadiusMd),
-                    contentPadding = PaddingValues(12.dp)
+                    contentPadding = PaddingValues(Dimens.CardPadding)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -176,26 +174,26 @@ fun ShiftReportPreviewDialog(
                     ) {
                         Text(
                             text = businessName,
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                         Text(
                             text = titleLabel.uppercase(),
-                            fontSize = 9.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = PureWhite.copy(alpha = 0.9f)
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                         Text(
                             text = "$formattedDate • ${report.shift} • ${report.cashierName}",
-                            fontSize = 8.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = PureWhite.copy(alpha = 0.85f)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                 // Sales Summary section
                 PreviewSection(title = stringResource(R.string.pdf_sales_summary_title)) {
@@ -225,7 +223,7 @@ fun ShiftReportPreviewDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                 // Cash Drawer section
                 PreviewSection(title = stringResource(R.string.cash_drawer_recon_title)) {
@@ -279,7 +277,7 @@ fun ShiftReportPreviewDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                 // Other Tracking section
                 PreviewSection(title = stringResource(R.string.other_tracking_title)) {
@@ -300,12 +298,12 @@ fun ShiftReportPreviewDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 // Footer
                 Text(
                     text = stringResource(R.string.pdf_computer_generated_footer),
-                    fontSize = 9.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = OnSurfaceVariantLight,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
@@ -315,7 +313,7 @@ fun ShiftReportPreviewDialog(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 // Warning banner (if printer error)
                 if (printerErrorMessage != null) {
@@ -328,30 +326,30 @@ fun ShiftReportPreviewDialog(
                                 shape = RoundedCornerShape(Dimens.RadiusSm)
                             )
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.SpacingSm)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.PrintDisabled,
                                     contentDescription = null,
                                     tint = ErrorRedLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = stringResource(R.string.printer_warning_title),
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = ErrorRedLight
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = printerErrorMessage ?: "",
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = OnSurfaceLight
                             )
                             if (onOpenPrinterSettings != null) {
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                                 OutlinedButton(
                                     onClick = {
                                         onDismiss()
@@ -364,7 +362,7 @@ fun ShiftReportPreviewDialog(
                                         containerColor = Color.Transparent,
                                         contentColor = PrimaryIndigoDark
                                     ),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                     modifier = Modifier
                                         .align(Alignment.End)
                                         .heightIn(min = Dimens.MinTouchTarget)
@@ -377,12 +375,12 @@ fun ShiftReportPreviewDialog(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = null,
                                         tint = PrimaryIndigoDark,
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(Dimens.IconXs)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.open_printer_settings),
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = PrimaryIndigoDark
                                     )
@@ -407,32 +405,32 @@ fun ShiftReportPreviewDialog(
                                 com.lojia.shiftreport.util.PdfShareUtils.openFolderInFileManager(context, reportsDir)
                             }
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.SpacingSm)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = null,
                                     tint = SuccessTextDark,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = stringResource(R.string.pdf_exported_success),
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = SuccessTextDark
                                 )
                             }
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                             Text(
                                 text = exportSuccessMessage ?: "",
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = OnSurfaceLight
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.tap_to_open_folder),
-                                fontSize = 10.sp,
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = SuccessTextDark
                             )
@@ -443,7 +441,7 @@ fun ShiftReportPreviewDialog(
                 // Compact single button row: Print / Export / Share
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Print Button
@@ -512,7 +510,7 @@ fun ShiftReportPreviewDialog(
                         ),
                         elevation = null,
                         shape = RoundedCornerShape(Dimens.RadiusMd),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                         enabled = !isPrinting,
                         modifier = Modifier
                             .weight(1f)
@@ -522,9 +520,9 @@ fun ShiftReportPreviewDialog(
                     ) {
                         if (isPrinting) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(Dimens.IconSm),
                                 color = PureWhite,
-                                strokeWidth = 2.dp
+                                strokeWidth = Dimens.ProgressStrokeWidth
                             )
                         } else {
                             Row(
@@ -535,14 +533,14 @@ fun ShiftReportPreviewDialog(
                                     imageVector = Icons.Default.Print,
                                     contentDescription = stringResource(R.string.print_z_report_btn),
                                     tint = PureWhite,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(Dimens.IconSm)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = stringResource(R.string.print_btn),
                                     maxLines = 1,
                                     softWrap = false,
-                                    fontSize = 12.sp,
+                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = PureWhite,
                                     overflow = TextOverflow.Ellipsis
@@ -586,7 +584,7 @@ fun ShiftReportPreviewDialog(
                         ),
                         elevation = null,
                         shape = RoundedCornerShape(Dimens.RadiusMd),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                         enabled = !isExporting,
                         modifier = Modifier
                             .weight(1f)
@@ -602,14 +600,14 @@ fun ShiftReportPreviewDialog(
                                 imageVector = Icons.Default.Download,
                                 contentDescription = stringResource(R.string.export_pdf),
                                 tint = PureWhite,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(Dimens.IconSm)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.btn_export),
                                 maxLines = 1,
                                 softWrap = false,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = PureWhite,
                                 overflow = TextOverflow.Ellipsis
@@ -648,7 +646,7 @@ fun ShiftReportPreviewDialog(
                             containerColor = Color.Transparent,
                             contentColor = PrimaryIndigoDark
                         ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = Dimens.MinTouchTarget)
@@ -663,14 +661,14 @@ fun ShiftReportPreviewDialog(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = stringResource(R.string.share),
                                 tint = PrimaryIndigoDark,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(Dimens.IconSm)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.btn_share),
                                 maxLines = 1,
                                 softWrap = false,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = PrimaryIndigoDark,
                                 overflow = TextOverflow.Ellipsis
@@ -691,20 +689,19 @@ private fun PreviewSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 6.dp)
+            modifier = Modifier.padding(vertical = Dimens.SpacingXs)
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 3.dp, height = 14.dp)
-                    .background(PrimaryIndigoLight, RoundedCornerShape(2.dp))
+                    .size(width = Dimens.AccentBarWidth, height = Dimens.AccentBarHeight)
+                    .background(PrimaryIndigoLight, RoundedCornerShape(Dimens.AccentBarCorner))
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
             Text(
                 text = title,
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryIndigoDark,
-                letterSpacing = 0.05.sp
+                color = PrimaryIndigoDark
             )
         }
         content()
@@ -724,22 +721,22 @@ private fun PreviewRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(if (highlight != null) 4.dp else 0.dp)
-                .padding(vertical = if (highlight != null) 0.dp else 3.dp),
+                .padding(if (highlight != null) Dimens.SpacingXs else Dimens.SpacingNone)
+                .padding(vertical = if (highlight != null) Dimens.SpacingNone else Dimens.SpacingXxs),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = if (multiline) Alignment.Top else Alignment.CenterVertically
         ) {
             Text(
                 text = label,
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 color = if (bold) OnSurfaceLight else OnSurfaceVariantLight,
                 fontWeight = if (bold) FontWeight.Medium else FontWeight.Normal,
                 modifier = if (multiline) Modifier.weight(1f) else Modifier.wrapContentWidth()
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
             Text(
                 text = value,
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.bodyMedium.asMoneyTabular(),
                 color = highlight ?: color ?: OnSurfaceLight,
                 fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
             )
@@ -749,10 +746,10 @@ private fun PreviewRow(
     if (highlight != null) {
         Surface(
             color = highlight.copy(alpha = 0.10f),
-            shape = RoundedCornerShape(4.dp),
+            shape = RoundedCornerShape(Dimens.RadiusXs),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 2.dp)
+                .padding(vertical = Dimens.SpacingXxs)
         ) {
             rowContent()
         }
@@ -764,9 +761,9 @@ private fun PreviewRow(
 @Composable
 private fun PreviewDivider() {
     HorizontalDivider(
-        thickness = 0.5.dp,
+        thickness = Dimens.RowDividerWidth,
         color = OutlineVariantLight,
-        modifier = Modifier.padding(vertical = 2.dp)
+        modifier = Modifier.padding(vertical = Dimens.SpacingXxs)
     )
 }
 
@@ -918,12 +915,12 @@ fun EmployerAdvanceStatementPreviewDialog(
                         imageVector = Icons.Default.Description,
                         contentDescription = null,
                         tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                     Text(
                         text = stringResource(R.string.advance_statement_title),
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight,
                         maxLines = 2,
@@ -938,7 +935,7 @@ fun EmployerAdvanceStatementPreviewDialog(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.close),
                         tint = OnSurfaceVariantLight,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                 }
             }
@@ -950,7 +947,7 @@ fun EmployerAdvanceStatementPreviewDialog(
                     .fillMaxWidth()
                     .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 LojiaGradientHeader(
                     shape = RoundedCornerShape(Dimens.RadiusLg),
@@ -960,16 +957,16 @@ fun EmployerAdvanceStatementPreviewDialog(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                     ) {
                         Column(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXxs)
                         ) {
                             if (businessName != null) {
                                 Text(
                                     text = businessName,
-                                    fontSize = 14.sp,
+                                    style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = PureWhite,
                                     maxLines = 2,
@@ -978,18 +975,18 @@ fun EmployerAdvanceStatementPreviewDialog(
                             }
                             Text(
                                 text = stringResource(R.string.advance_statement_title),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = PureWhite.copy(alpha = 0.95f)
                             )
                             Text(
                                 text = "${stringResource(R.string.statement_period_label)}: $periodLabel",
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = PureWhite.copy(alpha = 0.9f)
                             )
                             Text(
                                 text = "${stringResource(R.string.statement_generated_at_label)}: $generatedText",
-                                fontSize = 10.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = PureWhite.copy(alpha = 0.85f)
                             )
                         }
@@ -999,7 +996,7 @@ fun EmployerAdvanceStatementPreviewDialog(
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(Dimens.LogoTileSize)
                                     .clip(CircleShape)
                             )
                         }
@@ -1019,9 +1016,9 @@ fun EmployerAdvanceStatementPreviewDialog(
                     ) {
                         Text(
                             text = stringResource(R.string.statement_empty_period_msg),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = OnSurfaceVariantLight,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(Dimens.SpacingLg)
                         )
                     }
                 } else {

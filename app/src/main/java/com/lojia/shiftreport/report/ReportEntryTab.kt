@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.ShiftReport
 import com.lojia.shiftreport.ui.common.LojiaTextField
@@ -227,7 +226,7 @@ fun ReportEntryTab(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .widthIn(max = 680.dp)
+                    .widthIn(max = Dimens.ReportMaxContentWidth)
                     .verticalScroll(scrollState)
                     .imePadding()
                     .navigationBarsPadding()
@@ -240,7 +239,7 @@ fun ReportEntryTab(
             Card(
                 shape = RoundedCornerShape(Dimens.CardCornerRadius),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(0.dp),
+                elevation = CardDefaults.cardElevation(Dimens.SpacingNone),
                 modifier = Modifier
                     .fillMaxWidth()
                     .cardRise(0)
@@ -593,7 +592,7 @@ fun ReportEntryTab(
                             )
                         }
 
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(Dimens.SpacingXl))
 
                         // ---- Standard 4-Card International POS Reconciliation Summary ----
                         PosReconciliationSummary(
@@ -621,7 +620,7 @@ fun ReportEntryTab(
                             currentCurrency = currentCurrency
                         )
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(Dimens.SpacingLg))
 
                         // ---- Action buttons ----
                         Row(
@@ -770,7 +769,7 @@ fun ReportEntryTab(
                     }
                 }
             }
-            Spacer(Modifier.height(80.dp)) // room for sticky bottom bar
+            Spacer(Modifier.height(Dimens.ReportEntryBottomSpacerHeight)) // room for sticky bottom bar
         }
     }
 }

@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.ui.theme.*
@@ -192,7 +191,7 @@ fun QuickPinScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(Dimens.QuickPinHeaderBottomGap))
 
             // 6-box PIN indicator: pressed-in inset wells with dots (●)
             Row(
@@ -332,7 +331,7 @@ fun QuickPinScreen(
                                                 imageVector = Icons.AutoMirrored.Filled.Backspace,
                                                 contentDescription = stringResource(R.string.cd_backspace),
                                                 tint = OnSurfaceVariantLight,
-                                                modifier = Modifier.size(24.dp)
+                                                modifier = Modifier.size(Dimens.IconLg)
                                             )
                                         }
                                     }

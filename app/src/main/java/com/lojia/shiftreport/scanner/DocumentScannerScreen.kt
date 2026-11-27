@@ -32,8 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
@@ -214,7 +212,7 @@ fun DocumentScannerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
         ) {
             // Header card
             DocumentScannerHeaderCard(
@@ -223,18 +221,18 @@ fun DocumentScannerScreen(
                 onCameraFallbackClick = launchFallbackCapture
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             // Search Bar & Selection Mode Bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 LojiaTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text(stringResource(R.string.search), fontSize = 13.5.sp) },
+                    placeholder = { Text(stringResource(R.string.search), style = MaterialTheme.typography.titleMedium) },
                     leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = TextHintColor) },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
                         {
@@ -269,7 +267,7 @@ fun DocumentScannerScreen(
 
             // Batch selection actions bar
             if (isSelectionMode && selectedDocs.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -282,19 +280,19 @@ fun DocumentScannerScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                            .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = stringResource(R.string.doc_selected_count, selectedDocs.size),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = PrimaryIndigoDark
                         )
 
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             TextButton(
@@ -310,7 +308,7 @@ fun DocumentScannerScreen(
                             ) {
                                 Text(
                                     text = if (selectedDocs.size == filteredDocs.size) stringResource(R.string.doc_deselect_all) else stringResource(R.string.doc_select_all),
-                                    fontSize = 12.sp,
+                                    style = MaterialTheme.typography.titleSmall,
                                     color = PrimaryIndigoDark,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -323,22 +321,22 @@ fun DocumentScannerScreen(
                                     containerColor = Color.Transparent,
                                     contentColor = PureWhite
                                 ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                 shape = RoundedCornerShape(Dimens.RadiusSm),
                                 modifier = Modifier
                                     .heightIn(min = Dimens.MinTouchTarget)
                                     .depthRaisedButton(isDestructive = true, cornerRadius = Dimens.RadiusSm)
                             ) {
-                                Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.delete), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                                Text(stringResource(R.string.delete), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
             // Document List
             if (filteredDocs.isEmpty()) {
@@ -348,8 +346,8 @@ fun DocumentScannerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp)
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
+                    contentPadding = PaddingValues(bottom = Dimens.SpacingXl)
                 ) {
                     items(filteredDocs.size, key = { idx -> filteredDocs[idx].id }) { index ->
                         val doc = filteredDocs[index]

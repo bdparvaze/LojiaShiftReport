@@ -16,8 +16,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.DialogSize
 import com.lojia.shiftreport.ui.common.LojiaDialog
@@ -44,13 +42,13 @@ fun SaveDocumentTitleDialog(
         ) {
             Text(
                 text = stringResource(R.string.doc_save_title_dialog),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
             Text(
                 text = stringResource(R.string.doc_enter_title_desc),
-                fontSize = 13.sp,
+                style = MaterialTheme.typography.titleMedium,
                 color = OnSurfaceVariantLight
             )
             LojiaTextField(
@@ -128,17 +126,17 @@ fun ScannerFallbackPromptDialog(
                 imageVector = Icons.Outlined.CameraAlt,
                 contentDescription = null,
                 tint = PrimaryIndigo,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(Dimens.IconXl)
             )
             Text(
                 text = stringResource(R.string.doc_capture_doc),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
             Text(
                 text = stringResource(R.string.doc_capture_desc),
-                fontSize = 13.5.sp,
+                style = MaterialTheme.typography.titleMedium,
                 color = OnSurfaceVariantLight
             )
             Row(
@@ -166,8 +164,8 @@ fun ScannerFallbackPromptDialog(
                             cornerRadius = Dimens.RadiusMd
                         )
                 ) {
-                    Icon(Icons.Outlined.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(Icons.Outlined.PhotoLibrary, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(stringResource(R.string.doc_from_gallery), fontWeight = FontWeight.SemiBold)
                 }
                 Button(
@@ -186,8 +184,8 @@ fun ScannerFallbackPromptDialog(
                         .heightIn(min = Dimens.MinTouchTarget)
                         .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                 ) {
-                    Icon(Icons.Outlined.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(Icons.Outlined.CameraAlt, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(stringResource(R.string.doc_open_camera), fontWeight = FontWeight.Bold)
                 }
             }
@@ -215,8 +213,8 @@ fun RenameDocumentDialog(
         ) {
             Text(
                 text = stringResource(R.string.doc_rename_title),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
             LojiaTextField(
@@ -297,17 +295,17 @@ fun DeleteDocumentConfirmDialog(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = null,
                 tint = ErrorRedLight,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(Dimens.IconXl)
             )
             Text(
                 text = stringResource(R.string.doc_delete_title),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
             Text(
                 text = stringResource(R.string.doc_delete_confirm, documentTitle),
-                fontSize = 13.5.sp,
+                style = MaterialTheme.typography.titleMedium,
                 color = OnSurfaceVariantLight
             )
             Row(
@@ -375,17 +373,17 @@ fun BatchDeleteConfirmDialog(
                 imageVector = Icons.Outlined.DeleteSweep,
                 contentDescription = null,
                 tint = ErrorRedLight,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(Dimens.IconXl)
             )
             Text(
                 text = stringResource(R.string.doc_batch_delete_title, count),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
             Text(
                 text = stringResource(R.string.doc_batch_delete_confirm, count),
-                fontSize = 13.5.sp,
+                style = MaterialTheme.typography.titleMedium,
                 color = OnSurfaceVariantLight
             )
             Row(
@@ -453,15 +451,15 @@ fun OcrTextPreviewDialog(
         ) {
             Text(
                 text = stringResource(R.string.doc_extracted_text_title),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 350.dp)
+                    .heightIn(max = Dimens.ScannerOcrDialogMaxHeight)
             ) {
                 Text(
                     text = documentTitle,
@@ -469,14 +467,14 @@ fun OcrTextPreviewDialog(
                         color = PrimaryIndigo,
                         fontWeight = FontWeight.SemiBold
                     ),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = Dimens.SpacingSm)
                 )
 
                 if (isLoading) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp),
+                            .height(Dimens.ScannerOcrLoadingHeight),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(color = PrimaryIndigo)
@@ -485,13 +483,13 @@ fun OcrTextPreviewDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(Dimens.MultilineFieldMinHeight),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.doc_no_text_found),
                             color = OnSurfaceVariantLight,
-                            fontSize = 13.sp
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 } else {
@@ -503,8 +501,7 @@ fun OcrTextPreviewDialog(
                     ) {
                         Text(
                             text = extractedText,
-                            fontSize = 13.sp,
-                            lineHeight = 19.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = OnBackgroundLight
                         )
                     }
@@ -513,7 +510,7 @@ fun OcrTextPreviewDialog(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (extractedText.isNotBlank()) {
@@ -552,8 +549,8 @@ fun OcrTextPreviewDialog(
                                 cornerRadius = Dimens.RadiusMd
                             )
                     ) {
-                        Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                         Text(stringResource(R.string.copy))
                     }
                     Button(
@@ -569,8 +566,8 @@ fun OcrTextPreviewDialog(
                             .heightIn(min = Dimens.MinTouchTarget)
                             .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                     ) {
-                        Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.Outlined.Description, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                         Text(stringResource(R.string.doc_btn_share_docx))
                     }
                 } else {
@@ -619,14 +616,14 @@ fun PasswordProtectDialog(
         ) {
             Text(
                 text = stringResource(R.string.doc_protect_pdf_title),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
                 color = OnSurfaceLight
             )
 
             Text(
                 text = stringResource(R.string.doc_protect_pdf_desc, documentTitle),
-                fontSize = 13.sp,
+                style = MaterialTheme.typography.titleMedium,
                 color = OnSurfaceVariantLight
             )
 
@@ -658,7 +655,7 @@ fun PasswordProtectDialog(
                 Text(
                     text = errorMessage ?: "",
                     color = ErrorRedLight,
-                    fontSize = 12.sp
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 

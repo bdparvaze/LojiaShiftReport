@@ -40,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -70,8 +71,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppCountry
@@ -214,13 +213,13 @@ fun AddEditAddressScreen(
                     bottomStart = Dimens.RadiusXl,
                     bottomEnd = Dimens.RadiusXl
                 ),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(Dimens.SpacingNone)
             ) {
                 TopAppBar(
                     title = {
                         Text(
                             text = stringResource(if (addressId != null) R.string.edit_address else R.string.add_new_address),
-                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = PureWhite
                         )
@@ -251,13 +250,13 @@ fun AddEditAddressScreen(
         bottomBar = {
             Surface(
                 color = SurfaceLight,
-                border = BorderStroke(0.5.dp, OutlineVariantLight),
+                border = BorderStroke(Dimens.RowDividerWidth, OutlineVariantLight),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
                 ) {
                     Button(
                         onClick = {
@@ -292,7 +291,6 @@ fun AddEditAddressScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = Dimens.MinTouchTarget)
-                            .height(52.dp)
                             .depthRaisedButton(
                                 enabled = canSave,
                                 isDestructive = true,
@@ -302,7 +300,7 @@ fun AddEditAddressScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.save),
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = if (canSave) PureWhite else OnSurfaceVariantLight
                         )
@@ -332,17 +330,17 @@ fun AddEditAddressScreen(
                         .fillMaxWidth()
                         .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
                         tint = SuccessTextDark,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
                     Text(
                         text = stringResource(R.string.all_info_encrypted),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = SuccessTextDark
                     )
@@ -353,17 +351,17 @@ fun AddEditAddressScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
+                    .padding(Dimens.SpacingLg)
                     .imePadding(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingLg)
             ) {
                 // =============================================================
                 // SECTION 1: Country/region
                 // =============================================================
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
                     Text(
                         text = stringResource(R.string.country_region_label),
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
                     )
@@ -398,10 +396,10 @@ fun AddEditAddressScreen(
                 // =============================================================
                 // SECTION 2: Address
                 // =============================================================
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
                     Text(
                         text = stringResource(R.string.address),
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
                     )
@@ -416,18 +414,18 @@ fun AddEditAddressScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(88.dp),
+                                .height(Dimens.AddressMapThumbSize),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(12.dp),
+                                    .padding(Dimens.CardPadding),
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
                                     text = addressLine.ifBlank { stringResource(R.string.address_tap_edit_map) },
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (addressLine.isBlank()) FontWeight.Normal else FontWeight.Medium,
                                     color = if (addressLine.isBlank()) TextHintColor else OnSurfaceLight,
                                     maxLines = 3,
@@ -437,7 +435,7 @@ fun AddEditAddressScreen(
 
                             Box(
                                 modifier = Modifier
-                                    .size(88.dp)
+                                    .size(Dimens.AddressMapThumbSize)
                                     .clickable { showMapPicker = true }
                                     .testTag("btn_address_map_thumbnail")
                             ) {
@@ -450,21 +448,21 @@ fun AddEditAddressScreen(
                                             imageVector = Icons.Outlined.Map,
                                             contentDescription = stringResource(R.string.cd_select_on_map),
                                             tint = PrimaryIndigoLight,
-                                            modifier = Modifier.size(32.dp)
+                                            modifier = Modifier.size(Dimens.IconXl)
                                         )
                                     }
                                 }
                                 Surface(
                                     modifier = Modifier.align(Alignment.BottomEnd),
-                                    shape = RoundedCornerShape(topStart = 8.dp),
+                                    shape = RoundedCornerShape(topStart = Dimens.RadiusMd),
                                     color = OnSurfaceLight.copy(alpha = 0.78f)
                                 ) {
                                     Text(
                                         text = stringResource(R.string.edit_item),
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = PureWhite,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                                     )
                                 }
                             }
@@ -479,7 +477,7 @@ fun AddEditAddressScreen(
                         label = {
                             Text(
                                 text = streetAddressLabel,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = OnSurfaceVariantLight
                             )
                         },
@@ -487,7 +485,7 @@ fun AddEditAddressScreen(
                         placeholder = {
                             Text(
                                 text = stringResource(R.string.street_building_district_hint),
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = TextHintColor
                             )
                         },
@@ -508,7 +506,7 @@ fun AddEditAddressScreen(
                         label = {
                             Text(
                                 text = aptSuiteLabel,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = OnSurfaceVariantLight
                             )
                         },
@@ -531,19 +529,19 @@ fun AddEditAddressScreen(
                         label = {
                             Text(
                                 text = addressLabelOptional,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = OnSurfaceVariantLight
                             )
                         },
                         contentDescription = addressLabelOptional,
                         trailingIcon = {
                             Surface(
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(Dimens.RadiusPill),
                                 color = PrimaryContainerLight,
-                                border = BorderStroke(1.dp, PrimaryIndigoLight),
+                                border = BorderStroke(Dimens.BorderThin, PrimaryIndigoLight),
                                 modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .padding(end = Dimens.SpacingSm)
+                                    .clip(RoundedCornerShape(Dimens.RadiusPill))
                                     .clickable {
                                         addressLabel = if (addressLabel == storeSuggestion) warehouseSuggestion else storeSuggestion
                                     }
@@ -551,10 +549,10 @@ fun AddEditAddressScreen(
                             ) {
                                 Text(
                                     text = stringResource(R.string.suggestion_label),
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = PrimaryIndigoDark,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                                 )
                             }
                         },
@@ -570,10 +568,10 @@ fun AddEditAddressScreen(
                 // =============================================================
                 // SECTION 3: Contact information
                 // =============================================================
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
                     Text(
                         text = stringResource(R.string.contact_information_header),
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
                     )
@@ -585,7 +583,7 @@ fun AddEditAddressScreen(
                         label = {
                             Text(
                                 text = firstNameLabel,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = OnSurfaceVariantLight
                             )
                         },
@@ -605,7 +603,7 @@ fun AddEditAddressScreen(
                         label = {
                             Text(
                                 text = lastNameLabel,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = OnSurfaceVariantLight
                             )
                         },
@@ -618,10 +616,10 @@ fun AddEditAddressScreen(
                             .testTag("input_last_name")
                     )
 
-                    // Row: [dialCode 96.dp readonly] + [Mobile number * with AutoAwesome trailing icon]
+                    // Row: [dialCode readonly] + [Mobile number * with AutoAwesome trailing icon]
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val mobileDialCodeLabel = stringResource(R.string.address_dial_code_label)
@@ -632,7 +630,7 @@ fun AddEditAddressScreen(
                             label = {
                                 Text(
                                     text = mobileDialCodeLabel,
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     color = OnSurfaceVariantLight
                                 )
                             },
@@ -641,7 +639,7 @@ fun AddEditAddressScreen(
                             shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier
-                                .width(96.dp)
+                                .width(Dimens.DialCodeFieldWidth)
                                 .testTag("input_mobile_dial_code")
                         )
 
@@ -654,7 +652,7 @@ fun AddEditAddressScreen(
                             label = {
                                 Text(
                                     text = mobileRequiredLabel,
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     color = OnSurfaceVariantLight
                                 )
                             },
@@ -670,7 +668,7 @@ fun AddEditAddressScreen(
                                         imageVector = Icons.Filled.AutoAwesome,
                                         contentDescription = stringResource(R.string.cd_autofill_phone),
                                         tint = PrimaryIndigoLight,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(Dimens.IconAction)
                                     )
                                 }
                             },
@@ -684,10 +682,10 @@ fun AddEditAddressScreen(
                         )
                     }
 
-                    // Row: [dialCode 96.dp readonly] + [Alternate phone number]
+                    // Row: [dialCode readonly] + [Alternate phone number]
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val altDialCodeLabel = stringResource(R.string.address_dial_code_label)
@@ -698,7 +696,7 @@ fun AddEditAddressScreen(
                             label = {
                                 Text(
                                     text = altDialCodeLabel,
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelMedium,
                                     color = OnSurfaceVariantLight
                                 )
                             },
@@ -707,7 +705,7 @@ fun AddEditAddressScreen(
                             shape = RoundedCornerShape(Dimens.RadiusMd),
                             colors = textFieldColors,
                             modifier = Modifier
-                                .width(96.dp)
+                                .width(Dimens.DialCodeFieldWidth)
                                 .testTag("input_alt_dial_code")
                         )
 
@@ -720,7 +718,7 @@ fun AddEditAddressScreen(
                             label = {
                                 Text(
                                     text = alternatePhoneLabel,
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     color = OnSurfaceVariantLight
                                 )
                             },
@@ -768,18 +766,18 @@ fun AddEditAddressScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 520.dp)
+                    .heightIn(max = Dimens.BottomSheetMaxHeight)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = stringResource(R.string.address_select_country_region),
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight
                     )
@@ -801,7 +799,7 @@ fun AddEditAddressScreen(
                     placeholder = {
                         Text(
                             text = stringResource(R.string.search_country_hint),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = TextHintColor
                         )
                     },
@@ -817,11 +815,11 @@ fun AddEditAddressScreen(
                     colors = textFieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingXs)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
+                Spacer(modifier = Modifier.height(Dimens.SpacingSm))
+                HorizontalDivider(thickness = Dimens.RowDividerWidth, color = OutlineVariantLight)
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
@@ -844,29 +842,29 @@ fun AddEditAddressScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd),
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Text(
                                         text = countryCodeToFlagEmoji(country.code),
-                                        fontSize = 20.sp,
+                                        style = MaterialTheme.typography.displayLarge,
                                         color = OnSurfaceLight
                                     )
                                     Text(
                                         text = stringResource(country.nameRes),
-                                        fontSize = 14.sp,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = OnSurfaceLight
                                     )
                                     Text(
                                         text = country.dialCode,
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = OnSurfaceVariantLight
                                     )
                                 }
@@ -875,7 +873,7 @@ fun AddEditAddressScreen(
                                         imageVector = Icons.Filled.Check,
                                         contentDescription = stringResource(R.string.cd_selected),
                                         tint = PrimaryIndigoLight,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(Dimens.IconMd)
                                     )
                                 }
                             }

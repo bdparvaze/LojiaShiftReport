@@ -27,8 +27,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.AppNavState
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppLanguage
@@ -52,7 +50,7 @@ fun MainAppDrawer(
     ModalDrawerSheet(
         drawerContainerColor = MaterialTheme.colorScheme.surface,
         modifier = Modifier
-            .width(304.dp)
+            .width(Dimens.DrawerWidth)
             .fillMaxHeight()
             .testTag("main_navigation_drawer")
     ) {
@@ -60,19 +58,19 @@ fun MainAppDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 20.dp)
+                .padding(bottom = Dimens.SpacingLg)
         ) {
             // Compact Header - 140dp
             LojiaGradientHeader(
                 shape = RectangleShape,
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(Dimens.SpacingNone)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .height(140.dp)
-                        .padding(16.dp)
+                        .height(Dimens.DrawerHeaderCompactHeight)
+                        .padding(Dimens.SpacingLg)
                 ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -80,11 +78,11 @@ fun MainAppDrawer(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(Dimens.LogoTileSize)
                                 .clip(CircleShape)
                                 .background(Color.White.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
@@ -93,7 +91,7 @@ fun MainAppDrawer(
                                 imageVector = Icons.Default.BarChart,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(Dimens.IconLg)
                             )
                         }
 
@@ -117,7 +115,7 @@ fun MainAppDrawer(
                     }
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AssistChip(
@@ -134,8 +132,8 @@ fun MainAppDrawer(
                                 containerColor = Color.White.copy(alpha = 0.2f),
                                 labelColor = Color.White
                             ),
-                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.35f)),
-                            modifier = Modifier.height(28.dp)
+                            border = BorderStroke(Dimens.RowDividerWidth, Color.White.copy(alpha = 0.35f)),
+                            modifier = Modifier.height(Dimens.DrawerChipHeight)
                         )
 
                         val rawRole = userProfile?.currentRole
@@ -162,14 +160,14 @@ fun MainAppDrawer(
                                 labelColor = Color.White
                             ),
                             border = null,
-                            modifier = Modifier.height(28.dp)
+                            modifier = Modifier.height(Dimens.DrawerChipHeight)
                         )
                     }
                 }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
             // ===============================================
             // Group A — NO header
@@ -181,7 +179,7 @@ fun MainAppDrawer(
                 activeColor = PrimaryIndigoLight,
                 isSelected = navState is AppNavState.ShiftReportState.Home,
                 modifier = Modifier
-                    .padding(top = 8.dp)
+                    .padding(top = Dimens.SpacingSm)
                     .testTag("drawer_item_home"),
                 onClick = {
                     onNavigate(AppNavState.ShiftReportState.Home)
@@ -369,27 +367,26 @@ private fun DrawerSectionHeader(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = 20.dp,
-                end = 20.dp,
-                top = 20.dp,
-                bottom = 8.dp
+                start = Dimens.SpacingLg,
+                end = Dimens.SpacingLg,
+                top = Dimens.SpacingLg,
+                bottom = Dimens.SpacingSm
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Accent bar
         Box(
             modifier = Modifier
-                .width(3.dp)
-                .height(14.dp)
-                .clip(RoundedCornerShape(2.dp))
+                .width(Dimens.AccentBarWidth)
+                .height(Dimens.AccentBarHeight)
+                .clip(RoundedCornerShape(Dimens.AccentBarCorner))
                 .background(PrimaryIndigoLight)
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
         Text(
             text = text.uppercase(),
-            fontSize = 11.sp,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.8.sp,
             color = TextHintColor
         )
     }
@@ -426,9 +423,9 @@ private fun DrawerMenuItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 2.dp)
-            .height(50.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXxs)
+            .height(Dimens.DrawerItemHeight)
+            .clip(RoundedCornerShape(Dimens.RadiusLg))
             .background(backgroundColor)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -438,21 +435,21 @@ private fun DrawerMenuItem(
                 ),
                 onClick = onClick
             )
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = Dimens.SpacingMd),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left accent bar (only when selected)
         if (isSelected) {
             Box(
                 modifier = Modifier
-                    .width(3.dp)
-                    .height(20.dp)
-                    .clip(RoundedCornerShape(2.dp))
+                    .width(Dimens.AccentBarWidth)
+                    .height(Dimens.IconAction)
+                    .clip(RoundedCornerShape(Dimens.AccentBarCorner))
                     .background(PrimaryIndigoLight)
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(Dimens.DrawerAccentGap))
         } else {
-            Spacer(modifier = Modifier.width(13.dp))
+            Spacer(modifier = Modifier.width(Dimens.DrawerUnselectedIndent))
         }
 
         // Icon
@@ -460,15 +457,15 @@ private fun DrawerMenuItem(
             imageVector = icon,
             contentDescription = title,
             tint = iconTint,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(Dimens.IconAction)
         )
 
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(Dimens.SpacingMd))
 
         // Text
         Text(
             text = title,
-            fontSize = 14.5.sp,
+            style = MaterialTheme.typography.bodyLarge,
             fontWeight = if (isSelected) FontWeight.SemiBold
                          else FontWeight.Medium,
             color = textColor,

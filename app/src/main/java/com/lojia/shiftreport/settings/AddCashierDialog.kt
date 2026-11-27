@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,8 +40,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.Cashier
 import com.lojia.shiftreport.data.UserProfile
@@ -77,15 +76,15 @@ fun AddCashierDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(PrimaryContainerLight),
                         contentAlignment = Alignment.Center
@@ -94,29 +93,29 @@ fun AddCashierDialog(
                             imageVector = if (isEditing) Icons.Outlined.PointOfSale else Icons.Outlined.PersonAdd,
                             contentDescription = null,
                             tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(Dimens.IconAction)
                         )
                     }
                     Column {
                         Text(
                             text = stringResource(if (isEditing) R.string.edit_cashier else R.string.add_cashier_4),
-                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = OnBackgroundLight
                         )
                         Text(
                             text = stringResource(R.string.cashier_management_desc),
-                            fontSize = 11.5.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = OnSurfaceVariantLight
                         )
                     }
                 }
 
                 // Name Input
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
                     Text(
                         text = stringResource(R.string.cashier_name),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
@@ -129,7 +128,7 @@ fun AddCashierDialog(
                         placeholder = {
                             Text(
                                 stringResource(R.string.eg_john_doe_sarah_1),
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = TextHintColor
                             )
                         },
@@ -138,7 +137,7 @@ fun AddCashierDialog(
                                 imageVector = Icons.Outlined.Person,
                                 contentDescription = null,
                                 tint = if (isNameError) ErrorRedLight else PrimaryIndigoLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         isError = isNameError,
@@ -151,7 +150,7 @@ fun AddCashierDialog(
                     if (isNameError) {
                         Text(
                             text = stringResource(R.string.cashier_name_required),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.labelMedium,
                             color = ErrorRedLight,
                             fontWeight = FontWeight.Medium
                         )
@@ -159,16 +158,16 @@ fun AddCashierDialog(
                 }
 
                 // Role Selection Chips
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
                     Text(
                         text = stringResource(R.string.cashier_role),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         listOf("CASHIER" to R.string.cashier, "ADMIN" to R.string.administrator).forEach { (roleKey, strRes) ->
                             val selected = selectedRole.equals(roleKey, ignoreCase = true)
@@ -184,7 +183,7 @@ fun AddCashierDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+                                    modifier = Modifier.padding(vertical = Dimens.SpacingSm, horizontal = Dimens.SpacingMd),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
@@ -192,12 +191,12 @@ fun AddCashierDialog(
                                         imageVector = Icons.Outlined.Badge,
                                         contentDescription = null,
                                         tint = if (selected) PrimaryIndigoLight else OnSurfaceVariantLight,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(Dimens.IconSm)
                                     )
-                                    Spacer(modifier = Modifier.size(6.dp))
+                                    Spacer(modifier = Modifier.size(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(strRes),
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.titleSmall,
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (selected) PrimaryIndigoLight else OnSurfaceVariantLight
                                     )
@@ -208,10 +207,10 @@ fun AddCashierDialog(
                 }
 
                 // 6-digit PIN Configuration
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)) {
                     Text(
                         text = stringResource(R.string.cashier_pin),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceLight,
                         textAlign = TextAlign.Center,
@@ -288,7 +287,7 @@ fun AddCashierDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
+                        .padding(top = Dimens.SpacingXs),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

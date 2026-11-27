@@ -37,8 +37,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
 import com.lojia.shiftreport.util.SecurityUtils
@@ -249,7 +247,7 @@ fun LojiaRegisterScreen(
         ) {
             LojiaHeader(isBn = isBn)
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(Dimens.AuthFieldGap))
 
             Column(
                 modifier = Modifier
@@ -260,7 +258,7 @@ fun LojiaRegisterScreen(
             LojiaCard(modifier = Modifier.fillMaxWidth().cardRise(0)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.AuthFieldGap)
                 ) {
                     LojiaInputField(
                         value = rFn,
@@ -297,7 +295,7 @@ fun LojiaRegisterScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 LojiaInputField(
                     value = rUn,
@@ -318,7 +316,7 @@ fun LojiaRegisterScreen(
                     testTag = "rUn"
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 LojiaInputField(
                     value = rEm,
@@ -336,7 +334,7 @@ fun LojiaRegisterScreen(
                     testTag = "rEm"
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -344,11 +342,11 @@ fun LojiaRegisterScreen(
                         fontSize = DepthTypeTokens.RegisterLabelSize,
                         fontWeight = FontWeight.SemiBold,
                         color = OnSurfaceVariantLight,
-                        modifier = Modifier.padding(bottom = 5.dp, start = 2.dp)
+                        modifier = Modifier.padding(bottom = Dimens.AuthSmallGap, start = Dimens.SpacingXxs)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         val dialShape = RoundedCornerShape(Dimens.RadiusInputRegister)
                         Box(
@@ -416,7 +414,7 @@ fun LojiaRegisterScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 LojiaInputField(
                     value = rPw,
@@ -438,7 +436,7 @@ fun LojiaRegisterScreen(
                                 imageVector = if (rPwVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                                 contentDescription = stringResource(R.string.cd_toggle_password),
                                 tint = if (rPwVisible) PrimaryIndigoLight else OnSurfaceVariantLight,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
                         }
                     },
@@ -449,7 +447,7 @@ fun LojiaRegisterScreen(
 
                 LojiaPasswordStrengthMeter(password = rPw, isBn = isBn)
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 LojiaInputField(
                     value = rCp,
@@ -472,7 +470,7 @@ fun LojiaRegisterScreen(
                                 imageVector = if (rCpVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                                 contentDescription = stringResource(R.string.cd_toggle_password),
                                 tint = if (rCpVisible) PrimaryIndigoLight else OnSurfaceVariantLight,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
                         }
                     },
@@ -481,7 +479,7 @@ fun LojiaRegisterScreen(
                     testTag = "rCp"
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 var showQuestionMenu by remember { mutableStateOf(false) }
                 val answerFocusRequester = remember { FocusRequester() }
@@ -496,7 +494,7 @@ fun LojiaRegisterScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 5.dp, start = 2.dp)
+                        modifier = Modifier.padding(bottom = Dimens.AuthSmallGap, start = Dimens.SpacingXxs)
                     ) {
                         Text(
                             text = stringResource(R.string.auth_sec_question),
@@ -555,7 +553,7 @@ fun LojiaRegisterScreen(
                                 imageVector = Icons.Default.KeyboardArrowDown,
                                 contentDescription = null,
                                 tint = DepthTokens.RegisterIconColor,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconMd)
                             )
                         }
 
@@ -567,7 +565,7 @@ fun LojiaRegisterScreen(
                             questionResIds.forEach { resId ->
                                 val qText = stringResource(resId)
                                 DropdownMenuItem(
-                                    text = { Text(text = qText, fontSize = 13.sp, color = LojiaColors.N900) },
+                                    text = { Text(text = qText, fontSize = DepthTypeTokens.RecoveryBodySize, color = LojiaColors.N900) },
                                     onClick = {
                                         rSq = qText
                                         showQuestionMenu = false
@@ -589,13 +587,13 @@ fun LojiaRegisterScreen(
                         Text(
                             text = stringResource(R.string.auth_err_sel_question),
                             color = LojiaColors.R500,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(top = 3.dp, start = 2.dp)
+                            fontSize = DepthTypeTokens.AuthValidationTextSize,
+                            modifier = Modifier.padding(top = Dimens.AuthTinyGap, start = Dimens.SpacingXxs)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                 LojiaInputField(
                     value = rSa,
@@ -647,20 +645,20 @@ fun LojiaRegisterScreen(
                                 checkedColor = PrimaryIndigoLight,
                                 uncheckedColor = OnSurfaceVariantLight
                             ),
-                            modifier = Modifier.size(18.dp).padding(top = 2.dp)
+                            modifier = Modifier.size(Dimens.RememberCheckboxSize).padding(top = Dimens.SpacingXxs)
                         )
                         Text(
                             text = termsAnnotated,
-                            fontSize = 11.5.sp,
+                            fontSize = DepthTypeTokens.RegisterTermsTextSize,
                             color = OnSurfaceVariantLight,
-                            lineHeight = 17.sp,
+                            lineHeight = DepthTypeTokens.RegisterTermsLineHeight,
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
             LojiaGradientButton(
                 text = if (isProcessingReg) stringResource(R.string.auth_processing) else stringResource(R.string.auth_reg_btn),
                 onClick = { handleRegister() },
@@ -670,7 +668,7 @@ fun LojiaRegisterScreen(
                 testTag = "regBtn"
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -680,17 +678,17 @@ fun LojiaRegisterScreen(
                     imageVector = Icons.Outlined.Lock,
                     contentDescription = null,
                     tint = OnSurfaceVariantLight,
-                    modifier = Modifier.size(12.dp)
+                    modifier = Modifier.size(Dimens.AuthCheckIconSize)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                 Text(
                     text = stringResource(R.string.auth_ssl_text),
-                    fontSize = 10.sp,
+                    fontSize = DepthTypeTokens.RegisterSslTextSize,
                     color = OnSurfaceVariantLight
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -711,7 +709,7 @@ fun LojiaRegisterScreen(
                         .clip(RoundedCornerShape(Dimens.RadiusSm))
                         .clickable { onGoToLogin() }
                         .wrapContentHeight(Alignment.CenterVertically)
-                        .padding(horizontal = 6.dp)
+                        .padding(horizontal = Dimens.AuthCompactGap)
                         .testTag("goLogin")
                 )
             }
@@ -781,13 +779,13 @@ fun LojiaRegisterSuccessScreen(
                 .fillMaxWidth()
                 .widthIn(max = Dimens.RegisterScreenMaxWidth)
                 .wrapContentHeight(Alignment.CenterVertically)
-                .padding(vertical = 24.dp),
+                .padding(vertical = Dimens.SpacingXl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             LojiaHeader(isBn = isBn)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             LojiaCard(modifier = Modifier.fillMaxWidth().cardRise(0)) {
                 Column(
@@ -797,7 +795,7 @@ fun LojiaRegisterSuccessScreen(
                     Box(
                         modifier = Modifier
                             .scale(scale.value)
-                            .size(80.dp)
+                            .size(Dimens.AuthSuccessBadgeSize)
                             .clip(CircleShape)
                             .background(SuccessContainer),
                         contentAlignment = Alignment.Center
@@ -806,34 +804,34 @@ fun LojiaRegisterSuccessScreen(
                             imageVector = Icons.Default.Check,
                             contentDescription = stringResource(R.string.cd_success),
                             tint = SuccessGreen,
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(Dimens.AuthSuccessIconSize)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(Dimens.AuthSuccessSpacerGap))
 
                     Text(
                         text = stringResource(R.string.auth_success_title),
-                        fontSize = 22.sp,
+                        fontSize = DepthTypeTokens.RegisterSuccessTitleSize,
                         fontWeight = FontWeight.ExtraBold,
                         color = OnSurfaceLight,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                     Text(
                         text = stringResource(R.string.auth_success_sub),
-                        fontSize = 13.sp,
+                        fontSize = DepthTypeTokens.RegisterSuccessSubSize,
                         color = OnSurfaceVariantLight,
                         textAlign = TextAlign.Center,
-                        lineHeight = 20.sp,
+                        lineHeight = DepthTypeTokens.RegisterSuccessSubLineHeight,
                         modifier = Modifier
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = Dimens.SpacingSm)
                             .fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXl))
 
                     LojiaGradientButton(
                         text = stringResource(R.string.auth_go_to_login),

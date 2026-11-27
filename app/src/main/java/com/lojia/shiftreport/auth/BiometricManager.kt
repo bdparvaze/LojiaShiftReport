@@ -43,8 +43,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.lojia.shiftreport.R
@@ -475,7 +473,7 @@ fun BiometricLockScreen(
                     ) {
                         LojiaHeader(isBn = isBn)
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(Dimens.AuthFieldGap))
 
                         LojiaCard(
                             modifier = Modifier
@@ -641,7 +639,7 @@ private fun LojiaPasswordLoginContent(
         textStyle = TextStyle(
             color = charcoalText,
             fontFamily = FontFamily.Default,
-            fontSize = 14.sp,
+            fontSize = DepthTypeTokens.AuthFieldInputSize,
             fontWeight = FontWeight.Normal
         ),
         modifier = Modifier
@@ -649,7 +647,7 @@ private fun LojiaPasswordLoginContent(
             .testTag("etLoginUser")
     )
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
     com.lojia.shiftreport.ui.common.LojiaTextField(
         value = loginPass,
@@ -704,7 +702,7 @@ private fun LojiaPasswordLoginContent(
         textStyle = TextStyle(
             color = charcoalText,
             fontFamily = FontFamily.Default,
-            fontSize = 14.sp,
+            fontSize = DepthTypeTokens.AuthFieldInputSize,
             fontWeight = FontWeight.Normal
         ),
         modifier = Modifier
@@ -712,7 +710,7 @@ private fun LojiaPasswordLoginContent(
             .testTag("etLoginPass")
     )
 
-    Spacer(modifier = Modifier.height(10.dp))
+    Spacer(modifier = Modifier.height(Dimens.AuthFieldGap))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -724,7 +722,7 @@ private fun LojiaPasswordLoginContent(
             modifier = Modifier
                 .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                 .clickable { onRememberMeChange(!rememberMe) }
-                .padding(end = 8.dp, top = 4.dp, bottom = 4.dp)
+                .padding(end = Dimens.SpacingSm, top = Dimens.SpacingXs, bottom = Dimens.SpacingXs)
                 .testTag("cbRemember")
         ) {
             Box(
@@ -744,11 +742,11 @@ private fun LojiaPasswordLoginContent(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
                         tint = PureWhite,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(Dimens.AuthCheckIconSize)
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(7.dp))
+            Spacer(modifier = Modifier.width(Dimens.AuthCheckboxTextGap))
             Text(
                 text = stringResource(R.string.auth_remember_me),
                 fontFamily = FontFamily.Default,
@@ -773,7 +771,7 @@ private fun LojiaPasswordLoginContent(
                 .clip(RoundedCornerShape(Dimens.RadiusSm))
                 .clickable { onForgotPassword() }
                 .wrapContentHeight(Alignment.CenterVertically)
-                .padding(horizontal = 4.dp)
+                .padding(horizontal = Dimens.SpacingXs)
                 .testTag("tvForgot")
         )
     }
@@ -784,7 +782,7 @@ private fun LojiaPasswordLoginContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 10.dp)
+                .padding(bottom = Dimens.AuthFieldGap)
                 .depthSemanticCard(
                     backgroundColor = NegativeBannerSurface,
                     borderColor = NegativeBannerBorder,
@@ -796,9 +794,9 @@ private fun LojiaPasswordLoginContent(
                 text = loginErrorMessage,
                 color = errorRed,
                 fontFamily = FontFamily.Default,
-                fontSize = 12.sp,
+                fontSize = DepthTypeTokens.AuthErrorBannerTextSize,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = Dimens.AuthFieldGap, vertical = Dimens.SpacingSm)
             )
         }
     }
@@ -811,7 +809,7 @@ private fun LojiaPasswordLoginContent(
         testTag = "btnLogin"
     )
 
-    Spacer(modifier = Modifier.height(14.dp))
+    Spacer(modifier = Modifier.height(Dimens.AuthSectionGap))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -839,7 +837,7 @@ private fun LojiaPasswordLoginContent(
                 .clip(RoundedCornerShape(Dimens.RadiusSm))
                 .clickable { onRegisterClick() }
                 .wrapContentHeight(Alignment.CenterVertically)
-                .padding(horizontal = 6.dp)
+                .padding(horizontal = Dimens.AuthCompactGap)
                 .testTag("goRegister")
         )
     }
@@ -880,7 +878,7 @@ fun LojiaPasswordRecoveryDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Text(
                 text = stringResource(R.string.auth_password_recovery_title),
@@ -897,7 +895,7 @@ fun LojiaPasswordRecoveryDialog(
                 ) {
                     Text(
                         text = stringResource(R.string.auth_recovery_unavailable),
-                        fontSize = 13.sp,
+                        fontSize = DepthTypeTokens.RecoveryBodySize,
                         fontWeight = FontWeight.Medium,
                         color = OnSurfaceLight,
                         modifier = Modifier.padding(Dimens.RecoveryInfoPadding)
@@ -906,7 +904,7 @@ fun LojiaPasswordRecoveryDialog(
             } else {
                 Text(
                     text = stringResource(R.string.auth_answer_security_question),
-                    fontSize = 12.sp,
+                    fontSize = DepthTypeTokens.AuthErrorBannerTextSize,
                     color = OnSurfaceVariantLight
                 )
 
@@ -918,13 +916,13 @@ fun LojiaPasswordRecoveryDialog(
                     Column(modifier = Modifier.padding(Dimens.RecoveryInfoPadding)) {
                         Text(
                             text = stringResource(R.string.auth_question_label),
-                            fontSize = 11.sp,
+                            fontSize = DepthTypeTokens.RecoveryQuestionHeaderSize,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryIndigoLight
                         )
                         Text(
                             text = question,
-                            fontSize = 13.sp,
+                            fontSize = DepthTypeTokens.RecoveryBodySize,
                             fontWeight = FontWeight.Medium,
                             color = OnSurfaceLight
                         )
@@ -954,16 +952,16 @@ fun LojiaPasswordRecoveryDialog(
                                 shape = RoundedCornerShape(Dimens.RadiusSm)
                             )
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.SpacingMd)) {
                             Text(
                                 text = stringResource(R.string.auth_identity_verified),
-                                fontSize = 12.sp,
+                                fontSize = DepthTypeTokens.AuthErrorBannerTextSize,
                                 color = SuccessGreen,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = stringResource(R.string.auth_recovery_success_msg),
-                                fontSize = 13.sp,
+                                fontSize = DepthTypeTokens.RecoveryBodySize,
                                 fontWeight = FontWeight.Medium,
                                 color = OnSurfaceLight
                             )

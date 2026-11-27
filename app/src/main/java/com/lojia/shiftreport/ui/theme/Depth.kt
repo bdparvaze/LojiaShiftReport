@@ -491,6 +491,30 @@ object DepthTypeTokens {
     val HomeLiveBadgeTracking: TextUnit = 0.44.sp
     val HomeChartValueSize: TextUnit = 10.5.sp
     val HomeChartDayLabelSize: TextUnit = 11.sp
+
+    // ============ BATCH A: LOGO PICKER AVATAR & PRESET EMOJI ============
+    val BusinessLogoInitialSize: TextUnit = 36.sp
+    val PresetLogoEmojiSize: TextUnit = 22.sp
+
+    // ============ BATCH D: AUTH, REGISTER & RECOVERY PARITY TOKENS ============
+    val AuthFieldLabelSize: TextUnit = 13.sp
+    val AuthFieldInputSize: TextUnit = 14.sp
+    val AuthErrorBannerTextSize: TextUnit = 12.sp
+    val AuthSectionHeaderTitleSize: TextUnit = 13.5.sp
+    val AuthSectionHeaderSubtitleSize: TextUnit = 10.8.sp
+    val AuthInfoDotTextSize: TextUnit = 8.5.sp
+    val AuthTooltipTextSize: TextUnit = 10.sp
+    val AuthValidationTextSize: TextUnit = 11.sp
+    val AuthInputLineHeight: TextUnit = 18.sp
+    val AuthCountryHeaderSize: TextUnit = 15.sp
+    val RegisterTermsTextSize: TextUnit = 11.5.sp
+    val RegisterTermsLineHeight: TextUnit = 17.sp
+    val RegisterSslTextSize: TextUnit = 10.sp
+    val RegisterSuccessTitleSize: TextUnit = 22.sp
+    val RegisterSuccessSubSize: TextUnit = 13.sp
+    val RegisterSuccessSubLineHeight: TextUnit = 20.sp
+    val RecoveryBodySize: TextUnit = 13.sp
+    val RecoveryQuestionHeaderSize: TextUnit = 11.sp
 }
 
 /**

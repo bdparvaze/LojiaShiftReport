@@ -15,8 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
@@ -79,44 +77,44 @@ fun PosReconciliationSummary(
         Card(
             shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(0.dp),
+            elevation = CardDefaults.cardElevation(Dimens.SpacingNone),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(0)
                 .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Brass))
-            Column(Modifier.padding(14.dp)) {
+            Column(Modifier.padding(Dimens.CardPadding)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🏷️", fontSize = 16.sp)
-                        Spacer(Modifier.width(6.dp))
+                        Text("🏷️", style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.width(Dimens.SpacingXs))
                         Text(
                             stringResource(R.string.sales_summary),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             color = ShiftColors.Charcoal
                         )
                     }
                     Surface(
                         color = ShiftColors.BrassLight,
-                        shape = RoundedCornerShape(6.dp)
+                        shape = RoundedCornerShape(Dimens.RadiusSm)
                     ) {
                         Text(
                             text = stringResource(R.string.recon_pos_revenue_breakdown),
-                            fontSize = 10.sp,
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = ShiftColors.Brass,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = Dimens.SpacingXs, vertical = Dimens.SpacingXxs)
                         )
                     }
                 }
 
-                DashedDivider(Modifier.padding(vertical = 10.dp))
+                DashedDivider(Modifier.padding(vertical = Dimens.SpacingSm))
 
                 ReconciliationRow(stringResource(R.string.cash_sales), cashSales, currency)
                 ReconciliationRow(stringResource(R.string.mada_bank), madaSales, currency)
@@ -124,35 +122,35 @@ fun PosReconciliationSummary(
                     ReconciliationRow(stringResource(R.string.digital_wallet), digitalWalletSales, currency)
                 }
 
-                DashedDivider(Modifier.padding(vertical = 8.dp), color = ShiftColors.Border)
+                DashedDivider(Modifier.padding(vertical = Dimens.SpacingSm), color = ShiftColors.Border)
 
                 // TOTAL GROSS SALES (Prominent)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(Dimens.RadiusMd))
                         .background(WarningContainer)
-                        .border(1.dp, WarningOrange.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 9.dp),
+                        .border(Dimens.FlatBorderWidth, WarningOrange.copy(alpha = 0.4f), RoundedCornerShape(Dimens.RadiusMd))
+                        .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         stringResource(R.string.total_sales),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.5.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         color = WarningOrange
                     )
                     Text(
                         MoneyFormat.formatMinor(totalSales, currency),
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp,
+                        style = MaterialTheme.typography.titleLarge.asMoneyTabular(),
                         color = WarningOrange
                     )
                 }
 
                 if (totalDiscounts > 0L || salesReturns > 0L) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Dimens.SpacingSm))
                     if (totalDiscounts > 0L) {
                         ReconciliationRow(
                             label = "- ${stringResource(R.string.total_discounts_label)}",
@@ -169,27 +167,27 @@ fun PosReconciliationSummary(
                             valueColor = ShiftColors.Danger
                         )
                     }
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(Dimens.SpacingXs))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(Dimens.RadiusMd))
                             .background(SuccessContainer)
-                            .border(1.dp, PosCashGreen.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                            .border(Dimens.FlatBorderWidth, PosCashGreen.copy(alpha = 0.4f), RoundedCornerShape(Dimens.RadiusMd))
+                            .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             stringResource(R.string.net_sales_label),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = PosCashGreen
                         )
                         Text(
                             MoneyFormat.formatMinor(netSales, currency),
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.5.sp,
+                            style = MaterialTheme.typography.titleLarge.asMoneyTabular(),
                             color = PosCashGreen
                         )
                     }
@@ -203,32 +201,32 @@ fun PosReconciliationSummary(
         Card(
             shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(0.dp),
+            elevation = CardDefaults.cardElevation(Dimens.SpacingNone),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(1)
                 .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.NetCashGreen))
-            Column(Modifier.padding(14.dp)) {
+            Column(Modifier.padding(Dimens.CardPadding)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("💵", fontSize = 16.sp)
-                        Spacer(Modifier.width(6.dp))
+                        Text("💵", style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.width(Dimens.SpacingXs))
                         Text(
                             stringResource(R.string.cash_drawer_recon_title),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             color = ShiftColors.Charcoal
                         )
                     }
                 }
 
-                DashedDivider(Modifier.padding(vertical = 10.dp))
+                DashedDivider(Modifier.padding(vertical = Dimens.SpacingSm))
 
                 // Float / Inflow
                 if (startingCash > 0L) {
@@ -243,14 +241,14 @@ fun PosReconciliationSummary(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 3.dp),
+                        .padding(vertical = Dimens.SpacingXxs),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(stringResource(R.string.total_cash_in), fontSize = 11.5.sp, color = PosCashGreen, fontWeight = FontWeight.SemiBold)
-                    Text("+ ${MoneyFormat.formatMinor(totalCashIn, currency)}", fontSize = 12.sp, color = PosCashGreen, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.total_cash_in), style = MaterialTheme.typography.bodyMedium, color = PosCashGreen, fontWeight = FontWeight.SemiBold)
+                    Text("+ ${MoneyFormat.formatMinor(totalCashIn, currency)}", style = MaterialTheme.typography.bodyMedium.asMoneyTabular(), color = PosCashGreen, fontWeight = FontWeight.Bold)
                 }
 
-                DashedDivider(Modifier.padding(vertical = 6.dp))
+                DashedDivider(Modifier.padding(vertical = Dimens.SpacingXs))
 
                 // Outflow
                 if (totalExpenses > 0L) {
@@ -267,45 +265,46 @@ fun PosReconciliationSummary(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 3.dp),
+                        .padding(vertical = Dimens.SpacingXxs),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(stringResource(R.string.total_cash_out), fontSize = 11.5.sp, color = PosExpenseRed, fontWeight = FontWeight.SemiBold)
-                    Text("- ${MoneyFormat.formatMinor(totalCashOut, currency)}", fontSize = 12.sp, color = PosExpenseRed, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.total_cash_out), style = MaterialTheme.typography.bodyMedium, color = PosExpenseRed, fontWeight = FontWeight.SemiBold)
+                    Text("- ${MoneyFormat.formatMinor(totalCashOut, currency)}", style = MaterialTheme.typography.bodyMedium.asMoneyTabular(), color = PosExpenseRed, fontWeight = FontWeight.Bold)
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Dimens.SpacingSm))
 
                 // EXPECTED CASH CALLOUT
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(Dimens.RadiusLg))
                         .background(SuccessContainer)
-                        .border(1.dp, PosCashGreen.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                        .padding(12.dp)
+                        .border(Dimens.FlatBorderWidth, PosCashGreen.copy(alpha = 0.4f), RoundedCornerShape(Dimens.RadiusLg))
+                        .padding(Dimens.SpacingMd)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 stringResource(R.string.cash_in_drawer),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = PosCashGreen
                             )
                             Text(
                                 stringResource(R.string.recon_drawer_formula),
-                                fontSize = 9.5.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = PosCashGreen
                             )
                         }
+                        Spacer(Modifier.width(Dimens.SpacingSm))
                         Text(
                             MoneyFormat.formatMinor(expectedCash, currency),
-                            fontSize = 16.sp,
+                            style = MaterialTheme.typography.headlineSmall.asMoneyTabular(),
                             fontWeight = FontWeight.ExtraBold,
                             color = PosCashGreen
                         )
@@ -320,26 +319,26 @@ fun PosReconciliationSummary(
         Card(
             shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(0.dp),
+            elevation = CardDefaults.cardElevation(Dimens.SpacingNone),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(2)
                 .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Primary))
-            Column(Modifier.padding(14.dp)) {
+            Column(Modifier.padding(Dimens.CardPadding)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("⚖️", fontSize = 16.sp)
-                    Spacer(Modifier.width(6.dp))
+                    Text("⚖️", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.width(Dimens.SpacingXs))
                     Text(
                         stringResource(R.string.variance_over_short),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         color = ShiftColors.Charcoal
                     )
                 }
 
-                DashedDivider(Modifier.padding(vertical = 10.dp))
+                DashedDivider(Modifier.padding(vertical = Dimens.SpacingSm))
 
                 // Actual Cash Input Field
                 NumberField(
@@ -350,25 +349,25 @@ fun PosReconciliationSummary(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(Dimens.SpacingSm))
 
                 // Variance Status Banner
                 if (variance == null) {
                     Surface(
                         color = ShiftColors.Bg,
-                        shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, ShiftColors.Border),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
+                        border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, ShiftColors.Border),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(Dimens.SpacingSm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("ℹ️", fontSize = 14.sp)
-                            Spacer(Modifier.width(8.dp))
+                            Text("ℹ️", style = MaterialTheme.typography.bodyLarge)
+                            Spacer(Modifier.width(Dimens.SpacingSm))
                             Text(
                                 stringResource(R.string.recon_enter_physical_cash_hint),
-                                fontSize = 11.5.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = ShiftColors.TextMuted
                             )
                         }
@@ -404,41 +403,41 @@ fun PosReconciliationSummary(
 
                     Surface(
                         color = bgColor,
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+                        shape = RoundedCornerShape(Dimens.RadiusLg),
+                        border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, borderColor),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(Modifier.padding(12.dp)) {
+                        Column(Modifier.padding(Dimens.SpacingMd)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(iconSymbol, fontWeight = FontWeight.Bold, color = textColor, fontSize = 14.sp)
-                                    Spacer(Modifier.width(6.dp))
+                                    Text(iconSymbol, fontWeight = FontWeight.Bold, color = textColor, style = MaterialTheme.typography.bodyLarge)
+                                    Spacer(Modifier.width(Dimens.SpacingXs))
                                     Text(
                                         statusText,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = textColor
                                     )
                                 }
                                 Text(
                                     "${if (variance > 0L) "+" else ""}${MoneyFormat.formatMinor(variance, currency)}",
                                     fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 15.sp,
+                                    style = MaterialTheme.typography.titleLarge.asMoneyTabular(),
                                     color = textColor
                                 )
                             }
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(
                                     R.string.recon_expected_actual_format,
                                     MoneyFormat.formatMinor(expectedCash, currency),
                                     MoneyFormat.formatMinor(actualCountVal ?: 0L, currency)
                                 ),
-                                fontSize = 10.5.sp,
+                                style = MaterialTheme.typography.bodySmall.asMoneyTabular(),
                                 color = textColor.copy(alpha = 0.85f)
                             )
                         }
@@ -453,26 +452,26 @@ fun PosReconciliationSummary(
         Card(
             shape = RoundedCornerShape(Dimens.RadiusKpiCard),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(0.dp),
+            elevation = CardDefaults.cardElevation(Dimens.SpacingNone),
             modifier = Modifier
                 .fillMaxWidth()
                 .cardRise(3)
                 .depthCard(shape = RoundedCornerShape(Dimens.RadiusKpiCard), cornerRadius = Dimens.RadiusKpiCard)
         ) {
             Box(Modifier.fillMaxWidth().height(Dimens.TopAccentStripHeight).background(ShiftColors.Purple))
-            Column(Modifier.padding(14.dp)) {
+            Column(Modifier.padding(Dimens.CardPadding)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("📋", fontSize = 16.sp)
-                    Spacer(Modifier.width(6.dp))
+                    Text("📋", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.width(Dimens.SpacingXs))
                     Text(
                         stringResource(R.string.recon_operational_tracking_title),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         color = ShiftColors.Charcoal
                     )
                 }
 
-                DashedDivider(Modifier.padding(vertical = 10.dp))
+                DashedDivider(Modifier.padding(vertical = Dimens.SpacingSm))
 
                 ReconciliationRow(
                     label = stringResource(R.string.due_sales_credit_entries),
@@ -483,14 +482,14 @@ fun PosReconciliationSummary(
 
                 if (staffMealsCount > 0) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.SpacingXs),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
-                            Text(stringResource(R.string.pdf_staff_meals), fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-                            Text(stringResource(R.string.complimentary_non_revenue_metric), fontSize = 9.5.sp, color = ShiftColors.TextMuted)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(stringResource(R.string.pdf_staff_meals), style = MaterialTheme.typography.bodyMedium, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
+                            Text(stringResource(R.string.complimentary_non_revenue_metric), style = MaterialTheme.typography.bodySmall, color = ShiftColors.TextMuted)
                         }
-                        Text(stringResource(R.string.people_count, staffMealsCount), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Text)
+                        Text(stringResource(R.string.people_count, staffMealsCount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = ShiftColors.Text)
                     }
                 }
 
@@ -505,11 +504,11 @@ fun PosReconciliationSummary(
 
                 if (muasselCount > 0 || outdoorMuasselCount > 0) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.SpacingXs),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.muassel), fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
-                        Text(stringResource(R.string.recon_pcs_count_format, muasselCount + outdoorMuasselCount), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = ShiftColors.Purple)
+                        Text(stringResource(R.string.muassel), style = MaterialTheme.typography.bodyMedium, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.recon_pcs_count_format, muasselCount + outdoorMuasselCount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = ShiftColors.Purple)
                     }
                 }
 
@@ -552,19 +551,20 @@ fun ReconciliationRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = Dimens.SpacingXs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(label, fontSize = 12.5.sp, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyMedium, color = ShiftColors.TextMuted, fontWeight = FontWeight.Medium)
             if (!note.isNullOrBlank()) {
-                Text(note, fontSize = 9.5.sp, color = ShiftColors.TextMuted)
+                Text(note, style = MaterialTheme.typography.bodySmall, color = ShiftColors.TextMuted)
             }
         }
+        Spacer(Modifier.width(Dimens.SpacingSm))
         Text(
             MoneyFormat.formatMinor(value, currency),
-            fontSize = 13.sp,
+            style = MaterialTheme.typography.titleMedium.asMoneyTabular(),
             fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold,
             color = valueColor
         )
@@ -573,7 +573,7 @@ fun ReconciliationRow(
 
 @Composable
 fun DashedDivider(modifier: Modifier = Modifier, color: Color = ShiftColors.Border) {
-    Canvas(modifier = modifier.fillMaxWidth().height(1.dp)) {
+    Canvas(modifier = modifier.fillMaxWidth().height(Dimens.FlatBorderWidth)) {
         drawLine(
             color = color,
             start = Offset(0f, 0f),

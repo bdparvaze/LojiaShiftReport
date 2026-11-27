@@ -20,11 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.Dimens
+import com.lojia.shiftreport.ui.theme.dpToken
 import com.lojia.shiftreport.ui.theme.OnSurfaceVariantLight
 import com.lojia.shiftreport.ui.theme.PureWhite
 import com.lojia.shiftreport.ui.theme.SurfaceLight
@@ -75,10 +75,10 @@ fun LojiaDialog(
 ) {
     val configuration = LocalConfiguration.current
     val targetWidth = calculateDialogWidth(
-        screenWidth = configuration.screenWidthDp.dp,
+        screenWidth = configuration.screenWidthDp.dpToken(),
         size = size
     )
-    val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+    val maxDialogHeight = (configuration.screenHeightDp.dpToken() * 0.85f)
     val usesStandardSurface = containerColor == MaterialTheme.colorScheme.surface ||
         containerColor == SurfaceLight ||
         containerColor == PureWhite
@@ -139,7 +139,7 @@ fun LojiaConfirmDialog(
     extraContent: (@Composable () -> Unit)? = null
 ) {
     val configuration = LocalConfiguration.current
-    val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+    val maxDialogHeight = (configuration.screenHeightDp.dpToken() * 0.85f)
 
     LojiaDialog(
         onDismissRequest = onDismissRequest,
@@ -277,7 +277,7 @@ fun LojiaFormDialog(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val configuration = LocalConfiguration.current
-    val maxDialogHeight = (configuration.screenHeightDp.dp * 0.85f)
+    val maxDialogHeight = (configuration.screenHeightDp.dpToken() * 0.85f)
 
     LojiaDialog(
         onDismissRequest = onDismissRequest,

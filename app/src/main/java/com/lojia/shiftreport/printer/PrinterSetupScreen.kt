@@ -25,8 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.ui.common.LojiaTextField
@@ -132,7 +130,7 @@ fun PrinterSetupScreen(
         topBar = {
             if (showTopBar) {
                 LojiaGradientHeader(
-                    shape = RoundedCornerShape(0.dp),
+                    shape = RoundedCornerShape(Dimens.SpacingNone),
                     contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm)
                 ) {
                     Row(
@@ -153,13 +151,13 @@ fun PrinterSetupScreen(
                                 imageVector = Icons.Default.Print,
                                 contentDescription = null,
                                 tint = PureWhite,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                             Text(
                                 text = stringResource(R.string.printer_setup_title),
+                                style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
                                 color = PureWhite,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -183,8 +181,8 @@ fun PrinterSetupScreen(
         },
         bottomBar = {
             Surface(
-                tonalElevation = 0.dp,
-                shadowElevation = 8.dp,
+                tonalElevation = Dimens.SpacingNone,
+                shadowElevation = Dimens.FlatCardShadowBlur,
                 color = PureWhite,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -192,7 +190,7 @@ fun PrinterSetupScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd)
                 ) {
                     val statusBgColor = when (connectionStatus) {
                         PrinterConnectionStatus.CONNECTED -> SuccessContainer
@@ -222,7 +220,7 @@ fun PrinterSetupScreen(
                                 borderColor = statusBorderColor,
                                 shape = RoundedCornerShape(Dimens.RadiusSm)
                             )
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -234,9 +232,9 @@ fun PrinterSetupScreen(
                             },
                             contentDescription = null,
                             tint = statusContentColor,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Text(
                             text = when (connectionStatus) {
                                 PrinterConnectionStatus.CONNECTED -> stringResource(
@@ -248,7 +246,7 @@ fun PrinterSetupScreen(
                                 PrinterConnectionStatus.FAILED -> statusMessage ?: stringResource(R.string.printer_status_failed)
                                 PrinterConnectionStatus.DISCONNECTED -> stringResource(R.string.printer_status_disconnected)
                             },
-                            fontSize = 12.5.sp,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = statusContentColor,
                             maxLines = 1,
@@ -256,12 +254,12 @@ fun PrinterSetupScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                     // Buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         // Test Print Button
                         Button(
@@ -376,12 +374,12 @@ fun PrinterSetupScreen(
                                 .depthRaisedButton(enabled = !isOperating, cornerRadius = Dimens.RadiusMd)
                                 .testTag("btnTestPrint")
                         ) {
-                            Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(Dimens.IconMd))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
                                 stringResource(R.string.printer_test_print_btn),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.5.sp
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -410,7 +408,11 @@ fun PrinterSetupScreen(
                                         cornerRadius = Dimens.RadiusMd
                                     )
                             ) {
-                                Text(stringResource(R.string.btn_disconnect_drive), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    stringResource(R.string.btn_disconnect_drive),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                     }
@@ -501,8 +503,8 @@ fun PrinterSetupScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(Dimens.SpacingLg),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                     ) {
                         item {
                             Box(
@@ -511,14 +513,14 @@ fun PrinterSetupScreen(
                                     .cardRise(0)
                                     .depthCard(shape = RoundedCornerShape(Dimens.RadiusMd))
                             ) {
-                                Column(modifier = Modifier.padding(14.dp)) {
+                                Column(modifier = Modifier.padding(Dimens.CardPadding)) {
                                     Text(
                                         text = stringResource(R.string.printer_direct_network_header),
+                                        style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
                                         color = OnBackgroundLight
                                     )
-                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                                     LojiaTextField(
                                         value = networkNameInput,
@@ -532,11 +534,11 @@ fun PrinterSetupScreen(
                                             .testTag(PrinterTestTags.INPUT_PRINTER_NAME)
                                     )
 
-                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Spacer(modifier = Modifier.height(Dimens.SpacingSm))
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                                     ) {
                                         LojiaTextField(
                                             value = ipInput,
@@ -559,16 +561,16 @@ fun PrinterSetupScreen(
                                             singleLine = true,
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                             modifier = Modifier
-                                                .width(96.dp)
+                                                .width(Dimens.DialCodeFieldWidth)
                                                 .testTag("inputPrinterPort")
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                                     ) {
                                         // Auto Discover Button
                                         OutlinedButton(
@@ -598,9 +600,9 @@ fun PrinterSetupScreen(
                                             Icon(
                                                 imageVector = if (isDiscovering) Icons.Default.Stop else Icons.Default.Search,
                                                 contentDescription = null,
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(Dimens.IconMd)
                                             )
-                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                             Text(
                                                 if (isDiscovering) stringResource(R.string.printer_stop_scan_btn)
                                                 else stringResource(R.string.printer_auto_discover_btn),
@@ -680,9 +682,9 @@ fun PrinterSetupScreen(
                                         ) {
                                             if (isOperating) {
                                                 CircularProgressIndicator(
-                                                    modifier = Modifier.size(18.dp),
+                                                    modifier = Modifier.size(Dimens.IconMd),
                                                     color = PureWhite,
-                                                    strokeWidth = 2.dp
+                                                    strokeWidth = Dimens.ProgressStrokeWidth
                                                 )
                                             } else {
                                                 Text(stringResource(R.string.printer_connect_btn), fontWeight = FontWeight.Bold)
@@ -717,14 +719,14 @@ fun PrinterSetupScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
+                                        .padding(vertical = Dimens.SpacingSm),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                                     Text(
                                         text = stringResource(R.string.printer_scanning_network),
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = OnSurfaceVariantLight
                                     )
                                 }
@@ -738,9 +740,9 @@ fun PrinterSetupScreen(
                                     R.string.printer_discovered_network_format,
                                     discoveredPrinters.size
                                 ),
+                                style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                modifier = Modifier.padding(top = Dimens.SpacingSm, bottom = Dimens.SpacingXs)
                             )
                         }
 
@@ -748,9 +750,9 @@ fun PrinterSetupScreen(
                             item {
                                 Text(
                                     text = stringResource(R.string.printer_no_network_found),
-                                    fontSize = 12.5.sp,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = OnSurfaceVariantLight,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    modifier = Modifier.padding(vertical = Dimens.SpacingSm)
                                 )
                             }
                         }
@@ -773,12 +775,12 @@ fun PrinterSetupScreen(
                                     }
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(12.dp),
+                                    modifier = Modifier.padding(Dimens.SpacingMd),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(36.dp)
+                                            .size(Dimens.AvatarBadgeSize)
                                             .clip(CircleShape)
                                             .background(PrimaryContainerLight),
                                         contentAlignment = Alignment.Center
@@ -787,13 +789,22 @@ fun PrinterSetupScreen(
                                             Icons.Default.Print,
                                             contentDescription = null,
                                             tint = PrimaryIndigoDark,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(Dimens.IconAction)
                                         )
                                     }
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.SpacingMd))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(device.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = OnBackgroundLight)
-                                        Text("${device.address}:${device.port}", fontSize = 12.sp, color = OnSurfaceVariantLight)
+                                        Text(
+                                            device.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = OnBackgroundLight
+                                        )
+                                        Text(
+                                            "${device.address}:${device.port}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = OnSurfaceVariantLight
+                                        )
                                     }
                                     OutlinedButton(
                                         onClick = {
@@ -833,7 +844,7 @@ fun PrinterSetupScreen(
                                             containerColor = Color.Transparent,
                                             contentColor = PrimaryIndigoDark
                                         ),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                        contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                         modifier = Modifier
                                             .heightIn(min = Dimens.MinTouchTarget)
                                             .depthSecondaryButton(
@@ -841,7 +852,11 @@ fun PrinterSetupScreen(
                                                 cornerRadius = Dimens.RadiusMd
                                             )
                                     ) {
-                                        Text(stringResource(R.string.printer_connect_btn), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(
+                                            stringResource(R.string.printer_connect_btn),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     }
                                 }
                             }
@@ -856,8 +871,8 @@ fun PrinterSetupScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(Dimens.SpacingLg),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         item {
                             Box(modifier = Modifier.cardRise(0)) {
@@ -879,10 +894,10 @@ fun PrinterSetupScreen(
                         item {
                             Text(
                                 text = stringResource(R.string.printer_paired_bt_format, pairedPrinters.size),
+                                style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
                                 color = OnBackgroundLight,
-                                modifier = Modifier.padding(bottom = 4.dp)
+                                modifier = Modifier.padding(bottom = Dimens.SpacingXs)
                             )
                         }
 
@@ -890,9 +905,9 @@ fun PrinterSetupScreen(
                             item {
                                 Text(
                                     text = stringResource(R.string.printer_no_paired_bt_found),
-                                    fontSize = 12.5.sp,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = OnSurfaceVariantLight,
-                                    modifier = Modifier.padding(vertical = 12.dp)
+                                    modifier = Modifier.padding(vertical = Dimens.SpacingMd)
                                 )
                             }
                         }
@@ -913,19 +928,28 @@ fun PrinterSetupScreen(
                                     }
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(14.dp),
+                                    modifier = Modifier.padding(Dimens.CardPadding),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Bluetooth,
                                         contentDescription = null,
                                         tint = if (isSelected) PrimaryIndigoDark else OnSurfaceVariantLight,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(Dimens.IconLg)
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(Dimens.SpacingMd))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(device.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = OnBackgroundLight)
-                                        Text(device.address, fontSize = 12.sp, color = OnSurfaceVariantLight)
+                                        Text(
+                                            device.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = OnBackgroundLight
+                                        )
+                                        Text(
+                                            device.address,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = OnSurfaceVariantLight
+                                        )
                                     }
                                     if (isSelected) {
                                         OutlinedButton(
@@ -975,7 +999,7 @@ fun PrinterSetupScreen(
                                                 containerColor = Color.Transparent,
                                                 contentColor = PrimaryIndigoDark
                                             ),
-                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                            contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingXs),
                                             modifier = Modifier
                                                 .heightIn(min = Dimens.MinTouchTarget)
                                                 .depthSecondaryButton(
@@ -983,7 +1007,11 @@ fun PrinterSetupScreen(
                                                     cornerRadius = Dimens.RadiusMd
                                                 )
                                         ) {
-                                            Text(stringResource(R.string.printer_connect_btn), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                            Text(
+                                                stringResource(R.string.printer_connect_btn),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
                                         }
                                     }
                                 }
@@ -1011,18 +1039,18 @@ private fun PrinterOptionsCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(Dimens.CardPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             Text(
                 text = stringResource(R.string.printer_paper_width_label),
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
                 color = OnBackgroundLight
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 FilterChip(
                     selected = selectedPaperWidthMm == 58,
@@ -1044,13 +1072,13 @@ private fun PrinterOptionsCard(
 
             Text(
                 text = stringResource(R.string.printer_cut_mode_label),
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
                 color = OnBackgroundLight
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 FilterChip(
                     selected = selectedCutMode == PrinterCutMode.NONE,

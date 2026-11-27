@@ -27,11 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.common.LojiaDialog
-import com.lojia.shiftreport.ui.common.LojiaDimens
 import com.lojia.shiftreport.ui.common.LojiaTextField
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.PasswordSetupResult
@@ -51,14 +48,14 @@ fun BackupPasswordCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp)
-            .depthCard(shape = RoundedCornerShape(LojiaDimens.CardRadius))
+            .padding(bottom = Dimens.SpacingLg)
+            .depthCard(shape = RoundedCornerShape(Dimens.CardCornerRadius))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(Dimens.CardPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -67,12 +64,12 @@ fun BackupPasswordCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     modifier = Modifier.weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(Dimens.DialogHeaderBadgeSize)
                             .clip(CircleShape)
                             .background(PrimaryIndigoLight.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
@@ -81,28 +78,28 @@ fun BackupPasswordCard(
                             imageVector = Icons.Outlined.Key,
                             contentDescription = null,
                             tint = PrimaryIndigoLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconAction)
                         )
                     }
                     Column {
                         Text(
                             text = stringResource(R.string.backup_pw_title),
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceLight
                         )
                         Text(
                             text = stringResource(R.string.backup_pw_card_desc),
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondaryLight
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
                     color = if (hasBackupPassword) SuccessContainer else WarningContainer
                 ) {
                     Text(
@@ -110,11 +107,11 @@ fun BackupPasswordCard(
                             if (hasBackupPassword) R.string.backup_pw_status_set
                             else R.string.backup_pw_status_not_set
                         ),
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (hasBackupPassword) SuccessTextDark else WarningText,
                         modifier = Modifier
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
                             .testTag("badge_backup_password_status")
                     )
                 }
@@ -132,21 +129,22 @@ fun BackupPasswordCard(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = Dimens.MinTouchTarget)
                     .depthRaisedButton(cornerRadius = Dimens.RadiusMd)
                     .testTag("btn_backup_password_manage")
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Lock,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(Dimens.IconSm)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                 Text(
                     text = stringResource(
                         if (hasBackupPassword) R.string.backup_pw_action_change
                         else R.string.backup_pw_action_set
                     ),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -191,15 +189,15 @@ fun BackupPasswordSetupDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
@@ -208,7 +206,7 @@ fun BackupPasswordSetupDialog(
                         imageVector = Icons.Outlined.Key,
                         contentDescription = null,
                         tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                 }
                 Text(
@@ -216,8 +214,8 @@ fun BackupPasswordSetupDialog(
                         if (isChange) R.string.backup_pw_dialog_change_title
                         else R.string.backup_pw_dialog_set_title
                     ),
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
                     color = OnSurfaceLight
                 )
             }
@@ -232,21 +230,20 @@ fun BackupPasswordSetupDialog(
                     )
             ) {
                 Row(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(Dimens.SpacingMd),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.Top
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.WarningAmber,
                         contentDescription = null,
                         tint = WarningText,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(Dimens.IconMd)
                     )
                     Text(
                         text = stringResource(R.string.backup_pw_no_recovery_warning),
-                        fontSize = 12.sp,
-                        color = WarningText,
-                        lineHeight = 16.sp
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = WarningText
                     )
                 }
             }
@@ -254,9 +251,8 @@ fun BackupPasswordSetupDialog(
             if (isChange) {
                 Text(
                     text = stringResource(R.string.backup_pw_older_backups_notice),
-                    fontSize = 12.sp,
-                    color = TextSecondaryLight,
-                    lineHeight = 16.sp
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondaryLight
                 )
             }
 
@@ -343,7 +339,7 @@ fun BackupPasswordSetupDialog(
             if (!errorMessage.isNullOrEmpty()) {
                 Text(
                     text = errorMessage!!,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = ErrorRedLight,
                     fontWeight = FontWeight.Medium
                 )
@@ -419,9 +415,9 @@ fun BackupPasswordSetupDialog(
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(Dimens.ProgressIndicatorSmSize),
                             color = PureWhite,
-                            strokeWidth = 2.dp
+                            strokeWidth = Dimens.ProgressStrokeWidth
                         )
                     } else {
                         Text(stringResource(R.string.backup_pw_save_button), fontWeight = FontWeight.Bold)
@@ -456,7 +452,7 @@ fun BackupPasswordSetupDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -479,11 +475,11 @@ fun BackupPasswordRequiredDialog(
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(Dimens.PinDialogIconSize)
                     .clip(CircleShape)
                     .background(WarningContainer),
                 contentAlignment = Alignment.Center
@@ -492,20 +488,19 @@ fun BackupPasswordRequiredDialog(
                     imageVector = Icons.Outlined.Lock,
                     contentDescription = null,
                     tint = WarningText,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(Dimens.IconLg)
                 )
             }
             Text(
                 text = stringResource(R.string.backup_pw_set_first_title),
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
                 color = OnSurfaceLight
             )
             Text(
                 text = stringResource(R.string.backup_pw_set_first_message),
-                fontSize = 13.sp,
-                color = TextSecondaryLight,
-                lineHeight = 18.sp
+                style = MaterialTheme.typography.titleMedium,
+                color = TextSecondaryLight
             )
 
             val confirmAction = @Composable {
@@ -549,7 +544,7 @@ fun BackupPasswordRequiredDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -584,15 +579,15 @@ fun BackupRestorePasswordDialog(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(Dimens.DialogHeaderBadgeSize)
                         .clip(CircleShape)
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
@@ -601,31 +596,30 @@ fun BackupRestorePasswordDialog(
                         imageVector = Icons.Outlined.Lock,
                         contentDescription = null,
                         tint = PrimaryIndigoLight,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                 }
                 Text(
                     text = stringResource(R.string.backup_pw_restore_title),
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
                     color = OnSurfaceLight
                 )
             }
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Text(
                     text = stringResource(R.string.backup_pw_restore_prompt),
-                    fontSize = 13.sp,
-                    color = TextSecondaryLight,
-                    lineHeight = 18.sp
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextSecondaryLight
                 )
                 if (!fileName.isNullOrBlank()) {
                     Text(
                         text = fileName,
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryIndigoLight
                     )
@@ -671,7 +665,7 @@ fun BackupRestorePasswordDialog(
                 if (!errorMessage.isNullOrBlank()) {
                     Text(
                         text = errorMessage,
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = ErrorRedLight,
                         fontWeight = FontWeight.Medium
                     )
@@ -705,9 +699,9 @@ fun BackupRestorePasswordDialog(
                 ) {
                     if (isRestoring) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(Dimens.ProgressIndicatorSmSize),
                             color = PureWhite,
-                            strokeWidth = 2.dp
+                            strokeWidth = Dimens.ProgressStrokeWidth
                         )
                     } else {
                         Text(
@@ -746,7 +740,7 @@ fun BackupRestorePasswordDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
+                    .padding(top = Dimens.SpacingXs),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

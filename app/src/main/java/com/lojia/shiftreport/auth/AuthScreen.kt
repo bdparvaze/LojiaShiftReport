@@ -39,8 +39,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.data.AppDatabase
@@ -204,7 +202,7 @@ fun AuthScreenLoginTab(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = Dimens.SpacingXs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Operator Username Field
@@ -219,7 +217,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = usernameLabel,
                     fontFamily = FontFamily.Default,
-                    fontSize = 13.sp
+                    fontSize = DepthTypeTokens.AuthFieldLabelSize
                 )
             },
             contentDescription = usernameLabel,
@@ -250,7 +248,7 @@ fun AuthScreenLoginTab(
             textStyle = TextStyle(
                 color = charcoalText,
                 fontFamily = FontFamily.Default,
-                fontSize = 14.sp,
+                fontSize = DepthTypeTokens.AuthFieldInputSize,
                 fontWeight = FontWeight.Normal
             ),
             modifier = Modifier
@@ -258,7 +256,7 @@ fun AuthScreenLoginTab(
                 .testTag("etLoginUser")
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
         // Password Field with Eye Toggle
         val passwordLabel = stringResource(R.string.auth_password)
@@ -272,7 +270,7 @@ fun AuthScreenLoginTab(
                 Text(
                     text = passwordLabel,
                     fontFamily = FontFamily.Default,
-                    fontSize = 13.sp
+                    fontSize = DepthTypeTokens.AuthFieldLabelSize
                 )
             },
             contentDescription = passwordLabel,
@@ -300,7 +298,7 @@ fun AuthScreenLoginTab(
                         imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = stringResource(if (isPasswordVisible) R.string.cd_hide_password else R.string.cd_show_password),
                         tint = mediumGray,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(Dimens.IconAction)
                     )
                 }
             },
@@ -317,7 +315,7 @@ fun AuthScreenLoginTab(
             textStyle = TextStyle(
                 color = charcoalText,
                 fontFamily = FontFamily.Default,
-                fontSize = 14.sp,
+                fontSize = DepthTypeTokens.AuthFieldInputSize,
                 fontWeight = FontWeight.Normal
             ),
             modifier = Modifier
@@ -325,7 +323,7 @@ fun AuthScreenLoginTab(
                 .testTag("etLoginPass")
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(Dimens.AuthFieldGap))
 
         // Remember Me & Forgot Password Row
         Row(
@@ -351,7 +349,7 @@ fun AuthScreenLoginTab(
                             }
                         }
                     }
-                    .padding(end = 8.dp, top = 6.dp, bottom = 6.dp)
+                    .padding(end = Dimens.SpacingSm, top = Dimens.AuthCompactGap, bottom = Dimens.AuthCompactGap)
                     .testTag("cbRemember")
             ) {
                 Box(
@@ -371,11 +369,11 @@ fun AuthScreenLoginTab(
                             imageVector = Icons.Default.Check,
                             contentDescription = stringResource(R.string.auth_remember_me_selected_cd),
                             tint = PureWhite,
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(Dimens.AuthCheckIconSize)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                 Text(
                     text = stringResource(R.string.auth_remember_me),
                     fontFamily = FontFamily.Default,
@@ -390,7 +388,7 @@ fun AuthScreenLoginTab(
             TextButton(
                 onClick = onForgotPasswordClick,
                 modifier = Modifier.defaultMinSize(minHeight = Dimens.MinTouchTarget),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                contentPadding = PaddingValues(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingXs)
             ) {
                 Text(
                     text = stringResource(R.string.auth_forgot_password),
@@ -403,7 +401,7 @@ fun AuthScreenLoginTab(
         }
 
         errorMessage?.let { msg ->
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingSm))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -417,11 +415,11 @@ fun AuthScreenLoginTab(
                 Text(
                     text = msg,
                     fontFamily = FontFamily.Default,
-                    fontSize = 12.sp,
+                    fontSize = DepthTypeTokens.AuthErrorBannerTextSize,
                     color = errorRed,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                     textAlign = TextAlign.Center
                 )
             }
@@ -453,9 +451,9 @@ fun AuthScreenLoginTab(
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(Dimens.IconAction),
                     color = PureWhite,
-                    strokeWidth = 2.dp
+                    strokeWidth = Dimens.ProgressStrokeWidth
                 )
             } else {
                 Text(
@@ -467,7 +465,7 @@ fun AuthScreenLoginTab(
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(Dimens.AuthSectionGap))
 
         // Register link
         Row(
@@ -486,7 +484,7 @@ fun AuthScreenLoginTab(
                     .defaultMinSize(minHeight = Dimens.MinTouchTarget)
                     .clip(RoundedCornerShape(Dimens.RadiusSm))
                     .clickable { onRegisterClick() }
-                    .padding(horizontal = 6.dp),
+                    .padding(horizontal = Dimens.AuthCompactGap),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.AppDatabase
 import com.lojia.shiftreport.data.Employee
@@ -431,7 +430,7 @@ private fun EmployeeStatCard(
 ) {
     Box(
         modifier = modifier
-            .defaultMinSize(minHeight = 80.dp)
+            .defaultMinSize(minHeight = Dimens.EmployeeStatCardMinHeight)
             .cardRise(index)
             .depthCard(cornerRadius = Dimens.CardCornerRadius)
     ) {

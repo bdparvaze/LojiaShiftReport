@@ -23,8 +23,6 @@ import androidx.compose.ui.res.stringResource
 import com.lojia.shiftreport.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.DateTimeFormatUtils
 import com.lojia.shiftreport.util.calculateInSampleSize
@@ -48,16 +46,16 @@ fun DocumentScannerHeaderCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
+                .padding(Dimens.SpacingLg)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .size(Dimens.ButtonHeightPrimary)
+                        .clip(RoundedCornerShape(Dimens.RadiusLg))
                         .background(PrimaryContainerLight),
                     contentAlignment = Alignment.Center
                 ) {
@@ -65,7 +63,7 @@ fun DocumentScannerHeaderCard(
                         imageVector = Icons.Outlined.DocumentScanner,
                         contentDescription = null,
                         tint = PrimaryIndigoDark,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(Dimens.IconLg)
                     )
                 }
 
@@ -81,9 +79,8 @@ fun DocumentScannerHeaderCard(
                     )
                     Text(
                         text = stringResource(R.string.doc_scanner_desc),
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = TextSecondaryLight,
-                            fontSize = 12.sp
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = TextSecondaryLight
                         ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -91,11 +88,11 @@ fun DocumentScannerHeaderCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
             ) {
                 Button(
                     onClick = onScanClick,
@@ -114,13 +111,13 @@ fun DocumentScannerHeaderCard(
                     Icon(
                         imageVector = Icons.Outlined.DocumentScanner,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.btn_scan),
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -146,13 +143,13 @@ fun DocumentScannerHeaderCard(
                     Icon(
                         imageVector = Icons.Outlined.CameraAlt,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.btn_camera),
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.5.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -179,14 +176,14 @@ fun DocumentScannerHeaderCard(
                         imageVector = Icons.Outlined.PhotoLibrary,
                         contentDescription = null,
                         tint = PrimaryIndigoDark,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(Dimens.IconSm)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Text(
                         text = stringResource(R.string.btn_gallery),
+                        style = MaterialTheme.typography.labelLarge,
                         color = PrimaryIndigoDark,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.5.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -262,22 +259,22 @@ fun ScannedDocumentItemCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(Dimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isSelectionMode) {
                 Checkbox(
                     checked = isSelected,
                     onCheckedChange = { onToggleSelect() },
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = Dimens.SpacingSm)
                 )
             }
 
             // Thumbnail or Document Icon
             Box(
                 modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .size(Dimens.BadgeMinWidth)
+                    .clip(RoundedCornerShape(Dimens.RadiusKpiCard))
                     .background(SurfaceVariantLight),
                 contentAlignment = Alignment.Center
             ) {
@@ -293,12 +290,12 @@ fun ScannedDocumentItemCard(
                         imageVector = Icons.Outlined.PictureAsPdf,
                         contentDescription = null,
                         tint = ErrorRedLight,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(Dimens.IconLg)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingMd))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -310,13 +307,12 @@ fun ScannedDocumentItemCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                 val pageStr = if (document.pageCount == 1) stringResource(R.string.doc_page_count_single, document.pageCount) else stringResource(R.string.doc_page_count_plural, document.pageCount)
                 Text(
                     text = "$sizeStr • $pageStr • $dateStr",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondaryLight,
-                        fontSize = 11.sp
+                        color = TextSecondaryLight
                     ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -415,16 +411,16 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 40.dp),
+            .padding(vertical = Dimens.SpacingHuge),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(Dimens.EmptyStateIconBgSize)
                     .clip(CircleShape)
                     .background(PrimaryContainerLight),
                 contentAlignment = Alignment.Center
@@ -433,7 +429,7 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
                     imageVector = Icons.Outlined.DocumentScanner,
                     contentDescription = null,
                     tint = PrimaryIndigo,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(Dimens.EmptyStateIconSize)
                 )
             }
             Text(
@@ -445,14 +441,13 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
             )
             Text(
                 text = stringResource(R.string.doc_empty_import_desc),
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondaryLight,
-                    fontSize = 12.sp
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = TextSecondaryLight
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
             Button(
                 onClick = onScanClick,
                 elevation = null,
@@ -468,13 +463,13 @@ fun DocumentScannerEmptyState(onScanClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.Outlined.DocumentScanner,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(Dimens.IconSm)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                 Text(
                     text = stringResource(R.string.btn_scan_document),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

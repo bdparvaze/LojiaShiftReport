@@ -91,12 +91,6 @@ import androidx.compose.ui.text.style.TextOverflow
 
 
 import androidx.compose.ui.text.style.TextAlign
-
-
-import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.window.Dialog
@@ -169,13 +163,13 @@ fun SecureDeleteModal(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingLg),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Warning icon in circle
                     Box(
                         modifier = Modifier
-                            .size(56.dp)
+                            .size(Dimens.LogoTileSize)
                             .clip(CircleShape)
                             .background(ErrorContainer),
                         contentAlignment = Alignment.Center
@@ -184,77 +178,75 @@ fun SecureDeleteModal(
                             imageVector = Icons.Outlined.DeleteForever,
                             contentDescription = null,
                             tint = ErrorRedLight,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(Dimens.IconLg)
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingMd))
                     Text(
                         text = stringResource(R.string.delete_shift_report_title),
-                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = OnSurfaceLight,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                     Text(
                         text = reportSubtitle,
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = PrimaryIndigoDark,
                         textAlign = TextAlign.Center
                     )
                 }
 
-                HorizontalDivider(thickness = 0.5.dp, color = OutlineVariantLight)
+                HorizontalDivider(thickness = Dimens.RowDividerWidth, color = OutlineVariantLight)
 
                 // Body block
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingLg)
                 ) {
                     // Warning banner
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusLg),
                         color = ErrorContainer.copy(alpha = 0.6f),
-                        border = BorderStroke(1.dp, ErrorRedLight.copy(alpha = 0.25f))
+                        border = BorderStroke(Dimens.FlatBorderWidth, ErrorRedLight.copy(alpha = 0.25f))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
+                                .padding(Dimens.CardPadding),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Info,
                                 contentDescription = null,
                                 tint = ErrorRedLight,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(Dimens.IconSm)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                             Text(
                                 text = stringResource(R.string.delete_shift_report_confirm_desc),
-                                fontSize = 12.sp,
-                                color = OnSurfaceLight,
-                                lineHeight = 16.sp
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = OnSurfaceLight
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
                     Text(
                         text = stringResource(R.string.security_question_label),
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium,
-                        color = TextHintColor,
-                        letterSpacing = 0.5.sp
+                        color = TextHintColor
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
                     // Question
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusMd),
                         color = SurfaceVariantLight
                     ) {
                         Text(
@@ -263,26 +255,26 @@ fun SecureDeleteModal(
                             } else {
                                 stringResource(R.string.auth_recovery_unavailable)
                             },
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             color = PrimaryIndigoDark,
-                            modifier = Modifier.padding(12.dp)
+                            modifier = Modifier.padding(Dimens.CardPadding)
                         )
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingLg))
 
                     // Password field
                     LojiaTextField(
                         value = passwordInput,
                         onValueChange = { passwordInput = it; errorMsg = null },
-                        label = { Text(stringResource(R.string.password), fontSize = 12.sp) },
-                        placeholder = { Text(stringResource(R.string.auth_ph_password), fontSize = 12.sp) },
+                        label = { Text(stringResource(R.string.password), style = MaterialTheme.typography.bodyMedium) },
+                        placeholder = { Text(stringResource(R.string.auth_ph_password), style = MaterialTheme.typography.bodyMedium) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Lock,
                                 contentDescription = null,
                                 tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         visualTransformation = PasswordVisualTransformation(),
@@ -293,20 +285,20 @@ fun SecureDeleteModal(
                             .testTag("delete_auth_password_input"),
                         shape = RoundedCornerShape(Dimens.RadiusMd)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                     // Security answer field
                     LojiaTextField(
                         value = answerInput,
                         onValueChange = { answerInput = it; errorMsg = null },
-                        label = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp) },
-                        placeholder = { Text(stringResource(R.string.title_security_answer), fontSize = 12.sp) },
+                        label = { Text(stringResource(R.string.title_security_answer), style = MaterialTheme.typography.bodyMedium) },
+                        placeholder = { Text(stringResource(R.string.title_security_answer), style = MaterialTheme.typography.bodyMedium) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.HelpOutline,
                                 contentDescription = null,
                                 tint = OnSurfaceVariantLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(Dimens.IconField)
                             )
                         },
                         singleLine = true,
@@ -318,18 +310,18 @@ fun SecureDeleteModal(
 
                     // Error message (if any)
                     if (errorMsg != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Dimens.SpacingSm))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Outlined.ErrorOutline,
                                 contentDescription = null,
                                 tint = ErrorRedLight,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(Dimens.IconXs)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
                                 text = errorMsg!!,
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = ErrorRedLight,
                                 maxLines = 2
                             )
@@ -341,8 +333,8 @@ fun SecureDeleteModal(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                 ) {
                     // Cancel — raised secondary
                     OutlinedButton(
@@ -364,7 +356,7 @@ fun SecureDeleteModal(
                     ) {
                         Text(
                             text = stringResource(R.string.cancel),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = PrimaryIndigoLight
                         )
@@ -425,12 +417,12 @@ fun SecureDeleteModal(
                             imageVector = Icons.Outlined.DeleteOutline,
                             contentDescription = null,
                             tint = PureWhite,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(Dimens.IconSm)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                         Text(
                             text = stringResource(R.string.delete),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = PureWhite
                         )
@@ -473,7 +465,7 @@ fun SolidCard(
     }
 
     Column(
-        modifier = finalModifier.padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier = finalModifier.padding(horizontal = Dimens.CardPadding, vertical = Dimens.SpacingSm),
         content = content
     )
 }
@@ -494,30 +486,30 @@ fun MetricStatCard(
             .fillMaxWidth()
             .depthCard(shape = cardShape),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.SpacingNone),
         border = null,
         shape = cardShape
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
+                .padding(horizontal = Dimens.CardPadding, vertical = Dimens.SpacingSm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .depthInset(shape = RoundedCornerShape(10.dp)),
+                    .size(Dimens.TextFieldHeightCompact)
+                    .depthInset(shape = RoundedCornerShape(Dimens.RadiusKpiCard)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(Dimens.IconAction)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingMd))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -592,12 +584,12 @@ fun FormInputField(
                 { Icon(leadingIcon, contentDescription = null, tint = PrimaryIndigo) }
             } else null,
             trailingIcon = if (suffixText != null) {
-                { Text(suffixText, style = MaterialTheme.typography.labelLarge, color = TextSecondaryLight, modifier = Modifier.padding(end = 12.dp)) }
+                { Text(suffixText, style = MaterialTheme.typography.labelLarge, color = TextSecondaryLight, modifier = Modifier.padding(end = Dimens.SpacingMd)) }
             } else null,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             isError = isError,
             singleLine = true,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(Dimens.RadiusLg),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -611,7 +603,7 @@ fun FormInputField(
                 text = errorMessage,
                 color = AccentRose,
                 style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(start = 12.dp, top = 4.dp)
+                modifier = Modifier.padding(start = Dimens.SpacingMd, top = Dimens.SpacingXs)
             )
         }
     }
@@ -626,7 +618,7 @@ fun SectionTitle(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = Dimens.SpacingSm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -636,9 +628,9 @@ fun SectionTitle(
                     imageVector = icon,
                     contentDescription = null,
                     tint = PrimaryIndigo,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(Dimens.IconAction)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
             }
             Text(
                 text = title,

@@ -33,8 +33,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.ui.theme.*
 import kotlin.math.hypot
@@ -93,7 +91,7 @@ fun DocumentCropCanvasView(
                 title = {
                     Text(
                         text = stringResource(R.string.doc_crop_adjust_title),
-                        fontSize = 17.sp,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
@@ -115,7 +113,7 @@ fun DocumentCropCanvasView(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(Dimens.SpacingLg)
                     .onGloballyPositioned { layoutCoordinates ->
                         val containerSize = Size(
                             layoutCoordinates.size.width.toFloat(),
@@ -170,7 +168,7 @@ fun DocumentCropCanvasView(
                             .pointerInput(displaySize, displayOffset) {
                                 detectDragGestures(
                                     onDragStart = { touch ->
-                                        val handleRadius = 36.dp.toPx()
+                                        val handleRadius = Dimens.ScannerCropHandleHitRadius.toPx()
                                         activeHandle = when {
                                             hypot(touch.x - uiTL.x, touch.y - uiTL.y) < handleRadius -> HandleType.CORNER_TL
                                             hypot(touch.x - uiTR.x, touch.y - uiTR.y) < handleRadius -> HandleType.CORNER_TR
@@ -246,7 +244,7 @@ fun DocumentCropCanvasView(
                         drawPath(
                             path = polyPath,
                             color = ScannerAccentGreen,
-                            style = Stroke(width = 2.5.dp.toPx())
+                            style = Stroke(width = Dimens.CropperStrokeWidth.toPx())
                         )
 
                         // Handles
@@ -259,12 +257,12 @@ fun DocumentCropCanvasView(
 
                         for ((pos, type) in handles) {
                             val isCurrent = activeHandle == type
-                            val radius = if (isCurrent) 16.dp.toPx() else 12.dp.toPx()
+                            val radius = if (isCurrent) Dimens.ScannerCropHandleActiveRadius.toPx() else Dimens.ScannerCropHandleIdleRadius.toPx()
 
                             drawCircle(color = Color.White, radius = radius, center = pos)
                             drawCircle(
                                 color = if (isCurrent) PosCashGreen else ScannerAccentGreen,
-                                radius = radius - 3.5.dp.toPx(),
+                                radius = radius - Dimens.ScannerCropHandleInnerInset.toPx(),
                                 center = pos
                             )
                         }
@@ -277,7 +275,7 @@ fun DocumentCropCanvasView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(ScannerDarkBg)
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingMd),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -296,16 +294,21 @@ fun DocumentCropCanvasView(
                         }
                     },
                     border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color.White.copy(alpha = 0.3f))),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
+                    modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.AutoAwesome,
                         contentDescription = null,
                         tint = ScannerAccentGreen,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(Dimens.IconMd)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.doc_btn_auto_detect), fontSize = 13.sp, color = Color.White)
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
+                    Text(
+                        text = stringResource(R.string.doc_btn_auto_detect),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White
+                    )
                 }
 
                 // Full Screen / Select All
@@ -316,9 +319,13 @@ fun DocumentCropCanvasView(
                         uiBR = Offset(displayOffset.x + displaySize.width, displayOffset.y + displaySize.height)
                         uiBL = Offset(displayOffset.x, displayOffset.y + displaySize.height)
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = OutlineLight)
+                    colors = ButtonDefaults.textButtonColors(contentColor = OutlineLight),
+                    modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                 ) {
-                    Text(stringResource(R.string.doc_select_all), fontSize = 13.sp)
+                    Text(
+                        text = stringResource(R.string.doc_select_all),
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
 
                 // Next / Confirm Button
@@ -348,15 +355,21 @@ fun DocumentCropCanvasView(
                         onConfirmCrop(finalCorners)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ScannerAccentGreen),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(Dimens.RadiusLg),
+                    modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)
                 ) {
-                    Text(stringResource(R.string.btn_next), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.btn_next),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                     Icon(
                         imageVector = Icons.Outlined.Check,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(Dimens.IconMd)
                     )
                 }
             }

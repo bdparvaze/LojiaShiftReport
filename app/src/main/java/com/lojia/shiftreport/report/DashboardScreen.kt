@@ -63,13 +63,6 @@ import androidx.compose.ui.platform.testTag
 
 
 import androidx.compose.ui.text.font.FontWeight
-
-
-import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.ui.unit.sp
-
 import com.lojia.shiftreport.data.AppLanguage
 
 
@@ -109,12 +102,12 @@ fun DashboardScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Dimens.SpacingLg),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
             item {
                 val context = LocalContext.current
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -123,8 +116,8 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .size(Dimens.IconTile)
+                                .clip(RoundedCornerShape(Dimens.RadiusMd))
                                 .background(PrimaryBlue.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -132,23 +125,21 @@ fun DashboardScreen(
                                 imageVector = Icons.Default.Analytics,
                                 contentDescription = null,
                                 tint = PrimaryBlue,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(Dimens.IconAction)
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                         Column {
                             Text(
                                 text = stringResource(R.string.analytics_overview),
-                                style = MaterialTheme.typography.titleMedium.copy(
+                                style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 17.sp,
                                     color = OnBackgroundLight
                                 )
                             )
                             Text(
                                 text = stringResource(R.string.dashboard_analytics_subtitle),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.sp,
                                     color = TextSecondaryLight
                                 )
                             )
@@ -173,17 +164,20 @@ fun DashboardScreen(
                                     Toast.makeText(context, context.getString(R.string.export_failed_msg, result.errorMessage), Toast.LENGTH_LONG).show()
                                 }
                             },
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = PureWhite,
                                 contentColor = PrimaryBlue
                             ),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
-                            modifier = Modifier.wrapContentWidth().testTag("export_analytics_pdf_btn")
+                            border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineLight),
+                            modifier = Modifier
+                                .wrapContentWidth()
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .testTag("export_analytics_pdf_btn")
                         ) {
-                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(Dimens.IconSm))
+                            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.export_pdf),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
@@ -198,28 +192,29 @@ fun DashboardScreen(
             // View Segmented Switcher (Monthly Sales Trends vs Shift & Payment Overview)
             item {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(Dimens.RadiusSegmentTrack),
                     color = SurfaceVariantLight,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
+                    border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineLight),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(4.dp)
+                            .padding(Dimens.SpacingXs)
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusSegmentThumb),
                             color = if (dashboardViewMode == 0) PureWhite else Color.Transparent,
-                            border = if (dashboardViewMode == 0) androidx.compose.foundation.BorderStroke(1.dp, OutlineLight) else null,
-                            shadowElevation = if (dashboardViewMode == 0) 1.dp else 0.dp,
+                            border = if (dashboardViewMode == 0) androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineLight) else null,
+                            shadowElevation = if (dashboardViewMode == 0) Dimens.FlatBorderWidth else Dimens.SpacingNone,
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .clip(RoundedCornerShape(Dimens.RadiusSegmentThumb))
                                 .clickable { dashboardViewMode = 0 }
                         ) {
                             Row(
-                                modifier = Modifier.padding(vertical = 9.dp),
+                                modifier = Modifier.padding(vertical = Dimens.SpacingSm),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -227,32 +222,33 @@ fun DashboardScreen(
                                     imageVector = Icons.Default.Timeline,
                                     contentDescription = null,
                                     tint = if (dashboardViewMode == 0) PrimaryBlue else TextSecondaryLight,
-                                    modifier = Modifier.size(17.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
-                                Spacer(modifier = Modifier.width(7.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = stringResource(R.string.monthly_trends),
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (dashboardViewMode == 0) FontWeight.Bold else FontWeight.Medium,
                                     color = if (dashboardViewMode == 0) PrimaryBlue else TextSecondaryLight
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(Dimens.SpacingXs))
 
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusSegmentThumb),
                             color = if (dashboardViewMode == 1) PureWhite else Color.Transparent,
-                            border = if (dashboardViewMode == 1) androidx.compose.foundation.BorderStroke(1.dp, OutlineLight) else null,
-                            shadowElevation = if (dashboardViewMode == 1) 1.dp else 0.dp,
+                            border = if (dashboardViewMode == 1) androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineLight) else null,
+                            shadowElevation = if (dashboardViewMode == 1) Dimens.FlatBorderWidth else Dimens.SpacingNone,
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
+                                .heightIn(min = Dimens.MinTouchTarget)
+                                .clip(RoundedCornerShape(Dimens.RadiusSegmentThumb))
                                 .clickable { dashboardViewMode = 1 }
                         ) {
                             Row(
-                                modifier = Modifier.padding(vertical = 9.dp),
+                                modifier = Modifier.padding(vertical = Dimens.SpacingSm),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -260,12 +256,12 @@ fun DashboardScreen(
                                     imageVector = Icons.Default.PieChart,
                                     contentDescription = null,
                                     tint = if (dashboardViewMode == 1) PrimaryBlue else TextSecondaryLight,
-                                    modifier = Modifier.size(17.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
-                                Spacer(modifier = Modifier.width(7.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                                 Text(
                                     text = stringResource(R.string.payment_breakdown),
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (dashboardViewMode == 1) FontWeight.Bold else FontWeight.Medium,
                                     color = if (dashboardViewMode == 1) PrimaryBlue else TextSecondaryLight
                                 )
@@ -290,7 +286,7 @@ fun DashboardScreen(
                     val dashDigits = MoneyFormat.minorUnitDigits(currency)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                     ) {
                         MonthlyKpiCard(
                             title = stringResource(R.string.total_revenue),
@@ -316,7 +312,7 @@ fun DashboardScreen(
                     val dashDigits = MoneyFormat.minorUnitDigits(currency)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                     ) {
                         MonthlyKpiCard(
                             title = stringResource(R.string.total_expenses),
@@ -340,16 +336,16 @@ fun DashboardScreen(
                 // Payment Method Breakdown Progress Bars
                 item {
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
                         color = PureWhite,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
+                        border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineLight),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.CardPadding)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(30.dp)
+                                        .size(Dimens.IconTile)
                                         .clip(CircleShape)
                                         .background(PrimaryBlue.copy(alpha = 0.10f)),
                                     contentAlignment = Alignment.Center
@@ -358,20 +354,19 @@ fun DashboardScreen(
                                         imageVector = Icons.Default.PieChart,
                                         contentDescription = null,
                                         tint = PrimaryBlue,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(Dimens.IconSm)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                                 Text(
                                     text = stringResource(R.string.payment_distribution),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.5.sp,
                                         color = OnBackgroundLight
                                     )
                                 )
                             }
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                             val sumPayments = (totalCash + totalMada + totalWallet).coerceAtLeast(1L)
                             val cashPct = ((totalCash.toDouble() / sumPayments.toDouble()) * 100).toInt()
@@ -386,7 +381,7 @@ fun DashboardScreen(
                                 currency = currency,
                                 color = PosCashGreenFill
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                             // Mada Bar
                             PaymentProgressBar(
@@ -396,7 +391,7 @@ fun DashboardScreen(
                                 currency = currency,
                                 color = PosCardBlue
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                             // Digital Wallet Bar
                             PaymentProgressBar(
@@ -413,16 +408,16 @@ fun DashboardScreen(
                 // Shift Comparison Card (Morning vs Evening)
                 item {
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(Dimens.CardCornerRadius),
                         color = PureWhite,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, OutlineLight),
+                        border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineLight),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.CardPadding)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(30.dp)
+                                        .size(Dimens.IconTile)
                                         .clip(CircleShape)
                                         .background(PrimaryBlue.copy(alpha = 0.10f)),
                                     contentAlignment = Alignment.Center
@@ -431,20 +426,19 @@ fun DashboardScreen(
                                         imageVector = Icons.Default.CompareArrows,
                                         contentDescription = null,
                                         tint = PrimaryBlue,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(Dimens.IconSm)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
                                 Text(
                                     text = stringResource(R.string.shift_comparison),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.5.sp,
                                         color = OnBackgroundLight
                                     )
                                 )
                             }
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                             val morningShifts = shiftReports.filter { it.shift.equals("Morning", ignoreCase = true) }
                             val eveningShifts = shiftReports.filter { it.shift.equals("Evening", ignoreCase = true) }
@@ -454,15 +448,15 @@ fun DashboardScreen(
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(Dimens.RadiusLg),
                                     color = SurfaceVariantLight,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariantLight),
+                                    border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineVariantLight),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
+                                    Column(modifier = Modifier.padding(Dimens.SpacingMd)) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -470,28 +464,28 @@ fun DashboardScreen(
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.shift_morning),
-                                                fontSize = 12.5.sp,
+                                                style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = OnBackgroundLight
                                             )
                                             Box(
                                                 modifier = Modifier
-                                                    .size(6.dp)
+                                                    .size(Dimens.StatusDotSize)
                                                     .clip(CircleShape)
                                                     .background(PrimaryBlue)
                                             )
                                         }
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                                         Text(
                                             text = stringResource(R.string.shifts_count, morningShifts.size),
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = TextSecondaryLight
                                         )
-                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                                         val shiftDigits = MoneyFormat.minorUnitDigits(currency)
                                         Text(
                                             text = "${MoneyFormat.toPlainDecimal(morningTotal, shiftDigits)} $currency",
-                                            fontSize = 15.sp,
+                                            style = MaterialTheme.typography.titleLarge.asMoneyTabular(),
                                             fontWeight = FontWeight.Bold,
                                             color = PrimaryBlue
                                         )
@@ -499,12 +493,12 @@ fun DashboardScreen(
                                 }
 
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(Dimens.RadiusLg),
                                     color = SurfaceVariantLight,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariantLight),
+                                    border = androidx.compose.foundation.BorderStroke(Dimens.FlatBorderWidth, OutlineVariantLight),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
+                                    Column(modifier = Modifier.padding(Dimens.SpacingMd)) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -512,28 +506,28 @@ fun DashboardScreen(
                                         ) {
                                             Text(
                                                 text = stringResource(R.string.shift_evening),
-                                                fontSize = 12.5.sp,
+                                                style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = OnBackgroundLight
                                             )
                                             Box(
                                                 modifier = Modifier
-                                                    .size(6.dp)
+                                                    .size(Dimens.StatusDotSize)
                                                     .clip(CircleShape)
                                                     .background(ChartAmber)
                                             )
                                         }
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                                         Text(
                                             text = stringResource(R.string.shifts_count, eveningShifts.size),
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = TextSecondaryLight
                                         )
-                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                                         val shiftDigits = MoneyFormat.minorUnitDigits(currency)
                                         Text(
                                             text = "${MoneyFormat.toPlainDecimal(eveningTotal, shiftDigits)} $currency",
-                                            fontSize = 15.sp,
+                                            style = MaterialTheme.typography.titleLarge.asMoneyTabular(),
                                             fontWeight = FontWeight.Bold,
                                             color = WarningOrange
                                         )
@@ -546,7 +540,7 @@ fun DashboardScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXl))
             }
         }
     }
@@ -569,15 +563,14 @@ fun PaymentProgressBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .size(Dimens.LiveDotSize)
                         .clip(CircleShape)
                         .background(color)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpacingXs))
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 12.5.sp,
                         fontWeight = FontWeight.Medium,
                         color = OnBackgroundLight
                     )
@@ -587,22 +580,21 @@ fun PaymentProgressBar(
             val amountStr = MoneyFormat.toPlainDecimal(MoneyFormat.toMinorUnits(amount, barDigits), barDigits)
             Text(
                 text = "$amountStr $currency ($percent%)",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 12.5.sp,
+                style = MaterialTheme.typography.bodyMedium.asMoneyTabular().copy(
                     fontWeight = FontWeight.Bold,
                     color = OnBackgroundLight
                 )
             )
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpacingXs))
         LinearProgressIndicator(
             progress = { (percent / 100f).coerceIn(0f, 1f) },
             color = color,
             trackColor = SurfaceVariantLight,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(7.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .height(Dimens.ProgressBarHeight)
+                .clip(RoundedCornerShape(Dimens.RadiusXs))
         )
     }
 }

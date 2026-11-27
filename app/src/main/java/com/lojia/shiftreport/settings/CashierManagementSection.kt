@@ -27,8 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lojia.shiftreport.R
 import com.lojia.shiftreport.auth.AdminAuthDialog
 import com.lojia.shiftreport.data.Cashier
@@ -184,9 +182,9 @@ fun CashierManagementSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = LojiaDimens.ScreenPadding, vertical = 8.dp)
-                .padding(PaddingValues(bottom = 88.dp)),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
+                .padding(PaddingValues(bottom = Dimens.CashierListBottomClearance)),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
         ) {
             // =====================================================================
             // 1. KPI STRIP & HEADER
@@ -200,7 +198,7 @@ fun CashierManagementSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(Dimens.CardPadding)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -209,7 +207,7 @@ fun CashierManagementSection(
                     ) {
                         Text(
                             text = stringResource(R.string.team_overview),
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Medium,
                             color = OnSurfaceLight
                         )
@@ -221,25 +219,25 @@ fun CashierManagementSection(
                                 containerColor = Color.Transparent,
                                 contentColor = PureWhite
                             ),
-                            shape = RoundedCornerShape(LojiaDimens.InputRadius),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(Dimens.RadiusMd),
+                            contentPadding = PaddingValues(horizontal = Dimens.SpacingMd, vertical = Dimens.SpacingSm),
                             modifier = Modifier
                                 .heightIn(min = Dimens.MinTouchTarget)
-                                .depthRaisedButton(enabled = true, cornerRadius = LojiaDimens.InputRadius)
+                                .depthRaisedButton(enabled = true, cornerRadius = Dimens.RadiusMd)
                                 .testTag("btnAddCashier")
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.PersonAdd,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(Dimens.IconSm)
                                 )
                                 Text(
                                     text = stringResource(R.string.add_cashier_4),
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     color = PureWhite
                                 )
@@ -247,11 +245,11 @@ fun CashierManagementSection(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         KpiChip(
                             label = stringResource(R.string.total),
@@ -284,14 +282,14 @@ fun CashierManagementSection(
             // =====================================================================
             // 2. SEARCH & STATUS FILTERS ROW
             // =====================================================================
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
                 LojiaTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
                             text = stringResource(R.string.search_cashiers_placeholder),
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = TextHintColor
                         )
                     },
@@ -312,7 +310,7 @@ fun CashierManagementSection(
                                     imageVector = Icons.Outlined.Close,
                                     contentDescription = null,
                                     tint = OnSurfaceVariantLight,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(Dimens.IconMd)
                                 )
                             }
                         }
@@ -326,7 +324,7 @@ fun CashierManagementSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     StatusFilterChip(
@@ -356,7 +354,7 @@ fun CashierManagementSection(
             // 3. ACTIVE CASHIER LIST / EMPTY STATE
             // =====================================================================
             if (isLoading) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)) {
                     repeat(3) { CashierSkeletonCard() }
                 }
             } else if (selectedFilter != CashierStatusFilter.ARCHIVED) {
@@ -370,23 +368,23 @@ fun CashierManagementSection(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 32.dp, horizontal = 16.dp),
+                                .padding(vertical = Dimens.SpacingHuge, horizontal = Dimens.SpacingLg),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.People,
                                 contentDescription = null,
                                 tint = TextHintColor,
-                                modifier = Modifier.size(64.dp)
+                                modifier = Modifier.size(Dimens.EmptyStateIconBgSize)
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingMd))
                             Text(
                                 text = stringResource(R.string.no_cashiers_found_1),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = OnSurfaceLight
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                             Text(
                                 text = stringResource(R.string.cashier_empty_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
@@ -397,7 +395,7 @@ fun CashierManagementSection(
                 } else {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                     ) {
                         filteredActiveCashiers.forEachIndexed { index, cashier ->
                             CashierCard(
@@ -423,7 +421,7 @@ fun CashierManagementSection(
             // 4. EXPANDABLE ARCHIVED CASHIERS SECTION
             // =====================================================================
             if (filteredArchivedCashiers.isNotEmpty() || selectedFilter == CashierStatusFilter.ARCHIVED) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -436,17 +434,17 @@ fun CashierManagementSection(
                                 .fillMaxWidth()
                                 .heightIn(min = Dimens.MinTouchTarget)
                                 .clickable { isArchivedSectionExpanded = !isArchivedSectionExpanded }
-                                .padding(16.dp),
+                                .padding(Dimens.CardPadding),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(Dimens.DialogHeaderBadgeSize)
                                         .clip(CircleShape)
                                         .background(SurfaceVariantLight),
                                     contentAlignment = Alignment.Center
@@ -455,19 +453,19 @@ fun CashierManagementSection(
                                         imageVector = Icons.Outlined.Archive,
                                         contentDescription = null,
                                         tint = OnSurfaceVariantLight,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(Dimens.IconAction)
                                     )
                                 }
                                 Column {
                                     Text(
                                         text = "${stringResource(R.string.archived_cashiers_title)} (${filteredArchivedCashiers.size})",
-                                        fontSize = 14.sp,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.SemiBold,
                                         color = OnSurfaceLight
                                     )
                                     Text(
                                         text = stringResource(R.string.cashier_archived_audit_desc),
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = TextHintColor
                                     )
                                 }
@@ -485,15 +483,15 @@ fun CashierManagementSection(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    .padding(Dimens.SpacingMd),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSm)
                             ) {
                                 if (filteredArchivedCashiers.isEmpty()) {
                                     Text(
                                         text = stringResource(R.string.cashier_no_archived),
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = TextHintColor,
-                                        modifier = Modifier.padding(8.dp)
+                                        modifier = Modifier.padding(Dimens.SpacingSm)
                                     )
                                 } else {
                                     filteredArchivedCashiers.forEachIndexed { index, archivedCashier ->
@@ -660,7 +658,7 @@ fun CashierManagementSection(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(Dimens.PinDialogIconSize)
                             .clip(CircleShape)
                             .background(WarningContainer),
                         contentAlignment = Alignment.Center
@@ -669,14 +667,14 @@ fun CashierManagementSection(
                             imageVector = Icons.Outlined.History,
                             contentDescription = null,
                             tint = WarningOrange,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(Dimens.IconLg)
                         )
                     }
 
                     Text(
                         text = stringResource(R.string.cashier_cannot_delete_has_history_title),
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
                         textAlign = TextAlign.Center,
                         color = OnBackgroundLight,
                         modifier = Modifier.fillMaxWidth()
@@ -684,8 +682,7 @@ fun CashierManagementSection(
 
                     Text(
                         text = stringResource(R.string.cashier_cannot_delete_has_history_desc),
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         color = OnSurfaceVariantLight,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -763,7 +760,7 @@ fun CashierManagementSection(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(Dimens.PinDialogIconSize)
                             .clip(CircleShape)
                             .background(ErrorContainerLight),
                         contentAlignment = Alignment.Center
@@ -772,14 +769,14 @@ fun CashierManagementSection(
                             imageVector = Icons.Outlined.DeleteForever,
                             contentDescription = null,
                             tint = ErrorRedLight,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(Dimens.IconLg)
                         )
                     }
 
                     Text(
                         text = stringResource(R.string.delete_permanently_title),
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
                         textAlign = TextAlign.Center,
                         color = OnBackgroundLight,
                         modifier = Modifier.fillMaxWidth()
@@ -787,8 +784,7 @@ fun CashierManagementSection(
 
                     Text(
                         text = stringResource(R.string.delete_permanently_desc),
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         color = OnSurfaceVariantLight,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -800,7 +796,7 @@ fun CashierManagementSection(
                         placeholder = {
                             Text(
                                 stringResource(R.string.type_delete_to_confirm),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = TextHintColor
                             )
                         },
@@ -911,42 +907,42 @@ private fun CashierCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(Dimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Avatar Circle
             Box(
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(Dimens.AvatarBadgeSize)
                     .clip(CircleShape)
                     .background(if (isArchived) SurfaceVariantLight else PrimaryContainerLight),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initial,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (isArchived) OnSurfaceVariantLight else PrimaryIndigoLight
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingMd))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = cashier.name,
-                    fontSize = 15.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = if (isArchived) OnSurfaceVariantLight else OnSurfaceLight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingXs)
                 ) {
                     if (isArchived) {
                         CashierStatusChip(
@@ -979,33 +975,33 @@ private fun CashierCard(
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(Dimens.RadiusXs),
                         color = SurfaceVariantLight
                     ) {
                         Text(
                             text = cashier.role,
-                            fontSize = 10.sp,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
                             color = OnSurfaceVariantLight,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = Dimens.SpacingXs, vertical = Dimens.SpacingXxs)
                         )
                     }
                 }
 
                 if (isArchived && cashier.archivedAt != null) {
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(Dimens.SpacingXxs))
                     val dateFormatted = remember(cashier.archivedAt) {
                         DateTimeFormatUtils.formatDateTime(cashier.archivedAt)
                     }
                     Text(
                         text = stringResource(R.string.cashier_archived_date_fmt, dateFormatted),
-                        fontSize = 10.5.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = TextHintColor
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingSm))
 
             // Action Buttons
             if (isArchived) {
@@ -1047,7 +1043,7 @@ private fun CashierCard(
                             imageVector = Icons.Outlined.Edit,
                             contentDescription = stringResource(R.string.edit_cashier),
                             tint = OnSurfaceVariantLight,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(Dimens.IconMd)
                         )
                     }
 
@@ -1065,7 +1061,7 @@ private fun CashierCard(
                         modifier = Modifier.testTag("switchCashier_${cashier.id}")
                     )
 
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SpacingXs))
 
                     IconButton(
                         onClick = onDelete,
@@ -1077,7 +1073,7 @@ private fun CashierCard(
                             imageVector = Icons.Outlined.DeleteOutline,
                             contentDescription = stringResource(R.string.delete),
                             tint = ErrorRedLight,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(Dimens.IconAction)
                         )
                     }
                 }
@@ -1097,23 +1093,23 @@ private fun CashierStatusChip(
     dotColor: Color
 ) {
     Surface(
-        shape = RoundedCornerShape(4.dp),
+        shape = RoundedCornerShape(Dimens.RadiusXs),
         color = containerColor
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = Dimens.SpacingXs, vertical = Dimens.SpacingXxs),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(6.dp)
+                    .size(Dimens.StatusDotSize)
                     .clip(CircleShape)
                     .background(dotColor)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingXs))
             Text(
                 text = label,
-                fontSize = 10.sp,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = textColor
             )
@@ -1139,18 +1135,18 @@ private fun KpiChip(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = Dimens.SpacingSm, vertical = Dimens.SpacingSm),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = label,
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = accessibleColor,
                 maxLines = 1
             )
             Text(
                 text = value,
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = accessibleColor
             )
@@ -1169,17 +1165,17 @@ private fun StatusFilterChip(
             .heightIn(min = Dimens.MinTouchTarget)
             .depthCard(
                 accent = selected,
-                shape = RoundedCornerShape(999.dp)
+                shape = RoundedCornerShape(Dimens.RadiusFull)
             )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             color = if (selected) PrimaryIndigoDark else OnSurfaceVariantLight,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = Dimens.SpacingLg, vertical = Dimens.SpacingSm)
         )
     }
 }
@@ -1194,30 +1190,30 @@ private fun CashierSkeletonCard() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Dimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(Dimens.AvatarBadgeSize)
                     .clip(CircleShape)
                     .background(SurfaceVariantLight)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.SpacingMd))
             Column(modifier = Modifier.weight(1f)) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.5f)
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .height(Dimens.SkeletonLineHeightTitle)
+                        .clip(RoundedCornerShape(Dimens.RadiusXs))
                         .background(SurfaceVariantLight)
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(Dimens.SpacingXs))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.3f)
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .height(Dimens.SkeletonLineHeightSubtitle)
+                        .clip(RoundedCornerShape(Dimens.RadiusXs))
                         .background(SurfaceVariantLight)
                 )
             }
