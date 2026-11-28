@@ -15,7 +15,23 @@ object AppLanguageManager {
     }
 
     fun changeLanguage(context: Context, languageCode: String) {
-        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
+        val normalizedCode = AppLanguage.fromCode(languageCode).code
+        LanguagePreferences.saveLanguage(context, normalizedCode)
+        applyLocaleIfNeeded(normalizedCode)
+    }
+
+    fun applyLocaleIfNeeded(languageCode: String) {
+        val normalizedCode = AppLanguage.fromCode(languageCode).code
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        val currentTag = if (currentLocales.isEmpty) {
+            ""
+        } else {
+            currentLocales.toLanguageTags().substringBefore('-').substringBefore('_')
+        }
+        if (currentTag.equals(normalizedCode, ignoreCase = true)) {
+            return
+        }
+        val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(normalizedCode)
         if (Looper.myLooper() == Looper.getMainLooper()) {
             AppCompatDelegate.setApplicationLocales(appLocale)
         } else {
@@ -23,9 +39,8 @@ object AppLanguageManager {
                 AppCompatDelegate.setApplicationLocales(appLocale)
             }
         }
-        LanguagePreferences.saveLanguage(context, languageCode)
     }
-    
+
     fun getCurrentLanguageCode(): String {
         return AppCompatDelegate.getApplicationLocales().toLanguageTags().substringBefore('-').ifEmpty { AppConstants.LOCALE_EN }
     }

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,8 +38,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.common.LanguageSwitcherButton
+import com.lojia.shiftreport.util.LanguagePreferences
 import com.lojia.shiftreport.util.SecurityUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,34 +52,39 @@ fun LojiaRegisterScreen(
     userProfile: UserProfile?,
     isBn: Boolean,
     onRegisterSuccess: (UserProfile) -> Unit,
-    onGoToLogin: () -> Unit
+    onGoToLogin: () -> Unit,
+    currentLanguage: AppLanguage = if (isBn) AppLanguage.BENGALI else AppLanguage.ENGLISH
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val preferencesRepository = remember(context) { PreferencesRepository.getInstance(context) }
 
-    // Registration input states
-    var rFn by remember { mutableStateOf("") }
-    var rLn by remember { mutableStateOf("") }
-    var rUn by remember { mutableStateOf("") }
-    var rEm by remember { mutableStateOf("") }
-    var phoneNum by remember { mutableStateOf("") }
+    // Registration input states preserved across Activity recreation on language change
+    var rFn by rememberSaveable { mutableStateOf("") }
+    var rLn by rememberSaveable { mutableStateOf("") }
+    var rUn by rememberSaveable { mutableStateOf("") }
+    var rEm by rememberSaveable { mutableStateOf("") }
+    var phoneNum by rememberSaveable { mutableStateOf("") }
 
     // Country Detection & Selection
     val defaultCountry = remember(context) {
         com.lojia.shiftreport.util.CountryDetector.detectDefaultLojiaCountry(context)
     }
-    var selectedCountry by remember { mutableStateOf(defaultCountry) }
-    var showCountryPicker by remember { mutableStateOf(false) }
+    var selectedCountryCode by rememberSaveable { mutableStateOf(defaultCountry.code) }
+    val selectedCountry = remember(selectedCountryCode, defaultCountry) {
+        LOJIA_COUNTRIES.firstOrNull { it.code == selectedCountryCode } ?: defaultCountry
+    }
+    var showCountryPicker by rememberSaveable { mutableStateOf(false) }
 
-    var rPw by remember { mutableStateOf("") }
-    var rPwVisible by remember { mutableStateOf(false) }
-    var rCp by remember { mutableStateOf("") }
-    var rCpVisible by remember { mutableStateOf(false) }
-    var rSq by remember { mutableStateOf("") }
-    var rSa by remember { mutableStateOf("") }
-    var agreeTerms by remember { mutableStateOf(false) }
+    var rPw by rememberSaveable { mutableStateOf("") }
+    var rPwVisible by rememberSaveable { mutableStateOf(false) }
+    var rCp by rememberSaveable { mutableStateOf("") }
+    var rCpVisible by rememberSaveable { mutableStateOf(false) }
+    var rSq by rememberSaveable { mutableStateOf("") }
+    var rSqIndex by rememberSaveable { mutableIntStateOf(-1) }
+    var rSa by rememberSaveable { mutableStateOf("") }
+    var agreeTerms by rememberSaveable { mutableStateOf(false) }
     var isProcessingReg by remember { mutableStateOf(false) }
 
     // Validation states
@@ -219,33 +228,60 @@ fun LojiaRegisterScreen(
                 rememberMe = false
             )
             preferencesRepository.syncWithUserProfile(newProfile)
+            val regUserId = LanguagePreferences.resolveUserId(
+                username = newProfile.username,
+                userProfileId = newProfile.id
+            )
+            LanguagePreferences.saveDeviceAndUserLanguage(
+                context = context,
+                userId = regUserId,
+                languageCode = currentLanguage.code
+            )
             onRegisterSuccess(newProfile)
         }
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(LocalDepthStyle.current.pageBackground)
-            .imePadding(),
-        contentAlignment = Alignment.Center
+            .imePadding()
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = Dimens.RegisterScreenMaxWidth + Dimens.SpacingLg * 2)
-                .wrapContentHeight(Alignment.CenterVertically)
-                .verticalScroll(rememberScrollState())
                 .padding(
+                    top = Dimens.SpacingSm,
                     start = Dimens.SpacingLg,
-                    end = Dimens.SpacingLg,
-                    top = Dimens.RegisterHeaderTopPadding,
-                    bottom = Dimens.SpacingXxl
+                    end = Dimens.SpacingLg
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.End
         ) {
-            LojiaHeader(isBn = isBn)
+            LanguageSwitcherButton(currentLanguage = currentLanguage)
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = Dimens.RegisterScreenMaxWidth + Dimens.SpacingLg * 2)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = Dimens.SpacingLg,
+                        end = Dimens.SpacingLg,
+                        top = Dimens.SpacingSm,
+                        bottom = Dimens.SpacingXxl
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                LojiaHeader(isBn = isBn)
 
             Spacer(modifier = Modifier.height(Dimens.AuthFieldGap))
 
@@ -481,7 +517,7 @@ fun LojiaRegisterScreen(
 
                 Spacer(modifier = Modifier.height(Dimens.SpacingMd))
 
-                var showQuestionMenu by remember { mutableStateOf(false) }
+                var showQuestionMenu by rememberSaveable { mutableStateOf(false) }
                 val answerFocusRequester = remember { FocusRequester() }
                 val questionResIds = listOf(
                     R.string.auth_sq1,
@@ -490,6 +526,11 @@ fun LojiaRegisterScreen(
                     R.string.auth_sq4,
                     R.string.auth_sq5
                 )
+                LaunchedEffect(currentLanguage.code, rSqIndex) {
+                    if (rSqIndex in questionResIds.indices) {
+                        rSq = context.getString(questionResIds[rSqIndex])
+                    }
+                }
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -562,11 +603,12 @@ fun LojiaRegisterScreen(
                             onDismissRequest = { showQuestionMenu = false },
                             containerColor = PureWhite
                         ) {
-                            questionResIds.forEach { resId ->
+                            questionResIds.forEachIndexed { qIndex, resId ->
                                 val qText = stringResource(resId)
                                 DropdownMenuItem(
                                     text = { Text(text = qText, fontSize = DepthTypeTokens.RecoveryBodySize, color = LojiaColors.N900) },
                                     onClick = {
+                                        rSqIndex = qIndex
                                         rSq = qText
                                         showQuestionMenu = false
                                         vSq = FieldValidationState.SUCCESS
@@ -718,13 +760,14 @@ fun LojiaRegisterScreen(
         }
     }
 }
+    }
 
     if (showCountryPicker) {
         LojiaCountryPickerDialog(
             countries = LOJIA_COUNTRIES,
             selectedDial = selectedCountry.dial,
             onSelectCountry = {
-                selectedCountry = it
+                selectedCountryCode = it.code
                 showCountryPicker = false
             },
             onDismiss = { showCountryPicker = false },

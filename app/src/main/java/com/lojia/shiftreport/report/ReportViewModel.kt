@@ -111,9 +111,13 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setLanguage(language: AppLanguage) {
-        syncManager.setLanguage(language)
+        val activeUserId = LanguagePreferences.resolveUserId(
+            username = userProfile.value?.username ?: preferencesRepository.getSavedUsername(),
+            userProfileId = userProfile.value?.id
+        )
+        syncManager.setLanguage(language, activeUserId)
         viewModelScope.launch {
-            _uiMessage.emit(UiText.StringResource(R.string.toast_lang_changed, language.displayName))
+            _uiMessage.emit(UiText.StringResource(R.string.toast_lang_changed, language.nativeName))
         }
     }
 

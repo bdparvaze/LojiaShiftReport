@@ -121,6 +121,17 @@ class ConfigurationSyncManager private constructor(private val context: Context)
             observeDatabaseSettings()
         }
 
+        // Keep language synchronized with DataStore single source of truth
+        scope.launch {
+            com.lojia.shiftreport.util.LanguagePreferences.getLanguageFlow(context).collect { code ->
+                val lang = AppLanguage.fromCode(code)
+                if (lang != _currentLanguage.value) {
+                    _currentLanguage.value = lang
+                    prefs.edit().putString(KEY_SELECTED_LANGUAGE, lang.code).apply()
+                }
+            }
+        }
+
         // Observe financial tables to keep currency lock reactive
         scope.launch {
             combine(
@@ -156,8 +167,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     }
 
     private fun loadInitialLanguage(): AppLanguage {
-        val code = prefs.getString(KEY_SELECTED_LANGUAGE, AppLanguage.ENGLISH.code) ?: AppLanguage.ENGLISH.code
-        return AppLanguage.fromCode(code)
+        return AppLanguage.fromCode(com.lojia.shiftreport.util.LanguagePreferences.getLanguage(context))
     }
 
     private fun loadInitialCountry(): AppCountry {
@@ -179,16 +189,18 @@ class ConfigurationSyncManager private constructor(private val context: Context)
 
     private suspend fun syncStoredSettingsFromDb() {
         try {
-            // Restore language from Room DB if present
+            // Keep LanguagePreferences DataStore as the single source of truth for language;
+            // only migrate from Room DB if DataStore has no stored language yet.
+            val storedDsLang = com.lojia.shiftreport.util.LanguagePreferences.getStoredLanguageOrNull(context)
             val dbLangCode = reportDao.getSetting(KEY_SELECTED_LANGUAGE)
-            if (!dbLangCode.isNullOrBlank()) {
+            if (storedDsLang == null && !dbLangCode.isNullOrBlank()) {
                 val dbLang = AppLanguage.fromCode(dbLangCode)
+                com.lojia.shiftreport.util.LanguagePreferences.saveLanguageDataStore(context, dbLang.code)
                 if (dbLang != _currentLanguage.value) {
                     _currentLanguage.value = dbLang
                     prefs.edit().putString(KEY_SELECTED_LANGUAGE, dbLang.code).apply()
                 }
-            } else {
-                // Seed current language to DB
+            } else if (dbLangCode.isNullOrBlank()) {
                 reportDao.setSetting(AppSetting(KEY_SELECTED_LANGUAGE, _currentLanguage.value.code))
             }
 
@@ -259,11 +271,7 @@ class ConfigurationSyncManager private constructor(private val context: Context)
                 settingsList.forEach { setting ->
                     when (setting.key) {
                         KEY_SELECTED_LANGUAGE -> {
-                            val lang = AppLanguage.fromCode(setting.value)
-                            if (lang != _currentLanguage.value) {
-                                _currentLanguage.value = lang
-                                prefs.edit().putString(KEY_SELECTED_LANGUAGE, lang.code).apply()
-                            }
+                            // DataStore (LanguagePreferences) owns the active language; avoid Room overwriting DataStore
                         }
                         KEY_SELECTED_COUNTRY -> {
                             val country = AppCountry.fromCode(setting.value)
@@ -306,14 +314,18 @@ class ConfigurationSyncManager private constructor(private val context: Context)
     }
 
     /**
-     * Change and synchronize language setting across all modules and persist to DB & SharedPreferences.
+     * Change and synchronize language setting across all modules, persisting to DataStore (device-wide + per-user).
      */
-    fun setLanguage(language: AppLanguage) {
+    fun setLanguage(language: AppLanguage, userId: String? = null) {
         _currentLanguage.value = language
         prefs.edit().putString(KEY_SELECTED_LANGUAGE, language.code).apply()
-        com.lojia.shiftreport.util.LanguagePreferences.saveLanguage(context, language.code)
         com.lojia.shiftreport.util.AppLanguageManager.changeLanguage(context, language.code)
         scope.launch {
+            com.lojia.shiftreport.util.LanguagePreferences.saveDeviceAndUserLanguage(
+                context = context,
+                userId = userId,
+                languageCode = language.code
+            )
             reportDao.setSetting(AppSetting(KEY_SELECTED_LANGUAGE, language.code))
             reportDao.insertAuditLog(
                 AuditLog(

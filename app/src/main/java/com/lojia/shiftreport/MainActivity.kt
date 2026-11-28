@@ -112,13 +112,20 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
         // Initialize POS session manager (screen-off & minimization instant lock)
         AppSessionManager.init(applicationContext)
 
-        // Initialize saved language
-        val savedLang = com.lojia.shiftreport.util.LanguagePreferences.getLanguage(this)
-        val currentLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
-        if (currentLocales.isEmpty || currentLocales.toLanguageTags() != savedLang) {
-            val appLocale = androidx.core.os.LocaleListCompat.forLanguageTags(savedLang)
-            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(appLocale)
+        // Initialize language once from device locale when never stored; otherwise stored preference wins
+        val storedLang = LanguagePreferences.getStoredLanguageSyncOrNull(this)
+        val initialLangCode = if (storedLang != null) {
+            storedLang
+        } else {
+            val resolved = LanguagePreferences.resolveInitialLanguage(
+                systemLanguageTags = LanguagePreferences.getSystemLanguageTags(this),
+                supportedCodes = supportedAppLanguages().map { it.code },
+                storedCode = null
+            )
+            LanguagePreferences.saveLanguage(this, resolved)
+            resolved
         }
+        AppLanguageManager.applyLocaleIfNeeded(initialLangCode)
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.light(
                 android.graphics.Color.TRANSPARENT,
@@ -141,7 +148,11 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
         handleAuthIntent(intent)
 
         setContent {
-            val currentLanguage by reportViewModel.currentLanguage.collectAsState()
+            val activeLanguageCode by LanguagePreferences.getLanguageFlow(this@MainActivity)
+                .collectAsState(initial = LanguagePreferences.getLanguage(this@MainActivity))
+            val currentLanguage = remember(activeLanguageCode) {
+                AppLanguage.fromCode(activeLanguageCode)
+            }
             val userProfile by reportViewModel.userProfile.collectAsState()
             val activeModule by reportViewModel.currentModule.collectAsState()
             val businessProfile by reportViewModel.businessProfile.collectAsState()
@@ -325,6 +336,19 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                     fullName = userProfile?.fullName,
                                     email = userProfile?.email
                                 )
+                                val resolvedUid = LanguagePreferences.resolveUserId(
+                                    username = uName,
+                                    userProfileId = userProfile?.id
+                                )
+                                if (resolvedUid != null) {
+                                    scope.launch {
+                                        LanguagePreferences.applyUserLanguageOnLogin(
+                                            context = this@MainActivity,
+                                            userId = resolvedUid,
+                                            currentCode = activeLanguageCode
+                                        )
+                                    }
+                                }
                             },
                             onSaveUserProfile = { updatedProfile ->
                                 reportViewModel.saveUserProfile(updatedProfile)

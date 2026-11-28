@@ -88,8 +88,10 @@ fun LanguageSettingsComponent(
                     index = index,
                     onClick = {
                         coroutineScope.launch {
-                            LanguagePreferences.saveLanguageDataStore(context, lang.code)
-                            ConfigurationSyncManager.getInstance(context).setLanguage(lang)
+                            val prefsRepo = PreferencesRepository.getInstance(context)
+                            val activeUserId = LanguagePreferences.resolveUserId(prefsRepo.getSavedUsername())
+                            LanguagePreferences.saveDeviceAndUserLanguage(context, activeUserId, lang.code)
+                            ConfigurationSyncManager.getInstance(context).setLanguage(lang, activeUserId)
                             onLanguageChanged(lang)
                             val nativeNameRes = when (lang) {
                                 AppLanguage.ENGLISH -> R.string.lang_native_en
@@ -292,9 +294,11 @@ fun LanguageToggleSettingsCard(
             checked = currentLang.code == secondaryLang.code,
             onCheckedChange = { _ ->
                 coroutineScope.launch {
+                    val prefsRepo = PreferencesRepository.getInstance(context)
+                    val activeUserId = LanguagePreferences.resolveUserId(prefsRepo.getSavedUsername())
                     val newLang = LanguagePreferences.toggleLanguage(context)
-                    LanguagePreferences.saveLanguageDataStore(context, newLang.code)
-                    ConfigurationSyncManager.getInstance(context).setLanguage(newLang)
+                    LanguagePreferences.saveDeviceAndUserLanguage(context, activeUserId, newLang.code)
+                    ConfigurationSyncManager.getInstance(context).setLanguage(newLang, activeUserId)
                     onLanguageChanged(newLang)
                 }
             },

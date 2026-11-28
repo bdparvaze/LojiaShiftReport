@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,7 @@ import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.common.LanguageSwitcherButton
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.SecurityUtils
 import com.lojia.shiftreport.util.isPinUsable
@@ -113,21 +115,26 @@ fun AuthScreenLoginTab(
     val preferencesRepository = remember(context) { PreferencesRepository.getInstance(context) }
     val secureStorageManager = SecureStorageManager
 
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isPasswordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) } // MUST be false by default - International POS standard
+    var username by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
+    var rememberMe by rememberSaveable { mutableStateOf(false) } // MUST be false by default - International POS standard
+    var hasInitializedRememberedUsername by rememberSaveable { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var errorResId by rememberSaveable { mutableStateOf<Int?>(null) }
+    val errorMessage = errorResId?.let { stringResource(it) }
 
     // Load saved username on start: Foodics / Banking standard
     LaunchedEffect(Unit) {
-        val savedUsername = preferencesRepository.getRememberedUsername()
-        if (!savedUsername.isNullOrBlank()) {
-            username = savedUsername
-            rememberMe = true // If username saved, show ticked
-        } else {
-            rememberMe = false
+        if (!hasInitializedRememberedUsername) {
+            val savedUsername = preferencesRepository.getRememberedUsername()
+            if (!savedUsername.isNullOrBlank()) {
+                username = savedUsername
+                rememberMe = true // If username saved, show ticked
+            } else {
+                rememberMe = false
+            }
+            hasInitializedRememberedUsername = true
         }
     }
 
@@ -144,11 +151,11 @@ fun AuthScreenLoginTab(
         val trimmedPass = password.trim()
 
         if (trimmedUser.isEmpty() || trimmedPass.isEmpty()) {
-            errorMessage = context.getString(R.string.auth_toast_please_enter_credentials)
+            errorResId = R.string.auth_toast_please_enter_credentials
             return
         }
 
-        errorMessage = null
+        errorResId = null
         isLoading = true
 
         coroutineScope.launch {
@@ -194,7 +201,7 @@ fun AuthScreenLoginTab(
                 Toast.makeText(context, context.getString(R.string.auth_toast_login_success), Toast.LENGTH_SHORT).show()
                 onAuthenticated()
             } else {
-                errorMessage = context.getString(R.string.auth_toast_invalid_credentials)
+                errorResId = R.string.auth_toast_invalid_credentials
             }
         }
     }
@@ -205,13 +212,21 @@ fun AuthScreenLoginTab(
             .padding(horizontal = Dimens.SpacingXs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = Dimens.SpacingSm),
+            horizontalArrangement = Arrangement.End
+        ) {
+            LanguageSwitcherButton(currentLanguage = language)
+        }
         // Operator Username Field
         val usernameLabel = stringResource(R.string.auth_username_or_email)
         com.lojia.shiftreport.ui.common.LojiaTextField(
             value = username,
             onValueChange = {
                 username = it
-                errorMessage = null
+                errorResId = null
             },
             label = {
                 Text(
@@ -264,7 +279,7 @@ fun AuthScreenLoginTab(
             value = password,
             onValueChange = {
                 password = it
-                errorMessage = null
+                errorResId = null
             },
             label = {
                 Text(

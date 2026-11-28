@@ -557,6 +557,17 @@ enum class AppCountry(
 fun defaultCountryDisplayName(): String =
     AppCountry.fromCode(AppConstants.DEFAULT_COUNTRY_CODE).displayNameEn
 
+fun nativeLanguageName(code: String): String {
+    val normalized = code.trim().ifEmpty { AppLanguage.ENGLISH.code }
+    val locale = java.util.Locale.forLanguageTag(normalized)
+    val raw = locale.getDisplayLanguage(locale).ifBlank { normalized }
+    return raw.replaceFirstChar { ch ->
+        if (ch.isLowerCase()) ch.titlecase(locale) else ch.toString()
+    }
+}
+
+fun supportedAppLanguages(): List<AppLanguage> = AppLanguage.entries
+
 enum class AppLanguage(
     val code: String,
     val displayName: String,
@@ -567,7 +578,7 @@ enum class AppLanguage(
     BENGALI("bn", "Bengali", R.string.lang_bengali, isRtl = false),
     ARABIC("ar", "Arabic", R.string.lang_arabic, isRtl = true);
 
-    val nativeName: String get() = displayName
+    val nativeName: String get() = nativeLanguageName(code)
 
     companion object {
         fun fromCode(code: String?): AppLanguage {

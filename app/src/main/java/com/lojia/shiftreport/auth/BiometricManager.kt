@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ import com.lojia.shiftreport.data.AppLanguage
 import com.lojia.shiftreport.data.BusinessProfile
 import com.lojia.shiftreport.data.PreferencesRepository
 import com.lojia.shiftreport.data.UserProfile
+import com.lojia.shiftreport.ui.common.LanguageSwitcherButton
 import com.lojia.shiftreport.ui.theme.*
 import com.lojia.shiftreport.util.SecurityUtils
 import com.lojia.shiftreport.util.isPinUsable
@@ -303,10 +305,10 @@ fun BiometricLockScreen(
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
 
-    var isBn by remember { mutableStateOf(language.code == "bn") }
+    val isBn = language.code == "bn"
 
     val preferencesRepository = remember(context) { PreferencesRepository.getInstance(context) }
-    
+
     val isUserRegistered = (userProfile != null && userProfile.isRegistered) || preferencesRepository.getSavedUsername().isNotBlank()
 
     // Quick PIN/Biometric screen is ONLY shown if user has registered AND explicitly enabled Quick Login in Settings
@@ -314,14 +316,14 @@ fun BiometricLockScreen(
         preferencesRepository.hasPinConfigured() || preferencesRepository.isBiometricEnabled()
     )
 
-    var currentPage by remember(isUserRegistered, isQuickSecurityEnabled) {
-        mutableStateOf(
-            if (isUserRegistered && isQuickSecurityEnabled) {
-                AuthScreenPage.QUICK_PIN
-            } else {
-                AuthScreenPage.LOGIN
-            }
-        )
+    val defaultPageName = if (isUserRegistered && isQuickSecurityEnabled) {
+        AuthScreenPage.QUICK_PIN.name
+    } else {
+        AuthScreenPage.LOGIN.name
+    }
+    var currentPageName by rememberSaveable { mutableStateOf(defaultPageName) }
+    val currentPage = remember(currentPageName) {
+        runCatching { AuthScreenPage.valueOf(currentPageName) }.getOrDefault(AuthScreenPage.LOGIN)
     }
 
     LaunchedEffect(userProfile) {
@@ -330,22 +332,27 @@ fun BiometricLockScreen(
 
     val secureStorageManager = SecureStorageManager
 
-    var loginUser by remember { mutableStateOf("") }
-    var loginPass by remember { mutableStateOf("") }
-    var loginPassVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) } // MUST be false by default - Foodics / POS Banking Standard
+    var loginUser by rememberSaveable { mutableStateOf("") }
+    var loginPass by rememberSaveable { mutableStateOf("") }
+    var loginPassVisible by rememberSaveable { mutableStateOf(false) }
+    var rememberMe by rememberSaveable { mutableStateOf(false) } // MUST be false by default - Foodics / POS Banking Standard
+    var hasInitializedRememberedUsername by rememberSaveable { mutableStateOf(false) }
     var isSigningIn by remember { mutableStateOf(false) }
-    var loginErrorMessage by remember { mutableStateOf<String?>(null) }
-    var showForgotDialog by remember { mutableStateOf(false) }
+    var loginErrorResId by rememberSaveable { mutableStateOf<Int?>(null) }
+    val loginErrorMessage = loginErrorResId?.let { stringResource(it) }
+    var showForgotDialog by rememberSaveable { mutableStateOf(false) }
 
-    // Load saved username on start - Foodics / Banking POS standard
+    // Load saved username on initial mount only so activity recreation never overwrites typed user input
     LaunchedEffect(Unit) {
-        val savedUsername = preferencesRepository.getRememberedUsername()
-        if (!savedUsername.isNullOrBlank()) {
-            loginUser = savedUsername
-            rememberMe = true
-        } else {
-            rememberMe = false
+        if (!hasInitializedRememberedUsername) {
+            val savedUsername = preferencesRepository.getRememberedUsername()
+            if (!savedUsername.isNullOrBlank()) {
+                loginUser = savedUsername
+                rememberMe = true
+            } else {
+                rememberMe = false
+            }
+            hasInitializedRememberedUsername = true
         }
         try {
             context.getSharedPreferences("lojia", Context.MODE_PRIVATE).edit().remove("lojiaUser").apply()
@@ -357,11 +364,11 @@ fun BiometricLockScreen(
         val u = loginUser.trim()
         val p = loginPass.trim()
         if (u.isEmpty() || p.isEmpty()) {
-            loginErrorMessage = context.getString(R.string.auth_toast_please_enter_credentials)
+            loginErrorResId = R.string.auth_toast_please_enter_credentials
             return
         }
 
-        loginErrorMessage = null
+        loginErrorResId = null
         isSigningIn = true
 
         coroutineScope.launch {
@@ -402,7 +409,7 @@ fun BiometricLockScreen(
                 Toast.makeText(context, context.getString(R.string.auth_toast_login_success), Toast.LENGTH_SHORT).show()
                 onAuthenticated()
             } else {
-                loginErrorMessage = context.getString(R.string.auth_toast_invalid_credentials)
+                loginErrorResId = R.string.auth_toast_invalid_credentials
             }
         }
     }
@@ -438,7 +445,7 @@ fun BiometricLockScreen(
                         onAuthenticated()
                     },
                     onFallbackToLogin = {
-                        currentPage = AuthScreenPage.LOGIN
+                        currentPageName = AuthScreenPage.LOGIN.name
                     },
                     onTriggerBiometric = {
                         BiometricManager.showBiometricPrompt(
@@ -471,6 +478,7 @@ fun BiometricLockScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        Spacer(modifier = Modifier.height(Dimens.MinTouchTarget))
                         LojiaHeader(isBn = isBn)
 
                         Spacer(modifier = Modifier.height(Dimens.AuthFieldGap))
@@ -484,12 +492,12 @@ fun BiometricLockScreen(
                                 loginUser = loginUser,
                                 onLoginUserChange = {
                                     loginUser = it
-                                    loginErrorMessage = null
+                                    loginErrorResId = null
                                 },
                                 loginPass = loginPass,
                                 onLoginPassChange = {
                                     loginPass = it
-                                    loginErrorMessage = null
+                                    loginErrorResId = null
                                 },
                                 loginPassVisible = loginPassVisible,
                                 onTogglePasswordVisible = { loginPassVisible = !loginPassVisible },
@@ -508,22 +516,30 @@ fun BiometricLockScreen(
                                 isSigningIn = isSigningIn,
                                 onSignIn = { handleLogin() },
                                 onRegisterClick = {
-                                    loginErrorMessage = null
-                                    currentPage = AuthScreenPage.REGISTER
+                                    loginErrorResId = null
+                                    currentPageName = AuthScreenPage.REGISTER.name
                                 }
                             )
                         }
                     }
+
+                    LanguageSwitcherButton(
+                        currentLanguage = language,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = Dimens.SpacingSm, end = Dimens.SpacingLg)
+                    )
                 }
             }
 
             AuthScreenPage.REGISTER -> {
                 BackHandler {
-                    currentPage = AuthScreenPage.LOGIN
+                    currentPageName = AuthScreenPage.LOGIN.name
                 }
                 LojiaRegisterScreen(
                     userProfile = userProfile,
                     isBn = isBn,
+                    currentLanguage = language,
                     onRegisterSuccess = { updatedProfile ->
                         onSaveUserProfile?.invoke(updatedProfile)
                         Toast.makeText(
@@ -534,7 +550,7 @@ fun BiometricLockScreen(
                         onAuthenticated()
                     },
                     onGoToLogin = {
-                        currentPage = AuthScreenPage.LOGIN
+                        currentPageName = AuthScreenPage.LOGIN.name
                     }
                 )
             }
@@ -555,6 +571,7 @@ fun BiometricLockScreen(
             onDismiss = { showForgotDialog = false },
             userProfile = userProfile,
             isBn = isBn,
+            language = language,
             onAuthenticated = onAuthenticated
         )
     }
@@ -852,7 +869,8 @@ fun LojiaPasswordRecoveryDialog(
     onDismiss: () -> Unit,
     userProfile: UserProfile?,
     isBn: Boolean,
-    onAuthenticated: () -> Unit
+    onAuthenticated: () -> Unit,
+    language: AppLanguage = if (isBn) AppLanguage.BENGALI else AppLanguage.ENGLISH
 ) {
     if (!showDialog) return
 
@@ -860,9 +878,10 @@ fun LojiaPasswordRecoveryDialog(
     val prefs = remember(context) { PreferencesRepository.getInstance(context) }
     val coroutineScope = rememberCoroutineScope()
 
-    var recoveryAnswer by remember { mutableStateOf("") }
+    var recoveryAnswer by rememberSaveable { mutableStateOf("") }
+    var hasRecoveryError by rememberSaveable { mutableStateOf(false) }
     var recoveryError by remember { mutableStateOf<String?>(null) }
-    var isAnswerCorrect by remember { mutableStateOf(false) }
+    var isAnswerCorrect by rememberSaveable { mutableStateOf(false) }
 
     val question = userProfile?.securityQuestion?.trim().orEmpty()
         .ifBlank { prefs.getRecoveryQuestion().trim() }
@@ -880,12 +899,21 @@ fun LojiaPasswordRecoveryDialog(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpacingMd)
         ) {
-            Text(
-                text = stringResource(R.string.auth_password_recovery_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryIndigoLight
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.auth_password_recovery_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryIndigoLight,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(Dimens.SpacingSm))
+                LanguageSwitcherButton(currentLanguage = language)
+            }
 
             if (!recoveryConfigured) {
                 Box(
@@ -934,6 +962,7 @@ fun LojiaPasswordRecoveryDialog(
                         value = recoveryAnswer,
                         onValueChange = {
                             recoveryAnswer = it
+                            hasRecoveryError = false
                             recoveryError = null
                         },
                         label = stringResource(R.string.auth_answer_label),
@@ -973,6 +1002,9 @@ fun LojiaPasswordRecoveryDialog(
             val confirmActionContent: @Composable () -> Unit = {
                 if (recoveryConfigured) {
                     val incorrectAnswerError = stringResource(R.string.auth_incorrect_answer)
+                    LaunchedEffect(hasRecoveryError, incorrectAnswerError) {
+                        recoveryError = if (hasRecoveryError) incorrectAnswerError else null
+                    }
                     if (!isAnswerCorrect) {
                         Button(
                             onClick = {
@@ -995,8 +1027,10 @@ fun LojiaPasswordRecoveryDialog(
                                             } catch (_: Exception) {}
                                         }
                                     }
+                                    hasRecoveryError = false
                                     isAnswerCorrect = true
                                 } else {
+                                    hasRecoveryError = true
                                     recoveryError = incorrectAnswerError
                                 }
                             },
