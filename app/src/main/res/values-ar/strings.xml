@@ -289,7 +289,7 @@
     <string name="profile_subtitle">بيانات المدير، وسائل الاتصال، وعنوان الفرع</string>
     <string name="cashiers_subtitle">إدارة حسابات الكاشير والموظفين للورديات</string>
     <string name="security_subtitle">حماية برمز PIN من 6 أرقام، بصمة الإصبع/الوجه، قفل تلقائي</string>
-    <string name="backup_subtitle">نسخ احتياطي محلي لقاعدة البيانات وتصدير ملفات التقارير والأرشيف</string>
+    <string name="backup_subtitle">نسخ احتياطي واستعادة بيانات متجرك</string>
     <string name="language_subtitle">لغة عرض التطبيق</string>
     <string name="about_subtitle">إصدار النظام، ترخيص البرنامج، الشروط وسياسة الخصوصية</string>
     <string name="support_subtitle">مكتب المساعدة، الفحص والتشخيص، وتذاكر الدعم</string>
@@ -505,7 +505,7 @@
     <string name="msg_1_license_usagenlojia_system">1. الترخيص والاستخدام\nلوجيا تطبيق محلي لإدارة نقاط البيع والورديات. جميع البيانات المولدة على هذا الجهاز تبقى تحت تحكم صاحب المنشأة بالكامل.\n\n2. دقة الحسابات\nيتحمل الكاشير والمدير مسؤولية تسجيل حركة النقدية والعد الدقيق.\n\n3. النسخ الاحتياطي والتصدير\nيتم إنشاء النسخ الاحتياطية محلياً. وتعمل التكاملات الاختيارية بناءً على طلب المستخدم.\n\n4. التحديثات\nقد تشمل التحديثات الدورية تحسينات للميزات وترقيات للأمان.</string>
     <string name="i_understand">أنا موافق</string>
     <string name="privacy_policy_2">سياسة الخصوصية</string>
-    <string name="msg_1_data_collectionnlojia_system">1. جمع البيانات\nتتم معالجة معاملات المبيعات والمخزون وسجلات الورديات محلياً على جهاز أندرويد الخاص بك.\n\n2. الأمان والمصادقة\nتتم المصادقة البيومترية عبر نظام أندرويد BiometricPrompt ولا يتم تخزين أي قوالب بيومترية في قاعدة البيانات.\n\n3. التكاملات الخارجية\nالتكاملات الاختيارية (مثل واتساب، التخزين الخارجي، الطابعات) تعمل فقط بإذن صريح من المستخدم.\n\n4. الاحتفاظ بالبيانات\nيمكنك تصدير أو مسح قواعد البيانات المحلية وسجلات التدقيق في أي وقت.</string>
+    <string name="msg_1_data_collectionnlojia_system">1. جمع البيانات\nتتم معالجة معاملات المبيعات والمخزون وسجلات الورديات محلياً على جهاز أندرويد الخاص بك.\n\n2. الأمان والمصادقة\nتتم المصادقة البيومترية عبر نظام أندرويد BiometricPrompt ولا يتم تخزين أي قوالب بيومترية في التطبيق.\n\n3. التكاملات الخارجية\nالتكاملات الاختيارية (مثل واتساب، التخزين الخارجي، الطابعات) تعمل فقط بإذن صريح من المستخدم.\n\n4. الاحتفاظ بالبيانات\nيمكنك تصدير أو مسح بيانات المتجر المحفوظة وسجلاتك في أي وقت.</string>
     <string name="close_3">إغلاق</string>
     <string name="submit_support_ticket">إرسال تذكرة دعم فني</string>
     <string name="ticket_tk8892_created">تم إنشاء التذكرة #TK-8892 بنجاح!</string>
@@ -994,7 +994,7 @@
     <string name="desc_search_shift_reports">البحث في تقارير ورديات أمين الصندوق التاريخية وتصدير PDF</string>
     <string name="desc_switch_to_shift_report">انقر للتبديل إلى وحدة تقارير الورديات والتحليلات</string>
     <string name="desc_sync_data_back_office">آخر مزامنة: الآن • جميع بيانات المتجر محدثة</string>
-    <string name="desc_system_architecture">تخزين محلي مشفر • محرك مزامنة نقاط البيع متعدد المتاجر</string>
+    <string name="desc_system_architecture">محفوظة بأمان على جهازك • تعمل بدون إنترنت</string>
     <string name="desc_view_complete_sales">عرض القائمة الكاملة للمعاملات وإيصالات المبيعات</string>
     <string name="desc_whatsapp_support">دردشة مباشرة فورية مع خدمة العملاء</string>
     <string name="label_total_combined">المجموع الكلي المشترك</string>
@@ -1013,10 +1013,10 @@
     <string name="title_security_answer">إجابة الأمان</string>
     <string name="title_security_question">سؤال الأمان</string>
     <string name="title_shift_report_module">تقرير الوردية</string>
-    <string name="title_shift_reports_pdf_archives">تقارير الورديات وأرشيفات PDF</string>
+    <string name="title_shift_reports_pdf_archives">تقارير الورديات وملفات PDF المحفوظة</string>
     <string name="title_show_cashier_name">إظهار اسم أمين الصندوق</string>
     <string name="title_sync_data_back_office">مزامنة البيانات مع المكتب الخلفي</string>
-    <string name="title_system_architecture">بنية النظام</string>
+    <string name="title_system_architecture">كيف يتم حفظ بياناتك</string>
     <string name="title_whatsapp_support">دعم واتساب</string>
     <string name="total_revenue_amount_fmt">إجمالي الإيرادات: %1$s %2$s</string>
     <string name="cd_expand">توسيع</string>
@@ -1053,7 +1053,7 @@
     <string name="auth_have_account">لديك حساب بالفعل؟ تسجيل الدخول</string>
     <string name="auth_logout">تسجيل الخروج</string>
     <string name="backup_data_title">نسخ احتياطي للبيانات</string>
-    <string name="backup_data_desc">تصدير جميع بيانات المتجر إلى مجلد التنزيلات بصيغة JSON</string>
+    <string name="backup_data_desc">حفظ جميع بيانات متجرك كملف نسخ احتياطي في مجلد التنزيلات</string>
     <string name="restore_backup_title">استعادة النسخة الاحتياطية</string>
     <string name="restore_backup_desc">استيراد واستعادة بيانات المتجر من ملف نسخة احتياطية</string>
     <string name="restore_confirm_title">استعادة بيانات المتجر؟</string>
@@ -1768,7 +1768,7 @@
     <string name="backup_pw_encrypted_badge">نسخة احتياطية محمولة مشفرة</string>
     <string name="printer_warning_message">تمت الطباعة باستخدام النص الاحتياطي؛ قد تُحذف الأحرف غير اللاتينية.</string>
     <string name="amount_comma_hint">استخدم النقطة العشرية (.) بدلاً من الفاصلة كفاصل للآلاف.</string>
-    <string name="currency_locked_message">تم قفل العملة لأن قاعدة البيانات تحتوي على سجلات مالية. لتغيير العملة، امسح جميع البيانات من النسخ الاحتياطي وإعادة الضبط.</string>
+    <string name="currency_locked_message">تم قفل العملة لأن لديك سجلات مبيعات أو ورديات محفوظة بالفعل. امسح جميع البيانات من النسخ الاحتياطي لتغيير العملة.</string>
     <string name="advance_over_salary_error">لا يمكن أن تتجاوز السلفة الراتب الشهري للموظف (%1$s)</string>
     <string name="no_cashiers_dropdown_hint">لا يوجد كاشير متاح. أضف واحداً من الإعدادات.</string>
     <string name="draft_restored_message">تمت استعادة وردية غير مكتملة</string>
@@ -1914,7 +1914,7 @@
 
     <string name="backup_section_destination">وجهة النسخ الاحتياطي</string>
     <string name="backup_select_location_title">اختر موقع النسخ الاحتياطي</string>
-    <string name="backup_select_location_desc">اختر مكان حفظ تقارير الورديات وقاعدة البيانات بأمان. بنية سحابية متعددة وفق المعايير الدولية.</string>
+    <string name="backup_select_location_desc">اختر مكان حفظ النسخ الاحتياطية.</string>
     <string name="backup_loc_device_title">تخزين الجهاز (دون اتصال)</string>
     <string name="backup_loc_device_subtitle">Documents/LojiaShiftReport/backups/ • دون اتصال 100%</string>
     <string name="backup_loc_gdrive_title">Google Drive</string>
@@ -1941,7 +1941,7 @@
     <string name="backup_freq_daily_3am">يومياً (3:00 ص)</string>
     <string name="backup_freq_manual">يدوي</string>
     <string name="backup_section_danger_zone">منطقة الخطر</string>
-    <string name="backup_local_archives_title">أرشيفات النسخ الاحتياطي المحلية</string>
+    <string name="backup_local_archives_title">النسخ الاحتياطية المحفوظة على الجهاز</string>
     <string name="backup_local_none_found">لم يتم العثور على ملفات نسخ احتياطي محلية في Documents/LojiaShiftReport/backups/</string>
     <string name="backup_open_folder_files">فتح المجلد في الملفات</string>
     <string name="backup_connect_onedrive">ربط Microsoft OneDrive</string>
@@ -1950,11 +1950,11 @@
     <string name="backup_onedrive_email_hint">مثال: store@outlook.com</string>
     <string name="backup_onedrive_connected_format">تم ربط حساب OneDrive: %1$s</string>
     <string name="backup_connect_account_btn">ربط الحساب</string>
-    <string name="backup_gdrive_none_found">لم يتم العثور على أرشيفات نسخ احتياطي في Google Drive.</string>
+    <string name="backup_gdrive_none_found">لم يتم العثور على نسخ احتياطية في Google Drive.</string>
     <string name="backup_restore_shifts_count_format">✓ %1$d وردية جاهزة للاستعادة</string>
     <string name="backup_restore_summary_format">إجمالي السجلات: %1$d • تاريخ التصدير: %2$s</string>
     <string name="backup_delete_dialog_title">اكتب DELETE للتأكيد</string>
-    <string name="backup_delete_dialog_warning">سيؤدي هذا إلى مسح جميع جداول قاعدة البيانات المحلية وجلسات الكاشير وسجل المبيعات وتقارير الورديات نهائياً من هذا الجهاز.</string>
+    <string name="backup_delete_dialog_warning">سيؤدي هذا إلى حذف جميع بيانات المتجر المحفوظة وجلسات الكاشير وسجلات المبيعات وتقارير الورديات نهائياً من هذا الجهاز.</string>
     <string name="backup_delete_dialog_instruction">للمتابعة، يرجى كتابة DELETE أدناه بأحرف كبيرة:</string>
     <string name="backup_delete_keyword">DELETE</string>
     <string name="backup_cleared_all_toast">تم مسح جميع بيانات النشاط التجاري نهائياً.</string>
@@ -1963,7 +1963,7 @@
     <string name="backup_local_folder_path">Documents/LojiaShiftReport/backups/</string>
     <string name="backup_status_protected">محمي</string>
     <string name="backup_status_no_backup">لا توجد نسخة</string>
-    <string name="backup_total_archives_size">إجمالي حجم الأرشيفات</string>
+    <string name="backup_total_archives_size">إجمالي حجم النسخ الاحتياطية</string>
     <string name="backup_backing_up">جارٍ النسخ الاحتياطي...</string>
     <string name="backup_now_label">نسخ احتياطي الآن</string>
     <string name="backup_view_files">عرض الملفات</string>
@@ -2178,7 +2178,7 @@
     <string name="drive_restore_complete_notif_body">تمت استعادة %1$d سجل من Google Drive (%2$s).</string>
     <string name="sync_status_workmanager">تمت المزامنة في الخلفية</string>
     <string name="cloud_backup_success_notif_title">☁️ نجح النسخ الاحتياطي السحابي</string>
-    <string name="cloud_backup_success_notif_body">تم نسخ قاعدة بيانات المتجر وسجلات الورديات إلى Google Drive الساعة %1$s.</string>
+    <string name="cloud_backup_success_notif_body">تم نسخ بيانات متجرك وسجلات الورديات احتياطياً إلى Google Drive الساعة %1$s.</string>
     <string name="backup_create_failed">فشل إنشاء النسخة الاحتياطية</string>
     <string name="backup_restored_notif_title">📦 تمت استعادة النسخة الاحتياطية بنجاح</string>
     <string name="backup_restored_notif_body">تمت استعادة %1$d سجل عمل إلى دفتر المتجر.</string>

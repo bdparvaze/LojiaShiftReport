@@ -154,10 +154,15 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             var reportRouteNonce by remember { mutableLongStateOf(0L) }
 
             val navBackStack = remember { mutableStateListOf<AppNavState>() }
+            var settingsEntry by rememberSaveable { mutableStateOf(SettingsEntry.FromDrawer) }
 
             fun navigateTo(newState: AppNavState) {
                 if (newState != navState) {
                     navBackStack.add(navState)
+                    if (newState is AppNavState.ShiftReportState.SettingsDetail) {
+                        settingsEntry = SettingsEntry.FromDrawer
+                        reportViewModel.selectReportSettingsMenu(newState.section, SettingsEntry.FromDrawer)
+                    }
                     navState = newState
                 }
             }
@@ -336,19 +341,36 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                             val focusManager = LocalFocusManager.current
                             val isRootScreen = navState is AppNavState.ShiftReportState.Home
                             val isScannerActive = navState is AppNavState.ShiftReportState.DocumentScanner
+                            val selectedSettingsMenuForBack by reportViewModel.selectedReportSettingsMenu.collectAsState()
+                            val backTarget = resolveBackTarget(
+                                isDrawerOrMenuOpen = drawerState.isOpen || topMenuState.isOpen,
+                                navState = navState,
+                                settingsEntry = settingsEntry,
+                                selectedSettingsMenu = selectedSettingsMenuForBack,
+                                backStackIsEmpty = navBackStack.isEmpty()
+                            )
 
-                            // Handle back button smoothly to close drawer, pop back stack, return to Home or exit
-                            val canHandleBack = drawerState.isOpen || topMenuState.isOpen || navBackStack.isNotEmpty() || navState != AppNavState.ShiftReportState.Home
-                            BackHandler(enabled = !isScannerActive && canHandleBack) {
-                                if (drawerState.isOpen || topMenuState.isOpen) {
-                                    topMenuState.onDismissBackPress()
-                                    scope.launch { drawerState.close() }
-                                } else if (navBackStack.isNotEmpty()) {
-                                    focusManager.clearFocus()
-                                    navState = navBackStack.removeAt(navBackStack.lastIndex)
-                                } else if (navState != AppNavState.ShiftReportState.Home) {
-                                    focusManager.clearFocus()
-                                    navState = AppNavState.ShiftReportState.Home
+                            // Handle back button smoothly using the single resolveBackTarget rule
+                            BackHandler(enabled = !isScannerActive && backTarget != BackTarget.NotHandled) {
+                                when (backTarget) {
+                                    BackTarget.CloseOverlays -> {
+                                        topMenuState.onDismissBackPress()
+                                        scope.launch { drawerState.close() }
+                                    }
+                                    BackTarget.GoToSettingsRoot -> {
+                                        focusManager.clearFocus()
+                                        reportViewModel.selectReportSettingsMenu("root")
+                                        navState = AppNavState.ShiftReportState.SettingsDetail("root")
+                                    }
+                                    BackTarget.PopBackStack -> {
+                                        focusManager.clearFocus()
+                                        navState = navBackStack.removeAt(navBackStack.lastIndex)
+                                    }
+                                    BackTarget.GoHome -> {
+                                        focusManager.clearFocus()
+                                        navState = AppNavState.ShiftReportState.Home
+                                    }
+                                    BackTarget.NotHandled -> Unit
                                 }
                             }
 
@@ -496,13 +518,32 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                                             },
                                             onPreviewPdf = { report -> previewReport = report },
                                             onNavigateToSection = { section ->
-                                                navigateTo(AppNavState.ShiftReportState.SettingsDetail(section))
+                                                settingsEntry = SettingsEntry.FromSettingsRoot
+                                                reportViewModel.selectReportSettingsMenu(section, SettingsEntry.FromSettingsRoot)
+                                                navState = AppNavState.ShiftReportState.SettingsDetail(section)
                                             },
                                             onNavigateBack = {
-                                                if (navBackStack.isNotEmpty()) {
-                                                    navState = navBackStack.removeAt(navBackStack.lastIndex)
-                                                } else {
-                                                    navState = AppNavState.ShiftReportState.Home
+                                                when (
+                                                    resolveBackTarget(
+                                                        isDrawerOrMenuOpen = false,
+                                                        navState = navState,
+                                                        settingsEntry = settingsEntry,
+                                                        selectedSettingsMenu = reportViewModel.selectedReportSettingsMenu.value,
+                                                        backStackIsEmpty = navBackStack.isEmpty()
+                                                    )
+                                                ) {
+                                                    BackTarget.GoToSettingsRoot -> {
+                                                        reportViewModel.selectReportSettingsMenu("root")
+                                                        navState = AppNavState.ShiftReportState.SettingsDetail("root")
+                                                    }
+                                                    BackTarget.PopBackStack -> {
+                                                        navState = navBackStack.removeAt(navBackStack.lastIndex)
+                                                    }
+                                                    BackTarget.GoHome,
+                                                    BackTarget.CloseOverlays,
+                                                    BackTarget.NotHandled -> {
+                                                        navState = AppNavState.ShiftReportState.Home
+                                                    }
                                                 }
                                             }
                                         )

@@ -289,7 +289,7 @@
     <string name="profile_subtitle">অ্যাডমিন তথ্য, যোগাযোগের বিবরণ ও শাখা ঠিকানা</string>
     <string name="cashiers_subtitle">শিফটের জন্য ক্যাশিয়ার ও কর্মচারীদের অ্যাকাউন্ট পরিচালনা করুন</string>
     <string name="security_subtitle">৪ সংখ্যার পিন, বায়োমেট্রিক ফিঙ্গারপ্রিন্ট ও অটো-লক</string>
-    <string name="backup_subtitle">লোকাল ডাটাবেজ ব্যাকআপ, রিপোর্ট ফাইল ও JSON এক্সপোর্ট</string>
+    <string name="backup_subtitle">আপনার দোকানের ডেটা ব্যাকআপ ও পুনরুদ্ধার করুন</string>
     <string name="language_subtitle">অ্যাপের ভাষা</string>
     <string name="about_subtitle">সিস্টেম ভার্সন, সফটওয়্যার লাইসেন্স ও শর্তাবলী</string>
     <string name="support_subtitle">হেল্প ডেস্ক, ফিডব্যাক ও সহায়তা</string>
@@ -505,7 +505,7 @@
     <string name="msg_1_license_usagenlojia_system">১. লাইসেন্স ও ব্যবহার\nলজিয়া একটি অফলাইন-ফার্স্ট পিওএস ও শিফট ম্যানেজমেন্ট সফটওয়্যার। ডিভাইসে তৈরি সকল তথ্যের পূর্ণ নিয়ন্ত্রণ ও মালিকানা স্টোর মালিকের।\n\n২. সঠিক হিসাব\nক্যাশিয়ার ও ম্যানেজার সঠিক ক্যাশ হিসাবের জন্য দায়ী।\n\n৩. লোকাল ব্যাকআপ ও এক্সপোর্ট\nডাটা ব্যাকআপ স্থানীয়ভাবে তৈরি হয়। ব্যবহারকারীর নির্দেশ অনুযায়ী এক্সপোর্ট বা শেয়ারিং সম্পন্ন হয়।\n\n৪. আপডেট\nনিয়মিত আপডেটে নতুন ফিচার ও নিরাপত্তা উন্নয়ন অন্তর্ভুক্ত থাকতে পারে।</string>
     <string name="i_understand">আমি বুঝতে পেরেছি</string>
     <string name="privacy_policy_2">গোপনীয়তা নীতি</string>
-    <string name="msg_1_data_collectionnlojia_system">১. তথ্য সংগ্রহ\nবিক্রয় লেনদেন, ইনভেন্টরি ক্যাটালগ ও শিফট হিসাব লোকাল ডিভাইসে সংরক্ষিত হয়।\n\n২. নিরাপত্তা ও বায়োমেট্রিক\nবায়োমেট্রিক প্রমাণীকরণ সরাসরি অ্যান্ড্রয়েড BiometricPrompt সিস্টেমের মাধ্যমে সম্পন্ন হয়। ডাটাবেজে কোনো বায়োমেট্রিক টেমপ্লেট সংরক্ষিত থাকে না।\n\n৩. তৃতীয় পক্ষ ও ইন্টিগ্রেশন\nঐচ্ছিক ইন্টিগ্রেশন (যেমন হোয়াটসঅ্যাপ, এক্সটার্নাল স্টোরেজ, প্রিন্টার) কেবল ব্যবহারকারীর সুস্পষ্ট অনুমতি নিয়েই পরিচালিত হয়।\n\n৪. ডাটা নিয়ন্ত্রণ\nআপনি যেকোনো সময় আপনার লোকাল ডাটাবেজ ও অডিট লগ এক্সপোর্ট বা রিসেট করতে পারবেন।</string>
+    <string name="msg_1_data_collectionnlojia_system">১. তথ্য সংগ্রহ\nবিক্রয় লেনদেন, ইনভেন্টরি ক্যাটালগ ও শিফট হিসাব লোকাল ডিভাইসে সংরক্ষিত হয়।\n\n২. নিরাপত্তা ও বায়োমেট্রিক\nবায়োমেট্রিক প্রমাণীকরণ সরাসরি অ্যান্ড্রয়েড BiometricPrompt সিস্টেমের মাধ্যমে সম্পন্ন হয়। অ্যাপে কোনো বায়োমেট্রিক টেমপ্লেট সংরক্ষিত থাকে না।\n\n৩. তৃতীয় পক্ষ ও ইন্টিগ্রেশন\nঐচ্ছিক ইন্টিগ্রেশন (যেমন হোয়াটসঅ্যাপ, এক্সটার্নাল স্টোরেজ, প্রিন্টার) কেবল ব্যবহারকারীর সুস্পষ্ট অনুমতি নিয়েই পরিচালিত হয়।\n\n৪. ডাটা নিয়ন্ত্রণ\nআপনি যেকোনো সময় আপনার সংরক্ষিত দোকানের ডেটা ও রেকর্ড এক্সপোর্ট বা মুছে ফেলতে পারবেন।</string>
     <string name="close_3">বন্ধ করুন</string>
     <string name="submit_support_ticket">সাপোর্ট টিকিট জমা দিন</string>
     <string name="ticket_tk8892_created">টিকিট #TK-8892 তৈরি হয়েছে!</string>
@@ -994,7 +994,7 @@
     <string name="desc_search_shift_reports">পূর্ববর্তী ক্যাশিয়ার শিফট রিপোর্ট খুঁজুন এবং পিডিএফ রপ্তানি করুন</string>
     <string name="desc_switch_to_shift_report">শিফট রিপোর্ট এবং অ্যানালিটিক্স মডিউলে যেতে আলতো চাপুন</string>
     <string name="desc_sync_data_back_office">সর্বশেষ সিঙ্ক: এইমাত্র • সমস্ত স্টোরের তথ্য হালনাগাদ</string>
-    <string name="desc_system_architecture">এনক্রিপ্ট করা স্থানীয় স্টোরেজ • মাল্টি-স্টোর পিওএস সিঙ্ক ইঞ্জিন</string>
+    <string name="desc_system_architecture">আপনার ডিভাইসে নিরাপদে সংরক্ষিত • ইন্টারনেট ছাড়াই কাজ করে</string>
     <string name="desc_view_complete_sales">লেনদেন এবং বিক্রয় রসিদের সম্পূর্ণ তালিকা দেখুন</string>
     <string name="desc_whatsapp_support">গ্রাহক সেবার সাথে তাৎক্ষণিক লাইভ চ্যাট</string>
     <string name="label_total_combined">সর্বমোট সম্মিলিত</string>
@@ -1013,10 +1013,10 @@
     <string name="title_security_answer">নিরাপত্তা উত্তর</string>
     <string name="title_security_question">নিরাপত্তা প্রশ্ন</string>
     <string name="title_shift_report_module">শিফট রিপোর্ট</string>
-    <string name="title_shift_reports_pdf_archives">শিফট রিপোর্ট এবং পিডিএফ আর্কাইভ</string>
+    <string name="title_shift_reports_pdf_archives">শিফট রিপোর্ট ও সংরক্ষিত পিডিএফ</string>
     <string name="title_show_cashier_name">ক্যাশিয়ারের নাম প্রদর্শন করুন</string>
     <string name="title_sync_data_back_office">ব্যাক অফিসের সাথে ডেটা সিঙ্ক করুন</string>
-    <string name="title_system_architecture">সিস্টেম আর্কিটেকচার</string>
+    <string name="title_system_architecture">আপনার ডেটা কীভাবে সংরক্ষিত থাকে</string>
     <string name="title_whatsapp_support">হোয়াটসঅ্যাপ সহায়তা</string>
     <string name="total_revenue_amount_fmt">মোট রাজস্ব: %1$s %2$s</string>
     <string name="cd_expand">প্রসারিত করুন</string>
@@ -1053,7 +1053,7 @@
     <string name="auth_have_account">আগে থেকেই অ্যাকাউন্ট আছে? লগ ইন করুন</string>
     <string name="auth_logout">লগ আউট</string>
     <string name="backup_data_title">ডেটা ব্যাকআপ</string>
-    <string name="backup_data_desc">সব ব্যবসার ডেটা JSON ফাইলে ডাউনলোডস ফোল্ডারে ব্যাকআপ করুন</string>
+    <string name="backup_data_desc">আপনার দোকানের সব ডেটা ডাউনলোড ফোল্ডারে একটি ব্যাকআপ ফাইল হিসেবে সংরক্ষণ করুন</string>
     <string name="restore_backup_title">ব্যাকআপ রিস্টোর করুন</string>
     <string name="restore_backup_desc">ব্যাকআপ ফাইল থেকে ব্যবসার ডেটা ফিরিয়ে আনুন</string>
     <string name="restore_confirm_title">ডেটা রিস্টোর করবেন?</string>
@@ -1768,7 +1768,7 @@
     <string name="backup_pw_encrypted_badge">এনক্রিপ্টেড পোর্টেবল ব্যাকআপ</string>
     <string name="printer_warning_message">টেক্সট ফলব্যাক ব্যবহার করে প্রিন্ট হয়েছে; অ-ল্যাটিন অক্ষর বাদ পড়তে পারে।</string>
     <string name="amount_comma_hint">হাজারের বিভাজক হিসেবে কমার পরিবর্তে দশমিক বিন্দু (.) ব্যবহার করুন।</string>
-    <string name="currency_locked_message">ডাটাবেসে আর্থিক রেকর্ড থাকায় মুদ্রা লক করা আছে। মুদ্রা পরিবর্তন করতে ব্যাকআপ ও রিসেট থেকে সব ডাটা মুছে ফেলুন।</string>
+    <string name="currency_locked_message">আপনার ইতিমধ্যে সংরক্ষিত বিক্রয় বা শিফট রেকর্ড থাকায় মুদ্রা লক করা আছে। মুদ্রা পরিবর্তন করতে ব্যাকআপ থেকে সব ডেটা মুছে ফেলুন।</string>
     <string name="advance_over_salary_error">অগ্রিম কর্মচারীর মাসিক বেতনের (%1$s) বেশি হতে পারবে না</string>
     <string name="no_cashiers_dropdown_hint">কোনো ক্যাশিয়ার নেই। সেটিংস থেকে যোগ করুন।</string>
     <string name="draft_restored_message">অসম্পূর্ণ শিফট ফিরে পাওয়া গেছে</string>
@@ -1914,7 +1914,7 @@
 
     <string name="backup_section_destination">ব্যাকআপ গন্তব্য</string>
     <string name="backup_select_location_title">ব্যাকআপ অবস্থান নির্বাচন করুন</string>
-    <string name="backup_select_location_desc">আপনার শিফট রিপোর্ট এবং ডাটাবেস কোথায় নিরাপদে সংরক্ষণ করা হবে তা বেছে নিন। আন্তর্জাতিক মানের মাল্টি-ক্লাউড আর্কিটেকচার।</string>
+    <string name="backup_select_location_desc">আপনার ব্যাকআপ কোথায় সংরক্ষিত হবে তা বেছে নিন।</string>
     <string name="backup_loc_device_title">ডিভাইস স্টোরেজ (অফলাইন)</string>
     <string name="backup_loc_device_subtitle">Documents/LojiaShiftReport/backups/ • ১০০% অফলাইন</string>
     <string name="backup_loc_gdrive_title">গুগল ড্রাইভ</string>
@@ -1941,7 +1941,7 @@
     <string name="backup_freq_daily_3am">দৈনিক (রাত ৩:০০)</string>
     <string name="backup_freq_manual">ম্যানুয়াল</string>
     <string name="backup_section_danger_zone">বিপদজনক অঞ্চল</string>
-    <string name="backup_local_archives_title">স্থানীয় ব্যাকআপ আর্কাইভ</string>
+    <string name="backup_local_archives_title">ডিভাইসে সংরক্ষিত ব্যাকআপ</string>
     <string name="backup_local_none_found">Documents/LojiaShiftReport/backups/-এ কোনো স্থানীয় ব্যাকআপ ফাইল পাওয়া যায়নি</string>
     <string name="backup_open_folder_files">ফাইলে ফোল্ডার খুলুন</string>
     <string name="backup_connect_onedrive">মাইক্রোসফট ওয়ানড্রাইভ সংযুক্ত করুন</string>
@@ -1950,11 +1950,11 @@
     <string name="backup_onedrive_email_hint">যেমন: store@outlook.com</string>
     <string name="backup_onedrive_connected_format">ওয়ানড্রাইভ অ্যাকাউন্ট সংযুক্ত হয়েছে: %1$s</string>
     <string name="backup_connect_account_btn">অ্যাকাউন্ট সংযুক্ত করুন</string>
-    <string name="backup_gdrive_none_found">গুগল ড্রাইভে কোনো ব্যাকআপ আর্কাইভ পাওয়া যায়নি।</string>
+    <string name="backup_gdrive_none_found">Google Drive-এ কোনো ব্যাকআপ পাওয়া যায়নি।</string>
     <string name="backup_restore_shifts_count_format">✓ %1$dটি শিফট পুনরুদ্ধারের জন্য প্রস্তুত</string>
     <string name="backup_restore_summary_format">মোট রেকর্ড: %1$d • এক্সপোর্ট তারিখ: %2$s</string>
     <string name="backup_delete_dialog_title">নিশ্চিত করতে DELETE লিখুন</string>
-    <string name="backup_delete_dialog_warning">এটি এই ডিভাইস থেকে সমস্ত স্থানীয় ডাটাবেস টেবিল, ক্যাশিয়ার সেশন, বিক্রয় খাতা এবং শিফট রিপোর্ট স্থায়ীভাবে মুছে ফেলবে।</string>
+    <string name="backup_delete_dialog_warning">এটি এই ডিভাইস থেকে সংরক্ষিত সব দোকানের তথ্য, ক্যাশিয়ার সেশন, বিক্রয় রেকর্ড এবং শিফট রিপোর্ট স্থায়ীভাবে মুছে ফেলবে।</string>
     <string name="backup_delete_dialog_instruction">এগিয়ে যেতে অনুগ্রহ করে নিচে বড় হাতের অক্ষরে DELETE লিখুন:</string>
     <string name="backup_delete_keyword">DELETE</string>
     <string name="backup_cleared_all_toast">সকল ব্যবসার তথ্য স্থায়ীভাবে মুছে ফেলা হয়েছে।</string>
@@ -1963,7 +1963,7 @@
     <string name="backup_local_folder_path">Documents/LojiaShiftReport/backups/</string>
     <string name="backup_status_protected">সুরক্ষিত</string>
     <string name="backup_status_no_backup">ব্যাকআপ নেই</string>
-    <string name="backup_total_archives_size">মোট আর্কাইভের আকার</string>
+    <string name="backup_total_archives_size">মোট ব্যাকআপের আকার</string>
     <string name="backup_backing_up">ব্যাকআপ হচ্ছে...</string>
     <string name="backup_now_label">এখনই ব্যাকআপ</string>
     <string name="backup_view_files">ফাইল দেখুন</string>
@@ -2178,7 +2178,7 @@
     <string name="drive_restore_complete_notif_body">গুগল ড্রাইভ থেকে %1$dটি রেকর্ড পুনরুদ্ধার করা হয়েছে (%2$s)।</string>
     <string name="sync_status_workmanager">ব্যাকগ্রাউন্ড সিঙ্ক সম্পন্ন হয়েছে</string>
     <string name="cloud_backup_success_notif_title">☁️ ক্লাউড ব্যাকআপ সফল</string>
-    <string name="cloud_backup_success_notif_body">%1$s-এ আপনার স্টোরের ডাটাবেস ও শিফট খাতা গুগল ড্রাইভে ব্যাকআপ হয়েছে।</string>
+    <string name="cloud_backup_success_notif_body">%1$s-এ আপনার দোকানের ডেটা ও শিফট রেকর্ড Google Drive-এ ব্যাকআপ হয়েছে।</string>
     <string name="backup_create_failed">ব্যাকআপ তৈরি ব্যর্থ হয়েছে</string>
     <string name="backup_restored_notif_title">📦 ব্যাকআপ সফলভাবে পুনরুদ্ধার হয়েছে</string>
     <string name="backup_restored_notif_body">স্টোরের খাতায় %1$dটি ব্যবসায়িক রেকর্ড পুনরুদ্ধার করা হয়েছে।</string>

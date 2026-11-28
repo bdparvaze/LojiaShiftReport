@@ -322,6 +322,7 @@ class Stage23QFullLocalizationUnitTest {
             "pulse",                // rememberInfiniteTransition label in GoogleMapsLocationPickerModal.kt
             "pulseRadius",          // animateFloat label in GoogleMapsLocationPickerModal.kt
             "pulseAlpha",           // animateFloat label in GoogleMapsLocationPickerModal.kt
+            "pinLift",              // animateDpAsState label in GoogleMapsLocationPickerModal.kt
             "pin_box_border",       // animateColorAsState label in SixDigitPinInput.kt
             "pin_box_container",    // animateColorAsState label in SixDigitPinInput.kt
             "modal_dot_size",       // animateDpAsState label in Components.kt

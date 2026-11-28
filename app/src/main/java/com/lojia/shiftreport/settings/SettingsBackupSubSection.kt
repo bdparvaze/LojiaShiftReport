@@ -68,8 +68,7 @@ private sealed interface PendingPasswordRestoreTarget {
 @Composable
 fun SettingsBackupSubSection(
     reportViewModel: ReportViewModel,
-    onRestrictedClick: (action: () -> Unit) -> Unit,
-    onNavigateBack: () -> Unit = { reportViewModel.selectReportSettingsMenu("root") }
+    onRestrictedClick: (action: () -> Unit) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()

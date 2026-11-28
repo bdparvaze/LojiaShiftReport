@@ -187,8 +187,17 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     private val _selectedReportSettingsMenu = MutableStateFlow<String?>("profile")
     val selectedReportSettingsMenu: StateFlow<String?> = _selectedReportSettingsMenu.asStateFlow()
 
-    fun selectReportSettingsMenu(menuKey: String?) {
+    private val _settingsEntry = MutableStateFlow(com.lojia.shiftreport.SettingsEntry.FromDrawer)
+    val settingsEntry: StateFlow<com.lojia.shiftreport.SettingsEntry> = _settingsEntry.asStateFlow()
+
+    fun selectReportSettingsMenu(
+        menuKey: String?,
+        entry: com.lojia.shiftreport.SettingsEntry? = null
+    ) {
         _selectedReportSettingsMenu.value = menuKey
+        if (entry != null) {
+            _settingsEntry.value = entry
+        }
     }
 
     fun switchModule(module: AppModule) {

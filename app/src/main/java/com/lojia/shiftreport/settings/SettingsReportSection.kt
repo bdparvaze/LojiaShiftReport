@@ -747,8 +747,7 @@ fun SettingsReportSection(
             "backup" -> {
                 SettingsBackupSubSection(
                     reportViewModel = reportViewModel,
-                    onRestrictedClick = onRestrictedClick,
-                    onNavigateBack = { reportViewModel.selectReportSettingsMenu("root") }
+                    onRestrictedClick = onRestrictedClick
                 )
             }
 

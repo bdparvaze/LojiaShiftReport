@@ -289,7 +289,7 @@
     <string name="profile_subtitle">Admin credentials, contact details, branch address</string>
     <string name="cashiers_subtitle">Manage cashier &amp; staff accounts for shifts</string>
     <string name="security_subtitle">6-Digit PIN protection, biometric fingerprint/face ID, auto-lock</string>
-    <string name="backup_subtitle">Local Room SQLite backup, report file export &amp; JSON archive</string>
+    <string name="backup_subtitle">Back up and restore your shop data</string>
     <string name="language_subtitle">App language</string>
     <string name="about_subtitle">System version, software license, terms &amp; privacy policy</string>
     <string name="support_subtitle">Help desk, diagnostics, feedback &amp; tickets</string>
@@ -505,7 +505,7 @@
     <string name="msg_1_license_usagenlojia_system">1. License &amp; Usage\nLojia is an offline-first POS and shift management application. All data generated on this device is stored locally under the full control of the store owner.\n\n2. Shift Ledger Accuracy\nCashiers and managers are responsible for entering accurate drawer counts, receipts, and cash movements.\n\n3. Local Backups &amp; Export\nData backups are created locally. Optional cloud exports or integrations operate only when configured by the user.\n\n4. Updates\nPeriodic updates may include feature enhancements, security patches, and improvements.</string>
     <string name="i_understand">I Understand</string>
     <string name="privacy_policy_2">Privacy Policy</string>
-    <string name="msg_1_data_collectionnlojia_system">1. Data Collection\nLojia processes sales transactions, inventory catalogs, cashier shifts, and business contact information locally on your Android device.\n\n2. Security &amp; Biometrics\nBiometric authentication is handled strictly through the Android BiometricPrompt system. No biometric templates are stored in the application database.\n\n3. Third-Party Integrations\nOptional integrations (e.g. WhatsApp sharing, external storage, Printers) operate exclusively with explicit user permissions.\n\n4. Data Retention\nYou may export or clear your local databases and records at any time.</string>
+    <string name="msg_1_data_collectionnlojia_system">1. Data Collection\nLojia processes sales transactions, inventory catalogs, cashier shifts, and business contact information locally on your Android device.\n\n2. Security &amp; Biometrics\nBiometric authentication is handled strictly through the Android BiometricPrompt system. No biometric templates are stored in the app.\n\n3. Third-Party Integrations\nOptional integrations (e.g. WhatsApp sharing, external storage, Printers) operate exclusively with explicit user permissions.\n\n4. Data Retention\nYou may export or clear your saved shop data and records at any time.</string>
     <string name="close_3">Close</string>
     <string name="submit_support_ticket">Submit Support Ticket</string>
     <string name="ticket_tk8892_created">Ticket #TK-8892 Created!</string>
@@ -994,7 +994,7 @@
     <string name="desc_search_shift_reports">Search historical cashier shift reports &amp; export PDF</string>
     <string name="desc_switch_to_shift_report">Tap to switch to Shift Report &amp; Analytics Module</string>
     <string name="desc_sync_data_back_office">Local database synced • All store data up to date</string>
-    <string name="desc_system_architecture">On-Device Local Database • Offline-First Architecture</string>
+    <string name="desc_system_architecture">Saved safely on your device • Works without internet</string>
     <string name="desc_view_complete_sales">View complete list of transactions and sales receipts</string>
     <string name="desc_whatsapp_support">Instant live chat with customer service</string>
     <string name="label_total_combined">Total Combined</string>
@@ -1013,10 +1013,10 @@
     <string name="title_security_answer">Security Answer</string>
     <string name="title_security_question">Security Question</string>
     <string name="title_shift_report_module">Shift report</string>
-    <string name="title_shift_reports_pdf_archives">Shift Reports &amp; PDF Archives</string>
+    <string name="title_shift_reports_pdf_archives">Shift Reports &amp; Saved PDFs</string>
     <string name="title_show_cashier_name">Show Cashier Name</string>
     <string name="title_sync_data_back_office">Local Store Data Archive</string>
-    <string name="title_system_architecture">System Architecture</string>
+    <string name="title_system_architecture">How Your Data Is Stored</string>
     <string name="title_whatsapp_support">WhatsApp Support</string>
     <string name="total_revenue_amount_fmt">Total Revenue: %1$s %2$s</string>
     <string name="cd_expand">Expand</string>
@@ -1053,7 +1053,7 @@
     <string name="auth_have_account">Already have an account? Log In</string>
     <string name="auth_logout">Log Out</string>
     <string name="backup_data_title">Backup Data</string>
-    <string name="backup_data_desc">Export all business data to Downloads folder as JSON</string>
+    <string name="backup_data_desc">Save all your shop data as a backup file in the Downloads folder</string>
     <string name="restore_backup_title">Restore Backup</string>
     <string name="restore_backup_desc">Import and restore business data from a backup file</string>
     <string name="restore_confirm_title">Restore Business Data?</string>
@@ -1768,7 +1768,7 @@
     <string name="backup_pw_encrypted_badge">Encrypted portable backup</string>
     <string name="printer_warning_message">Printed with text fallback; non-Latin characters may be omitted.</string>
     <string name="amount_comma_hint">Use a decimal point (.) instead of a comma as a thousands separator.</string>
-    <string name="currency_locked_message">Currency is locked because the database contains financial records. Clear all data in Backup &amp; Reset to change currency.</string>
+    <string name="currency_locked_message">Currency is locked because you already have saved sales or shift records. Clear all data in Backup to change currency.</string>
     <string name="advance_over_salary_error">Advance cannot exceed the employee\'s monthly salary (%1$s)</string>
     <string name="no_cashiers_dropdown_hint">No cashiers available. Add one in Settings.</string>
     <string name="draft_restored_message">Unfinished shift restored</string>
@@ -1914,7 +1914,7 @@
 
     <string name="backup_section_destination">BACKUP DESTINATION</string>
     <string name="backup_select_location_title">Select Backup Location</string>
-    <string name="backup_select_location_desc">Choose where your shift reports and database are safely stored. International standard multi-cloud architecture.</string>
+    <string name="backup_select_location_desc">Choose where your backups are saved.</string>
     <string name="backup_loc_device_title">Device Storage (Offline)</string>
     <string name="backup_loc_device_subtitle">Documents/LojiaShiftReport/backups/ • 100% Offline</string>
     <string name="backup_loc_gdrive_title">Google Drive</string>
@@ -1941,7 +1941,7 @@
     <string name="backup_freq_daily_3am">Daily (3:00 AM)</string>
     <string name="backup_freq_manual">Manual</string>
     <string name="backup_section_danger_zone">DANGER ZONE</string>
-    <string name="backup_local_archives_title">Local Backup Archives</string>
+    <string name="backup_local_archives_title">Saved Backups on Device</string>
     <string name="backup_local_none_found">No local backup files found in Documents/LojiaShiftReport/backups/</string>
     <string name="backup_open_folder_files">Open Folder in Files</string>
     <string name="backup_connect_onedrive">Connect Microsoft OneDrive</string>
@@ -1950,11 +1950,11 @@
     <string name="backup_onedrive_email_hint">e.g. store@outlook.com</string>
     <string name="backup_onedrive_connected_format">OneDrive account connected: %1$s</string>
     <string name="backup_connect_account_btn">Connect Account</string>
-    <string name="backup_gdrive_none_found">No backup archives found in Google Drive.</string>
+    <string name="backup_gdrive_none_found">No backups found in Google Drive.</string>
     <string name="backup_restore_shifts_count_format">✓ %1$d shifts ready to restore</string>
     <string name="backup_restore_summary_format">Total Records: %1$d • Export Date: %2$s</string>
     <string name="backup_delete_dialog_title">Type DELETE to Confirm</string>
-    <string name="backup_delete_dialog_warning">This will permanently wipe all local database tables, cashier sessions, sales ledger, and shift reports from this device.</string>
+    <string name="backup_delete_dialog_warning">This will permanently delete all saved shop data, cashier sessions, sales records, and shift reports from this device.</string>
     <string name="backup_delete_dialog_instruction">To proceed, please type DELETE below in all capital letters:</string>
     <string name="backup_delete_keyword">DELETE</string>
     <string name="backup_cleared_all_toast">All business data has been permanently cleared.</string>
@@ -1963,7 +1963,7 @@
     <string name="backup_local_folder_path">Documents/LojiaShiftReport/backups/</string>
     <string name="backup_status_protected">Protected</string>
     <string name="backup_status_no_backup">No Backup</string>
-    <string name="backup_total_archives_size">Total Archives Size</string>
+    <string name="backup_total_archives_size">Total Backups Size</string>
     <string name="backup_backing_up">Backing up...</string>
     <string name="backup_now_label">Backup Now</string>
     <string name="backup_view_files">View Files</string>
@@ -2178,7 +2178,7 @@
     <string name="drive_restore_complete_notif_body">Restored %1$d records from Google Drive (%2$s).</string>
     <string name="sync_status_workmanager">Synced via WorkManager</string>
     <string name="cloud_backup_success_notif_title">☁️ Cloud Backup Successful</string>
-    <string name="cloud_backup_success_notif_body">Your store database and shift ledgers were backed up to Google Drive at %1$s.</string>
+    <string name="cloud_backup_success_notif_body">Your shop data and shift records were backed up to Google Drive at %1$s.</string>
     <string name="backup_create_failed">Failed to create backup</string>
     <string name="backup_restored_notif_title">📦 Backup Restored Successfully</string>
     <string name="backup_restored_notif_body">Restored %1$d business records into store ledger.</string>
